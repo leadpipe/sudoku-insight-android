@@ -15,13 +15,13 @@ limitations under the License.
 */
 package us.blanshard.sudoku.core;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 /**
  * Generates Sudoku starting grids.  They may not be solvable, or have unique

@@ -21,14 +21,6 @@ import static us.blanshard.sudoku.core.NumSetTest.set;
 
 import org.junit.Test;
 
-import us.blanshard.sudoku.core.Block;
-import us.blanshard.sudoku.core.Column;
-import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Numeral;
-import us.blanshard.sudoku.core.Row;
-import us.blanshard.sudoku.core.Unit;
-
 public class UnitTest {  // What're the odds?
 
   public static Location loc(int row, int col) {

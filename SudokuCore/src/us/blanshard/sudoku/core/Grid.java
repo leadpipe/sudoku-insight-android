@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.core;
 
+import com.google.common.collect.Sets;
+
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.Arrays;
@@ -23,8 +25,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
-import com.google.common.collect.Sets;
 
 /**
  * An immutable Sudoku grid: each location may have a numeral set, the class is

@@ -20,9 +20,6 @@ import static org.junit.Assert.assertSame;
 
 import org.junit.Test;
 
-import us.blanshard.sudoku.core.Block;
-import us.blanshard.sudoku.core.Location;
-
 public class BlockTest {
 
   @Test public void all() {

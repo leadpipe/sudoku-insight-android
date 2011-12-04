@@ -15,12 +15,12 @@ limitations under the License.
 */
 package us.blanshard.sudoku.core;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * A row, column, or block of a Sudoku grid: a set of 9 locations that must all

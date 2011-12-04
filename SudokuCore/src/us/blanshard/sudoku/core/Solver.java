@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.core;
 
+import com.google.common.collect.Lists;
+
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Iterator;
@@ -23,8 +25,6 @@ import java.util.NoSuchElementException;
 import java.util.Random;
 
 import javax.annotation.Nullable;
-
-import com.google.common.collect.Lists;
 
 /**
  * A depth-first, randomized, worklist-based Sudoku solver.  This is an

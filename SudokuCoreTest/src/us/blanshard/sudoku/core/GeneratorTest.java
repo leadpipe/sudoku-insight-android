@@ -18,13 +18,13 @@ package us.blanshard.sudoku.core;
 import static org.junit.Assert.assertEquals;
 import static us.blanshard.sudoku.core.Generator.generate;
 
-import java.util.Random;
-
-import org.junit.Test;
-
 import us.blanshard.sudoku.core.Generator.Strategy;
 
 import com.google.common.collect.Sets;
+
+import org.junit.Test;
+
+import java.util.Random;
 
 public class GeneratorTest {
 

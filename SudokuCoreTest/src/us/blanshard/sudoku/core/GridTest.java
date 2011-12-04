@@ -20,16 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
-
-import org.junit.Test;
-
-import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Numeral;
 
 public class GridTest {
 
