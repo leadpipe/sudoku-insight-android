@@ -1,0 +1,90 @@
+package us.blanshard.sudoku.stats;
+
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+
+import java.util.Random;
+
+import us.blanshard.sudoku.core.Generator;
+import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Solver;
+
+import com.google.common.base.Stopwatch;
+
+/**
+ * Generates random Sudoku grids, solves them, and spits out statistics about
+ * the solvers.
+ *
+ * @author Luke Blanshard
+ */
+public class GenStats {
+  public static void main(String[] args) {
+    if (args.length < 1 || args.length > 2) exitWithUsage();
+    int count;
+    long seed;
+    try {
+      count = Integer.decode(args[0]);
+      seed = args.length > 1 ? Long.decode(args[1]) : System.currentTimeMillis();
+    } catch (NumberFormatException e) {
+      exitWithUsage();
+      return;  // Convince the compiler.
+    }
+
+    System.err.printf("Generating %d puzzles from seed %#x%n", count, seed);
+
+    // Start with a few rounds with a fixed seed and no printing, to get all the
+    // machinery warmed up.  Empirically it takes around 35 rounds to get the
+    // fully optimized code paths.
+    generate(40, 0, false);
+
+    // Then do the real work.
+    generate(count, seed, true);
+  }
+
+  private static void exitWithUsage() {
+    System.err.println("Usage: GenStats <count> [<seed>]");
+    System.exit(1);
+  }
+
+  private static final boolean[] bools = { false, true };
+
+  private static void generate(int count, long seed, boolean print) {
+    if (print) {
+      System.err.print("Start\tGenerator\tGen Micros\tSeed");
+      for (Solver.Strategy strategy : Solver.Strategy.values()) {
+        for (boolean fat : bools) {
+          System.err.printf("\t%s:%s:Num Solutions\tNum Steps\tMicros", strategy, fat);
+        }
+      }
+      System.err.println();
+    }
+    Random random = new Random(seed);
+    while (count-- > 0) {
+      Generator.Strategy genStrategy = Generator.chooseStrategy(random);
+
+      Stopwatch stopwatch = new Stopwatch().start();
+      Grid start = Generator.generate(genStrategy, random);
+      stopwatch.stop();
+
+      long genMicros = stopwatch.elapsedTime(MICROSECONDS);
+      long solverSeed = random.nextLong();
+
+      if (print)
+        System.out.printf("%s\t%s\t%d\t%#x",
+                          start.toFlatString(), genStrategy, genMicros, solverSeed);
+
+      for (Solver.Strategy strategy : Solver.Strategy.values()) {
+        for (boolean fat : bools) {
+          stopwatch.reset().start();
+          Solver.Result result = Solver.solve(start, new Random(solverSeed), strategy, fat);
+          stopwatch.stop();
+
+          long micros = stopwatch.elapsedTime(MICROSECONDS);
+          if (print)
+            System.out.printf("\t%d\t%d\t%d", result.numSolutions, result.numSteps, micros);
+        }
+      }
+      if (print)
+        System.out.println();
+    }
+  }
+}

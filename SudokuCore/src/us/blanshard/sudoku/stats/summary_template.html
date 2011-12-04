@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sudoku Solving Stats Summary</title>
+<style>
+  h1, h2 {
+    text-align: center;
+  }
+  table {
+    border-collapse: collapse;
+  }
+  td {
+    vertical-align: top;
+    padding: 1ex 1em;
+  }
+  td.solns {
+    padding: 2ex 0;
+    border: solid 2px #777;
+  }
+  td.solns td {
+    padding: 0 0.5em;
+  }
+  td.solns tr {
+    whitespace: nowrap;
+  }
+  tr.b {
+    background: #f7f7f7;
+  }
+  div.overall {
+    text-align: center;
+    margin: 1ex 1em 2ex;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>Summary of {{ count }} Puzzles</h1>
+<h2>{{ when|date:"SHORT_DATETIME_FORMAT" }}</h2>
+<table>
+<tr>
+  <td>Algorithm
+  {% for alg in algorithms %}
+  <th colspan=2>{{ alg.name }}
+  {% endfor %}
+<tr>
+  <td>
+  {% for alg in algorithms %}
+  <td colspan=2 align=center>{{ alg.steps.mean_formatted }} avg steps
+    <div>σ: {{ alg.steps.standard_deviation_formatted }}</div>
+  {% endfor %}
+<tr>
+  <td>Version
+  {% for alg in algorithms %}
+  <th>Thin
+  <th>Fat
+  {% endfor %}
+<tr>
+  <td>
+  {% for alg in algorithms %}
+    {% for vers in alg.versions %}
+    <td align=center>{{ vers.per_step.mean_formatted }} µs/step
+        <div>σ: {{ vers.per_step.standard_deviation_formatted }}</div>
+    {% endfor %}
+  {% endfor %}
+
+{% for solns in "012"|make_list %}
+<tr class=solns>
+  <td>{{ solns }} solution{{ solns|pluralize }}, by #steps
+  {% for alg in algorithms %}
+    {% for vers in alg.versions %}
+    <td class=solns>
+      {% for num, detailed in vers.by_solutions.items %}
+      {% if num|stringformat:"d" == solns %}
+      <div class=overall>
+        {{ detailed.overall.mean_formatted }} µs
+        avg of {{ detailed.overall.count_formatted }}
+        <div>σ: {{ detailed.overall.standard_deviation_formatted }}</div>
+      </div>
+      <table width=100%>
+        {% for steps, stat in detailed.by_steps %}
+        <tr class={% cycle "a" "b" %}>
+            <td align=right>{{ steps }}
+            <td align=right>{{ stat.count_formatted }}
+            <td align=right>{{ stat.mean_formatted }} µs
+            <td align=right>σ: {{ stat.standard_deviation_formatted }}
+        {% endfor %}
+      </table>
+      {% endif %}
+      {% endfor %}
+    {% endfor %}
+  {% endfor %}
+{% endfor %}
+
+</table>
+
+</body>
+</html>
