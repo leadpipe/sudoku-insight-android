@@ -21,3 +21,6 @@ syntax: glob
 
 # Compiled java files
 *.class
+
+# Eclipse bin directories
+bin
