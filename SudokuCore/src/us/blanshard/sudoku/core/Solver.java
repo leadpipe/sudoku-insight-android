@@ -47,19 +47,23 @@ public final class Solver implements Iterable<Grid> {
   public class Result {
     public final Grid start;
     public final int numSolutions;  // 0, 1, or 2 to mean >1
-    public final int numSteps;
+    public final int numSteps;  // The total number
+    public final int numStepsAfterSolution;
     @Nullable public final Grid solution;  // Not null when numSolutions == 1
 
     public Result() {
       Iter iter = iterator();
       int count = 0;
       Grid grid = null;
+      int steps = 0;
       while (iter.hasNext() && ++count <= 1) {
         grid = iter.next();
+        steps = iter.getStepCount();
       }
       this.start = Solver.this.start;
       this.numSolutions = count;
       this.numSteps = iter.getStepCount();
+      this.numStepsAfterSolution = count == 0 ? 0 : iter.getStepCount() - steps;
       this.solution = count == 1 ? grid : null;
     }
   }
