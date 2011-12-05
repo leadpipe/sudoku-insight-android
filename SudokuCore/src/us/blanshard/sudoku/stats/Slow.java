@@ -32,9 +32,9 @@ import java.util.Random;
  *
  * @author Luke Blanshard
  */
-public class Pathological {
-  private static final int STEPS_CUTOFF = 32;  // Over this we consider pathological.
-  private static final int NUM_RETRIES = 10;  // How many times to re-solve pathological puzzles.
+public class Slow {
+  private static final int STEPS_CUTOFF = 32;  // Over this we consider slow.
+  private static final int NUM_RETRIES = 10;  // How many times to re-solve slow puzzles.
 
   public static void main(String[] args) throws IOException {
     if (args.length != 1) exitWithUsage();
@@ -46,8 +46,6 @@ public class Pathological {
       exitWithUsage();
       return;  // Convince the compiler.
     }
-
-    System.err.printf("Rerunning pathological puzzles from %s%n", args[0]);
 
     r.mark(10000);
     String line = r.readLine();
@@ -61,18 +59,18 @@ public class Pathological {
       String[] fields = line.split("\\t");
       int fnum = 5;
       for (Solver.Strategy strategy : Solver.Strategy.values()) {
-        rerunIfPathological(fields, fnum, strategy);
+        rerunIfSlow(fields, fnum, strategy);
         fnum += 6;
       }
     }
   }
 
   private static void exitWithUsage() {
-    System.err.println("Usage: Pathological <filename>");
+    System.err.println("Usage: Slow <filename>");
     System.exit(1);
   }
 
-  private static void rerunIfPathological(
+  private static void rerunIfSlow(
       String[] fields, int stepIndex, Solver.Strategy strategy) {
     if (Integer.parseInt(fields[stepIndex]) > STEPS_CUTOFF) {
       Grid start = Grid.fromString(fields[0]);
