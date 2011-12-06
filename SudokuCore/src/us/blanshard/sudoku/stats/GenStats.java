@@ -70,10 +70,10 @@ public class GenStats {
     }
     Random random = new Random(seed);
     while (count-- > 0) {
-      Generator.Strategy genStrategy = Generator.chooseStrategy(random);
+      Generator generator = Generator.choose(random);
 
       Stopwatch stopwatch = new Stopwatch().start();
-      Grid start = Generator.generate(genStrategy, random);
+      Grid start = generator.generate(random);
       stopwatch.stop();
 
       long genMicros = stopwatch.elapsedTime(MICROSECONDS);
@@ -81,7 +81,7 @@ public class GenStats {
 
       if (print)
         System.out.printf("%s\t%s\t%d\t%#x",
-                          start.toFlatString(), genStrategy, genMicros, solverSeed);
+                          start.toFlatString(), generator, genMicros, solverSeed);
 
       for (Solver.Strategy strategy : Solver.Strategy.values()) {
         stopwatch.reset().start();

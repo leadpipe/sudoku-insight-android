@@ -16,9 +16,6 @@ limitations under the License.
 package us.blanshard.sudoku.core;
 
 import static org.junit.Assert.assertEquals;
-import static us.blanshard.sudoku.core.Generator.generate;
-
-import us.blanshard.sudoku.core.Generator.Strategy;
 
 import com.google.common.collect.Sets;
 
@@ -31,11 +28,11 @@ public class GeneratorTest {
   private final Random random = new Random(123);
 
   @Test public void random() {
-    ensureBasicProperties(generate(Strategy.RANDOM, random));
+    ensureBasicProperties(Generator.RANDOM.generate(random));
   }
 
   @Test public void classic() {
-    Grid grid = generate(Strategy.CLASSIC, random);
+    Grid grid = Generator.CLASSIC.generate(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(grid.containsKey(loc), grid.containsKey(Location.of(80 - loc.index)));
@@ -43,7 +40,7 @@ public class GeneratorTest {
   }
 
   @Test public void mirror() {
-    Grid grid = generate(Strategy.MIRROR, random);
+    Grid grid = Generator.MIRROR.generate(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -53,7 +50,7 @@ public class GeneratorTest {
   }
 
   @Test public void doubleMirror() {
-    Grid grid = generate(Strategy.DOUBLE_MIRROR, random);
+    Grid grid = Generator.DOUBLE_MIRROR.generate(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -66,7 +63,7 @@ public class GeneratorTest {
   }
 
   @Test public void blockwise() {
-    Grid grid = generate(Strategy.BLOCKWISE, random);
+    Grid grid = Generator.BLOCKWISE.generate(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
