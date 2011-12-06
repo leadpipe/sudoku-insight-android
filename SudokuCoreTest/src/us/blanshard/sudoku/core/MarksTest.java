@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.core;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static us.blanshard.sudoku.core.NumSetTest.set;
 import static us.blanshard.sudoku.core.UnitTest.loc;
 
@@ -36,18 +37,24 @@ public class MarksTest {
     builder.put(loc(4, 4), Numeral.of(1));
     builder.put(loc(4, 5), Numeral.of(9));
 
-    marks = new Marks(builder.build());
+    marks = build();
+  }
+
+  private Marks build() {
+    Marks.Builder b = Marks.builder();
+    assertTrue(b.assignAll(builder.build()));
+    return b.build();
   }
 
   @Test public void get() {
-    assertEquals(set(), marks.get(loc(4, 1)));
+    assertEquals(set(7), marks.get(loc(4, 1)));
     assertEquals(set(3, 5, 8), marks.get(loc(4, 2)));
   }
 
   @Test public void equals() {
-    Marks m2 = new Marks(builder.build());
+    Marks m2 = build();
     builder.remove(loc(6, 3));
-    Marks m3 = new Marks(builder.build());
+    Marks m3 = build();
 
     assertEquals(marks, marks);
     assertEquals(marks, m2);

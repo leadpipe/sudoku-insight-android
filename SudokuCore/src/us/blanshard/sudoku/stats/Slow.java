@@ -81,7 +81,7 @@ public class Slow {
       System.out.printf("%s\t%d\t%s", fields[0], numSolutions, strategy);
 
       for (int i = 0; i < NUM_RETRIES; ++i) {
-        Solver.Result result = Solver.solve(start, random, strategy, /*fat=*/true);
+        Solver.Result result = Solver.solve(start, random, strategy);
         System.out.printf("\t%d\t%d", result.numSteps, result.numStepsAfterSolution);
         if (result.numSolutions != numSolutions) {
           System.err.printf("Solver error: %s produced %d solutions instead of %d for %s%n",

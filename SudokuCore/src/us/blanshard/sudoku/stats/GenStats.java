@@ -60,15 +60,11 @@ public class GenStats {
     System.exit(1);
   }
 
-  private static final boolean[] bools = { false, true };
-
   private static void generate(int count, long seed, boolean print) {
     if (print) {
       System.err.print("Start\tGenerator\tGen Micros\tSeed");
       for (Solver.Strategy strategy : Solver.Strategy.values()) {
-        for (boolean fat : bools) {
-          System.err.printf("\t%s:%s:Num Solutions\tNum Steps\tMicros", strategy, fat);
-        }
+        System.err.printf("\t%s:Num Solutions\tNum Steps\tMicros", strategy);
       }
       System.err.println();
     }
@@ -88,15 +84,13 @@ public class GenStats {
                           start.toFlatString(), genStrategy, genMicros, solverSeed);
 
       for (Solver.Strategy strategy : Solver.Strategy.values()) {
-        for (boolean fat : bools) {
-          stopwatch.reset().start();
-          Solver.Result result = Solver.solve(start, new Random(solverSeed), strategy, fat);
-          stopwatch.stop();
+        stopwatch.reset().start();
+        Solver.Result result = Solver.solve(start, new Random(solverSeed), strategy);
+        stopwatch.stop();
 
-          long micros = stopwatch.elapsedTime(MICROSECONDS);
-          if (print)
-            System.out.printf("\t%d\t%d\t%d", result.numSolutions, result.numSteps, micros);
-        }
+        long micros = stopwatch.elapsedTime(MICROSECONDS);
+        if (print)
+          System.out.printf("\t%d\t%d\t%d", result.numSolutions, result.numSteps, micros);
       }
       if (print)
         System.out.println();

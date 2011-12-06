@@ -51,22 +51,18 @@ public class SolverTest {
   @Test public void allPermutations() {
     Grid prev = null;
     for (Solver.Strategy strategy : Solver.Strategy.values()) {
-      Solver.Result thinResult = Solver.solve(start, new Random(0), strategy, false);
-      Solver.Result fatResult = Solver.solve(start, new Random(0), strategy, true);
-      assertEquals(numSolutions, thinResult.numSolutions);
-      assertEquals(numSolutions, fatResult.numSolutions);
-      assertEquals(thinResult.numSteps, fatResult.numSteps);
-      assertEquals(thinResult.solution, fatResult.solution);
+      Solver.Result result = Solver.solve(start, new Random(0), strategy);
+      assertEquals(numSolutions, result.numSolutions);
       if (prev != null)
-        assertEquals(prev, thinResult.solution);
+        assertEquals(prev, result.solution);
       if (numSolutions == 1) {
-        assertEquals(Grid.State.SOLVED, thinResult.solution.getState());
-        assertEquals(true, thinResult.solution.isSolved());
-        assertEquals(true, thinResult.solution.entrySet().containsAll(start.entrySet()));
+        assertEquals(Grid.State.SOLVED, result.solution.getState());
+        assertEquals(true, result.solution.isSolved());
+        assertEquals(true, result.solution.entrySet().containsAll(start.entrySet()));
       } else {
-        assertNull(thinResult.solution);
+        assertNull(result.solution);
       }
-      prev = thinResult.solution;
+      prev = result.solution;
     }
   }
 }

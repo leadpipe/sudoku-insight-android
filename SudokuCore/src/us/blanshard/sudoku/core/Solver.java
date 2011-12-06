@@ -37,8 +37,8 @@ public final class Solver implements Iterable<Grid> {
   /**
    * Solves the given starting grid, returns a summary of the result.
    */
-  public static Result solve(Grid start, Random random, Strategy strategy, boolean fat) {
-    return new Solver(start, random, strategy, fat).result();
+  public static Result solve(Grid start, Random random, Strategy strategy) {
+    return new Solver(start, random, strategy).result();
   }
 
   /**
@@ -102,13 +102,11 @@ public final class Solver implements Iterable<Grid> {
   private final Grid start;
   private final Random random;
   private final Strategy strategy;
-  private final boolean fat;
 
-  public Solver(Grid start, Random random, Strategy strategy, boolean fat) {
+  public Solver(Grid start, Random random, Strategy strategy) {
     this.start = start;
     this.random = random;
     this.strategy = strategy;
-    this.fat = fat;
   }
 
   @Override public Iter iterator() {
@@ -127,7 +125,7 @@ public final class Solver implements Iterable<Grid> {
     private final ArrayDeque<Assignment> worklist = new ArrayDeque<Assignment>();
 
     private Iter() {
-      Marks.Builder builder = fat ? Marks.Fat.builder() : Marks.builder();
+      Marks.Builder builder = Marks.builder();
       if (!builder.assignAll(start)) {
         // This puzzle is not solvable.
         next = null;

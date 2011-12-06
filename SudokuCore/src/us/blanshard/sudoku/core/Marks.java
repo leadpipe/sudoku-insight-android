@@ -27,32 +27,15 @@ import java.util.Map;
  *
  * @author Luke Blanshard
  */
-public /*final*/ class Marks {
+public final class Marks {
 
-  /*private*/ final short[] bits;
+  private final short[] bits;
+  private final short[] unitBits;
   private static final short ALL_BITS = (1 << 9) - 1;
 
-  private Marks(short[] bits) {
+  private Marks(short[] bits, short[] unitBits) {
     this.bits = bits;
-  }
-
-  /**
-   * Creates a Marks for the given grid.  Only the local constraints for each
-   * location are applied: the result is likely to be less complete than passing
-   * the grid to the builder.
-   */
-  public Marks(Grid grid) {
-    this(new short[81]);
-    for (Location loc : Location.ALL) {
-      if (grid.containsKey(loc)) bits[loc.index] = grid.get(loc).bit;
-      else bits[loc.index] = ALL_BITS;
-    }
-    for (Unit unit : Unit.allUnits()) {
-      short missing = unit.getMissingBits(grid);
-      for (Location loc : unit) {
-        bits[loc.index] &= missing;
-      }
-    }
+    this.unitBits = unitBits;
   }
 
   public static Builder builder() {
@@ -64,13 +47,17 @@ public /*final*/ class Marks {
   }
 
   public Grid asGrid() {
+    return asGridBuilder().build();
+  }
+
+  public Grid.Builder asGridBuilder() {
     Grid.Builder builder = Grid.builder();
     for (Location loc : Location.ALL) {
       NumSet possible = get(loc);
       if (possible.size() == 1)
         builder.put(loc, possible.iterator().next());
     }
-    return builder.build();
+    return builder;
   }
 
   /**
@@ -85,23 +72,19 @@ public /*final*/ class Marks {
    * given numeral.
    */
   public UnitSubset get(Unit unit, Numeral num) {
-    int bit = 1, bits = 0;
-    for (Location loc : unit) {
-      if (get(loc).contains(num))
-        bits |= bit;
-      bit <<= 1;
-    }
-    return UnitSubset.ofBits(unit, bits);
+    return UnitSubset.ofBits(unit, unitBits[unit.unitIndex() * 9 + num.index]);
   }
 
-  public static /*final*/ class Builder {
-    /*private*/ Marks marks;
-    /*private*/ boolean built;
+  public static final class Builder {
+    private Marks marks;
+    private boolean built;
 
     private Builder() {
       short[] bits = new short[81];
       Arrays.fill(bits, ALL_BITS);
-      this.marks = new Marks(bits);
+      short[] unitBits = new short[Unit.COUNT * 9];
+      Arrays.fill(unitBits, ALL_BITS);
+      this.marks = new Marks(bits, unitBits);
       this.built = false;
     }
 
@@ -110,9 +93,9 @@ public /*final*/ class Marks {
       this.built = true;
     }
 
-    /*private*/ Marks marks() {
+    private Marks marks() {
       if (built) {
-        Marks marks = new Marks(this.marks.bits.clone());
+        Marks marks = new Marks(this.marks.bits.clone(), this.marks.unitBits.clone());
         this.marks = marks;
         this.built = false;
       }
@@ -200,19 +183,19 @@ public /*final*/ class Marks {
      * false if a contradiction is found.  The given subset is guaranteed to be
      * a singleton.
      */
-    protected boolean eliminateFromUnit(Numeral num, UnitSubset unitSubset) {
-      Location possible = null;
-      for (Location unitLoc : unitSubset.unit) {
-        if (get(unitLoc).contains(num)) {
-          if (possible != null)
-            return true;  // Two or more possibilities for num in this unit; try the next unit.
-          possible = unitLoc;
-        }
-      }
-      if (possible == null)
-        return false;  // This unit has no place for this numeral.
-      if (!assign(possible, num))
-        return false;  // Assigning the numeral to the only possible location in this unit failed.
+    private boolean eliminateFromUnit(Numeral num, UnitSubset unitSubset) {
+      // Remove this location from the possible locations within this unit
+      // that this numeral may be assigned.
+      marks.unitBits[unitSubset.unit.unitIndex() * 9 + num.index] &= ~unitSubset.bits;
+
+      UnitSubset remaining = get(unitSubset.unit, num);
+      if (remaining.size() == 0)
+        return false;  // no possibilities left in this assignment set
+
+      if (remaining.size() == 1  // Last possibility left.  Assign it.
+          && !assign(remaining.iterator().next(), num))
+        return false;
+
       return true;
     }
   }
@@ -266,76 +249,5 @@ public /*final*/ class Marks {
     while (count-- > 0)
       sb.append(c);
     return sb;
-  }
-
-  /**
-   * A subclass that maintains the unit-numeral assignment points in addition to
-   * the location ones.
-   */
-  public static class Fat extends Marks {
-    private final short[] unitBits;
-
-    private Fat(short[] bits, short[] unitBits) {
-      super(bits);
-      this.unitBits = unitBits;
-    }
-
-    public static Builder builder() {
-      return new Builder();
-    }
-
-    @Override public Builder asBuilder() {
-      return new Builder(this);
-    }
-
-    @Override public UnitSubset get(Unit unit, Numeral num) {
-      return UnitSubset.ofBits(unit, unitBits[unit.unitIndex() * 9 + num.index]);
-    }
-
-    public static class Builder extends Marks.Builder {
-      private Fat fatMarks;
-
-      public Builder() {
-        super(null);
-        short[] bits = new short[81];
-        Arrays.fill(bits, ALL_BITS);
-        short[] unitBits = new short[Unit.COUNT * 9];
-        Arrays.fill(unitBits, ALL_BITS);
-        this.fatMarks = new Fat(bits, unitBits);
-        this.marks = this.fatMarks;
-        this.built = false;
-      }
-
-      private Builder(Fat fatMarks) {
-        super(fatMarks);
-        this.fatMarks = fatMarks;
-      }
-
-      @Override Marks marks() {
-        if (built) {
-          Fat fatMarks = new Fat(this.fatMarks.bits.clone(), this.fatMarks.unitBits.clone());
-          this.fatMarks = fatMarks;
-          this.marks = fatMarks;
-          this.built = false;
-        }
-        return this.fatMarks;
-      }
-
-      @Override protected boolean eliminateFromUnit(Numeral num, UnitSubset unitSubset) {
-        // Remove this location from the possible locations within this unit
-        // that this numeral may be assigned.
-        fatMarks.unitBits[unitSubset.unit.unitIndex() * 9 + num.index] &= ~unitSubset.bits;
-
-        UnitSubset remaining = get(unitSubset.unit, num);
-        if (remaining.size() == 0)
-          return false;  // no possibilities left in this assignment set
-
-        if (remaining.size() == 1  // Last possibility left.  Assign it.
-            && !assign(remaining.iterator().next(), num))
-          return false;
-
-        return true;
-      }
-    }
   }
 }
