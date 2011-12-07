@@ -62,6 +62,16 @@ public class GeneratorTest {
     }
   }
 
+  @Test public void diagonal() {
+    Grid grid = Generator.DIAGONAL.generate(random);
+    ensureBasicProperties(grid);
+    for (Location loc : Location.ALL) {
+      assertEquals(
+          grid.containsKey(loc),
+          grid.containsKey(Location.ofIndices(loc.column.index, loc.row.index)));
+    }
+  }
+
   @Test public void blockwise() {
     Grid grid = Generator.BLOCKWISE.generate(random);
     ensureBasicProperties(grid);

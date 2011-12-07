@@ -35,49 +35,55 @@ public enum Generator {
 
   /** No pattern to the givens. */
   RANDOM {
-    @Override Iterable<Location> additional(Location loc) {
-      return Collections.emptyList();
+    @Override Iterable<Location> expanded(Location loc) {
+      return Collections.singleton(loc);
     }
   },
 
   /** The classic Sudoku rotational symmetry. */
   CLASSIC {
-    @Override Iterable<Location> additional(Location loc) {
+    @Override Iterable<Location> expanded(Location loc) {
       return loc.index == 40
-        ? Collections.<Location>emptyList()
-        : Collections.singleton(Location.of(80 - loc.index));
+        ? Collections.singleton(loc)
+        : Arrays.asList(loc, Location.of(80 - loc.index));
     }
   },
 
   /** A left-right mirror symmetry. */
   MIRROR {
-    @Override Iterable<Location> additional(Location loc) {
+    @Override Iterable<Location> expanded(Location loc) {
       return loc.column.number == 5
-        ? Collections.<Location>emptyList()
-        : Collections.singleton(Location.of(loc.row, Column.ofIndex(9 - loc.column.number)));
+        ? Collections.singleton(loc)
+        : Arrays.asList(loc, Location.of(loc.row, Column.ofIndex(9 - loc.column.number)));
     }
   },
 
   /** Mirrors left-right and top-bottom. */
   DOUBLE_MIRROR {
-    @Override Iterable<Location> additional(Location loc) {
-      if (loc.row.number == 5) return MIRROR.additional(loc);
+    @Override Iterable<Location> expanded(Location loc) {
+      if (loc.row.number == 5) return MIRROR.expanded(loc);
       Location vert = Location.of(Row.ofIndex(9 - loc.row.number), loc.column);
-      return Iterables.concat(
-          MIRROR.additional(loc),
-          Arrays.asList(vert),
-          MIRROR.additional(vert));
+      return Iterables.concat(MIRROR.expanded(loc), MIRROR.expanded(vert));
+    }
+  },
+
+  /** A mirror symmetry across one of the main diagonals. */
+  DIAGONAL {
+    @Override Iterable<Location> expanded(Location loc) {
+      return loc.column.number == loc.row.number
+        ? Collections.singleton(loc)
+        : Arrays.asList(loc, Location.of(loc.column.number, loc.row.number));
     }
   },
 
   /** Repeats locations in diagonally adjacent blocks. */
   BLOCKWISE {
-    @Override Iterable<Location> additional(Location loc) {
+    @Override Iterable<Location> expanded(Location loc) {
       int withinBlock = loc.unitSubsets.get(Unit.Type.BLOCK).getIndex(0);
-      int row =
-              loc.block.rowIndex();
+      int row = loc.block.rowIndex();
       int col = loc.block.columnIndex();
-      return Arrays.asList(Block.ofIndices((row + 1) % 3, (col + 1) % 3).get(withinBlock),
+      return Arrays.asList(loc,
+                           Block.ofIndices((row + 1) % 3, (col + 1) % 3).get(withinBlock),
                            Block.ofIndices((row + 2) % 3, (col + 2) % 3).get(withinBlock));
     }
   };
@@ -90,7 +96,7 @@ public enum Generator {
 
   private static final Generator[] values = values();
 
-  abstract Iterable<Location> additional(Location loc);
+  abstract Iterable<Location> expanded(Location loc);
 
   public static Generator choose(Random random) {
     return values[random.nextInt(values.length)];
@@ -106,8 +112,7 @@ public enum Generator {
 
     while (assigned < MIN_ASSIGNED || numerals.size() < 8) {
       Location nextRandom = locs.get(index++);
-      for (Location loc : Iterables.concat(Collections.singleton(nextRandom),
-                                           additional(nextRandom))) {
+      for (Location loc : expanded(nextRandom)) {
         if (gridBuilder.containsKey(loc)) continue;
         NumSet possible = marksBuilder.get(loc);
         Numeral num = possible.get(random.nextInt(possible.size()));
