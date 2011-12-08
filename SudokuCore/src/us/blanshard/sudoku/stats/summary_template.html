@@ -42,19 +42,22 @@
 <tr>
   <td>Algorithm
   {% for alg in algorithms %}
-  <th colspan=2>{{ alg.name }}
+  <th colspan={{ factors|length }}>{{ alg.name }}
+  {% endfor %}
+<tr>
+  <td>Factors
+  {% for alg in algorithms %}
+    {% for factor in factors %}
+    <th>{{factor}}
+    {% endfor %}
   {% endfor %}
 <tr>
   <td>
   {% for alg in algorithms %}
-  <td colspan=2 align=center>{{ alg.steps.mean_formatted }} avg steps
-    <div>σ: {{ alg.steps.standard_deviation_formatted }}</div>
-  {% endfor %}
-<tr>
-  <td>Version
-  {% for alg in algorithms %}
-  <th>Thin
-  <th>Fat
+    {% for vers in alg.versions %}
+    <td align=center>{{ vers.steps.mean_formatted }} avg steps
+        <div>σ: {{ vers.steps.standard_deviation_formatted }}</div>
+    {% endfor %}
   {% endfor %}
 <tr>
   <td>

@@ -28,14 +28,15 @@ from stats import RunningStat
 locale.setlocale(locale.LC_ALL, "en_US")
 settings.configure(DEBUG=True, TEMPLATE_DEBUG=True, TEMPLATE_DIRS=("."), TEMPLATE_STRING_IF_INVALID = "%s")
 
-def summarize_lines(lines):
-  per_step = [RunningStat() for _ in range(6)]
+def summarize_lines(lines, factors):
+  nvariants = 3 * len(factors)
+  per_step = [RunningStat() for _ in range(nvariants)]
   detailed = [defaultdict(lambda: {"overall": RunningStat(),
-                                   "by_steps": defaultdict(RunningStat)}) for _ in range(6)]
-  steps = [RunningStat() for _ in range(6)]
+                                   "by_steps": defaultdict(RunningStat)}) for _ in range(nvariants)]
+  steps = [RunningStat() for _ in range(nvariants)]
   for line in lines:
     fields = line.split("\t")
-    for n in range(6):
+    for n in range(nvariants):
       offset = 3 * n + 4
       num_solutions = int(fields[offset])
       num_steps = 1 + int(fields[offset + 1])  # Count the initial building as one step
@@ -49,36 +50,43 @@ def summarize_lines(lines):
 def construct_data(file_in):
   line = file_in.next()
   if line.startswith("Generating"):
-    file_in.next()  # Skip following header line too
+    line = file_in.next()
   else:
-    file_in.seek(0)  # Jump back to the beginning: no stderr lines
+    return usage("No header lines found")
 
-  summaries = summarize_lines(file_in)
+  headers = line.split("\t")
+  factors = [int(h.split(":")[1]) for h in headers if h.startswith("LOC")]
+  nfactors = len(factors)
+
+  summaries = summarize_lines(file_in, factors)
   def versions(n):
-    slice = summaries[2 * n : 2 * n + 2]
+    slice = summaries[nfactors * n : nfactors * (n + 1)]
     return [ {"per_step": per_step,
+              "steps": steps,
               "by_solutions": { num_solutions :
                                   { "overall": details["overall"],
                                     "by_steps": sorted(details["by_steps"].items()) }
                                 for num_solutions, details in detailed.items() }}
-             for (per_step, detailed, _) in slice]
+             for (per_step, detailed, steps) in slice]
   return { "when": datetime.fromtimestamp(os.fstat(file_in.fileno()).st_mtime),
            "count": summaries[0][0].count_formatted(),
+           "factors": factors,
            "algorithms": [ { "name": "Locations",
-                             "steps": summaries[0][2],
                              "versions": versions(0) },
                            { "name": "Blocks/Numerals",
-                             "steps": summaries[2][2],
                              "versions": versions(1) },
                            { "name": "All",
-                             "steps": summaries[4][2],
                              "versions": versions(2) } ] }
 
-def main(prog, args):
-  if len(args) != 1:
-    print "Usage: %s <fname>" % prog
-    exit(1)
+def usage(msg = None):
+  print "Usage: %s <fname>" % sys.argv[0]
+  if msg:
+    print msg
+  exit(1)
 
+def main(args):
+  if len(args) != 1:
+    usage();
   with open(args[0], "r") as file_in:
     data = construct_data(file_in)
 
@@ -91,4 +99,4 @@ def main(prog, args):
   print "Summary written to %s" % out_name
 
 if __name__ == "__main__":
-  main(sys.argv[0], sys.argv[1:])
+  main(sys.argv[1:])
