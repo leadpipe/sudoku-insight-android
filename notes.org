@@ -1,0 +1,24 @@
+* Solver
+** TODO Replace units & all strategies with various takes on locations
+** TODO Generate stats, summarize, compare
+
+* Generator
+** TODO Investigate solving an empty grid: how slow can it get?
+
+* App
+
+* Math
+** Pathological grids
+   - How bad can they get?
+*** TODO Solve one in the debugger, see what's going on
+
+** Canonical grids
+   - How to compare two grids for equivalence?
+   - Possible permutations that preserve constraints:
+     - transposition
+     - permutation of numerals
+     - permutation of block-rows or block-columns
+     - permutation of rows within a block-row or columns within a block-column
+     - rotation (can it be expressed by the others? -- yes)
+*** TODO Re-read the "how many sudokus" paper
+    - Canonical grid?
