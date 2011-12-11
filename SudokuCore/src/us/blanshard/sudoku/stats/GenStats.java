@@ -17,13 +17,13 @@ package us.blanshard.sudoku.stats;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
-import java.util.Random;
-
 import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Solver;
 
 import com.google.common.base.Stopwatch;
+
+import java.util.Random;
 
 /**
  * Generates random Sudoku grids, solves them, and spits out statistics about
@@ -60,14 +60,11 @@ public class GenStats {
     System.exit(1);
   }
 
-  private static final int[] factors = { 10, 30, 300 };
-
   private static void generate(int count, long seed, boolean print) {
     if (print) {
       System.err.print("Start\tGenerator\tGen Micros\tSeed");
       for (Solver.Strategy strategy : Solver.Strategy.values()) {
-        for (int factor : factors)
-          System.err.printf("\t%s:%d:Num Solutions\tNum Steps\tMicros", strategy, factor);
+        System.err.printf("\t%s:Num Solutions\tNum Steps\tMicros", strategy);
       }
       System.err.println();
     }
@@ -87,15 +84,13 @@ public class GenStats {
                           start.toFlatString(), generator, genMicros, solverSeed);
 
       for (Solver.Strategy strategy : Solver.Strategy.values()) {
-        for (int factor : factors) {
-          stopwatch.reset().start();
-          Solver.Result result = Solver.solve(start, new Random(solverSeed), strategy, factor);
-          stopwatch.stop();
+        stopwatch.reset().start();
+        Solver.Result result = Solver.solve(start, new Random(solverSeed), strategy);
+        stopwatch.stop();
 
-          long micros = stopwatch.elapsedTime(MICROSECONDS);
-          if (print)
-            System.out.printf("\t%d\t%d\t%d", result.numSolutions, result.numSteps, micros);
-        }
+        long micros = stopwatch.elapsedTime(MICROSECONDS);
+        if (print)
+          System.out.printf("\t%d\t%d\t%d", result.numSolutions, result.numSteps, micros);
       }
       if (print)
         System.out.println();

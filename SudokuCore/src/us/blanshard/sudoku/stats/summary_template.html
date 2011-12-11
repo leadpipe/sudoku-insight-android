@@ -40,41 +40,29 @@
 <h2>{{ when|date:"SHORT_DATETIME_FORMAT" }}</h2>
 <table>
 <tr>
-  <td>Algorithm
-  {% for alg in algorithms %}
-  <th colspan={{ factors|length }}>{{ alg.name }}
-  {% endfor %}
-<tr>
-  <td>Factors
-  {% for alg in algorithms %}
-    {% for factor in factors %}
-    <th>{{factor}}
-    {% endfor %}
+  <td>Strategy
+  {% for strat in strategies %}
+  <th>{{ strat.name }}
   {% endfor %}
 <tr>
   <td>
-  {% for alg in algorithms %}
-    {% for vers in alg.versions %}
-    <td align=center>{{ vers.steps.mean_formatted }} avg steps
-        <div>σ: {{ vers.steps.standard_deviation_formatted }}</div>
-    {% endfor %}
+  {% for strat in strategies %}
+    <td align=center>{{ strat.steps.mean_formatted }} avg steps
+        <div>σ: {{ strat.steps.standard_deviation_formatted }}</div>
   {% endfor %}
 <tr>
   <td>
-  {% for alg in algorithms %}
-    {% for vers in alg.versions %}
-    <td align=center>{{ vers.per_step.mean_formatted }} µs/step
-        <div>σ: {{ vers.per_step.standard_deviation_formatted }}</div>
-    {% endfor %}
+  {% for strat in strategies %}
+    <td align=center>{{ strat.per_step.mean_formatted }} µs/step
+        <div>σ: {{ strat.per_step.standard_deviation_formatted }}</div>
   {% endfor %}
 
 {% for solns in "012"|make_list %}
 <tr class=solns>
   <td>{{ solns }} solution{{ solns|pluralize }}, by #steps
-  {% for alg in algorithms %}
-    {% for vers in alg.versions %}
+  {% for strat in strategies %}
     <td class=solns>
-      {% for num, detailed in vers.by_solutions.items %}
+      {% for num, detailed in strat.by_solutions.items %}
       {% if num|stringformat:"d" == solns %}
       <div class=overall>
         {{ detailed.overall.mean_formatted }} µs
@@ -83,7 +71,7 @@
       </div>
       <table width=100%>
         {% for steps, stat in detailed.by_steps %}
-        <tr class={% cycle "a" "b" %}>
+        <tr class={{forloop.counter|divisibleby:2|yesno:"b,a"}}>
             <td align=right>{{ steps }}
             <td align=right>{{ stat.count_formatted }}
             <td align=right>{{ stat.mean_formatted }} µs
@@ -92,7 +80,6 @@
       </table>
       {% endif %}
       {% endfor %}
-    {% endfor %}
   {% endfor %}
 {% endfor %}
 

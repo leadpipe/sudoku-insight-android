@@ -9,5 +9,6 @@
 			<attribute name="javadoc_location" value="jar:file:/Users/leadpipe/Downloads/guava-10.0.1-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="/Users/leadpipe/Downloads/jsr305.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

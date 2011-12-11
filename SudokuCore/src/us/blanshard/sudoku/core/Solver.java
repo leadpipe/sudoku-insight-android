@@ -19,7 +19,6 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
 import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -40,14 +39,7 @@ public final class Solver implements Iterable<Grid> {
    * Solves the given starting grid, returns a summary of the result.
    */
   public static Result solve(Grid start, Random random, Strategy strategy) {
-    return solve(start, random, strategy, 300);
-  }
-
-  /**
-   * Solves the given starting grid, returns a summary of the result.
-   */
-  public static Result solve(Grid start, Random random, Strategy strategy, int factor) {
-    return new Solver(start, random, strategy, factor).result();
+    return new Solver(start, random, strategy).result();
   }
 
   /**
@@ -78,71 +70,58 @@ public final class Solver implements Iterable<Grid> {
   }
 
   /**
-   * This enumeration provides 3 strategies for solving a puzzle, which consist
-   * of deciding where to look in the puzzle for useful choice points: just
-   * locations, just unit-numeral pairs, or both.
+   * This enumeration provides strategies for solving a puzzle.
    */
   public enum Strategy {
-    LOC {
-      @Override void fillList(List<ChoicePoint> list, Marks marks) {
-        for (LocationChoicePoint point : locationChoicePoints) {
-          if (marks.get(point.location).size() > 1)
-            list.add(point);
-        }
+    BASE {
+      @Override Iter getIterator(Solver solver) {
+        return solver.new Iter();
       }
     },
-    UNIT {
-      @Override void fillList(List<ChoicePoint> list, Marks marks) {
-        for (UnitNumeralChoicePoint point : unitNumeralChoicePoints) {
-          if (marks.get(point.unit, point.numeral).size() > 1)
-            list.add(point);
-        }
+    LIST {
+      @Override Iter getIterator(Solver solver) {
+        return solver.new IterList();
       }
     },
-    ALL {
-      @Override void fillList(List<ChoicePoint> list, Marks marks) {
-        LOC.fillList(list, marks);
-        UNIT.fillList(list, marks);
+    SHUFFLE {
+      @Override Iter getIterator(Solver solver) {
+        return solver.new IterShuffle();
+      }
+    },
+    CYCLE10 {
+      @Override Iter getIterator(Solver solver) {
+        return solver.new IterCycle(10);
+      }
+    },
+    CYCLE25 {
+      @Override Iter getIterator(Solver solver) {
+        return solver.new IterCycle(25);
+      }
+    },
+    CYCLE60 {
+      @Override Iter getIterator(Solver solver) {
+        return solver.new IterCycle(60);
       }
     };
 
     /**
-     * Constructs a list of choice points that have more than one possible
-     * assignment remaining in the given marks.
+     * Returns the Iter subclass instance that corresponds to this strategy.
      */
-    public List<ChoicePoint> getChoicePoints(Marks marks) {
-      List<ChoicePoint> list = Lists.newArrayList();
-      fillList(list, marks);
-      return list;
-    }
-
-    /** Adds appropriate choice points to the given list. */
-    abstract void fillList(List<ChoicePoint> list, Marks marks);
+    abstract Iter getIterator(Solver solver);
   }
 
   private final Grid start;
   private final Random random;
-  private final int factor;
-  private final Marks marks;
-  @Nullable private final List<ChoicePoint> choicePoints;
+  private final Strategy strategy;
 
-  public Solver(Grid start, Random random, Strategy strategy, int factor) {
+  public Solver(Grid start, Random random, Strategy strategy) {
     this.start = start;
     this.random = random;
-    this.factor = factor;
-    Marks.Builder builder = Marks.builder();
-    if (builder.assignAll(start)) {
-      this.choicePoints = strategy.getChoicePoints(builder.build());
-      Collections.shuffle(choicePoints, random);
-    } else {
-      // This puzzle is not solvable.
-      this.choicePoints = null;
-    }
-    this.marks = builder.build();
+    this.strategy = strategy;
   }
 
   @Override public Iter iterator() {
-    return new Iter();
+    return strategy.getIterator(this);
   }
 
   public Result result() {
@@ -150,25 +129,21 @@ public final class Solver implements Iterable<Grid> {
   }
 
   public class Iter implements Iterator<Grid> {
-    private boolean nextComputed;
+    protected boolean nextComputed;
     private Grid next;
     private int stepCount;
-    private final Iterator<ChoicePoint> points;
-    private final ArrayDeque<Assignment> worklist = new ArrayDeque<Assignment>();
+    protected final ArrayDeque<Assignment> worklist = new ArrayDeque<Assignment>();
 
-    private Iter() {
-      if (choicePoints == null) {
+    protected Iter() {
+      Marks.Builder builder = Marks.builder();
+      if (!builder.assignAll(start)) {
         // This puzzle is not solvable.
         next = null;
         nextComputed = true;
-        points = null;
-      } else {
-        points = Iterators.cycle(choicePoints);
-        if (!pushNextAssignments(marks)) {
-          // This puzzle was solved by the initial assignments.
-          next = marks.asGrid();
-          nextComputed = true;
-        }
+      } else if (!pushInitialAssignments(builder.build())) {
+        // This puzzle was solved by the initial assignments.
+        next = builder.asGrid();
+        nextComputed = true;
       }
     }
 
@@ -201,25 +176,29 @@ public final class Solver implements Iterable<Grid> {
       while (!worklist.isEmpty()) {
         ++stepCount;
         Assignment assignment = worklist.removeFirst();
-        Marks.Builder marksBuilder = assignment.marks.asBuilder();
-        if (marksBuilder.assign(assignment.location, assignment.numeral)) {
-          Marks marks = marksBuilder.build();
+        Marks.Builder builder = assignment.marks.asBuilder();
+        if (builder.assign(assignment.location, assignment.numeral)) {
+          Marks marks = builder.build();
           if (!pushNextAssignments(marks)) return marks.asGrid();
         }
       }
       return null;  // All done.
     }
 
+    protected boolean pushInitialAssignments(Marks marks) {
+      return pushNextAssignments(marks);
+    }
+
     /** Returns true if there are more assignments to be made. */
     private boolean pushNextAssignments(Marks marks) {
-      List<Assignment> list = chooseNextAssignments(marks);
-      if (list == null) return false;  // No more assignments.
+      Assignment[] assignments = chooseNextAssignments(marks);
+      if (assignments == null) return false;  // No more assignments.
 
       // Push all possibilities onto the stack in random order.
-      for (int last = list.size(); last-- > 0; ) {
+      for (int last = assignments.length; last-- > 0; ) {
         int index = random.nextInt(last + 1);
-        worklist.addFirst(list.get(index));
-        if (index != last) list.set(index, list.get(last));
+        worklist.addFirst(assignments[index]);
+        if (index != last) assignments[index] = assignments[last];
       }
       return true;
     }
@@ -228,22 +207,34 @@ public final class Solver implements Iterable<Grid> {
      * Chooses a random set of mutually exclusive assignments from those
      * available in the given marks, or null if there aren't any left.
      */
-    @Nullable private List<Assignment> chooseNextAssignments(Marks marks) {
-      int size = 10;
-      int max = choicePoints.size();
-      ChoicePoint current = null;
-      for (int count = 0; count < max; ++count) {
-        ChoicePoint point = points.next();
-        int pointSize = point.size(marks);
-        if (pointSize > 1 && pointSize < size) {
-          current = point;
-          size = pointSize;
-          max = Math.min(max, (size - 2) * factor);
+    @Nullable protected Assignment[] chooseNextAssignments(Marks marks) {
+      int size = 9;
+      int count = 0;
+      Location current = null;
+      for (Location loc : Location.ALL) {
+        NumSet possible = marks.get(loc);
+        if (possible.size() < 2 || possible.size() > size) continue;
+        if (possible.size() < size) {
+          count = 0;
+          size = possible.size();
+        }
+        // Maintain a random choice of the smallest size seen so far.
+        if (random.nextInt(++count) == 0) {
+          current = loc;
         }
       }
-      if (current == null) return null;
-      return current.choices(marks);
+      if (count == 0) return null;
+      return makeAssignments(marks, current);
     }
+  }
+
+  private static Assignment[] makeAssignments(Marks marks, Location loc) {
+    NumSet set = marks.get(loc);
+    Assignment[] answer = new Assignment[set.size()];
+    int i = 0;
+    for (Numeral n : set)
+      answer[i++] = new Assignment(marks, loc, n);
+    return answer;
   }
 
   private static class Assignment {
@@ -258,80 +249,101 @@ public final class Solver implements Iterable<Grid> {
     }
   }
 
-  /**
-   * A choice point is a part of the puzzle that has mutually exclusive possible
-   * assignments of numerals to locations.  There are two kinds of choice
-   * points.  The first is the obvious: locations, with the possible numerals
-   * for each.  The second is more subtle: units and numerals, with the possible
-   * locations within each unit available for each numeral.
-   */
-  private interface ChoicePoint {
-    /**
-     * Tells how many possible assignments there are at this point in the given
-     * marks.
-     */
-    int size(Marks marks);
+  private class IterList extends Iter {
+    protected /*final*/ List<Location> locations;
 
-    /** Returns the possible assignments for this point in the given marks. */
-    List<Assignment> choices(Marks marks);
-  }
-
-  private static class LocationChoicePoint implements ChoicePoint {
-    final Location location;
-
-    LocationChoicePoint(Location location) {
-      this.location = location;
+    @Override protected boolean pushInitialAssignments(Marks marks) {
+      makeLocations(marks);
+      return super.pushInitialAssignments(marks);
     }
 
-    @Override public int size(Marks marks) {
-      return marks.get(location).size();
+    protected void makeLocations(Marks marks) {
+      locations = Lists.newArrayList();
+      for (Location loc : Location.ALL)
+        if (marks.get(loc).size() > 1)
+          locations.add(loc);
     }
 
-    @Override public List<Assignment> choices(Marks marks) {
-      NumSet set = marks.get(location);
-      Assignment[] array = new Assignment[set.size()];
-      int index = 0;
-      for (Numeral numeral : set)
-        array[index++] = new Assignment(marks, location, numeral);
-      return Arrays.asList(array);
+    @Override @Nullable protected Assignment[] chooseNextAssignments(Marks marks) {
+      int size = 9;
+      int count = 0;
+      Location current = null;
+      for (Location loc : locations) {
+        NumSet possible = marks.get(loc);
+        if (possible.size() < 2 || possible.size() > size) continue;
+        if (possible.size() < size) {
+          count = 0;
+          size = possible.size();
+        }
+        // Maintain a random choice of the smallest size seen so far.
+        if (random.nextInt(++count) == 0) {
+          current = loc;
+        }
+      }
+      if (count == 0) return null;
+      return makeAssignments(marks, current);
     }
   }
 
-  private static class UnitNumeralChoicePoint implements ChoicePoint {
-    final Unit unit;
-    final Numeral numeral;
-
-    UnitNumeralChoicePoint(Unit unit, Numeral numeral) {
-      this.unit = unit;
-      this.numeral = numeral;
+  private class IterShuffle extends IterList {
+    @Override protected void makeLocations(Marks marks) {
+      super.makeLocations(marks);
+      Collections.shuffle(locations, random);
     }
 
-    @Override public int size(Marks marks) {
-      return marks.get(unit, numeral).size();
-    }
+    @Override @Nullable protected Assignment[] chooseNextAssignments(Marks marks) {
+      int size = 9;
+      int count = 0;
+      Location current = null;
+      for (Location loc : locations) {
+        NumSet possible = marks.get(loc);
+        if (possible.size() < 2 || possible.size() > size) continue;
+        if (possible.size() < size) {
+          count = 0;
+          size = possible.size();
+        }
+        // Take the first size-2 location:
+        if (size == 2)
+          return makeAssignments(marks, loc);
 
-    @Override public List<Assignment> choices(Marks marks) {
-      UnitSubset set = marks.get(unit, numeral);
-      Assignment[] array = new Assignment[set.size()];
-      int index = 0;
-      for (Location location : set)
-        array[index++] = new Assignment(marks, location, numeral);
-      return Arrays.asList(array);
+        // Maintain a random choice of the smallest size seen so far.
+        if (random.nextInt(++count) == 0) {
+          current = loc;
+        }
+      }
+      if (count == 0) return null;
+      return makeAssignments(marks, current);
     }
   }
 
-  private static final LocationChoicePoint[] locationChoicePoints;
-  private static final UnitNumeralChoicePoint[] unitNumeralChoicePoints;
-  static {
-    locationChoicePoints = new LocationChoicePoint[Location.COUNT];
-    int index = 0;
-    for (Location loc : Location.ALL)
-      locationChoicePoints[index++] = new LocationChoicePoint(loc);
+  private class IterCycle extends IterShuffle {
+    private final int factor;
+    private /*final*/ Iterator<Location> locIterator;
 
-    unitNumeralChoicePoints = new UnitNumeralChoicePoint[Unit.COUNT * 9];
-    index = 0;
-    for (Unit unit : Unit.allUnits())
-      for (Numeral numeral : Numeral.ALL)
-        unitNumeralChoicePoints[index++] = new UnitNumeralChoicePoint(unit, numeral);
+    IterCycle(int factor) {
+      this.factor = factor;
+    }
+
+    @Override protected void makeLocations(Marks marks) {
+      super.makeLocations(marks);
+      locIterator = Iterators.cycle(locations);
+    }
+
+    @Override @Nullable protected Assignment[] chooseNextAssignments(Marks marks) {
+      int size = 10;
+      int max = locations.size();
+      Location current = null;
+      for (int count = 0; count < max; ++count) {
+        Location loc = locIterator.next();
+        NumSet possible = marks.get(loc);
+        if (possible.size() > 1 && possible.size() < size) {
+          current = loc;
+          size = possible.size();
+          max = Math.min(max, (size - 2) * factor);
+        }
+      }
+      if (current == null) return null;
+      return makeAssignments(marks, current);
+    }
   }
 }

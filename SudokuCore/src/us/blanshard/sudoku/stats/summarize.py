@@ -28,20 +28,19 @@ from stats import RunningStat
 locale.setlocale(locale.LC_ALL, "en_US")
 settings.configure(DEBUG=True, TEMPLATE_DEBUG=True, TEMPLATE_DIRS=("."), TEMPLATE_STRING_IF_INVALID = "%s")
 
-def summarize_lines(lines, factors):
-  nvariants = 3 * len(factors)
-  per_step = [RunningStat() for _ in range(nvariants)]
+def summarize_lines(lines, nstrategies):
+  per_step = [RunningStat() for _ in range(nstrategies)]
   detailed = [defaultdict(lambda: {"overall": RunningStat(),
-                                   "by_steps": defaultdict(RunningStat)}) for _ in range(nvariants)]
-  steps = [RunningStat() for _ in range(nvariants)]
+                                   "by_steps": defaultdict(RunningStat)}) for _ in range(nstrategies)]
+  steps = [RunningStat() for _ in range(nstrategies)]
   for line in lines:
     fields = line.split("\t")
-    for n in range(nvariants):
+    for n in range(nstrategies):
       offset = 3 * n + 4
       num_solutions = int(fields[offset])
-      num_steps = 1 + int(fields[offset + 1])  # Count the initial building as one step
+      num_steps = int(fields[offset + 1])
       micros = float(fields[offset + 2])
-      per_step[n].append(micros/num_steps)
+      per_step[n].append(micros/num_steps if num_steps > 0 else micros)
       detailed[n][num_solutions]["by_steps"][num_steps].append(micros)
       detailed[n][num_solutions]["overall"].append(micros)
       steps[n].append(num_steps)
@@ -55,28 +54,22 @@ def construct_data(file_in):
     return usage("No header lines found")
 
   headers = line.split("\t")
-  factors = [int(h.split(":")[1]) for h in headers if h.startswith("LOC")]
-  nfactors = len(factors)
+  strategies = [h.split(":")[0] for h in headers if h.endswith(":Num Solutions")]
+  nstrategies = len(strategies)
 
-  summaries = summarize_lines(file_in, factors)
-  def versions(n):
-    slice = summaries[nfactors * n : nfactors * (n + 1)]
-    return [ {"per_step": per_step,
-              "steps": steps,
-              "by_solutions": { num_solutions :
-                                  { "overall": details["overall"],
-                                    "by_steps": sorted(details["by_steps"].items()) }
-                                for num_solutions, details in detailed.items() }}
-             for (per_step, detailed, steps) in slice]
+  summaries = summarize_lines(file_in, nstrategies)
+  def for_strategy(n):
+    (per_step, detailed, steps) = summaries[n]
+    return {"name": strategies[n],
+            "per_step": per_step,
+            "steps": steps,
+            "by_solutions": { num_solutions :
+                                { "overall": details["overall"],
+                                  "by_steps": sorted(details["by_steps"].items()) }
+                              for num_solutions, details in detailed.items() }}
   return { "when": datetime.fromtimestamp(os.fstat(file_in.fileno()).st_mtime),
            "count": summaries[0][0].count_formatted(),
-           "factors": factors,
-           "algorithms": [ { "name": "Locations",
-                             "versions": versions(0) },
-                           { "name": "Blocks/Numerals",
-                             "versions": versions(1) },
-                           { "name": "All",
-                             "versions": versions(2) } ] }
+           "strategies": [ for_strategy(i) for i in range(nstrategies) ] }
 
 def usage(msg = None):
   print "Usage: %s <fname>" % sys.argv[0]
