@@ -15,10 +15,10 @@ limitations under the License.
 */
 package us.blanshard.sudoku.core;
 
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -30,6 +30,10 @@ import javax.annotation.Nullable;
 /**
  * A depth-first, randomized, worklist-based Sudoku solver.  This is an
  * Iterable: its iterator returns all solutions (if any) to the starting grid.
+ *
+ * <p> The worklist approach and the trying of alternative worklists if the
+ * first one is taking too long are due to David Bau in Heidi's Sudoku Hintpad
+ * (https://www.assembla.com/spaces/jssudoku/team).
  *
  * @author Luke Blanshard
  */
@@ -45,7 +49,7 @@ public final class Solver implements Iterable<Grid> {
   /**
    * A summary of a solver's work.
    */
-  public class Result {
+  public final class Result {
     public final Grid start;
     public final int numSolutions;  // 0, 1, or 2 to mean >1
     public final int numSteps;  // The total number
@@ -73,51 +77,101 @@ public final class Solver implements Iterable<Grid> {
    * This enumeration provides strategies for solving a puzzle.
    */
   public enum Strategy {
-    BASE {
+    SIMPLE {
       @Override Iter getIterator(Solver solver) {
-        return solver.new Iter();
+        int numSteps = 0;
+        Worklist worklist = solver.new Worklist();
+        while (!worklist.isCompleteOrFoundSomething()) {
+          numSteps += worklist.run(10000);
+        }
+        return solver.new Iter(worklist, numSteps);
       }
     },
-    LIST {
+    FAST_100_1_60_10 {  // Roughly corresponds to David Bau's parameters
       @Override Iter getIterator(Solver solver) {
-        return solver.new IterList();
+        return getIterator(solver, 100, 1.0, 60, 10);
       }
     },
-    SHUFFLE {
+    FAST_75_2_40_0 {
       @Override Iter getIterator(Solver solver) {
-        return solver.new IterShuffle();
+        return getIterator(solver, 50, 2.0, 30, 0);
       }
     },
-    CYCLE10 {
+    FAST_50_2_30_0 {
       @Override Iter getIterator(Solver solver) {
-        return solver.new IterCycle(10);
+        return getIterator(solver, 50, 2.0, 30, 0);
       }
     },
-    CYCLE25 {
+    FAST_40_2_25_0 {
       @Override Iter getIterator(Solver solver) {
-        return solver.new IterCycle(25);
-      }
-    },
-    CYCLE60 {
-      @Override Iter getIterator(Solver solver) {
-        return solver.new IterCycle(60);
+        return getIterator(solver, 50, 2.0, 30, 0);
       }
     };
 
     /**
-     * Returns the Iter subclass instance that corresponds to this strategy.
+     * Returns an Iter instance that corresponds to this strategy.
      */
     abstract Iter getIterator(Solver solver);
+
+    private static Iter getIterator(Solver solver, int longSteps, double factor, int shortSteps, int delta) {
+      int numSteps = 0;
+      Worklist worklist;
+      // The idea behind this is that some grids that take many steps only do so
+      // under peculiar circumstances, so it may be beneficial to try
+      // alternative paths to see if a short solution can be found.  The mean
+      // number of steps required to solve a grid is about 23, but some grids
+      // require thousands or tens of thousands of steps.
+      Worklist longRunner = solver.new Worklist();
+      if (longRunner.isCompleteOrFoundSomething()) {
+        worklist = longRunner;
+      } else {
+        while (true) {
+          numSteps += longRunner.run(longSteps);
+          if (longRunner.isCompleteOrFoundSomething()) {
+            worklist = longRunner;
+            break;
+          }
+          Worklist shortRunner = solver.new Worklist();
+          // Note we don't have to ask if the short runner found something at
+          // construction time, because the long runner didn't.
+          numSteps += shortRunner.run(shortSteps);
+          if (shortRunner.isCompleteOrFoundSomething()) {
+            worklist = shortRunner;
+            break;
+          }
+          shortSteps += delta;
+          longSteps = (int) (longSteps * factor);
+        }
+      }
+      return solver.new Iter(worklist, numSteps);
+    }
   }
 
   private final Grid start;
   private final Random random;
   private final Strategy strategy;
+  private final Marks startMarks;
+  private final Location[] locations;
 
   public Solver(Grid start, Random random, Strategy strategy) {
     this.start = start;
     this.random = random;
     this.strategy = strategy;
+
+    Marks.Builder builder = Marks.builder();
+    if (!builder.assignAll(start)) {
+      // This puzzle is not solvable.
+      this.startMarks = null;
+      this.locations = null;
+    } else {
+      Marks marks = this.startMarks = builder.build();
+      List<Location> locations = Lists.newArrayList();
+      for (Location loc : Location.ALL) {
+        if (marks.get(loc).size() > 1)
+          locations.add(loc);
+      }
+      this.locations = locations.toArray(new Location[locations.size()]);
+    }
   }
 
   @Override public Iter iterator() {
@@ -128,23 +182,17 @@ public final class Solver implements Iterable<Grid> {
     return new Result();
   }
 
-  public class Iter implements Iterator<Grid> {
-    protected boolean nextComputed;
+  public final class Iter implements Iterator<Grid> {
+    private boolean nextComputed;
     private Grid next;
     private int stepCount;
-    protected final ArrayDeque<Assignment> worklist = new ArrayDeque<Assignment>();
+    private final Worklist worklist;
 
-    protected Iter() {
-      Marks.Builder builder = Marks.builder();
-      if (!builder.assignAll(start)) {
-        // This puzzle is not solvable.
-        next = null;
-        nextComputed = true;
-      } else if (!pushInitialAssignments(builder.build())) {
-        // This puzzle was solved by the initial assignments.
-        next = builder.asGrid();
-        nextComputed = true;
-      }
+    private Iter(Worklist worklist, int stepCount) {
+      this.nextComputed = true;
+      this.next = worklist.getFound();
+      this.stepCount = stepCount;
+      this.worklist = worklist;
     }
 
     /**
@@ -173,20 +221,75 @@ public final class Solver implements Iterable<Grid> {
     }
 
     @Nullable private Grid computeNext() {
-      while (!worklist.isEmpty()) {
-        ++stepCount;
+      while (!worklist.isComplete()) {
+        stepCount += worklist.run(10000);
+        if (worklist.getFound() != null)
+          return worklist.getFound();
+      }
+      return null;
+    }
+  }
+
+  /**
+   * Forms the core of the solution iterators: a depth-first searcher for
+   * solutions that can be run for a set number of steps, instead of
+   * indefinitely.
+   */
+  public final class Worklist {
+    @Nullable private Grid found;
+    private final ArrayDeque<Assignment> worklist = new ArrayDeque<Assignment>();
+    private final Location[] locations;
+
+    public Worklist() {
+      if (startMarks == null) {
+        this.locations = null;
+      } else {
+        this.locations = Solver.this.locations.clone();
+        Collections.shuffle(Arrays.asList(this.locations), random);
+        if (!pushNextAssignments(startMarks)) {
+          found = startMarks.asGrid();
+        }
+      }
+    }
+
+    /**
+     * Returns the grid found on the most recent call to {@link #run}, or null
+     * if it stopped before finding one.
+     */
+    @Nullable public Grid getFound() {
+      return found;
+    }
+
+    /**
+     * Tells whether this worklist has finished searching for solutions.
+     */
+    public boolean isComplete() {
+      return worklist.isEmpty();
+    }
+
+    public boolean isCompleteOrFoundSomething() {
+      return isComplete() || found != null;
+    }
+
+    /**
+     * Runs through the remaining work, but taking not more than the given
+     * number of steps.  Returns the number of steps taken in this pass.
+     */
+    public int run(int maxSteps) {
+      found = null;
+      int count = 0;
+      while (!worklist.isEmpty() && count++ < maxSteps) {
         Assignment assignment = worklist.removeFirst();
         Marks.Builder builder = assignment.marks.asBuilder();
         if (builder.assign(assignment.location, assignment.numeral)) {
           Marks marks = builder.build();
-          if (!pushNextAssignments(marks)) return marks.asGrid();
+          if (!pushNextAssignments(marks)) {
+            found = marks.asGrid();
+            break;
+          }
         }
       }
-      return null;  // All done.
-    }
-
-    protected boolean pushInitialAssignments(Marks marks) {
-      return pushNextAssignments(marks);
+      return count;
     }
 
     /** Returns true if there are more assignments to be made. */
@@ -207,17 +310,21 @@ public final class Solver implements Iterable<Grid> {
      * Chooses a random set of mutually exclusive assignments from those
      * available in the given marks, or null if there aren't any left.
      */
-    @Nullable protected Assignment[] chooseNextAssignments(Marks marks) {
+    @Nullable private Assignment[] chooseNextAssignments(Marks marks) {
       int size = 9;
       int count = 0;
       Location current = null;
-      for (Location loc : Location.ALL) {
+      for (Location loc : locations) {
         NumSet possible = marks.get(loc);
         if (possible.size() < 2 || possible.size() > size) continue;
         if (possible.size() < size) {
           count = 0;
           size = possible.size();
         }
+        // Take the first size-2 location:
+        if (size == 2)
+          return makeAssignments(marks, loc);
+
         // Maintain a random choice of the smallest size seen so far.
         if (random.nextInt(++count) == 0) {
           current = loc;
@@ -246,104 +353,6 @@ public final class Solver implements Iterable<Grid> {
       this.marks = marks;
       this.location = location;
       this.numeral = numeral;
-    }
-  }
-
-  private class IterList extends Iter {
-    protected /*final*/ List<Location> locations;
-
-    @Override protected boolean pushInitialAssignments(Marks marks) {
-      makeLocations(marks);
-      return super.pushInitialAssignments(marks);
-    }
-
-    protected void makeLocations(Marks marks) {
-      locations = Lists.newArrayList();
-      for (Location loc : Location.ALL)
-        if (marks.get(loc).size() > 1)
-          locations.add(loc);
-    }
-
-    @Override @Nullable protected Assignment[] chooseNextAssignments(Marks marks) {
-      int size = 9;
-      int count = 0;
-      Location current = null;
-      for (Location loc : locations) {
-        NumSet possible = marks.get(loc);
-        if (possible.size() < 2 || possible.size() > size) continue;
-        if (possible.size() < size) {
-          count = 0;
-          size = possible.size();
-        }
-        // Maintain a random choice of the smallest size seen so far.
-        if (random.nextInt(++count) == 0) {
-          current = loc;
-        }
-      }
-      if (count == 0) return null;
-      return makeAssignments(marks, current);
-    }
-  }
-
-  private class IterShuffle extends IterList {
-    @Override protected void makeLocations(Marks marks) {
-      super.makeLocations(marks);
-      Collections.shuffle(locations, random);
-    }
-
-    @Override @Nullable protected Assignment[] chooseNextAssignments(Marks marks) {
-      int size = 9;
-      int count = 0;
-      Location current = null;
-      for (Location loc : locations) {
-        NumSet possible = marks.get(loc);
-        if (possible.size() < 2 || possible.size() > size) continue;
-        if (possible.size() < size) {
-          count = 0;
-          size = possible.size();
-        }
-        // Take the first size-2 location:
-        if (size == 2)
-          return makeAssignments(marks, loc);
-
-        // Maintain a random choice of the smallest size seen so far.
-        if (random.nextInt(++count) == 0) {
-          current = loc;
-        }
-      }
-      if (count == 0) return null;
-      return makeAssignments(marks, current);
-    }
-  }
-
-  private class IterCycle extends IterShuffle {
-    private final int factor;
-    private /*final*/ Iterator<Location> locIterator;
-
-    IterCycle(int factor) {
-      this.factor = factor;
-    }
-
-    @Override protected void makeLocations(Marks marks) {
-      super.makeLocations(marks);
-      locIterator = Iterators.cycle(locations);
-    }
-
-    @Override @Nullable protected Assignment[] chooseNextAssignments(Marks marks) {
-      int size = 10;
-      int max = locations.size();
-      Location current = null;
-      for (int count = 0; count < max; ++count) {
-        Location loc = locIterator.next();
-        NumSet possible = marks.get(loc);
-        if (possible.size() > 1 && possible.size() < size) {
-          current = loc;
-          size = possible.size();
-          max = Math.min(max, (size - 2) * factor);
-        }
-      }
-      if (current == null) return null;
-      return makeAssignments(marks, current);
     }
   }
 }

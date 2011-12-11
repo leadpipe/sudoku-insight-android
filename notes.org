@@ -1,12 +1,21 @@
 * Solver
 ** DONE Replace units & all strategies with various takes on locations
 ** DONE Generate stats, summarize, compare
-** TODO Separate worklist processing from the iterator
+** DONE Separate worklist processing from the iterator
+** DONE Go with the shuffle variant of the solver
+** TODO Experiment with different params for fast solver
 
 * Generator
 ** TODO Investigate solving an empty grid: how slow can it get?
+** TODO Put together a generator that keeps adding givens until it finds a unique solution
+** TODO Play with subsequently subtracting givens
+** TODO What about non-unique puzzles?
+
+* Hints
+** TODO Start work on basic visual strategies
 
 * App
+** TODO Write basic grid display
 
 * Math
 ** Pathological grids
