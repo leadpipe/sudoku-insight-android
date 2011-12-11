@@ -28,7 +28,7 @@ from stats import RunningStat
 locale.setlocale(locale.LC_ALL, "en_US")
 settings.configure(DEBUG=True, TEMPLATE_DEBUG=True, TEMPLATE_DIRS=("."), TEMPLATE_STRING_IF_INVALID = "%s")
 
-def summarize_lines(lines, nstrategies):
+def SummarizeLines(lines, nstrategies):
   per_step = [RunningStat() for _ in range(nstrategies)]
   detailed = [defaultdict(lambda: {"overall": RunningStat(),
                                    "by_steps": defaultdict(RunningStat)}) for _ in range(nstrategies)]
@@ -46,19 +46,19 @@ def summarize_lines(lines, nstrategies):
       steps[n].append(num_steps)
   return zip(per_step, detailed, steps)
 
-def construct_data(file_in):
+def ConstructData(file_in):
   line = file_in.next()
   if line.startswith("Generating"):
     line = file_in.next()
   else:
-    return usage("No header lines found")
+    return Usage("No header lines found")
 
   headers = line.split("\t")
   strategies = [h.split(":")[0] for h in headers if h.endswith(":Num Solutions")]
   nstrategies = len(strategies)
 
-  summaries = summarize_lines(file_in, nstrategies)
-  def for_strategy(n):
+  summaries = SummarizeLines(file_in, nstrategies)
+  def ForStrategy(n):
     (per_step, detailed, steps) = summaries[n]
     return {"name": strategies[n],
             "per_step": per_step,
@@ -69,21 +69,21 @@ def construct_data(file_in):
                               for num_solutions, details in detailed.items() }}
   return { "when": datetime.fromtimestamp(os.fstat(file_in.fileno()).st_mtime),
            "count": summaries[0][0].count_formatted(),
-           "strategies": [ for_strategy(i) for i in range(nstrategies) ] }
+           "strategies": [ ForStrategy(i) for i in range(nstrategies) ] }
 
-def usage(msg = None):
+def Usage(msg = None):
   print "Usage: %s <fname>" % sys.argv[0]
   if msg:
     print msg
   exit(1)
 
-def main(args):
-  if len(args) != 1:
-    usage();
-  with open(args[0], "r") as file_in:
-    data = construct_data(file_in)
+def main():
+  if len(sys.argv) != 2:
+    Usage();
+  with open(sys.argv[1], "r") as file_in:
+    data = ConstructData(file_in)
 
-  (root, _) = os.path.splitext(args[0])
+  (root, _) = os.path.splitext(sys.argv[1])
   out_name = "%s-summary.html" % root
 
   with open(out_name, "w") as file_out:
@@ -92,4 +92,4 @@ def main(args):
   print "Summary written to %s" % out_name
 
 if __name__ == "__main__":
-  main(sys.argv[1:])
+  main()
