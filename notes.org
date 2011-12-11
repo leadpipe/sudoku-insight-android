@@ -1,6 +1,7 @@
 * Solver
-** TODO Replace units & all strategies with various takes on locations
-** TODO Generate stats, summarize, compare
+** DONE Replace units & all strategies with various takes on locations
+** DONE Generate stats, summarize, compare
+** TODO Separate worklist processing from the iterator
 
 * Generator
 ** TODO Investigate solving an empty grid: how slow can it get?
