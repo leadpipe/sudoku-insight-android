@@ -56,6 +56,12 @@
     <td align=center>{{ strat.per_step.mean_formatted }} µs/step
         <div>σ: {{ strat.per_step.standard_deviation_formatted }}</div>
   {% endfor %}
+<tr>
+  <td>
+  {% for strat in strategies %}
+    <td align=center>{{ strat.total.mean_formatted }} avg µs
+        <div>σ: {{ strat.total.standard_deviation_formatted }}</div>
+  {% endfor %}
 
 {% for solns in "012"|make_list %}
 <tr class=solns>
@@ -65,8 +71,16 @@
       {% for num, detailed in strat.by_solutions.items %}
       {% if num|stringformat:"d" == solns %}
       <div class=overall>
-        {{ detailed.overall.mean_formatted }} µs
-        avg of {{ detailed.overall.count_formatted }}
+        {{ detailed.steps.mean_formatted }} avg steps
+        of {{ detailed.steps.count_formatted }}
+        <div>σ: {{ detailed.steps.standard_deviation_formatted }}</div>
+      </div>
+      <div class=overall>
+        {{ detailed.per_step.mean_formatted }} µs/step
+        <div>σ: {{ detailed.per_step.standard_deviation_formatted }}</div>
+      </div>
+      <div class=overall>
+        {{ detailed.overall.mean_formatted }} avg µs
         <div>σ: {{ detailed.overall.standard_deviation_formatted }}</div>
       </div>
       <table width=100%>

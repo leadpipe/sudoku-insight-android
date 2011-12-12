@@ -22,9 +22,9 @@ def main():
     fields = line.split("\t")
     steps = [int(fields[i]) for i in range(3, len(fields), 2)]
     slow_count = sum([s > 32 for s in steps])
-    if slow_count > 2:
-      avg_slow = sum([s for s in steps if s > 32]) / slow_count
-      results.append((slow_count, avg_slow, fields[0], fields[1], fields[2]))
+    avg_slow = sum([s for s in steps if s > 32]) / slow_count
+    if slow_count * avg_slow > 500:
+      results.append((avg_slow, slow_count, fields[0], fields[1], fields[2]))
 
   for result in sorted(results, reverse=True):
     print "{}\t{}\t{}\t{}\t{}".format(*result)

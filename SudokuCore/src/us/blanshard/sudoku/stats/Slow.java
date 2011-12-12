@@ -60,7 +60,7 @@ public class Slow {
       int fnum = 5;
       for (Solver.Strategy strategy : Solver.Strategy.values()) {
         rerunIfSlow(fields, fnum, strategy);
-        fnum += 6;
+        fnum += 2;
       }
     }
   }
@@ -75,18 +75,13 @@ public class Slow {
     if (Integer.parseInt(fields[stepIndex]) > STEPS_CUTOFF) {
       Grid start = Grid.fromString(fields[0]);
       Random random = new Random(decode(fields[3]));
-      int numSolutions = Integer.parseInt(fields[stepIndex - 1]);
 
       // First 3 fields: the starting grid, the number of solutions, the strategy.
-      System.out.printf("%s\t%d\t%s", fields[0], numSolutions, strategy);
+      System.out.printf("%s\t%s\t%s", fields[0], fields[4], strategy);
 
       for (int i = 0; i < NUM_RETRIES; ++i) {
         Solver.Result result = Solver.solve(start, random, strategy);
         System.out.printf("\t%d\t%d", result.numSteps, result.numStepsAfterSolution);
-        if (result.numSolutions != numSolutions) {
-          System.err.printf("Solver error: %s produced %d solutions instead of %d for %s%n",
-                            strategy, result.numSolutions, numSolutions, fields[0]);
-        }
       }
       System.out.println();
     }

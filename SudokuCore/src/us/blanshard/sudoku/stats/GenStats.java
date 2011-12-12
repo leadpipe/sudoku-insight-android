@@ -62,9 +62,9 @@ public class GenStats {
 
   private static void generate(int count, long seed, boolean print) {
     if (print) {
-      System.err.print("Start\tGenerator\tGen Micros\tSeed");
+      System.err.print("Start\tGenerator\tGen Micros\tSeed\tNum Solutions");
       for (Solver.Strategy strategy : Solver.Strategy.values()) {
-        System.err.printf("\t%s:Num Solutions\tNum Steps\tMicros", strategy);
+        System.err.printf("\t%s:Num Steps\tMicros", strategy);
       }
       System.err.println();
     }
@@ -79,9 +79,7 @@ public class GenStats {
       long genMicros = stopwatch.elapsedTime(MICROSECONDS);
       long solverSeed = random.nextLong();
 
-      if (print)
-        System.out.printf("%s\t%s\t%d\t%#x",
-                          start.toFlatString(), generator, genMicros, solverSeed);
+      boolean first = true;
 
       for (Solver.Strategy strategy : Solver.Strategy.values()) {
         stopwatch.reset().start();
@@ -89,8 +87,14 @@ public class GenStats {
         stopwatch.stop();
 
         long micros = stopwatch.elapsedTime(MICROSECONDS);
-        if (print)
-          System.out.printf("\t%d\t%d\t%d", result.numSolutions, result.numSteps, micros);
+        if (print) {
+          if (first)
+            System.out.printf("%s\t%s\t%d\t%#x\t%d", start.toFlatString(), generator, genMicros,
+                              solverSeed, result.numSolutions);
+          System.out.printf("\t%d\t%d", result.numSteps, micros);
+        }
+
+        first = false;
       }
       if (print)
         System.out.println();
