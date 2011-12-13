@@ -42,6 +42,14 @@ public final class Solver implements Iterable<Grid> {
   /**
    * Solves the given starting grid, returns a summary of the result.
    */
+  public static Result solve(Grid start, Random random) {
+    return solve(start, random, Strategy.FAST);
+  }
+
+  /**
+   * Solves the given starting grid using the given strategy, returns a summary
+   * of the result.
+   */
   public static Result solve(Grid start, Random random, Strategy strategy) {
     return new Solver(start, random, strategy).result();
   }
@@ -78,7 +86,7 @@ public final class Solver implements Iterable<Grid> {
    */
   public enum Strategy {
     SIMPLE {
-      @Override Iter getIterator(Solver solver) {
+      @Override public Iter getIterator(Solver solver) {
         int numSteps = 0;
         Worklist worklist = solver.new Worklist();
         while (!worklist.isCompleteOrFoundSomething()) {
@@ -87,64 +95,17 @@ public final class Solver implements Iterable<Grid> {
         return solver.new Iter(worklist, numSteps);
       }
     },
-    FAST_100_1_60_10 {  // Roughly corresponds to David Bau's parameters
-      @Override Iter getIterator(Solver solver) {
-        return getIterator(solver, 100, 1.0, 60, 10);
-      }
-    },
-    FAST_75_2_40_0 {
-      @Override Iter getIterator(Solver solver) {
-        return getIterator(solver, 50, 2.0, 30, 0);
-      }
-    },
-    FAST_50_2_30_0 {
-      @Override Iter getIterator(Solver solver) {
-        return getIterator(solver, 50, 2.0, 30, 0);
-      }
-    },
-    FAST_40_2_25_0 {
-      @Override Iter getIterator(Solver solver) {
-        return getIterator(solver, 50, 2.0, 30, 0);
+    FAST {
+      @Override public Iter getIterator(Solver solver) {
+        // Lots of testing to arrive at these values.
+        return solver.makeIterator(50, 1.5, 25, 5);
       }
     };
 
     /**
      * Returns an Iter instance that corresponds to this strategy.
      */
-    abstract Iter getIterator(Solver solver);
-
-    private static Iter getIterator(Solver solver, int longSteps, double factor, int shortSteps, int delta) {
-      int numSteps = 0;
-      Worklist worklist;
-      // The idea behind this is that some grids that take many steps only do so
-      // under peculiar circumstances, so it may be beneficial to try
-      // alternative paths to see if a short solution can be found.  The mean
-      // number of steps required to solve a grid is about 23, but some grids
-      // require thousands or tens of thousands of steps.
-      Worklist longRunner = solver.new Worklist();
-      if (longRunner.isCompleteOrFoundSomething()) {
-        worklist = longRunner;
-      } else {
-        while (true) {
-          numSteps += longRunner.run(longSteps);
-          if (longRunner.isCompleteOrFoundSomething()) {
-            worklist = longRunner;
-            break;
-          }
-          Worklist shortRunner = solver.new Worklist();
-          // Note we don't have to ask if the short runner found something at
-          // construction time, because the long runner didn't.
-          numSteps += shortRunner.run(shortSteps);
-          if (shortRunner.isCompleteOrFoundSomething()) {
-            worklist = shortRunner;
-            break;
-          }
-          shortSteps += delta;
-          longSteps = (int) (longSteps * factor);
-        }
-      }
-      return solver.new Iter(worklist, numSteps);
-    }
+    public abstract Iter getIterator(Solver solver);
   }
 
   private final Grid start;
@@ -180,6 +141,44 @@ public final class Solver implements Iterable<Grid> {
 
   public Result result() {
     return new Result();
+  }
+
+  /**
+   * Makes an iterator using several parameters to control the creation and
+   * running of the worklist the iterator will use.
+   *
+   * <p> The idea behind this is that some grids that take many steps only do so
+   * under peculiar circumstances, so it may be beneficial to try alternative
+   * paths to see if a short solution can be found.  The mean number of steps
+   * required to solve a grid is about 23, but some grids require thousands or
+   * tens of thousands of steps.
+   */
+  public Iter makeIterator(int longSteps, double factor, int shortSteps, int delta) {
+    int numSteps = 0;
+    Worklist worklist;
+    Worklist longRunner = new Worklist();
+    if (longRunner.isCompleteOrFoundSomething()) {
+      worklist = longRunner;
+    } else {
+      while (true) {
+        numSteps += longRunner.run(longSteps);
+        if (longRunner.isCompleteOrFoundSomething()) {
+          worklist = longRunner;
+          break;
+        }
+        Worklist shortRunner = new Worklist();
+        // Note we don't have to ask if the short runner found something at
+        // construction time, because the long runner didn't.
+        numSteps += shortRunner.run(shortSteps);
+        if (shortRunner.isCompleteOrFoundSomething()) {
+          worklist = shortRunner;
+          break;
+        }
+        shortSteps += delta;
+        longSteps = (int) (longSteps * factor);
+      }
+    }
+    return new Iter(worklist, numSteps);
   }
 
   public final class Iter implements Iterator<Grid> {
