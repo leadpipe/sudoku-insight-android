@@ -3,10 +3,11 @@
 ** DONE Generate stats, summarize, compare
 ** DONE Separate worklist processing from the iterator
 ** DONE Go with the shuffle variant of the solver
-** TODO Experiment with different params for fast solver
+** DONE Experiment with different params for fast solver
 
 * Generator
-** TODO Investigate solving an empty grid: how slow can it get?
+** DONE Investigate solving an empty grid: how slow can it get?
+   - A: not very
 ** TODO Put together a generator that keeps adding givens until it finds a unique solution
 ** TODO Play with subsequently subtracting givens
 ** TODO What about non-unique puzzles?
@@ -16,6 +17,7 @@
 
 * App
 ** TODO Write basic grid display
+** TODO Write basic gameplay
 
 * Math
 ** Pathological grids
