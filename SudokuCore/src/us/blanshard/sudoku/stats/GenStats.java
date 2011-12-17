@@ -38,18 +38,17 @@ public class GenStats {
     long seed;
     try {
       count = Integer.decode(args[0]);
-      seed = args.length > 1 ? Long.decode(args[1]) : System.currentTimeMillis();
+      seed = args.length > 1 ? Slow.decode(args[1]) : System.currentTimeMillis();
     } catch (NumberFormatException e) {
       exitWithUsage();
       return;  // Convince the compiler.
     }
 
-    System.err.printf("Generating %d puzzles from seed %#x%n", count, seed);
+    System.out.printf("Generating %d puzzles from seed %#x%n", count, seed);
 
     // Start with a few rounds with a fixed seed and no printing, to get all the
-    // machinery warmed up.  Empirically it takes around 35 rounds to get the
-    // fully optimized code paths.
-    generate(40, 0, false);
+    // machinery warmed up.
+    generate(400, 0, false);
 
     // Then do the real work.
     generate(count, seed, true);
@@ -62,42 +61,24 @@ public class GenStats {
 
   private static void generate(int count, long seed, boolean print) {
     if (print) {
-      System.err.print("Start\tGenerator\tGen Micros\tSeed\tNum Solutions");
-      for (Solver.Strategy strategy : Solver.Strategy.values()) {
-        System.err.printf("\t%s:Num Steps\tMicros", strategy);
-      }
-      System.err.println();
+      System.out.println("Seed\tNum Steps\tMicros\tGrid");
     }
     Random random = new Random(seed);
     while (count-- > 0) {
-      Generator generator = Generator.choose(random);
+
+      long solverSeed = random.nextLong();
+      Solver solver = new Solver(Grid.BLANK, new Random(solverSeed), Solver.Strategy.SIMPLE);
+      Solver.Iter iter = solver.iterator();
 
       Stopwatch stopwatch = new Stopwatch().start();
-      Grid start = generator.generate(random);
+      Grid grid = iter.next();
       stopwatch.stop();
 
-      long genMicros = stopwatch.elapsedTime(MICROSECONDS);
-      long solverSeed = random.nextLong();
-
-      boolean first = true;
-
-      for (Solver.Strategy strategy : Solver.Strategy.values()) {
-        stopwatch.reset().start();
-        Solver.Result result = Solver.solve(start, new Random(solverSeed), strategy);
-        stopwatch.stop();
-
-        long micros = stopwatch.elapsedTime(MICROSECONDS);
-        if (print) {
-          if (first)
-            System.out.printf("%s\t%s\t%d\t%#x\t%d", start.toFlatString(), generator, genMicros,
-                              solverSeed, result.numSolutions);
-          System.out.printf("\t%d\t%d", result.numSteps, micros);
-        }
-
-        first = false;
+      long micros = stopwatch.elapsedTime(MICROSECONDS);
+      if (print) {
+        System.out.printf("%#x\t%d\t%d\t%s%n",
+                          solverSeed, iter.getStepCount(), micros, grid.toFlatString());
       }
-      if (print)
-        System.out.println();
     }
   }
 }

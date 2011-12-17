@@ -87,7 +87,7 @@ public class Slow {
     }
   }
 
-  private static long decode(String s) {
+  public static long decode(String s) {
     if (s.startsWith("0x")) return new BigInteger(s.substring(2), 16).longValue();
     return Long.decode(s);  // Can't use generally because it barfs on too-large numbers.
   }
