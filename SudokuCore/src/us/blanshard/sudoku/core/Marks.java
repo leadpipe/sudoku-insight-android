@@ -25,6 +25,9 @@ import java.util.Map;
  *
  * <p> The outer class is immutable; has a nested builder.
  *
+ * <p> The builder's mutually recursive assign/eliminate methods are due to
+ * Peter Norvig (http://norvig.com/sudoku.html).
+ *
  * @author Luke Blanshard
  */
 public final class Marks {
