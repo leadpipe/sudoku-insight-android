@@ -19,15 +19,15 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.core.Solver;
+import us.blanshard.sudoku.core.Symmetry;
 
 import com.google.common.base.Stopwatch;
 
 import java.util.Random;
 
 /**
- * Generates random Sudoku grids, solves them, and spits out statistics about
- * the solvers.
+ * Generates random Sudoku grids, and spits out statistics about the various
+ * generator strategies.
  *
  * @author Luke Blanshard
  */
@@ -48,7 +48,7 @@ public class GenStats {
 
     // Start with a few rounds with a fixed seed and no printing, to get all the
     // machinery warmed up.
-    generate(400, 0, false);
+    generate(5, 0, false);
 
     // Then do the real work.
     generate(count, seed, true);
@@ -61,24 +61,27 @@ public class GenStats {
 
   private static void generate(int count, long seed, boolean print) {
     if (print) {
-      System.out.println("Seed\tNum Steps\tMicros\tGrid");
+      System.out.print("Symmetry\tSeed");
+      for (Generator generator : Generator.values())
+        System.out.printf("\t%s:Num Clues\tMicros", generator);
+      System.out.println();
     }
     Random random = new Random(seed);
     while (count-- > 0) {
+      Symmetry symmetry = Symmetry.choose(random);
+      long genSeed = random.nextLong();
+      if (print) System.out.printf("%s\t%#x", symmetry, genSeed);
 
-      long solverSeed = random.nextLong();
-      Solver solver = new Solver(Grid.BLANK, new Random(solverSeed), Solver.Strategy.SIMPLE);
-      Solver.Iter iter = solver.iterator();
+      for (Generator generator : Generator.values()) {
+        Stopwatch stopwatch = new Stopwatch().start();
+        Grid grid = generator.generate(new Random(genSeed), symmetry);
+        stopwatch.stop();
 
-      Stopwatch stopwatch = new Stopwatch().start();
-      Grid grid = iter.next();
-      stopwatch.stop();
-
-      long micros = stopwatch.elapsedTime(MICROSECONDS);
-      if (print) {
-        System.out.printf("%#x\t%d\t%d\t%s%n",
-                          solverSeed, iter.getStepCount(), micros, grid.toFlatString());
+        long micros = stopwatch.elapsedTime(MICROSECONDS);
+        if (print) System.out.printf("\t%d\t%d", grid.size(), micros);
       }
+
+      if (print) System.out.println();
     }
   }
 }

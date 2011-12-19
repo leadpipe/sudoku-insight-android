@@ -28,11 +28,11 @@ public class GeneratorTest {
   private final Random random = new Random(123);
 
   @Test public void random() {
-    ensureBasicProperties(Generator.RANDOM.generate(random));
+    ensureBasicProperties(Symmetry.RANDOM.generate(random));
   }
 
   @Test public void classic() {
-    Grid grid = Generator.CLASSIC.generate(random);
+    Grid grid = Symmetry.CLASSIC.generate(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(grid.containsKey(loc), grid.containsKey(Location.of(80 - loc.index)));
@@ -40,7 +40,7 @@ public class GeneratorTest {
   }
 
   @Test public void mirror() {
-    Grid grid = Generator.MIRROR.generate(random);
+    Grid grid = Symmetry.MIRROR.generate(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -50,7 +50,7 @@ public class GeneratorTest {
   }
 
   @Test public void doubleMirror() {
-    Grid grid = Generator.DOUBLE_MIRROR.generate(random);
+    Grid grid = Symmetry.DOUBLE_MIRROR.generate(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -63,7 +63,7 @@ public class GeneratorTest {
   }
 
   @Test public void diagonal() {
-    Grid grid = Generator.DIAGONAL.generate(random);
+    Grid grid = Symmetry.DIAGONAL.generate(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -72,8 +72,18 @@ public class GeneratorTest {
     }
   }
 
+  @Test public void rotational() {
+    Grid grid = Symmetry.ROTATIONAL.generate(random);
+    ensureBasicProperties(grid);
+    for (Location loc : Location.ALL) {
+      assertEquals(
+          grid.containsKey(loc),
+          grid.containsKey(Location.ofIndices(loc.column.index, 8 - loc.row.index)));
+    }
+  }
+
   @Test public void blockwise() {
-    Grid grid = Generator.BLOCKWISE.generate(random);
+    Grid grid = Symmetry.BLOCKWISE.generate(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -83,9 +93,25 @@ public class GeneratorTest {
     }
   }
 
+  @Test public void strategies() {
+    for (Generator generator : Generator.values()) {
+      Symmetry symmetry = Symmetry.choose(random);
+      Grid grid = generator.generate(random, symmetry);
+      ensureBasicProperties(grid);
+      if (!generator.toString().endsWith("RANDOM")) {
+        for (Location loc : Location.ALL) {
+          for (Location exp : symmetry.expand(loc)) {
+            assertEquals(grid.get(loc) == null, grid.get(exp) == null);
+          }
+        }
+      }
+    }
+  }
+
   private void ensureBasicProperties(Grid grid) {
     assertEquals(true, grid.size() >= 17);
     assertEquals(true, Sets.newHashSet(grid.values()).size() >= 8);
     assertEquals(true, Marks.builder().assignAll(grid));
+    assertEquals(1, Solver.solve(grid, random).numSolutions);
   }
 }

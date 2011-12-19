@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sudoku Generation Stats Summary</title>
+<style>
+  h1, h2 {
+    text-align: center;
+  }
+  h3 {
+    margin: 2ex 3em;
+  }
+  hr {
+    width: 50%;
+    margin-top: 4ex;
+  }
+  table {
+    border-collapse: collapse;
+  }
+  td {
+    vertical-align: top;
+    text-align: center;
+    padding: 1ex 1em;
+  }
+  .tophead {
+    font-weight: bold;
+  }
+  .lefthead {
+    font-weight: bold;
+    text-align: left;
+    vertical-align: middle;
+  }
+  .bottomborder {
+    border-bottom: solid 2px #777;
+  }
+  .rightborder {
+    border-right: solid 2px #777;
+  }
+  .clues {
+    background: #f7f7f7;
+  }
+  .time {
+    padding-top: 2ex;
+  }
+  .better {
+    color: #050;
+  }
+  .worse {
+    color: #600;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>Summary of 100,000 Puzzle Generations</h1>
+<h2>12/18/2011 7:42 p.m.</h2>
+
+<h3>Generators by symmetry</h3>
+<table>
+<tr>
+  <td>
+  <td><u>Generator:</u>
+  
+  <td class=tophead>Simple
+  
+  <td class=tophead>Subtractive
+  
+  <td class=tophead>Subtractive Random
+  
+  <td class=tophead>Additive
+  
+  <td class=tophead>Additive Random
+  
+  <td class=tophead>Additive Subtractive
+  
+  <td class=tophead>Additive Subtractive Random
+  
+  <td class=tophead>Additive Subtractive Subtractive Random
+  
+<tr>
+  <td>
+  <td>
+  
+    <td class=time> 0.59863 ms
+        <div>σ:  0.32705</div>
+  
+    <td class=time>  5.4496 ms
+        <div>σ:   2.3417</div>
+  
+    <td class=time>   12.66 ms
+        <div>σ:   2.3137</div>
+  
+    <td class=time>    2.93 ms
+        <div>σ:   1.2239</div>
+  
+    <td class=time>   4.539 ms
+        <div>σ:   1.2375</div>
+  
+    <td class=time>  12.829 ms
+        <div>σ:    2.212</div>
+  
+    <td class=time>  12.926 ms
+        <div>σ:   2.2441</div>
+  
+    <td class=time>  20.013 ms
+        <div>σ:   3.9049</div>
+  
+<tr>
+  <td><u>Symmetry</u>
+  <td>
+  
+    <td class="clues bottomborder">  37.534 clues
+        <div>σ:   4.3738</div>
+  
+    <td class="clues bottomborder">  28.468 clues
+        <div>σ:   3.0539</div>
+  
+    <td class="clues bottomborder">  24.381 clues
+        <div>σ:   1.1447</div>
+  
+    <td class="clues bottomborder">  36.154 clues
+        <div>σ:   4.2602</div>
+  
+    <td class="clues bottomborder">  32.226 clues
+        <div>σ:   2.2539</div>
+  
+    <td class="clues bottomborder">  28.425 clues
+        <div>σ:   3.0276</div>
+  
+    <td class="clues bottomborder">  24.389 clues
+        <div>σ:   1.1339</div>
+  
+    <td class="clues bottomborder">  24.373 clues
+        <div>σ:   1.1486</div>
+  
+
+
+<tr>
+  <td rowspan=2 class=lefthead>Blockwise
+    <div style="font-weight: normal">(115,160 puzzles)</div>
+  <td class="time rightborder">
+    <div>  8.6094 ms</div>
+    <div>σ:   6.6278</div>
+  
+  <td class=time>
+    <div>  0.5955 ms</div>
+    <div>σ:  0.29521</div>
+  
+  <td class=time>
+    <div>  3.9641 ms</div>
+    <div>σ:  0.91287</div>
+  
+  <td class=time>
+    <div>  12.391 ms</div>
+    <div>σ:   1.9215</div>
+  
+  <td class=time>
+    <div>  2.2841 ms</div>
+    <div>σ:    0.758</div>
+  
+  <td class=time>
+    <div>  4.4803 ms</div>
+    <div>σ:   1.1667</div>
+  
+  <td class=time>
+    <div>  12.242 ms</div>
+    <div>σ:   2.0743</div>
+  
+  <td class=time>
+    <div>   12.27 ms</div>
+    <div>σ:   1.9655</div>
+  
+  <td class=time>
+    <div>  20.648 ms</div>
+    <div>σ:   2.8308</div>
+  
+
+<tr>
+  <td class="clues rightborder">
+    <div>  29.518 clues</div>
+    <div>σ:   5.3298</div>
+  
+  <td class=clues>
+    <div>  37.281 clues</div>
+    <div>σ:   3.6674</div>
+  
+  <td class=clues>
+    <div>  28.958 clues</div>
+    <div>σ:   1.8517</div>
+  
+  <td class=clues>
+    <div>   24.41 clues</div>
+    <div>σ:   1.1538</div>
+  
+  <td class=clues>
+    <div>  36.019 clues</div>
+    <div>σ:   3.4448</div>
+  
+  <td class=clues>
+    <div>  31.703 clues</div>
+    <div>σ:   2.1703</div>
+  
+  <td class=clues>
+    <div>  28.968 clues</div>
+    <div>σ:   1.8643</div>
+  
+  <td class=clues>
+    <div>  24.409 clues</div>
+    <div>σ:   1.1456</div>
+  
+  <td class=clues>
+    <div>  24.398 clues</div>
+    <div>σ:   1.1603</div>
+  
+
+<tr>
+  <td rowspan=2 class=lefthead>Classic
+    <div style="font-weight: normal">(114,272 puzzles)</div>
+  <td class="time rightborder">
+    <div>  9.1396 ms</div>
+    <div>σ:   6.5515</div>
+  
+  <td class=time>
+    <div> 0.59215 ms</div>
+    <div>σ:  0.26387</div>
+  
+  <td class=time>
+    <div>  5.5441 ms</div>
+    <div>σ:    1.026</div>
+  
+  <td class=time>
+    <div>  13.537 ms</div>
+    <div>σ:   2.0446</div>
+  
+  <td class=time>
+    <div>  2.9873 ms</div>
+    <div>σ:   0.8735</div>
+  
+  <td class=time>
+    <div>   4.557 ms</div>
+    <div>σ:   1.1555</div>
+  
+  <td class=time>
+    <div>  12.629 ms</div>
+    <div>σ:   2.1272</div>
+  
+  <td class=time>
+    <div>  12.695 ms</div>
+    <div>σ:   2.0212</div>
+  
+  <td class=time>
+    <div>  20.574 ms</div>
+    <div>σ:   2.7605</div>
+  
+
+<tr>
+  <td class="clues rightborder">
+    <div>  28.944 clues</div>
+    <div>σ:   5.0787</div>
+  
+  <td class=clues>
+    <div>   36.51 clues</div>
+    <div>σ:   3.1929</div>
+  
+  <td class=clues>
+    <div>  27.433 clues</div>
+    <div>σ:   1.5628</div>
+  
+  <td class=clues>
+    <div>  24.297 clues</div>
+    <div>σ:   1.1286</div>
+  
+  <td class=clues>
+    <div>  35.072 clues</div>
+    <div>σ:   2.9701</div>
+  
+  <td class=clues>
+    <div>  32.141 clues</div>
+    <div>σ:   2.2112</div>
+  
+  <td class=clues>
+    <div>  27.443 clues</div>
+    <div>σ:   1.5539</div>
+  
+  <td class=clues>
+    <div>  24.346 clues</div>
+    <div>σ:   1.1303</div>
+  
+  <td class=clues>
+    <div>  24.312 clues</div>
+    <div>σ:   1.1314</div>
+  
+
+<tr>
+  <td rowspan=2 class=lefthead>Diagonal
+    <div style="font-weight: normal">(112,880 puzzles)</div>
+  <td class="time rightborder">
+    <div>  9.2316 ms</div>
+    <div>σ:   6.5744</div>
+  
+  <td class=time>
+    <div>  0.5968 ms</div>
+    <div>σ:  0.30066</div>
+  
+  <td class=time>
+    <div>  5.8035 ms</div>
+    <div>σ:   1.1851</div>
+  
+  <td class=time>
+    <div>  13.756 ms</div>
+    <div>σ:   1.9487</div>
+  
+  <td class=time>
+    <div>  3.0888 ms</div>
+    <div>σ:   1.0482</div>
+  
+  <td class=time>
+    <div>  4.6109 ms</div>
+    <div>σ:   1.1848</div>
+  
+  <td class=time>
+    <div>  12.674 ms</div>
+    <div>σ:   2.2237</div>
+  
+  <td class=time>
+    <div>  12.723 ms</div>
+    <div>σ:   2.3385</div>
+  
+  <td class=time>
+    <div>    20.6 ms</div>
+    <div>σ:   2.9027</div>
+  
+
+<tr>
+  <td class="clues rightborder">
+    <div>  28.747 clues</div>
+    <div>σ:   4.7733</div>
+  
+  <td class=clues>
+    <div>  35.825 clues</div>
+    <div>σ:   3.0282</div>
+  
+  <td class=clues>
+    <div>   27.22 clues</div>
+    <div>σ:   1.4819</div>
+  
+  <td class=clues>
+    <div>  24.472 clues</div>
+    <div>σ:    1.135</div>
+  
+  <td class=clues>
+    <div>  34.391 clues</div>
+    <div>σ:   2.8061</div>
+  
+  <td class=clues>
+    <div>  31.979 clues</div>
+    <div>σ:    2.173</div>
+  
+  <td class=clues>
+    <div>  27.168 clues</div>
+    <div>σ:   1.4855</div>
+  
+  <td class=clues>
+    <div>  24.463 clues</div>
+    <div>σ:   1.1313</div>
+  
+  <td class=clues>
+    <div>  24.461 clues</div>
+    <div>σ:   1.1503</div>
+  
+
+<tr>
+  <td rowspan=2 class=lefthead>Double Mirror
+    <div style="font-weight: normal">(113,568 puzzles)</div>
+  <td class="time rightborder">
+    <div>  9.1582 ms</div>
+    <div>σ:   7.2415</div>
+  
+  <td class=time>
+    <div>  0.6069 ms</div>
+    <div>σ:  0.35825</div>
+  
+  <td class=time>
+    <div>   3.768 ms</div>
+    <div>σ:  0.95793</div>
+  
+  <td class=time>
+    <div>  12.845 ms</div>
+    <div>σ:   1.9033</div>
+  
+  <td class=time>
+    <div>  2.3573 ms</div>
+    <div>σ:  0.94407</div>
+  
+  <td class=time>
+    <div>  4.6294 ms</div>
+    <div>σ:   1.4376</div>
+  
+  <td class=time>
+    <div>  13.265 ms</div>
+    <div>σ:   2.3218</div>
+  
+  <td class=time>
+    <div>  13.478 ms</div>
+    <div>σ:   2.3989</div>
+  
+  <td class=time>
+    <div>  22.317 ms</div>
+    <div>σ:   3.0885</div>
+  
+
+<tr>
+  <td class="clues rightborder">
+    <div>  31.711 clues</div>
+    <div>σ:   7.1903</div>
+  
+  <td class=clues>
+    <div>  42.143 clues</div>
+    <div>σ:   4.5811</div>
+  
+  <td class=clues>
+    <div>  32.251 clues</div>
+    <div>σ:   2.5018</div>
+  
+  <td class=clues>
+    <div>  24.472 clues</div>
+    <div>σ:    1.193</div>
+  
+  <td class=clues>
+    <div>  40.819 clues</div>
+    <div>σ:   4.3783</div>
+  
+  <td class=clues>
+    <div>  32.981 clues</div>
+    <div>σ:   2.3073</div>
+  
+  <td class=clues>
+    <div>    32.1 clues</div>
+    <div>σ:    2.509</div>
+  
+  <td class=clues>
+    <div>  24.458 clues</div>
+    <div>σ:   1.1546</div>
+  
+  <td class=clues>
+    <div>  24.464 clues</div>
+    <div>σ:   1.1946</div>
+  
+
+<tr>
+  <td rowspan=2 class=lefthead>Mirror
+    <div style="font-weight: normal">(115,096 puzzles)</div>
+  <td class="time rightborder">
+    <div>  9.5378 ms</div>
+    <div>σ:   6.7363</div>
+  
+  <td class=time>
+    <div> 0.59414 ms</div>
+    <div>σ:  0.29406</div>
+  
+  <td class=time>
+    <div>   5.962 ms</div>
+    <div>σ:   1.1353</div>
+  
+  <td class=time>
+    <div>  14.027 ms</div>
+    <div>σ:   2.0736</div>
+  
+  <td class=time>
+    <div>  3.3408 ms</div>
+    <div>σ:  0.99081</div>
+  
+  <td class=time>
+    <div>   4.766 ms</div>
+    <div>σ:   1.2567</div>
+  
+  <td class=time>
+    <div>  13.146 ms</div>
+    <div>σ:   2.1534</div>
+  
+  <td class=time>
+    <div>  13.304 ms</div>
+    <div>σ:   2.3381</div>
+  
+  <td class=time>
+    <div>  21.162 ms</div>
+    <div>σ:   2.8737</div>
+  
+
+<tr>
+  <td class="clues rightborder">
+    <div>  29.409 clues</div>
+    <div>σ:   5.4705</div>
+  
+  <td class=clues>
+    <div>  37.667 clues</div>
+    <div>σ:   3.2339</div>
+  
+  <td class=clues>
+    <div>   27.98 clues</div>
+    <div>σ:    1.622</div>
+  
+  <td class=clues>
+    <div>  24.328 clues</div>
+    <div>σ:   1.1329</div>
+  
+  <td class=clues>
+    <div>  36.168 clues</div>
+    <div>σ:   3.0442</div>
+  
+  <td class=clues>
+    <div>  32.572 clues</div>
+    <div>σ:   2.2268</div>
+  
+  <td class=clues>
+    <div>    27.9 clues</div>
+    <div>σ:   1.6053</div>
+  
+  <td class=clues>
+    <div>  24.357 clues</div>
+    <div>σ:   1.1346</div>
+  
+  <td class=clues>
+    <div>  24.298 clues</div>
+    <div>σ:   1.1349</div>
+  
+
+<tr>
+  <td rowspan=2 class=lefthead>Random
+    <div style="font-weight: normal">(113,744 puzzles)</div>
+  <td class="time rightborder">
+    <div>  8.7359 ms</div>
+    <div>σ:   4.9154</div>
+  
+  <td class=time>
+    <div>   0.604 ms</div>
+    <div>σ:  0.37253</div>
+  
+  <td class=time>
+    <div>  9.8767 ms</div>
+    <div>σ:   1.5747</div>
+  
+  <td class=time>
+    <div>  9.9024 ms</div>
+    <div>σ:   1.6397</div>
+  
+  <td class=time>
+    <div>  4.5389 ms</div>
+    <div>σ:   1.0964</div>
+  
+  <td class=time>
+    <div>  4.5313 ms</div>
+    <div>σ:   1.1114</div>
+  
+  <td class=time>
+    <div>  13.474 ms</div>
+    <div>σ:   2.1983</div>
+  
+  <td class=time>
+    <div>  13.479 ms</div>
+    <div>σ:   2.1417</div>
+  
+  <td class=time>
+    <div>  13.481 ms</div>
+    <div>σ:   2.1391</div>
+  
+
+<tr>
+  <td class="clues rightborder">
+    <div>  27.395 clues</div>
+    <div>σ:   4.3314</div>
+  
+  <td class=clues>
+    <div>  33.571 clues</div>
+    <div>σ:   2.3559</div>
+  
+  <td class=clues>
+    <div>  24.304 clues</div>
+    <div>σ:   1.0945</div>
+  
+  <td class=clues>
+    <div>  24.304 clues</div>
+    <div>σ:   1.0945</div>
+  
+  <td class=clues>
+    <div>   32.04 clues</div>
+    <div>σ:   2.1645</div>
+  
+  <td class=clues>
+    <div>   32.04 clues</div>
+    <div>σ:   2.1645</div>
+  
+  <td class=clues>
+    <div>    24.3 clues</div>
+    <div>σ:   1.0998</div>
+  
+  <td class=clues>
+    <div>    24.3 clues</div>
+    <div>σ:   1.0998</div>
+  
+  <td class=clues>
+    <div>    24.3 clues</div>
+    <div>σ:   1.0998</div>
+  
+
+<tr>
+  <td rowspan=2 class=lefthead>Rotational
+    <div style="font-weight: normal">(115,280 puzzles)</div>
+  <td class="time rightborder">
+    <div>  8.5458 ms</div>
+    <div>σ:   6.9214</div>
+  
+  <td class=time>
+    <div> 0.60102 ms</div>
+    <div>σ:  0.38455</div>
+  
+  <td class=time>
+    <div>  3.2705 ms</div>
+    <div>σ:  0.83315</div>
+  
+  <td class=time>
+    <div>   12.16 ms</div>
+    <div>σ:   1.8497</div>
+  
+  <td class=time>
+    <div>  1.9295 ms</div>
+    <div>σ:  0.67304</div>
+  
+  <td class=time>
+    <div>  4.2014 ms</div>
+    <div>σ:   1.2479</div>
+  
+  <td class=time>
+    <div>  12.384 ms</div>
+    <div>σ:   2.0782</div>
+  
+  <td class=time>
+    <div>  12.542 ms</div>
+    <div>σ:   2.1493</div>
+  
+  <td class=time>
+    <div>  21.278 ms</div>
+    <div>σ:   2.9254</div>
+  
+
+<tr>
+  <td class="clues rightborder">
+    <div>  30.717 clues</div>
+    <div>σ:   6.3265</div>
+  
+  <td class=clues>
+    <div>  39.713 clues</div>
+    <div>σ:   4.3004</div>
+  
+  <td class=clues>
+    <div>  31.097 clues</div>
+    <div>σ:   2.3603</div>
+  
+  <td class=clues>
+    <div>   24.39 clues</div>
+    <div>σ:   1.1587</div>
+  
+  <td class=clues>
+    <div>  38.537 clues</div>
+    <div>σ:   4.1032</div>
+  
+  <td class=clues>
+    <div>  32.169 clues</div>
+    <div>σ:   2.2808</div>
+  
+  <td class=clues>
+    <div>   31.06 clues</div>
+    <div>σ:   2.3471</div>
+  
+  <td class=clues>
+    <div>  24.393 clues</div>
+    <div>σ:   1.1307</div>
+  
+  <td class=clues>
+    <div>   24.38 clues</div>
+    <div>σ:   1.1535</div>
+  
+
+
+</table>
+
+<hr>
+<h3>Generator deltas, left minus top</h3>
+<table>
+<tr>
+  <td>Generator
+  
+  <td class="tophead bottomborder">Simple
+  
+  <td class="tophead bottomborder">Subtractive
+  
+  <td class="tophead bottomborder">Subtractive Random
+  
+  <td class="tophead bottomborder">Additive
+  
+  <td class="tophead bottomborder">Additive Random
+  
+  <td class="tophead bottomborder">Additive Subtractive
+  
+  <td class="tophead bottomborder">Additive Subtractive Random
+  
+  <td class="tophead bottomborder">Additive Subtractive Subtractive Random
+  
+
+
+<tr>
+  <td rowspan=2 class="lefthead rightborder">Simple
+  
+  <td class=time>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+        -4.851</span> ms</div>
+    <div>σ:   2.3567</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -12.061</span> ms</div>
+    <div>σ:   2.3162</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -2.3314</span> ms</div>
+    <div>σ:   1.2612</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -3.9404</span> ms</div>
+    <div>σ:   1.2693</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -12.231</span> ms</div>
+    <div>σ:    2.217</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -12.327</span> ms</div>
+    <div>σ:   2.2489</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -19.415</span> ms</div>
+    <div>σ:   3.9074</div>
+    
+  
+
+<tr>
+  
+  <td class=clues>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        9.0661</span> clues</div>
+    <div>σ:    3.745</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        13.153</span> clues</div>
+    <div>σ:   4.4292</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        1.3802</span> clues</div>
+    <div>σ:   2.3893</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        5.3081</span> clues</div>
+    <div>σ:   4.0263</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        9.1093</span> clues</div>
+    <div>σ:   3.7698</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        13.145</span> clues</div>
+    <div>σ:   4.4384</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        13.161</span> clues</div>
+    <div>σ:   4.4328</div>
+    
+  
+
+<tr>
+  <td rowspan=2 class="lefthead rightborder">Subtractive
+  
+  <td class=time>
+    
+    <div><span class="worse">
+         4.851</span> ms</div>
+    <div>σ:   2.3567</div>
+    
+  
+  <td class=time>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -7.2103</span> ms</div>
+    <div>σ:   3.5196</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        2.5197</span> ms</div>
+    <div>σ:   1.8122</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+       0.91062</span> ms</div>
+    <div>σ:   2.5166</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -7.3795</span> ms</div>
+    <div>σ:   2.8168</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -7.4764</span> ms</div>
+    <div>σ:   2.8689</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -14.564</span> ms</div>
+    <div>σ:   5.4291</div>
+    
+  
+
+<tr>
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -9.0661</span> clues</div>
+    <div>σ:    3.745</div>
+    
+  
+  <td class=clues>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        4.0866</span> clues</div>
+    <div>σ:   2.9842</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -7.6859</span> clues</div>
+    <div>σ:   3.5515</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+        -3.758</span> clues</div>
+    <div>σ:   3.5464</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        0.0432</span> clues</div>
+    <div>σ:   1.9052</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        4.0788</span> clues</div>
+    <div>σ:   3.1325</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        4.0951</span> clues</div>
+    <div>σ:   3.1148</div>
+    
+  
+
+<tr>
+  <td rowspan=2 class="lefthead rightborder">Subtractive Random
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        12.061</span> ms</div>
+    <div>σ:   2.3162</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        7.2103</span> ms</div>
+    <div>σ:   3.5196</div>
+    
+  
+  <td class=time>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+          9.73</span> ms</div>
+    <div>σ:   2.6504</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+         8.121</span> ms</div>
+    <div>σ:   2.4111</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+      -0.16918</span> ms</div>
+    <div>σ:   2.8264</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+      -0.26603</span> ms</div>
+    <div>σ:   2.8824</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -7.3534</span> ms</div>
+    <div>σ:   3.3894</div>
+    
+  
+
+<tr>
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -13.153</span> clues</div>
+    <div>σ:   4.4292</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -4.0866</span> clues</div>
+    <div>σ:   2.9842</div>
+    
+  
+  <td class=clues>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -11.773</span> clues</div>
+    <div>σ:   4.3196</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -7.8446</span> clues</div>
+    <div>σ:   2.4458</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -4.0434</span> clues</div>
+    <div>σ:   3.0853</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+      -0.00781</span> clues</div>
+    <div>σ:   1.4266</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+       0.00844</span> clues</div>
+    <div>σ:   1.3756</div>
+    
+  
+
+<tr>
+  <td rowspan=2 class="lefthead rightborder">Additive
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        2.3314</span> ms</div>
+    <div>σ:   1.2612</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -2.5197</span> ms</div>
+    <div>σ:   1.8122</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+         -9.73</span> ms</div>
+    <div>σ:   2.6504</div>
+    
+  
+  <td class=time>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+        -1.609</span> ms</div>
+    <div>σ:   1.5188</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -9.8992</span> ms</div>
+    <div>σ:    2.078</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+        -9.996</span> ms</div>
+    <div>σ:   2.1441</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -17.083</span> ms</div>
+    <div>σ:   4.3234</div>
+    
+  
+
+<tr>
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -1.3802</span> clues</div>
+    <div>σ:   2.3893</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        7.6859</span> clues</div>
+    <div>σ:   3.5515</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        11.773</span> clues</div>
+    <div>σ:   4.3196</div>
+    
+  
+  <td class=clues>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        3.9279</span> clues</div>
+    <div>σ:   3.9353</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        7.7291</span> clues</div>
+    <div>σ:   3.5444</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        11.765</span> clues</div>
+    <div>σ:   4.3236</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        11.781</span> clues</div>
+    <div>σ:   4.3163</div>
+    
+  
+
+<tr>
+  <td rowspan=2 class="lefthead rightborder">Additive Random
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        3.9404</span> ms</div>
+    <div>σ:   1.2693</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+      -0.91062</span> ms</div>
+    <div>σ:   2.5166</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+        -8.121</span> ms</div>
+    <div>σ:   2.4111</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+         1.609</span> ms</div>
+    <div>σ:   1.5188</div>
+    
+  
+  <td class=time>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -8.2902</span> ms</div>
+    <div>σ:   2.1831</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+        -8.387</span> ms</div>
+    <div>σ:   2.2513</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -15.474</span> ms</div>
+    <div>σ:    3.877</div>
+    
+  
+
+<tr>
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -5.3081</span> clues</div>
+    <div>σ:   4.0263</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+         3.758</span> clues</div>
+    <div>σ:   3.5464</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        7.8446</span> clues</div>
+    <div>σ:   2.4458</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -3.9279</span> clues</div>
+    <div>σ:   3.9353</div>
+    
+  
+  <td class=clues>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        3.8012</span> clues</div>
+    <div>σ:   3.5338</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        7.8368</span> clues</div>
+    <div>σ:   2.4354</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+         7.853</span> clues</div>
+    <div>σ:   2.4446</div>
+    
+  
+
+<tr>
+  <td rowspan=2 class="lefthead rightborder">Additive Subtractive
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        12.231</span> ms</div>
+    <div>σ:    2.217</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        7.3795</span> ms</div>
+    <div>σ:   2.8168</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+       0.16918</span> ms</div>
+    <div>σ:   2.8264</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        9.8992</span> ms</div>
+    <div>σ:    2.078</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        8.2902</span> ms</div>
+    <div>σ:   2.1831</div>
+    
+  
+  <td class=time>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+      -0.096842</span> ms</div>
+    <div>σ:   2.1465</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -7.1842</span> ms</div>
+    <div>σ:   3.9334</div>
+    
+  
+
+<tr>
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -9.1093</span> clues</div>
+    <div>σ:   3.7698</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -0.0432</span> clues</div>
+    <div>σ:   1.9052</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        4.0434</span> clues</div>
+    <div>σ:   3.0853</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -7.7291</span> clues</div>
+    <div>σ:   3.5444</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -3.8012</span> clues</div>
+    <div>σ:   3.5338</div>
+    
+  
+  <td class=clues>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        4.0356</span> clues</div>
+    <div>σ:   3.0307</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+        4.0519</span> clues</div>
+    <div>σ:    2.957</div>
+    
+  
+
+<tr>
+  <td rowspan=2 class="lefthead rightborder">Additive Subtractive Random
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        12.327</span> ms</div>
+    <div>σ:   2.2489</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        7.4764</span> ms</div>
+    <div>σ:   2.8689</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+       0.26603</span> ms</div>
+    <div>σ:   2.8824</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+         9.996</span> ms</div>
+    <div>σ:   2.1441</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+         8.387</span> ms</div>
+    <div>σ:   2.2513</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+      0.096842</span> ms</div>
+    <div>σ:   2.1465</div>
+    
+  
+  <td class=time>
+    
+  
+  <td class=time>
+    
+    <div><span class="better">
+       -7.0874</span> ms</div>
+    <div>σ:   3.8698</div>
+    
+  
+
+<tr>
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -13.145</span> clues</div>
+    <div>σ:   4.4384</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -4.0788</span> clues</div>
+    <div>σ:   3.1325</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+       0.00781</span> clues</div>
+    <div>σ:   1.4266</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -11.765</span> clues</div>
+    <div>σ:   4.3236</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -7.8368</span> clues</div>
+    <div>σ:   2.4354</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -4.0356</span> clues</div>
+    <div>σ:   3.0307</div>
+    
+  
+  <td class=clues>
+    
+  
+  <td class=clues>
+    
+    <div><span class="worse">
+       0.01625</span> clues</div>
+    <div>σ:   1.2349</div>
+    
+  
+
+<tr>
+  <td rowspan=2 class="lefthead rightborder">Additive Subtractive Subtractive Random
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        19.415</span> ms</div>
+    <div>σ:   3.9074</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        14.564</span> ms</div>
+    <div>σ:   5.4291</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        7.3534</span> ms</div>
+    <div>σ:   3.3894</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        17.083</span> ms</div>
+    <div>σ:   4.3234</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        15.474</span> ms</div>
+    <div>σ:    3.877</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        7.1842</span> ms</div>
+    <div>σ:   3.9334</div>
+    
+  
+  <td class=time>
+    
+    <div><span class="worse">
+        7.0874</span> ms</div>
+    <div>σ:   3.8698</div>
+    
+  
+  <td class=time>
+    
+  
+
+<tr>
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -13.161</span> clues</div>
+    <div>σ:   4.4328</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -4.0951</span> clues</div>
+    <div>σ:   3.1148</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+      -0.00844</span> clues</div>
+    <div>σ:   1.3756</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -11.781</span> clues</div>
+    <div>σ:   4.3163</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+        -7.853</span> clues</div>
+    <div>σ:   2.4446</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+       -4.0519</span> clues</div>
+    <div>σ:    2.957</div>
+    
+  
+  <td class=clues>
+    
+    <div><span class="better">
+      -0.01625</span> clues</div>
+    <div>σ:   1.2349</div>
+    
+  
+  <td class=clues>
+    
+  
+
+
+</table>
+
+</body>
+</html>

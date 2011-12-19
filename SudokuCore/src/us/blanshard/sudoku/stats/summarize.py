@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Summarizes the output of GenStats, read from stdin."""
+"""Summarizes the output of GenStats."""
 
 import locale
 import os
@@ -28,31 +28,32 @@ from stats import RunningStat
 locale.setlocale(locale.LC_ALL, "en_US")
 settings.configure(DEBUG=True, TEMPLATE_DEBUG=True, TEMPLATE_DIRS=("."), TEMPLATE_STRING_IF_INVALID = "%s")
 
-def SummarizeLines(lines, nstrategies):
-  detailed = [defaultdict(lambda: {"steps": RunningStat(),  # Avg steps by #solutions
-                                   "per_step": RunningStat(),  # Avg time per step by #solutions
-                                   "overall": RunningStat(),  # Avg time by #solutions
-                                   "by_steps": defaultdict(RunningStat)})  # Time by #steps & #solutions
-              for _ in range(nstrategies)]
-  steps = [RunningStat() for _ in range(nstrategies)]
-  per_step = [RunningStat() for _ in range(nstrategies)]
-  total = [RunningStat() for _ in range(nstrategies)]
+def SummarizeLines(lines, ngenerators):
+  def Stat(): return {"time": RunningStat(), "clues": RunningStat()}
+  def Stats(): return [Stat() for _ in range(ngenerators)]
+  def AllStats(): return {"overall": Stat(), "by_generator": Stats()}
+  symmetries = defaultdict(AllStats)
+  generators = [AllStats() for _ in range(ngenerators)]
   for line in lines:
     fields = line.split("\t")
-    num_solutions = int(fields[4])
-    for n in range(nstrategies):
-      offset = 2 * n + 5
-      num_steps = int(fields[offset + 0])
-      micros = float(fields[offset + 1])
-      micros_per_step = micros/num_steps if num_steps > 0 else micros
-      detailed[n][num_solutions]["steps"].append(num_steps)
-      detailed[n][num_solutions]["per_step"].append(micros_per_step)
-      detailed[n][num_solutions]["overall"].append(micros)
-      detailed[n][num_solutions]["by_steps"][num_steps].append(micros)
-      steps[n].append(num_steps)
-      per_step[n].append(micros_per_step)
-      total[n].append(micros)
-  return zip(detailed, steps, per_step, total)
+    symmetry = fields[0]
+    time = [float(fields[n]) / 1000.0 for n in range(3, len(fields), 2)]
+    clues = [int(fields[n]) for n in range(2, len(fields), 2)]
+
+    for n in range(ngenerators):
+      symmetries[symmetry]["overall"]["time"].append(time[n])
+      symmetries[symmetry]["overall"]["clues"].append(clues[n])
+      symmetries[symmetry]["by_generator"][n]["time"].append(time[n])
+      symmetries[symmetry]["by_generator"][n]["clues"].append(clues[n])
+
+      generators[n]["overall"]["time"].append(time[n])
+      generators[n]["overall"]["clues"].append(clues[n])
+
+      for m in range(ngenerators):
+        generators[n]["by_generator"][m]["time"].append(time[n] - time[m])
+        generators[n]["by_generator"][m]["clues"].append(clues[n] - clues[m])
+
+  return (symmetries, generators)
 
 def ConstructData(file_in):
   line = file_in.next()
@@ -62,25 +63,39 @@ def ConstructData(file_in):
     return Usage("No header lines found")
 
   headers = line.split("\t")
-  strategies = [h.split(":")[0] for h in headers if h.endswith(":Num Steps")]
-  nstrategies = len(strategies)
+  generatorIds = [h.split(":")[0] for h in headers if h.endswith(":Num Clues")]
+  ngenerators = len(generatorIds)
 
-  summaries = SummarizeLines(file_in, nstrategies)
-  def ForStrategy(n):
-    (detailed, steps, per_step, total) = summaries[n]
-    return {"name": strategies[n],
-            "steps": steps,
-            "per_step": per_step,
-            "total": total,
-            "by_solutions": { num_solutions :
-                                { "steps": details["steps"],
-                                  "per_step": details["per_step"],
-                                  "overall": details["overall"],
-                                  "by_steps": sorted(details["by_steps"].items()) }
-                              for num_solutions, details in detailed.items() }}
-  return { "when": datetime.fromtimestamp(os.fstat(file_in.fileno()).st_mtime),
-           "count": summaries[0][1].count_formatted(),
-           "strategies": [ ForStrategy(i) for i in range(nstrategies) ] }
+  (symmetries, generators) = SummarizeLines(file_in, ngenerators)
+
+  symmetryIds = sorted(symmetries.keys())
+
+  def ToName(id):
+    return " ".join([w.capitalize() for w in id.split("_")])
+
+  def Generator(n):
+    return {
+      "name": ToName(generatorIds[n]),
+      "time": generators[n]["overall"]["time"],
+      "clues": generators[n]["overall"]["clues"],
+      "by_generator": generators[n]["by_generator"],
+      }
+
+  def Symmetry(id):
+    return {
+      "name": ToName(id),
+      "time": symmetries[id]["overall"]["time"],
+      "clues": symmetries[id]["overall"]["clues"],
+      "by_generator": symmetries[id]["by_generator"],
+      }
+
+  return {
+    "count": generators[0]["overall"]["time"].count_formatted(),
+    "when": datetime.fromtimestamp(os.fstat(file_in.fileno()).st_mtime),
+    "generators": [Generator(n) for n in range(ngenerators)],
+    "symmetries": [Symmetry(id) for id in symmetryIds],
+    }
+
 
 def Usage(msg = None):
   print "Usage: %s <fname>" % sys.argv[0]

@@ -2,98 +2,138 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Sudoku Solving Stats Summary</title>
+<title>Sudoku Generation Stats Summary</title>
 <style>
   h1, h2 {
     text-align: center;
+  }
+  h3 {
+    margin: 2ex 3em;
+  }
+  hr {
+    width: 50%;
+    margin-top: 4ex;
   }
   table {
     border-collapse: collapse;
   }
   td {
     vertical-align: top;
+    text-align: center;
     padding: 1ex 1em;
   }
-  td.solns {
-    padding: 2ex 0;
-    border: solid 2px #777;
+  .tophead {
+    font-weight: bold;
   }
-  td.solns td {
-    padding: 0 0.5em;
+  .lefthead {
+    font-weight: bold;
+    text-align: left;
+    vertical-align: middle;
   }
-  td.solns tr {
-    whitespace: nowrap;
+  .bottomborder {
+    border-bottom: solid 2px #777;
   }
-  tr.b {
+  .rightborder {
+    border-right: solid 2px #777;
+  }
+  .clues {
     background: #f7f7f7;
   }
-  div.overall {
-    text-align: center;
-    margin: 1ex 1em 2ex;
+  .time {
+    padding-top: 2ex;
+  }
+  .better {
+    color: #050;
+  }
+  .worse {
+    color: #600;
   }
 </style>
 </head>
 
 <body>
 
-<h1>Summary of {{ count }} Puzzles</h1>
+<h1>Summary of {{ count }} Puzzle Generations</h1>
 <h2>{{ when|date:"SHORT_DATETIME_FORMAT" }}</h2>
+
+<h3>Generators by symmetry</h3>
 <table>
 <tr>
-  <td>Strategy
-  {% for strat in strategies %}
-  <th>{{ strat.name }}
+  <td>
+  <td><u>Generator:</u>
+  {% for gen in generators %}
+  <td class=tophead>{{ gen.name }}
   {% endfor %}
 <tr>
   <td>
-  {% for strat in strategies %}
-    <td align=center>{{ strat.steps.mean_formatted }} avg steps
-        <div>σ: {{ strat.steps.standard_deviation_formatted }}</div>
+  <td>
+  {% for gen in generators %}
+    <td class=time>{{ gen.time.mean_formatted }} ms
+        <div>σ: {{ gen.time.standard_deviation_formatted }}</div>
   {% endfor %}
 <tr>
+  <td><u>Symmetry</u>
   <td>
-  {% for strat in strategies %}
-    <td align=center>{{ strat.per_step.mean_formatted }} µs/step
-        <div>σ: {{ strat.per_step.standard_deviation_formatted }}</div>
-  {% endfor %}
-<tr>
-  <td>
-  {% for strat in strategies %}
-    <td align=center>{{ strat.total.mean_formatted }} avg µs
-        <div>σ: {{ strat.total.standard_deviation_formatted }}</div>
+  {% for gen in generators %}
+    <td class="clues bottomborder">{{ gen.clues.mean_formatted }} clues
+        <div>σ: {{ gen.clues.standard_deviation_formatted }}</div>
   {% endfor %}
 
-{% for solns in "012"|make_list %}
-<tr class=solns>
-  <td>{{ solns }} solution{{ solns|pluralize }}, by #steps
-  {% for strat in strategies %}
-    <td class=solns>
-      {% for num, detailed in strat.by_solutions.items %}
-      {% if num|stringformat:"d" == solns %}
-      <div class=overall>
-        {{ detailed.steps.mean_formatted }} avg steps
-        of {{ detailed.steps.count_formatted }}
-        <div>σ: {{ detailed.steps.standard_deviation_formatted }}</div>
-      </div>
-      <div class=overall>
-        {{ detailed.per_step.mean_formatted }} µs/step
-        <div>σ: {{ detailed.per_step.standard_deviation_formatted }}</div>
-      </div>
-      <div class=overall>
-        {{ detailed.overall.mean_formatted }} avg µs
-        <div>σ: {{ detailed.overall.standard_deviation_formatted }}</div>
-      </div>
-      <table width=100%>
-        {% for steps, stat in detailed.by_steps %}
-        <tr class={{forloop.counter|divisibleby:2|yesno:"b,a"}}>
-            <td align=right>{{ steps }}
-            <td align=right>{{ stat.count_formatted }}
-            <td align=right>{{ stat.mean_formatted }} µs
-            <td align=right>σ: {{ stat.standard_deviation_formatted }}
-        {% endfor %}
-      </table>
-      {% endif %}
-      {% endfor %}
+{% for sym in symmetries %}
+<tr>
+  <td rowspan=2 class=lefthead>{{ sym.name }}
+    <div style="font-weight: normal">({{ sym.time.count_formatted }} puzzles)</div>
+  <td class="time rightborder">
+    <div>{{ sym.time.mean_formatted }} ms</div>
+    <div>σ: {{ sym.time.standard_deviation_formatted }}</div>
+  {% for gen in sym.by_generator %}
+  <td class=time>
+    <div>{{ gen.time.mean_formatted }} ms</div>
+    <div>σ: {{ gen.time.standard_deviation_formatted }}</div>
+  {% endfor %}
+
+<tr>
+  <td class="clues rightborder">
+    <div>{{ sym.clues.mean_formatted }} clues</div>
+    <div>σ: {{ sym.clues.standard_deviation_formatted }}</div>
+  {% for gen in sym.by_generator %}
+  <td class=clues>
+    <div>{{ gen.clues.mean_formatted }} clues</div>
+    <div>σ: {{ gen.clues.standard_deviation_formatted }}</div>
+  {% endfor %}
+{% endfor %}
+
+</table>
+
+<hr>
+<h3>Generator deltas, left minus top</h3>
+<table>
+<tr>
+  <td>Generator
+  {% for gen in generators %}
+  <td class="tophead bottomborder">{{ gen.name }}
+  {% endfor %}
+
+{% for gen in generators %}
+<tr>
+  <td rowspan=2 class="lefthead rightborder">{{ gen.name }}
+  {% for gen2 in gen.by_generator %}
+  <td class=time>
+    {% if forloop.counter != forloop.parentloop.counter %}
+    <div><span class="{% if gen2.time.mean <= 0 %}better{% else %}worse{% endif %}">
+      {{ gen2.time.mean_formatted }}</span> ms</div>
+    <div>σ: {{ gen2.time.standard_deviation_formatted }}</div>
+    {% endif %}
+  {% endfor %}
+
+<tr>
+  {% for gen2 in gen.by_generator %}
+  <td class=clues>
+    {% if forloop.counter != forloop.parentloop.counter %}
+    <div><span class="{% if gen2.clues.mean <= 0 %}better{% else %}worse{% endif %}">
+      {{ gen2.clues.mean_formatted }}</span> clues</div>
+    <div>σ: {{ gen2.clues.standard_deviation_formatted }}</div>
+    {% endif %}
   {% endfor %}
 {% endfor %}
 
