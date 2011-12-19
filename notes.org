@@ -8,8 +8,8 @@
 * Generator
 ** DONE Investigate solving an empty grid: how slow can it get?
    - A: not very
-** TODO Put together a generator that keeps adding givens until it finds a unique solution
-** TODO Play with subsequently subtracting givens
+** DONE Put together a generator that keeps adding givens until it finds a unique solution
+** DONE Play with subsequently subtracting givens
 ** TODO What about non-unique puzzles?
 
 * Hints
