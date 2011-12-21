@@ -25,7 +25,7 @@ import java.util.Random;
 
 public class GeneratorTest {
 
-  private final Random random = new Random(123);
+  private final Random random = new Random(0);
 
   @Test public void random() {
     ensureBasicProperties(Symmetry.RANDOM.generate(random));
@@ -98,7 +98,7 @@ public class GeneratorTest {
       Symmetry symmetry = Symmetry.choose(random);
       Grid grid = generator.generate(random, symmetry);
       ensureBasicProperties(grid);
-      if (!generator.toString().endsWith("RANDOM")) {
+      if (generator.honorsSymmetry()) {
         for (Location loc : Location.ALL) {
           for (Location exp : symmetry.expand(loc)) {
             assertEquals(grid.get(loc) == null, grid.get(exp) == null);

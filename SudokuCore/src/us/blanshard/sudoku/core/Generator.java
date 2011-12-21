@@ -21,8 +21,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import javax.annotation.Nullable;
-
 /**
  * Generates Sudoku starting grids.  The various enumeration values correspond
  * to different strategies for generating grids.
@@ -66,62 +64,8 @@ public enum Generator {
     @Override public Grid generate(Random random, Symmetry symmetry, Grid target) {
       Grid start = SUBTRACTIVE.generate(random, symmetry, target);
       if (symmetry == Symmetry.RANDOM) return start;
-      return subtractRandom(random, start);
-    }
-    @Override public boolean honorsSymmetry() { return false; }
-  },
-
-  /**
-   * Populates at least 17 givens, then keeps populating them until the grid
-   * results in a single solution.  (17 is the minimum number of givens that
-   * can imply a unique solution, to the best of anyone's knowledge.)
-   */
-  ADDITIVE {
-    @Override public Grid generate(Random random, Symmetry symmetry, Grid target) {
-      List<Location> randomLocs = randomLocations(random);
-      Grid.Builder gridBuilder = buildToMinimal(symmetry, target, randomLocs);
-      return add(random, symmetry, target, gridBuilder, randomLocs);
-    }
-    @Override public boolean honorsSymmetry() { return true; }
-  },
-
-  /**
-   * Starts like ADDITIVE but then fills in more givens without regard to the
-   * symmetry.
-   */
-  ADDITIVE_RANDOM {
-    @Override public Grid generate(Random random, Symmetry symmetry, Grid target) {
-      List<Location> randomLocs = randomLocations(random);
-      Grid.Builder gridBuilder = buildToMinimal(symmetry, target, randomLocs);
-      return add(random, Symmetry.RANDOM, target, gridBuilder, randomLocs);
-    }
-    @Override public boolean honorsSymmetry() { return false; }
-  },
-
-  /** Does ADDITIVE, then SUBTRACTIVE's last part. */
-  ADDITIVE_SUBTRACTIVE {
-    @Override public Grid generate(Random random, Symmetry symmetry, Grid target) {
-      Grid start = ADDITIVE.generate(random, symmetry, target);
-      return subtract(random, symmetry, start.asBuilder(), Lists.newArrayList(start.keySet()));
-    }
-    @Override public boolean honorsSymmetry() { return true; }
-  },
-
-  /** Does ADDITIVE, then SUBTRACTIVE_RANDOM's last part. */
-  ADDITIVE_SUBTRACTIVE_RANDOM {
-    @Override public Grid generate(Random random, Symmetry symmetry, Grid target) {
-      Grid start = ADDITIVE.generate(random, symmetry, target);
-      return subtractRandom(random, start);
-    }
-    @Override public boolean honorsSymmetry() { return false; }
-  },
-
-  /** Does ADDITIVE_SUBTRACTIVE, then SUBTRACTIVE_RANDOM's last part. */
-  ADDITIVE_SUBTRACTIVE_SUBTRACTIVE_RANDOM {
-    @Override public Grid generate(Random random, Symmetry symmetry, Grid target) {
-      Grid start = ADDITIVE_SUBTRACTIVE.generate(random, symmetry, target);
-      if (symmetry == Symmetry.RANDOM) return start;
-      return subtractRandom(random, start);
+      return subtract(
+          random, Symmetry.RANDOM, start.asBuilder(), Lists.newArrayList(start.keySet()));
     }
     @Override public boolean honorsSymmetry() { return false; }
   };
@@ -162,7 +106,8 @@ public enum Generator {
    * Creates a starting grid that yields a single solution.  Fills the given
    * list with the locations used to seed the resulting grid.
    */
-  public static Grid.Builder buildToMaximal(Random random, Symmetry symmetry, Grid target, List<Location> used) {
+  public static Grid.Builder buildToMaximal(
+      Random random, Symmetry symmetry, Grid target, List<Location> used) {
     List<Location> randomLocs = randomLocations(random);
     Grid.Builder gridBuilder = Grid.builder();
     Marks.Builder marksBuilder = Marks.builder();
@@ -182,47 +127,8 @@ public enum Generator {
     return gridBuilder;
   }
 
-  /**
-   * Creates a starting grid that is just large enough to conceivably yield a
-   * unique solution.
-   */
-  public static Grid.Builder buildToMinimal(
-      Symmetry symmetry, Grid target, List<Location> randomLocs) {
-    Grid.Builder gridBuilder = Grid.builder();
-    Marks.Builder marksBuilder = Marks.builder();
-    int count = 0;
-
-    // Assign numerals from the target until we reach 17, skipping if they are
-    // already implied.
-    for (Location randomLoc : randomLocs) {
-      if (marksBuilder.get(randomLoc).size() > 1) {
-        for (Location loc : symmetry.expand(randomLoc)) {
-          gridBuilder.put(loc, target.get(loc));
-          marksBuilder.assign(loc, target.get(loc));
-          ++count;
-        }
-        if (count >= 17) break;
-      }
-    }
-
-    return gridBuilder;
-  }
-
   public static boolean hasUniqueSolution(Grid start, Random random) {
     return Solver.solve(start, random).numSolutions == 1;
-  }
-
-  /**
-   * Solves the given starting grid, looking for a solution different from the
-   * target.  Returns null if there isn't one.
-   */
-  @Nullable public static Grid findAlternateSolution(Grid start, Random random, Grid target) {
-    Solver.Iter iter = new Solver(start, random, Solver.Strategy.SIMPLE).iterator();
-    while (iter.hasNext()) {
-      Grid soln = iter.next();
-      if (!soln.equals(target)) return soln;
-    }
-    return null;
   }
 
   /**
@@ -239,35 +145,6 @@ public enum Generator {
       if (!hasUniqueSolution(gridBuilder.build(), random))
         gridBuilder = prev.asBuilder();
     }
-    return gridBuilder.build();
-  }
-
-  /**
-   * Subtracts clues at random from the given grid while still ensuring it
-   * remains uniquely solvable.
-   */
-  public static Grid subtractRandom(Random random, Grid grid) {
-    return subtract(random, Symmetry.RANDOM, grid.asBuilder(), Lists.newArrayList(grid.keySet()));
-  }
-
-  /**
-   * Adds givens to the given grid, according to the given symmetry, until
-   * there is a unique solution.
-   */
-  public static Grid add(Random random, Symmetry symmetry, Grid target,
-                         Grid.Builder gridBuilder, List<Location> randomLocs) {
-
-    for (Grid alt; (alt = findAlternateSolution(gridBuilder.build(), random, target)) != null; ) {
-      for (Location randomLoc : randomLocs) {
-        if (alt.get(randomLoc) != target.get(randomLoc)) {
-          for (Location loc : symmetry.expand(randomLoc)) {
-            gridBuilder.put(loc, target.get(loc));
-          }
-          break;
-        }
-      }
-    }
-
     return gridBuilder.build();
   }
 }
