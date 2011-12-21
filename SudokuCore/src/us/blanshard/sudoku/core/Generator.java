@@ -189,15 +189,20 @@ public enum Generator {
   public static Grid.Builder buildToMinimal(
       Symmetry symmetry, Grid target, List<Location> randomLocs) {
     Grid.Builder gridBuilder = Grid.builder();
+    Marks.Builder marksBuilder = Marks.builder();
     int count = 0;
 
-    // Assign numerals from the target until we reach 17.
+    // Assign numerals from the target until we reach 17, skipping if they are
+    // already implied.
     for (Location randomLoc : randomLocs) {
-      for (Location loc : symmetry.expand(randomLoc)) {
-        gridBuilder.put(loc, target.get(loc));
-        ++count;
+      if (marksBuilder.get(randomLoc).size() > 1) {
+        for (Location loc : symmetry.expand(randomLoc)) {
+          gridBuilder.put(loc, target.get(loc));
+          marksBuilder.assign(loc, target.get(loc));
+          ++count;
+        }
+        if (count >= 17) break;
       }
-      if (count >= 17) break;
     }
 
     return gridBuilder;
