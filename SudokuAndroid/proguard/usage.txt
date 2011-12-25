@@ -1,0 +1,1502 @@
+com.google.common.annotations.Beta
+com.google.common.annotations.GwtCompatible
+com.google.common.annotations.GwtIncompatible
+com.google.common.annotations.VisibleForTesting
+com.google.common.base.Ascii
+com.google.common.base.CaseFormat
+com.google.common.base.CaseFormat$1
+com.google.common.base.CharMatcher
+com.google.common.base.CharMatcher$1
+com.google.common.base.CharMatcher$10
+com.google.common.base.CharMatcher$11
+com.google.common.base.CharMatcher$12
+com.google.common.base.CharMatcher$13
+com.google.common.base.CharMatcher$14
+com.google.common.base.CharMatcher$15
+com.google.common.base.CharMatcher$2
+com.google.common.base.CharMatcher$3
+com.google.common.base.CharMatcher$4
+com.google.common.base.CharMatcher$5
+com.google.common.base.CharMatcher$6
+com.google.common.base.CharMatcher$7
+com.google.common.base.CharMatcher$8
+com.google.common.base.CharMatcher$9
+com.google.common.base.CharMatcher$And
+com.google.common.base.CharMatcher$LookupTable
+com.google.common.base.CharMatcher$Or
+com.google.common.base.Charsets
+com.google.common.base.Defaults
+com.google.common.base.Enums
+com.google.common.base.Enums$1
+com.google.common.base.Enums$ValueOfFunction
+com.google.common.base.Equivalence
+com.google.common.base.Equivalence$1
+com.google.common.base.Equivalence$EquivalentToPredicate
+com.google.common.base.Equivalence$Wrapper
+com.google.common.base.Equivalences
+com.google.common.base.Equivalences$Equals
+com.google.common.base.Equivalences$Identity
+com.google.common.base.FinalizablePhantomReference
+com.google.common.base.FinalizableReference
+com.google.common.base.FinalizableReferenceQueue
+com.google.common.base.FinalizableReferenceQueue$DecoupledLoader
+com.google.common.base.FinalizableReferenceQueue$DirectLoader
+com.google.common.base.FinalizableReferenceQueue$FinalizerLoader
+com.google.common.base.FinalizableReferenceQueue$SystemLoader
+com.google.common.base.FinalizableSoftReference
+com.google.common.base.FinalizableWeakReference
+com.google.common.base.Function
+com.google.common.base.FunctionalEquivalence
+com.google.common.base.Functions
+com.google.common.base.Functions$1
+com.google.common.base.Functions$ConstantFunction
+com.google.common.base.Functions$ForMapWithDefault
+com.google.common.base.Functions$FunctionComposition
+com.google.common.base.Functions$FunctionForMapNoDefault
+com.google.common.base.Functions$IdentityFunction
+com.google.common.base.Functions$PredicateFunction
+com.google.common.base.Functions$SupplierFunction
+com.google.common.base.Functions$ToStringFunction
+com.google.common.base.Joiner:
+    75:75:public static com.google.common.base.Joiner on(char)
+    84:86:private Joiner(com.google.common.base.Joiner)
+    93:102:public java.lang.Appendable appendTo(java.lang.Appendable,java.lang.Iterable)
+    110:110:public final java.lang.Appendable appendTo(java.lang.Appendable,java.lang.Object[])
+    119:119:public final java.lang.Appendable appendTo(java.lang.Appendable,java.lang.Object,java.lang.Object,java.lang.Object[])
+    129:133:public final java.lang.StringBuilder appendTo(java.lang.StringBuilder,java.lang.Iterable)
+    142:142:public final java.lang.StringBuilder appendTo(java.lang.StringBuilder,java.lang.Object[])
+    152:152:public final java.lang.StringBuilder appendTo(java.lang.StringBuilder,java.lang.Object,java.lang.Object,java.lang.Object[])
+    160:160:public final java.lang.String join(java.lang.Iterable)
+    168:168:public final java.lang.String join(java.lang.Object[])
+    176:176:public final java.lang.String join(java.lang.Object,java.lang.Object,java.lang.Object[])
+    185:186:public com.google.common.base.Joiner useForNull(java.lang.String)
+    208:208:public com.google.common.base.Joiner skipNulls()
+    370:371:java.lang.CharSequence toString(java.lang.Object)
+    376:377:private static java.lang.Iterable iterable(java.lang.Object,java.lang.Object,java.lang.Object[])
+    63:63:Joiner(com.google.common.base.Joiner,com.google.common.base.Joiner$1)
+    63:63:static java.lang.String access$100(com.google.common.base.Joiner)
+com.google.common.base.Joiner$1:
+    final java.lang.String val$nullText
+    final com.google.common.base.Joiner this$0
+    186:186:Joiner$1(com.google.common.base.Joiner,com.google.common.base.Joiner,java.lang.String)
+    188:188:java.lang.CharSequence toString(java.lang.Object)
+    192:193:public com.google.common.base.Joiner useForNull(java.lang.String)
+    197:197:public com.google.common.base.Joiner skipNulls()
+com.google.common.base.Joiner$2
+com.google.common.base.Joiner$3
+com.google.common.base.Joiner$MapJoiner:
+    284:284:public java.lang.Appendable appendTo(java.lang.Appendable,java.util.Map)
+    293:293:public java.lang.StringBuilder appendTo(java.lang.StringBuilder,java.util.Map)
+    301:301:public java.lang.String join(java.util.Map)
+    313:328:public java.lang.Appendable appendTo(java.lang.Appendable,java.lang.Iterable)
+    341:345:public java.lang.StringBuilder appendTo(java.lang.StringBuilder,java.lang.Iterable)
+    356:356:public java.lang.String join(java.lang.Iterable)
+    365:365:public com.google.common.base.Joiner$MapJoiner useForNull(java.lang.String)
+com.google.common.base.Objects
+com.google.common.base.Objects$1
+com.google.common.base.Objects$ToStringHelper
+com.google.common.base.Optional
+com.google.common.base.Optional$1
+com.google.common.base.Optional$Absent
+com.google.common.base.Optional$Present
+com.google.common.base.PairwiseEquivalence
+com.google.common.base.Platform
+com.google.common.base.Platform$1
+com.google.common.base.Preconditions:
+    71:74:public static void checkArgument(boolean)
+    87:90:public static void checkArgument(boolean,java.lang.Object)
+    114:118:public static void checkArgument(boolean,java.lang.String,java.lang.Object[])
+    128:131:public static void checkState(boolean)
+    171:175:public static void checkState(boolean,java.lang.String,java.lang.Object[])
+    203:206:public static java.lang.Object checkNotNull(java.lang.Object,java.lang.Object)
+    229:234:public static java.lang.Object checkNotNull(java.lang.Object,java.lang.String,java.lang.Object[])
+    280:280:public static int checkElementIndex(int,int)
+    300:303:public static int checkElementIndex(int,int,java.lang.String)
+    307:312:private static java.lang.String badElementIndex(int,int,java.lang.String)
+    330:330:public static int checkPositionIndex(int,int)
+    350:353:public static int checkPositionIndex(int,int,java.lang.String)
+    357:362:private static java.lang.String badPositionIndex(int,int,java.lang.String)
+    383:386:public static void checkPositionIndexes(int,int,int)
+    389:396:private static java.lang.String badPositionIndexes(int,int,int)
+    414:443:static java.lang.String format(java.lang.String,java.lang.Object[])
+com.google.common.base.Predicate
+com.google.common.base.Predicates
+com.google.common.base.Predicates$1
+com.google.common.base.Predicates$AndPredicate
+com.google.common.base.Predicates$AssignableFromPredicate
+com.google.common.base.Predicates$CompositionPredicate
+com.google.common.base.Predicates$ContainsPatternPredicate
+com.google.common.base.Predicates$InPredicate
+com.google.common.base.Predicates$InstanceOfPredicate
+com.google.common.base.Predicates$IsEqualToPredicate
+com.google.common.base.Predicates$NotPredicate
+com.google.common.base.Predicates$ObjectPredicate
+com.google.common.base.Predicates$ObjectPredicate$1
+com.google.common.base.Predicates$ObjectPredicate$2
+com.google.common.base.Predicates$ObjectPredicate$3
+com.google.common.base.Predicates$ObjectPredicate$4
+com.google.common.base.Predicates$OrPredicate
+com.google.common.base.Splitter
+com.google.common.base.Splitter$1
+com.google.common.base.Splitter$1$1
+com.google.common.base.Splitter$2
+com.google.common.base.Splitter$2$1
+com.google.common.base.Splitter$3
+com.google.common.base.Splitter$3$1
+com.google.common.base.Splitter$4
+com.google.common.base.Splitter$4$1
+com.google.common.base.Splitter$5
+com.google.common.base.Splitter$6
+com.google.common.base.Splitter$AbstractIterator
+com.google.common.base.Splitter$AbstractIterator$State
+com.google.common.base.Splitter$MapSplitter
+com.google.common.base.Splitter$SplittingIterator
+com.google.common.base.Splitter$Strategy
+com.google.common.base.Stopwatch
+com.google.common.base.Stopwatch$1
+com.google.common.base.Strings
+com.google.common.base.Supplier
+com.google.common.base.Suppliers
+com.google.common.base.Suppliers$ExpiringMemoizingSupplier
+com.google.common.base.Suppliers$MemoizingSupplier
+com.google.common.base.Suppliers$SupplierComposition
+com.google.common.base.Suppliers$SupplierFunction
+com.google.common.base.Suppliers$SupplierOfInstance
+com.google.common.base.Suppliers$ThreadSafeSupplier
+com.google.common.base.Throwables
+com.google.common.base.Ticker
+com.google.common.base.Ticker$1
+com.google.common.base.internal.Finalizer
+com.google.common.base.internal.Finalizer$1
+com.google.common.base.internal.Finalizer$ShutDown
+com.google.common.base.package-info
+com.google.common.cache.AbstractCache
+com.google.common.cache.AbstractCache$SimpleStatsCounter
+com.google.common.cache.AbstractCache$StatsCounter
+com.google.common.cache.Cache
+com.google.common.cache.CacheBuilder
+com.google.common.cache.CacheBuilder$1
+com.google.common.cache.CacheBuilder$2
+com.google.common.cache.CacheBuilder$CacheAsMap
+com.google.common.cache.CacheBuilder$NullCache
+com.google.common.cache.CacheBuilder$NullComputingConcurrentMap
+com.google.common.cache.CacheBuilder$NullConcurrentMap
+com.google.common.cache.CacheBuilder$NullListener
+com.google.common.cache.CacheLoader
+com.google.common.cache.CacheLoader$FunctionToCacheLoader
+com.google.common.cache.CacheLoader$SupplierToCacheLoader
+com.google.common.cache.CacheStats
+com.google.common.cache.ComputingCache
+com.google.common.cache.CustomConcurrentHashMap
+com.google.common.cache.CustomConcurrentHashMap$1
+com.google.common.cache.CustomConcurrentHashMap$2
+com.google.common.cache.CustomConcurrentHashMap$AbstractReferenceEntry
+com.google.common.cache.CustomConcurrentHashMap$ComputedError
+com.google.common.cache.CustomConcurrentHashMap$ComputedException
+com.google.common.cache.CustomConcurrentHashMap$ComputedNull
+com.google.common.cache.CustomConcurrentHashMap$ComputedReference
+com.google.common.cache.CustomConcurrentHashMap$ComputedUncheckedException
+com.google.common.cache.CustomConcurrentHashMap$ComputedValue
+com.google.common.cache.CustomConcurrentHashMap$ComputingValueReference
+com.google.common.cache.CustomConcurrentHashMap$EntryFactory
+com.google.common.cache.CustomConcurrentHashMap$EntryFactory$1
+com.google.common.cache.CustomConcurrentHashMap$EntryFactory$10
+com.google.common.cache.CustomConcurrentHashMap$EntryFactory$11
+com.google.common.cache.CustomConcurrentHashMap$EntryFactory$12
+com.google.common.cache.CustomConcurrentHashMap$EntryFactory$2
+com.google.common.cache.CustomConcurrentHashMap$EntryFactory$3
+com.google.common.cache.CustomConcurrentHashMap$EntryFactory$4
+com.google.common.cache.CustomConcurrentHashMap$EntryFactory$5
+com.google.common.cache.CustomConcurrentHashMap$EntryFactory$6
+com.google.common.cache.CustomConcurrentHashMap$EntryFactory$7
+com.google.common.cache.CustomConcurrentHashMap$EntryFactory$8
+com.google.common.cache.CustomConcurrentHashMap$EntryFactory$9
+com.google.common.cache.CustomConcurrentHashMap$EntryIterator
+com.google.common.cache.CustomConcurrentHashMap$EntrySet
+com.google.common.cache.CustomConcurrentHashMap$EvictionQueue
+com.google.common.cache.CustomConcurrentHashMap$EvictionQueue$1
+com.google.common.cache.CustomConcurrentHashMap$EvictionQueue$2
+com.google.common.cache.CustomConcurrentHashMap$ExpirationQueue
+com.google.common.cache.CustomConcurrentHashMap$ExpirationQueue$1
+com.google.common.cache.CustomConcurrentHashMap$ExpirationQueue$2
+com.google.common.cache.CustomConcurrentHashMap$HashIterator
+com.google.common.cache.CustomConcurrentHashMap$KeyIterator
+com.google.common.cache.CustomConcurrentHashMap$KeySet
+com.google.common.cache.CustomConcurrentHashMap$NullEntry
+com.google.common.cache.CustomConcurrentHashMap$ReferenceEntry
+com.google.common.cache.CustomConcurrentHashMap$Segment
+com.google.common.cache.CustomConcurrentHashMap$SerializationProxy
+com.google.common.cache.CustomConcurrentHashMap$SoftEntry
+com.google.common.cache.CustomConcurrentHashMap$SoftEvictableEntry
+com.google.common.cache.CustomConcurrentHashMap$SoftExpirableEntry
+com.google.common.cache.CustomConcurrentHashMap$SoftExpirableEvictableEntry
+com.google.common.cache.CustomConcurrentHashMap$SoftValueReference
+com.google.common.cache.CustomConcurrentHashMap$Strength
+com.google.common.cache.CustomConcurrentHashMap$Strength$1
+com.google.common.cache.CustomConcurrentHashMap$Strength$2
+com.google.common.cache.CustomConcurrentHashMap$Strength$3
+com.google.common.cache.CustomConcurrentHashMap$StrongEntry
+com.google.common.cache.CustomConcurrentHashMap$StrongEvictableEntry
+com.google.common.cache.CustomConcurrentHashMap$StrongExpirableEntry
+com.google.common.cache.CustomConcurrentHashMap$StrongExpirableEvictableEntry
+com.google.common.cache.CustomConcurrentHashMap$StrongValueReference
+com.google.common.cache.CustomConcurrentHashMap$ValueIterator
+com.google.common.cache.CustomConcurrentHashMap$ValueReference
+com.google.common.cache.CustomConcurrentHashMap$Values
+com.google.common.cache.CustomConcurrentHashMap$WeakEntry
+com.google.common.cache.CustomConcurrentHashMap$WeakEvictableEntry
+com.google.common.cache.CustomConcurrentHashMap$WeakExpirableEntry
+com.google.common.cache.CustomConcurrentHashMap$WeakExpirableEvictableEntry
+com.google.common.cache.CustomConcurrentHashMap$WeakValueReference
+com.google.common.cache.CustomConcurrentHashMap$WriteThroughEntry
+com.google.common.cache.ForwardingCache
+com.google.common.cache.ForwardingCache$SimpleForwardingCache
+com.google.common.cache.RemovalCause
+com.google.common.cache.RemovalCause$1
+com.google.common.cache.RemovalCause$2
+com.google.common.cache.RemovalCause$3
+com.google.common.cache.RemovalCause$4
+com.google.common.cache.RemovalCause$5
+com.google.common.cache.RemovalListener
+com.google.common.cache.RemovalListeners
+com.google.common.cache.RemovalListeners$1
+com.google.common.cache.RemovalListeners$1$1
+com.google.common.cache.RemovalNotification
+com.google.common.cache.package-info
+com.google.common.collect.AbstractBiMap
+com.google.common.collect.AbstractBiMap$1
+com.google.common.collect.AbstractBiMap$EntrySet
+com.google.common.collect.AbstractBiMap$EntrySet$1
+com.google.common.collect.AbstractBiMap$EntrySet$1$1
+com.google.common.collect.AbstractBiMap$Inverse
+com.google.common.collect.AbstractBiMap$KeySet
+com.google.common.collect.AbstractBiMap$KeySet$1
+com.google.common.collect.AbstractBiMap$ValueSet
+com.google.common.collect.AbstractBiMap$ValueSet$1
+com.google.common.collect.AbstractIndexedListIterator
+com.google.common.collect.AbstractIterator
+com.google.common.collect.AbstractIterator$1
+com.google.common.collect.AbstractIterator$State
+com.google.common.collect.AbstractLinkedIterator
+com.google.common.collect.AbstractListMultimap
+com.google.common.collect.AbstractMapBasedMultiset
+com.google.common.collect.AbstractMapBasedMultiset$1
+com.google.common.collect.AbstractMapBasedMultiset$1$1
+com.google.common.collect.AbstractMapBasedMultiset$MapBasedElementSet
+com.google.common.collect.AbstractMapBasedMultiset$MapBasedElementSet$1
+com.google.common.collect.AbstractMapBasedMultiset$MapBasedMultisetIterator
+com.google.common.collect.AbstractMapEntry
+com.google.common.collect.AbstractMultimap
+com.google.common.collect.AbstractMultimap$1
+com.google.common.collect.AbstractMultimap$2
+com.google.common.collect.AbstractMultimap$3
+com.google.common.collect.AbstractMultimap$4
+com.google.common.collect.AbstractMultimap$AsMap
+com.google.common.collect.AbstractMultimap$AsMap$AsMapEntries
+com.google.common.collect.AbstractMultimap$AsMap$AsMapIterator
+com.google.common.collect.AbstractMultimap$EntryIterator
+com.google.common.collect.AbstractMultimap$KeySet
+com.google.common.collect.AbstractMultimap$KeySet$1
+com.google.common.collect.AbstractMultimap$RandomAccessWrappedList
+com.google.common.collect.AbstractMultimap$SortedAsMap
+com.google.common.collect.AbstractMultimap$SortedKeySet
+com.google.common.collect.AbstractMultimap$WrappedCollection
+com.google.common.collect.AbstractMultimap$WrappedCollection$WrappedIterator
+com.google.common.collect.AbstractMultimap$WrappedList
+com.google.common.collect.AbstractMultimap$WrappedList$WrappedListIterator
+com.google.common.collect.AbstractMultimap$WrappedSet
+com.google.common.collect.AbstractMultimap$WrappedSortedSet
+com.google.common.collect.AbstractMultiset
+com.google.common.collect.AbstractMultiset$ElementSet
+com.google.common.collect.AbstractMultiset$EntrySet
+com.google.common.collect.AbstractSetMultimap
+com.google.common.collect.AbstractSortedMultiset
+com.google.common.collect.AbstractSortedMultiset$1
+com.google.common.collect.AbstractSortedMultiset$2
+com.google.common.collect.AbstractSortedSetMultimap
+com.google.common.collect.ArrayListMultimap
+com.google.common.collect.ArrayTable
+com.google.common.collect.ArrayTable$1
+com.google.common.collect.ArrayTable$CellSet
+com.google.common.collect.ArrayTable$CellSet$1
+com.google.common.collect.ArrayTable$CellSet$1$1
+com.google.common.collect.ArrayTable$Column
+com.google.common.collect.ArrayTable$ColumnEntrySet
+com.google.common.collect.ArrayTable$ColumnEntrySet$1
+com.google.common.collect.ArrayTable$ColumnEntrySet$1$1
+com.google.common.collect.ArrayTable$ColumnMap
+com.google.common.collect.ArrayTable$ColumnMapEntrySet
+com.google.common.collect.ArrayTable$ColumnMapEntrySet$1
+com.google.common.collect.ArrayTable$Row
+com.google.common.collect.ArrayTable$RowEntrySet
+com.google.common.collect.ArrayTable$RowEntrySet$1
+com.google.common.collect.ArrayTable$RowEntrySet$1$1
+com.google.common.collect.ArrayTable$RowMap
+com.google.common.collect.ArrayTable$RowMapEntrySet
+com.google.common.collect.ArrayTable$RowMapEntrySet$1
+com.google.common.collect.ArrayTable$Values
+com.google.common.collect.ArrayTable$Values$1
+com.google.common.collect.AsynchronousComputationException
+com.google.common.collect.BiMap
+com.google.common.collect.BoundType
+com.google.common.collect.BstAggregate
+com.google.common.collect.BstBalancePolicy
+com.google.common.collect.BstCountBasedBalancePolicies
+com.google.common.collect.BstCountBasedBalancePolicies$1
+com.google.common.collect.BstCountBasedBalancePolicies$2
+com.google.common.collect.BstCountBasedBalancePolicies$3
+com.google.common.collect.BstInOrderPath
+com.google.common.collect.BstInOrderPath$1
+com.google.common.collect.BstInOrderPath$2
+com.google.common.collect.BstModificationResult
+com.google.common.collect.BstModificationResult$ModificationType
+com.google.common.collect.BstModifier
+com.google.common.collect.BstMutationResult
+com.google.common.collect.BstMutationResult$1
+com.google.common.collect.BstMutationRule
+com.google.common.collect.BstNode
+com.google.common.collect.BstNode$1
+com.google.common.collect.BstNodeFactory
+com.google.common.collect.BstOperations
+com.google.common.collect.BstOperations$1
+com.google.common.collect.BstPath
+com.google.common.collect.BstPathFactory
+com.google.common.collect.BstRangeOps
+com.google.common.collect.BstRangeOps$1
+com.google.common.collect.BstSide
+com.google.common.collect.BstSide$1
+com.google.common.collect.BstSide$2
+com.google.common.collect.ByFunctionOrdering
+com.google.common.collect.ClassToInstanceMap
+com.google.common.collect.Collections2:
+    80:86:public static java.util.Collection filter(java.util.Collection,com.google.common.base.Predicate)
+    96:98:static boolean safeContains(java.util.Collection,java.lang.Object)
+    262:262:public static java.util.Collection transform(java.util.Collection,com.google.common.base.Function)
+    305:311:static boolean containsAllImpl(java.util.Collection,java.util.Collection)
+    318:326:static java.lang.String toStringImpl(java.util.Collection)
+    333:334:static java.lang.StringBuilder newStringBuilderForCollection(int)
+com.google.common.collect.Collections2$1
+com.google.common.collect.Collections2$FilteredCollection
+com.google.common.collect.Collections2$FilteredCollection$1
+com.google.common.collect.Collections2$FilteredCollection$2
+com.google.common.collect.Collections2$TransformedCollection
+com.google.common.collect.ComparatorOrdering
+com.google.common.collect.ComparisonChain
+com.google.common.collect.ComparisonChain$1
+com.google.common.collect.ComparisonChain$InactiveComparisonChain
+com.google.common.collect.CompoundOrdering
+com.google.common.collect.ComputationException
+com.google.common.collect.ComputingConcurrentHashMap
+com.google.common.collect.ComputingConcurrentHashMap$ComputationExceptionReference
+com.google.common.collect.ComputingConcurrentHashMap$ComputedReference
+com.google.common.collect.ComputingConcurrentHashMap$ComputingMapAdapter
+com.google.common.collect.ComputingConcurrentHashMap$ComputingSegment
+com.google.common.collect.ComputingConcurrentHashMap$ComputingSerializationProxy
+com.google.common.collect.ComputingConcurrentHashMap$ComputingValueReference
+com.google.common.collect.ConcurrentHashMultiset
+com.google.common.collect.ConcurrentHashMultiset$1
+com.google.common.collect.ConcurrentHashMultiset$2
+com.google.common.collect.ConcurrentHashMultiset$3
+com.google.common.collect.ConcurrentHashMultiset$EntrySet
+com.google.common.collect.ConcurrentHashMultiset$FieldSettersHolder
+com.google.common.collect.Constraint
+com.google.common.collect.Constraints
+com.google.common.collect.Constraints$ConstrainedCollection
+com.google.common.collect.Constraints$ConstrainedList
+com.google.common.collect.Constraints$ConstrainedListIterator
+com.google.common.collect.Constraints$ConstrainedMultiset
+com.google.common.collect.Constraints$ConstrainedRandomAccessList
+com.google.common.collect.Constraints$ConstrainedSet
+com.google.common.collect.Constraints$ConstrainedSortedSet
+com.google.common.collect.Constraints$NotNullConstraint
+com.google.common.collect.ContiguousSet
+com.google.common.collect.Count
+com.google.common.collect.CustomConcurrentHashMap
+com.google.common.collect.CustomConcurrentHashMap$1
+com.google.common.collect.CustomConcurrentHashMap$2
+com.google.common.collect.CustomConcurrentHashMap$AbstractReferenceEntry
+com.google.common.collect.CustomConcurrentHashMap$AbstractSerializationProxy
+com.google.common.collect.CustomConcurrentHashMap$CleanupMapTask
+com.google.common.collect.CustomConcurrentHashMap$EntryFactory
+com.google.common.collect.CustomConcurrentHashMap$EntryFactory$1
+com.google.common.collect.CustomConcurrentHashMap$EntryFactory$10
+com.google.common.collect.CustomConcurrentHashMap$EntryFactory$11
+com.google.common.collect.CustomConcurrentHashMap$EntryFactory$12
+com.google.common.collect.CustomConcurrentHashMap$EntryFactory$2
+com.google.common.collect.CustomConcurrentHashMap$EntryFactory$3
+com.google.common.collect.CustomConcurrentHashMap$EntryFactory$4
+com.google.common.collect.CustomConcurrentHashMap$EntryFactory$5
+com.google.common.collect.CustomConcurrentHashMap$EntryFactory$6
+com.google.common.collect.CustomConcurrentHashMap$EntryFactory$7
+com.google.common.collect.CustomConcurrentHashMap$EntryFactory$8
+com.google.common.collect.CustomConcurrentHashMap$EntryFactory$9
+com.google.common.collect.CustomConcurrentHashMap$EntryIterator
+com.google.common.collect.CustomConcurrentHashMap$EntrySet
+com.google.common.collect.CustomConcurrentHashMap$EvictionQueue
+com.google.common.collect.CustomConcurrentHashMap$EvictionQueue$1
+com.google.common.collect.CustomConcurrentHashMap$EvictionQueue$2
+com.google.common.collect.CustomConcurrentHashMap$ExpirationQueue
+com.google.common.collect.CustomConcurrentHashMap$ExpirationQueue$1
+com.google.common.collect.CustomConcurrentHashMap$ExpirationQueue$2
+com.google.common.collect.CustomConcurrentHashMap$HashIterator
+com.google.common.collect.CustomConcurrentHashMap$KeyIterator
+com.google.common.collect.CustomConcurrentHashMap$KeySet
+com.google.common.collect.CustomConcurrentHashMap$NullEntry
+com.google.common.collect.CustomConcurrentHashMap$ReferenceEntry
+com.google.common.collect.CustomConcurrentHashMap$Segment
+com.google.common.collect.CustomConcurrentHashMap$SerializationProxy
+com.google.common.collect.CustomConcurrentHashMap$SoftEntry
+com.google.common.collect.CustomConcurrentHashMap$SoftEvictableEntry
+com.google.common.collect.CustomConcurrentHashMap$SoftExpirableEntry
+com.google.common.collect.CustomConcurrentHashMap$SoftExpirableEvictableEntry
+com.google.common.collect.CustomConcurrentHashMap$SoftValueReference
+com.google.common.collect.CustomConcurrentHashMap$Strength
+com.google.common.collect.CustomConcurrentHashMap$Strength$1
+com.google.common.collect.CustomConcurrentHashMap$Strength$2
+com.google.common.collect.CustomConcurrentHashMap$Strength$3
+com.google.common.collect.CustomConcurrentHashMap$StrongEntry
+com.google.common.collect.CustomConcurrentHashMap$StrongEvictableEntry
+com.google.common.collect.CustomConcurrentHashMap$StrongExpirableEntry
+com.google.common.collect.CustomConcurrentHashMap$StrongExpirableEvictableEntry
+com.google.common.collect.CustomConcurrentHashMap$StrongValueReference
+com.google.common.collect.CustomConcurrentHashMap$ValueIterator
+com.google.common.collect.CustomConcurrentHashMap$ValueReference
+com.google.common.collect.CustomConcurrentHashMap$Values
+com.google.common.collect.CustomConcurrentHashMap$WeakEntry
+com.google.common.collect.CustomConcurrentHashMap$WeakEvictableEntry
+com.google.common.collect.CustomConcurrentHashMap$WeakExpirableEntry
+com.google.common.collect.CustomConcurrentHashMap$WeakExpirableEvictableEntry
+com.google.common.collect.CustomConcurrentHashMap$WeakValueReference
+com.google.common.collect.CustomConcurrentHashMap$WriteThroughEntry
+com.google.common.collect.Cut
+com.google.common.collect.Cut$1
+com.google.common.collect.Cut$AboveAll
+com.google.common.collect.Cut$AboveValue
+com.google.common.collect.Cut$BelowAll
+com.google.common.collect.Cut$BelowValue
+com.google.common.collect.DescendingImmutableSortedMultiset
+com.google.common.collect.DiscreteDomain
+com.google.common.collect.DiscreteDomains
+com.google.common.collect.DiscreteDomains$BigIntegerDomain
+com.google.common.collect.DiscreteDomains$IntegerDomain
+com.google.common.collect.DiscreteDomains$LongDomain
+com.google.common.collect.EmptyContiguousSet
+com.google.common.collect.EmptyContiguousSet$1
+com.google.common.collect.EmptyContiguousSet$SerializedForm
+com.google.common.collect.EmptyImmutableList
+com.google.common.collect.EmptyImmutableList$1
+com.google.common.collect.EmptyImmutableListMultimap
+com.google.common.collect.EmptyImmutableMap
+com.google.common.collect.EmptyImmutableMultiset
+com.google.common.collect.EmptyImmutableSet
+com.google.common.collect.EmptyImmutableSetMultimap
+com.google.common.collect.EmptyImmutableSortedMultiset
+com.google.common.collect.EmptyImmutableSortedSet
+com.google.common.collect.EnumBiMap
+com.google.common.collect.EnumHashBiMap
+com.google.common.collect.EnumMultiset
+com.google.common.collect.EvictionListeners
+com.google.common.collect.EvictionListeners$1
+com.google.common.collect.EvictionListeners$1$1
+com.google.common.collect.ExplicitOrdering
+com.google.common.collect.ForwardingCollection
+com.google.common.collect.ForwardingConcurrentMap
+com.google.common.collect.ForwardingIterator
+com.google.common.collect.ForwardingList
+com.google.common.collect.ForwardingListIterator
+com.google.common.collect.ForwardingListMultimap
+com.google.common.collect.ForwardingMap
+com.google.common.collect.ForwardingMap$1
+com.google.common.collect.ForwardingMap$StandardEntrySet
+com.google.common.collect.ForwardingMap$StandardKeySet
+com.google.common.collect.ForwardingMap$StandardValues
+com.google.common.collect.ForwardingMapEntry
+com.google.common.collect.ForwardingMultimap
+com.google.common.collect.ForwardingMultiset
+com.google.common.collect.ForwardingMultiset$StandardElementSet
+com.google.common.collect.ForwardingObject
+com.google.common.collect.ForwardingQueue
+com.google.common.collect.ForwardingSet
+com.google.common.collect.ForwardingSetMultimap
+com.google.common.collect.ForwardingSortedMap
+com.google.common.collect.ForwardingSortedSet
+com.google.common.collect.ForwardingSortedSetMultimap
+com.google.common.collect.ForwardingTable
+com.google.common.collect.GeneralRange
+com.google.common.collect.GeneralRange$1
+com.google.common.collect.GenericMapMaker
+com.google.common.collect.GenericMapMaker$NullListener
+com.google.common.collect.HashBasedTable
+com.google.common.collect.HashBasedTable$Factory
+com.google.common.collect.HashBiMap
+com.google.common.collect.HashMultimap
+com.google.common.collect.HashMultiset
+com.google.common.collect.Hashing
+com.google.common.collect.ImmutableAsList
+com.google.common.collect.ImmutableAsList$SerializedForm
+com.google.common.collect.ImmutableBiMap
+com.google.common.collect.ImmutableBiMap$Builder
+com.google.common.collect.ImmutableBiMap$EmptyBiMap
+com.google.common.collect.ImmutableBiMap$SerializedForm
+com.google.common.collect.ImmutableClassToInstanceMap
+com.google.common.collect.ImmutableClassToInstanceMap$1
+com.google.common.collect.ImmutableClassToInstanceMap$Builder
+com.google.common.collect.ImmutableCollection
+com.google.common.collect.ImmutableCollection$1
+com.google.common.collect.ImmutableCollection$ArrayImmutableCollection
+com.google.common.collect.ImmutableCollection$Builder
+com.google.common.collect.ImmutableCollection$EmptyImmutableCollection
+com.google.common.collect.ImmutableCollection$SerializedForm
+com.google.common.collect.ImmutableEntry
+com.google.common.collect.ImmutableEnumSet
+com.google.common.collect.ImmutableEnumSet$EnumSerializedForm
+com.google.common.collect.ImmutableList
+com.google.common.collect.ImmutableList$Builder
+com.google.common.collect.ImmutableList$ReverseImmutableList
+com.google.common.collect.ImmutableList$ReverseImmutableList$1
+com.google.common.collect.ImmutableList$SerializedForm
+com.google.common.collect.ImmutableListMultimap
+com.google.common.collect.ImmutableListMultimap$Builder
+com.google.common.collect.ImmutableMap
+com.google.common.collect.ImmutableMap$Builder
+com.google.common.collect.ImmutableMap$SerializedForm
+com.google.common.collect.ImmutableMultimap
+com.google.common.collect.ImmutableMultimap$Builder
+com.google.common.collect.ImmutableMultimap$BuilderMultimap
+com.google.common.collect.ImmutableMultimap$EntryCollection
+com.google.common.collect.ImmutableMultimap$EntryCollection$1
+com.google.common.collect.ImmutableMultimap$FieldSettersHolder
+com.google.common.collect.ImmutableMultimap$SortedKeyBuilderMultimap
+com.google.common.collect.ImmutableMultimap$Values
+com.google.common.collect.ImmutableMultimap$Values$1
+com.google.common.collect.ImmutableMultiset
+com.google.common.collect.ImmutableMultiset$1
+com.google.common.collect.ImmutableMultiset$Builder
+com.google.common.collect.ImmutableMultiset$EntrySet
+com.google.common.collect.ImmutableMultiset$EntrySet$EntrySetSerializedForm
+com.google.common.collect.ImmutableMultiset$SerializedForm
+com.google.common.collect.ImmutableSet
+com.google.common.collect.ImmutableSet$ArrayImmutableSet
+com.google.common.collect.ImmutableSet$Builder
+com.google.common.collect.ImmutableSet$SerializedForm
+com.google.common.collect.ImmutableSet$TransformedImmutableSet
+com.google.common.collect.ImmutableSet$TransformedImmutableSet$1
+com.google.common.collect.ImmutableSetMultimap
+com.google.common.collect.ImmutableSetMultimap$Builder
+com.google.common.collect.ImmutableSetMultimap$BuilderMultimap
+com.google.common.collect.ImmutableSetMultimap$SortedKeyBuilderMultimap
+com.google.common.collect.ImmutableSortedAsList
+com.google.common.collect.ImmutableSortedMap
+com.google.common.collect.ImmutableSortedMap$1
+com.google.common.collect.ImmutableSortedMap$2
+com.google.common.collect.ImmutableSortedMap$3
+com.google.common.collect.ImmutableSortedMap$4
+com.google.common.collect.ImmutableSortedMap$Builder
+com.google.common.collect.ImmutableSortedMap$EntrySet
+com.google.common.collect.ImmutableSortedMap$EntrySetSerializedForm
+com.google.common.collect.ImmutableSortedMap$SerializedForm
+com.google.common.collect.ImmutableSortedMap$Values
+com.google.common.collect.ImmutableSortedMap$ValuesSerializedForm
+com.google.common.collect.ImmutableSortedMapFauxverideShim
+com.google.common.collect.ImmutableSortedMultiset
+com.google.common.collect.ImmutableSortedMultiset$Builder
+com.google.common.collect.ImmutableSortedMultiset$SerializedForm
+com.google.common.collect.ImmutableSortedMultisetFauxverideShim
+com.google.common.collect.ImmutableSortedSet
+com.google.common.collect.ImmutableSortedSet$Builder
+com.google.common.collect.ImmutableSortedSet$SerializedForm
+com.google.common.collect.ImmutableSortedSetFauxverideShim
+com.google.common.collect.Interner
+com.google.common.collect.Interners
+com.google.common.collect.Interners$1
+com.google.common.collect.Interners$CustomInterner
+com.google.common.collect.Interners$CustomInterner$Dummy
+com.google.common.collect.Interners$InternerFunction
+com.google.common.collect.Iterables:
+    63:68:public static java.lang.Iterable unmodifiableIterable(java.lang.Iterable)
+    79:79:public static java.lang.Iterable unmodifiableIterable(com.google.common.collect.ImmutableCollection)
+    105:105:public static int size(java.lang.Iterable)
+    116:126:public static boolean contains(java.lang.Iterable,java.lang.Object)
+    142:142:public static boolean removeAll(java.lang.Iterable,java.util.Collection)
+    160:160:public static boolean retainAll(java.lang.Iterable,java.util.Collection)
+    180:184:public static boolean removeIf(java.lang.Iterable,com.google.common.base.Predicate)
+    191:211:private static boolean removeIfFromRandomAccessList(java.util.List,com.google.common.base.Predicate)
+    226:235:private static void slowRemoveIfForRemainingElements(java.util.List,com.google.common.base.Predicate,int,int)
+    246:246:public static boolean elementsEqual(java.lang.Iterable,java.lang.Iterable)
+    265:265:public static java.lang.Object getOnlyElement(java.lang.Iterable)
+    277:277:public static java.lang.Object getOnlyElement(java.lang.Iterable,java.lang.Object)
+    290:292:public static java.lang.Object[] toArray(java.lang.Iterable,java.lang.Class)
+    303:303:static java.lang.Object[] toArray(java.lang.Iterable)
+    312:312:private static java.util.Collection toCollection(java.lang.Iterable)
+    325:329:public static boolean addAll(java.util.Collection,java.lang.Iterable)
+    340:346:public static int frequency(java.lang.Iterable,java.lang.Object)
+    367:368:public static java.lang.Iterable cycle(java.lang.Iterable)
+    398:398:public static java.lang.Iterable cycle(java.lang.Object[])
+    429:432:public static java.lang.Iterable concat(java.lang.Iterable,java.lang.Iterable,java.lang.Iterable)
+    449:453:public static java.lang.Iterable concat(java.lang.Iterable,java.lang.Iterable,java.lang.Iterable,java.lang.Iterable)
+    467:467:public static java.lang.Iterable concat(java.lang.Iterable[])
+    532:534:public static java.lang.Iterable partition(java.lang.Iterable,int)
+    561:563:public static java.lang.Iterable paddedPartition(java.lang.Iterable,int)
+    577:579:public static java.lang.Iterable filter(java.lang.Iterable,com.google.common.base.Predicate)
+    601:603:public static java.lang.Iterable filter(java.lang.Iterable,java.lang.Class)
+    617:617:public static boolean any(java.lang.Iterable,com.google.common.base.Predicate)
+    626:626:public static boolean all(java.lang.Iterable,com.google.common.base.Predicate)
+    638:638:public static java.lang.Object find(java.lang.Iterable,com.google.common.base.Predicate)
+    649:649:public static java.lang.Object find(java.lang.Iterable,com.google.common.base.Predicate,java.lang.Object)
+    665:665:public static int indexOf(java.lang.Iterable,com.google.common.base.Predicate)
+    682:684:public static java.lang.Iterable transform(java.lang.Iterable,com.google.common.base.Function)
+    701:714:public static java.lang.Object get(java.lang.Iterable,int)
+    718:722:private static void checkNonnegativeIndex(int)
+    739:745:public static java.lang.Object get(java.lang.Iterable,int,java.lang.Object)
+    759:759:public static java.lang.Object getFirst(java.lang.Iterable,java.lang.Object)
+    770:788:public static java.lang.Object getLast(java.lang.Iterable)
+    800:822:public static java.lang.Object getLast(java.lang.Iterable,java.lang.Object)
+    826:826:private static java.lang.Object getLastInNonemptyList(java.util.List)
+    851:867:public static java.lang.Iterable skip(java.lang.Iterable,int)
+    926:928:public static java.lang.Iterable limit(java.lang.Iterable,int)
+    956:967:public static java.lang.Iterable consumingIterable(java.lang.Iterable)
+    1014:1014:public static java.lang.Iterable reverse(java.util.List)
+    1027:1027:public static boolean isEmpty(java.lang.Iterable)
+    1051:1058:static boolean remove(java.lang.Iterable,java.lang.Object)
+com.google.common.collect.Iterables$1
+com.google.common.collect.Iterables$10
+com.google.common.collect.Iterables$10$1
+com.google.common.collect.Iterables$11
+com.google.common.collect.Iterables$12
+com.google.common.collect.Iterables$13
+com.google.common.collect.Iterables$4
+com.google.common.collect.Iterables$5
+com.google.common.collect.Iterables$6
+com.google.common.collect.Iterables$7
+com.google.common.collect.Iterables$8
+com.google.common.collect.Iterables$9
+com.google.common.collect.Iterables$ConsumingQueueIterator
+com.google.common.collect.Iterables$UnmodifiableIterable
+com.google.common.collect.Iterators:
+    107:107:static java.util.Iterator emptyModifiableIterator()
+    113:117:public static com.google.common.collect.UnmodifiableIterator unmodifiableIterator(java.util.Iterator)
+    137:137:public static com.google.common.collect.UnmodifiableIterator unmodifiableIterator(com.google.common.collect.UnmodifiableIterator)
+    146:151:public static int size(java.util.Iterator)
+    159:172:public static boolean contains(java.util.Iterator,java.lang.Object)
+    186:194:public static boolean removeAll(java.util.Iterator,java.util.Collection)
+    210:218:public static boolean removeIf(java.util.Iterator,com.google.common.base.Predicate)
+    232:240:public static boolean retainAll(java.util.Iterator,java.util.Collection)
+    255:265:public static boolean elementsEqual(java.util.Iterator,java.util.Iterator)
+    293:308:public static java.lang.Object getOnlyElement(java.util.Iterator)
+    320:320:public static java.lang.Object getOnlyElement(java.util.Iterator,java.lang.Object)
+    335:336:public static java.lang.Object[] toArray(java.util.Iterator,java.lang.Class)
+    349:354:public static boolean addAll(java.util.Collection,java.util.Iterator)
+    365:379:public static int frequency(java.util.Iterator,java.lang.Object)
+    397:398:public static java.util.Iterator cycle(java.lang.Iterable)
+    441:441:public static java.util.Iterator cycle(java.lang.Object[])
+    455:457:public static java.util.Iterator concat(java.util.Iterator,java.util.Iterator)
+    472:475:public static java.util.Iterator concat(java.util.Iterator,java.util.Iterator,java.util.Iterator)
+    491:495:public static java.util.Iterator concat(java.util.Iterator,java.util.Iterator,java.util.Iterator,java.util.Iterator)
+    509:509:public static java.util.Iterator concat(java.util.Iterator[])
+    579:579:public static com.google.common.collect.UnmodifiableIterator partition(java.util.Iterator,int)
+    600:600:public static com.google.common.collect.UnmodifiableIterator paddedPartition(java.util.Iterator,int)
+    605:607:private static com.google.common.collect.UnmodifiableIterator partitionImpl(java.util.Iterator,int,boolean)
+    639:641:public static com.google.common.collect.UnmodifiableIterator filter(java.util.Iterator,com.google.common.base.Predicate)
+    668:668:public static com.google.common.collect.UnmodifiableIterator filter(java.util.Iterator,java.lang.Class)
+    678:685:public static boolean any(java.util.Iterator,com.google.common.base.Predicate)
+    695:702:public static boolean all(java.util.Iterator,com.google.common.base.Predicate)
+    715:715:public static java.lang.Object find(java.util.Iterator,com.google.common.base.Predicate)
+    728:729:public static java.lang.Object find(java.util.Iterator,com.google.common.base.Predicate,java.lang.Object)
+    750:759:public static int indexOf(java.util.Iterator,com.google.common.base.Predicate)
+    772:774:public static java.util.Iterator transform(java.util.Iterator,com.google.common.base.Function)
+    802:812:public static java.lang.Object get(java.util.Iterator,int)
+    818:822:private static void checkNonnegative(int)
+    841:846:public static java.lang.Object get(java.util.Iterator,int,java.lang.Object)
+    860:860:public static java.lang.Object getNext(java.util.Iterator,java.lang.Object)
+    871:875:public static java.lang.Object getLast(java.util.Iterator)
+    887:887:public static java.lang.Object getLast(java.util.Iterator,java.lang.Object)
+    899:906:public static int skip(java.util.Iterator,int)
+    923:925:public static java.util.Iterator limit(java.util.Iterator,int)
+    963:964:public static java.util.Iterator consumingIterator(java.util.Iterator)
+    985:990:static void clear(java.util.Iterator)
+    1007:1008:public static com.google.common.collect.UnmodifiableIterator forArray(java.lang.Object[])
+    1031:1042:static com.google.common.collect.UnmodifiableIterator forArray(java.lang.Object[],int,int)
+    1057:1057:public static com.google.common.collect.UnmodifiableIterator singletonIterator(java.lang.Object)
+    1084:1085:public static com.google.common.collect.UnmodifiableIterator forEnumeration(java.util.Enumeration)
+    1105:1106:public static java.util.Enumeration asEnumeration(java.util.Iterator)
+    1203:1210:public static com.google.common.collect.PeekingIterator peekingIterator(java.util.Iterator)
+    1221:1221:public static com.google.common.collect.PeekingIterator peekingIterator(com.google.common.collect.PeekingIterator)
+com.google.common.collect.Iterators$10
+com.google.common.collect.Iterators$11
+com.google.common.collect.Iterators$12
+com.google.common.collect.Iterators$13
+com.google.common.collect.Iterators$14
+com.google.common.collect.Iterators$15
+com.google.common.collect.Iterators$3
+com.google.common.collect.Iterators$4
+com.google.common.collect.Iterators$6
+com.google.common.collect.Iterators$7
+com.google.common.collect.Iterators$8
+com.google.common.collect.Iterators$9
+com.google.common.collect.Iterators$PeekingImpl
+com.google.common.collect.LexicographicalOrdering
+com.google.common.collect.LinkedHashMultimap
+com.google.common.collect.LinkedHashMultimap$1
+com.google.common.collect.LinkedHashMultimap$SetDecorator
+com.google.common.collect.LinkedHashMultimap$SetDecorator$1
+com.google.common.collect.LinkedHashMultiset
+com.google.common.collect.LinkedListMultimap
+com.google.common.collect.LinkedListMultimap$1
+com.google.common.collect.LinkedListMultimap$2
+com.google.common.collect.LinkedListMultimap$3
+com.google.common.collect.LinkedListMultimap$3$1
+com.google.common.collect.LinkedListMultimap$4
+com.google.common.collect.LinkedListMultimap$5
+com.google.common.collect.LinkedListMultimap$5$1
+com.google.common.collect.LinkedListMultimap$6
+com.google.common.collect.LinkedListMultimap$AsMapEntries
+com.google.common.collect.LinkedListMultimap$AsMapEntries$1
+com.google.common.collect.LinkedListMultimap$AsMapEntries$1$1
+com.google.common.collect.LinkedListMultimap$DistinctKeyIterator
+com.google.common.collect.LinkedListMultimap$MultisetView
+com.google.common.collect.LinkedListMultimap$MultisetView$1
+com.google.common.collect.LinkedListMultimap$MultisetView$2
+com.google.common.collect.LinkedListMultimap$MultisetView$2$1
+com.google.common.collect.LinkedListMultimap$MultisetView$2$1$1
+com.google.common.collect.LinkedListMultimap$Node
+com.google.common.collect.LinkedListMultimap$NodeIterator
+com.google.common.collect.LinkedListMultimap$ValueForKeyIterator
+com.google.common.collect.ListMultimap
+com.google.common.collect.Lists:
+    90:95:public static java.util.ArrayList newArrayList(java.lang.Object[])
+    99:102:static int computeArrayListCapacity(int)
+    167:168:public static java.util.ArrayList newArrayListWithCapacity(int)
+    189:189:public static java.util.ArrayList newArrayListWithExpectedSize(int)
+    204:204:public static java.util.LinkedList newLinkedList()
+    216:220:public static java.util.LinkedList newLinkedList(java.lang.Iterable)
+    240:240:public static java.util.List asList(java.lang.Object,java.lang.Object[])
+    283:283:public static java.util.List asList(java.lang.Object,java.lang.Object,java.lang.Object[])
+    345:345:public static java.util.List transform(java.util.List,com.google.common.base.Function)
+    484:486:public static java.util.List partition(java.util.List,int)
+    536:536:public static com.google.common.collect.ImmutableList charactersOf(java.lang.String)
+    636:636:public static java.util.List charactersOf(java.lang.CharSequence)
+    729:734:public static java.util.List reverse(java.util.List)
+    892:896:static int hashCodeImpl(java.util.List)
+    903:912:static boolean equalsImpl(java.util.List,java.lang.Object)
+    921:927:static boolean addAllImpl(java.util.List,int,java.lang.Iterable)
+    934:940:static int indexOfImpl(java.util.List,java.lang.Object)
+    947:953:static int lastIndexOfImpl(java.util.List,java.lang.Object)
+    960:960:static java.util.ListIterator listIteratorImpl(java.util.List,int)
+    969:986:static java.util.List subListImpl(java.util.List,int,int)
+com.google.common.collect.Lists$1
+com.google.common.collect.Lists$2
+com.google.common.collect.Lists$AbstractListWrapper
+com.google.common.collect.Lists$CharSequenceAsList
+com.google.common.collect.Lists$OnePlusArrayList
+com.google.common.collect.Lists$Partition
+com.google.common.collect.Lists$RandomAccessListWrapper
+com.google.common.collect.Lists$RandomAccessPartition
+com.google.common.collect.Lists$RandomAccessReverseList
+com.google.common.collect.Lists$ReverseList
+com.google.common.collect.Lists$ReverseList$1
+com.google.common.collect.Lists$StringAsImmutableList
+com.google.common.collect.Lists$StringAsImmutableList$1
+com.google.common.collect.Lists$TransformingRandomAccessList
+com.google.common.collect.Lists$TransformingSequentialList
+com.google.common.collect.Lists$TransformingSequentialList$1
+com.google.common.collect.Lists$TwoPlusArrayList
+com.google.common.collect.MapConstraint
+com.google.common.collect.MapConstraints
+com.google.common.collect.MapConstraints$1
+com.google.common.collect.MapConstraints$2
+com.google.common.collect.MapConstraints$2$1
+com.google.common.collect.MapConstraints$ConstrainedAsMapEntries
+com.google.common.collect.MapConstraints$ConstrainedAsMapEntries$1
+com.google.common.collect.MapConstraints$ConstrainedAsMapValues
+com.google.common.collect.MapConstraints$ConstrainedAsMapValues$1
+com.google.common.collect.MapConstraints$ConstrainedBiMap
+com.google.common.collect.MapConstraints$ConstrainedEntries
+com.google.common.collect.MapConstraints$ConstrainedEntries$1
+com.google.common.collect.MapConstraints$ConstrainedEntrySet
+com.google.common.collect.MapConstraints$ConstrainedListMultimap
+com.google.common.collect.MapConstraints$ConstrainedMap
+com.google.common.collect.MapConstraints$ConstrainedMultimap
+com.google.common.collect.MapConstraints$ConstrainedMultimap$1
+com.google.common.collect.MapConstraints$ConstrainedMultimap$2
+com.google.common.collect.MapConstraints$ConstrainedSetMultimap
+com.google.common.collect.MapConstraints$ConstrainedSortedSetMultimap
+com.google.common.collect.MapConstraints$InverseConstraint
+com.google.common.collect.MapConstraints$NotNullMapConstraint
+com.google.common.collect.MapDifference
+com.google.common.collect.MapDifference$ValueDifference
+com.google.common.collect.MapEvictionListener
+com.google.common.collect.MapMaker
+com.google.common.collect.MapMaker$1
+com.google.common.collect.MapMaker$MapMakerRemovalListener
+com.google.common.collect.MapMaker$NullComputingConcurrentMap
+com.google.common.collect.MapMaker$NullConcurrentMap
+com.google.common.collect.MapMaker$RemovalCause
+com.google.common.collect.MapMaker$RemovalCause$1
+com.google.common.collect.MapMaker$RemovalCause$2
+com.google.common.collect.MapMaker$RemovalCause$3
+com.google.common.collect.MapMaker$RemovalCause$4
+com.google.common.collect.MapMaker$RemovalCause$5
+com.google.common.collect.MapMaker$RemovalListener
+com.google.common.collect.MapMaker$RemovalNotification
+com.google.common.collect.Maps:
+    85:85:public static java.util.HashMap newHashMap()
+    103:103:public static java.util.HashMap newHashMapWithExpectedSize(int)
+    112:119:static int capacity(int)
+    138:138:public static java.util.HashMap newHashMap(java.util.Map)
+    151:151:public static java.util.LinkedHashMap newLinkedHashMap()
+    167:167:public static java.util.LinkedHashMap newLinkedHashMap(java.util.Map)
+    186:186:public static java.util.concurrent.ConcurrentMap newConcurrentMap()
+    199:199:public static java.util.TreeMap newTreeMap()
+    215:215:public static java.util.TreeMap newTreeMap(java.util.SortedMap)
+    235:235:public static java.util.TreeMap newTreeMap(java.util.Comparator)
+    259:259:public static java.util.EnumMap newEnumMap(java.util.Map)
+    268:268:public static java.util.IdentityHashMap newIdentityHashMap()
+    300:300:public static com.google.common.collect.BiMap synchronizedBiMap(com.google.common.collect.BiMap)
+    321:321:public static com.google.common.collect.MapDifference difference(java.util.Map,java.util.Map)
+    347:374:public static com.google.common.collect.MapDifference difference(java.util.Map,java.util.Map,com.google.common.base.Equivalence)
+    381:381:private static com.google.common.collect.MapDifference mapDifference(boolean,java.util.Map,java.util.Map,java.util.Map,java.util.Map)
+    527:527:public static com.google.common.collect.ImmutableMap uniqueIndex(java.lang.Iterable,com.google.common.base.Function)
+    544:545:public static com.google.common.collect.ImmutableMap uniqueIndex(java.lang.Object,com.google.common.base.Function)
+    565:571:public static com.google.common.collect.ImmutableMap uniqueIndex(java.util.Iterator,com.google.common.base.Function)
+    590:597:public static com.google.common.collect.ImmutableMap fromProperties(java.util.Properties)
+    612:612:public static java.util.Map$Entry immutableEntry(java.lang.Object,java.lang.Object)
+    625:625:static java.util.Set unmodifiableEntrySet(java.util.Set)
+    639:640:static java.util.Map$Entry unmodifiableEntry(java.util.Map$Entry)
+    750:750:public static com.google.common.collect.BiMap unmodifiableBiMap(com.google.common.collect.BiMap)
+    833:841:public static java.util.Map transformValues(java.util.Map,com.google.common.base.Function)
+    898:898:public static java.util.Map transformEntries(java.util.Map,com.google.common.collect.Maps$EntryTransformer)
+    1050:1058:public static java.util.Map filterKeys(java.util.Map,com.google.common.base.Predicate)
+    1095:1103:public static java.util.Map filterValues(java.util.Map,com.google.common.base.Predicate)
+    1137:1138:public static java.util.Map filterEntries(java.util.Map,com.google.common.base.Predicate)
+    1149:1151:private static java.util.Map filterFiltered(com.google.common.collect.Maps$AbstractFilteredMap,com.google.common.base.Predicate)
+    1528:1530:static java.lang.Object safeGet(java.util.Map,java.lang.Object)
+    1540:1542:static boolean safeContainsKey(java.util.Map,java.lang.Object)
+    1560:1563:static boolean containsEntryImpl(java.util.Collection,java.lang.Object)
+    1580:1583:static boolean removeEntryImpl(java.util.Collection,java.lang.Object)
+    1590:1597:static boolean equalsImpl(java.util.Map,java.lang.Object)
+    1604:1604:static int hashCodeImpl(java.util.Map)
+    1611:1614:static java.lang.String toStringImpl(java.util.Map)
+    1622:1625:static void putAllImpl(java.util.Map,java.util.Map)
+    1631:1636:static boolean containsKeyImpl(java.util.Map,java.lang.Object)
+    1643:1648:static boolean containsValueImpl(java.util.Map,java.lang.Object)
+com.google.common.collect.Maps$1
+com.google.common.collect.Maps$2
+com.google.common.collect.Maps$3
+com.google.common.collect.Maps$4
+com.google.common.collect.Maps$AbstractFilteredMap
+com.google.common.collect.Maps$AbstractFilteredMap$Values
+com.google.common.collect.Maps$AbstractFilteredMap$Values$1
+com.google.common.collect.Maps$EntrySet
+com.google.common.collect.Maps$EntryTransformer
+com.google.common.collect.Maps$FilteredEntryMap
+com.google.common.collect.Maps$FilteredEntryMap$EntrySet
+com.google.common.collect.Maps$FilteredEntryMap$EntrySet$1
+com.google.common.collect.Maps$FilteredEntryMap$EntrySet$1$1
+com.google.common.collect.Maps$FilteredEntryMap$KeySet
+com.google.common.collect.Maps$FilteredEntryMap$KeySet$1
+com.google.common.collect.Maps$FilteredKeyMap
+com.google.common.collect.Maps$ImprovedAbstractMap
+com.google.common.collect.Maps$ImprovedAbstractMap$1
+com.google.common.collect.Maps$ImprovedAbstractMap$2
+com.google.common.collect.Maps$KeySet
+com.google.common.collect.Maps$KeySet$1
+com.google.common.collect.Maps$MapDifferenceImpl
+com.google.common.collect.Maps$TransformedEntriesMap
+com.google.common.collect.Maps$TransformedEntriesMap$1
+com.google.common.collect.Maps$TransformedEntriesMap$1$1
+com.google.common.collect.Maps$TransformedEntriesMap$2
+com.google.common.collect.Maps$UnmodifiableBiMap
+com.google.common.collect.Maps$UnmodifiableEntries
+com.google.common.collect.Maps$UnmodifiableEntries$1
+com.google.common.collect.Maps$UnmodifiableEntrySet
+com.google.common.collect.Maps$ValueDifferenceImpl
+com.google.common.collect.Maps$Values
+com.google.common.collect.Maps$Values$1
+com.google.common.collect.MinMaxPriorityQueue
+com.google.common.collect.MinMaxPriorityQueue$1
+com.google.common.collect.MinMaxPriorityQueue$Builder
+com.google.common.collect.MinMaxPriorityQueue$Heap
+com.google.common.collect.MinMaxPriorityQueue$MoveDesc
+com.google.common.collect.MinMaxPriorityQueue$QueueIterator
+com.google.common.collect.Multimap
+com.google.common.collect.Multimaps
+com.google.common.collect.Multimaps$1
+com.google.common.collect.Multimaps$2
+com.google.common.collect.Multimaps$3
+com.google.common.collect.Multimaps$AsMap
+com.google.common.collect.Multimaps$AsMap$EntrySet
+com.google.common.collect.Multimaps$CustomListMultimap
+com.google.common.collect.Multimaps$CustomMultimap
+com.google.common.collect.Multimaps$CustomSetMultimap
+com.google.common.collect.Multimaps$CustomSortedSetMultimap
+com.google.common.collect.Multimaps$Entries
+com.google.common.collect.Multimaps$EntrySet
+com.google.common.collect.Multimaps$Keys
+com.google.common.collect.Multimaps$Keys$1
+com.google.common.collect.Multimaps$Keys$1$1
+com.google.common.collect.Multimaps$Keys$2
+com.google.common.collect.Multimaps$Keys$KeysEntrySet
+com.google.common.collect.Multimaps$MapMultimap
+com.google.common.collect.Multimaps$MapMultimap$1
+com.google.common.collect.Multimaps$MapMultimap$1$1
+com.google.common.collect.Multimaps$MapMultimap$AsMap
+com.google.common.collect.Multimaps$MapMultimap$AsMapEntries
+com.google.common.collect.Multimaps$MapMultimap$AsMapEntries$1
+com.google.common.collect.Multimaps$MapMultimap$AsMapEntries$1$1
+com.google.common.collect.Multimaps$TransformedEntriesListMultimap
+com.google.common.collect.Multimaps$TransformedEntriesListMultimap$1
+com.google.common.collect.Multimaps$TransformedEntriesMultimap
+com.google.common.collect.Multimaps$TransformedEntriesMultimap$1
+com.google.common.collect.Multimaps$TransformedEntriesMultimap$2
+com.google.common.collect.Multimaps$TransformedEntriesMultimap$3
+com.google.common.collect.Multimaps$TransformedEntriesMultimap$TransformedEntries
+com.google.common.collect.Multimaps$TransformedEntriesMultimap$TransformedEntries$1
+com.google.common.collect.Multimaps$TransformedEntriesMultimap$TransformedEntries$1$1
+com.google.common.collect.Multimaps$UnmodifiableAsMapEntries
+com.google.common.collect.Multimaps$UnmodifiableAsMapEntries$1
+com.google.common.collect.Multimaps$UnmodifiableAsMapValues
+com.google.common.collect.Multimaps$UnmodifiableAsMapValues$1
+com.google.common.collect.Multimaps$UnmodifiableListMultimap
+com.google.common.collect.Multimaps$UnmodifiableMultimap
+com.google.common.collect.Multimaps$UnmodifiableMultimap$1
+com.google.common.collect.Multimaps$UnmodifiableSetMultimap
+com.google.common.collect.Multimaps$UnmodifiableSortedSetMultimap
+com.google.common.collect.Multimaps$Values
+com.google.common.collect.Multimaps$Values$1
+com.google.common.collect.Multiset
+com.google.common.collect.Multiset$Entry
+com.google.common.collect.Multisets
+com.google.common.collect.Multisets$1
+com.google.common.collect.Multisets$1$1
+com.google.common.collect.Multisets$AbstractEntry
+com.google.common.collect.Multisets$ElementSet
+com.google.common.collect.Multisets$ElementSet$1
+com.google.common.collect.Multisets$EntrySet
+com.google.common.collect.Multisets$ImmutableEntry
+com.google.common.collect.Multisets$MultisetIteratorImpl
+com.google.common.collect.Multisets$SetMultiset
+com.google.common.collect.Multisets$SetMultiset$1
+com.google.common.collect.Multisets$SetMultiset$1$1
+com.google.common.collect.Multisets$SetMultiset$ElementSet
+com.google.common.collect.Multisets$UnmodifiableMultiset
+com.google.common.collect.MutableClassToInstanceMap
+com.google.common.collect.MutableClassToInstanceMap$1
+com.google.common.collect.NaturalOrdering
+com.google.common.collect.NullsFirstOrdering
+com.google.common.collect.NullsLastOrdering
+com.google.common.collect.ObjectArrays
+com.google.common.collect.Ordering
+com.google.common.collect.Ordering$ArbitraryOrdering
+com.google.common.collect.Ordering$ArbitraryOrdering$1
+com.google.common.collect.Ordering$ArbitraryOrderingHolder
+com.google.common.collect.Ordering$IncomparableValueException
+com.google.common.collect.PeekingIterator
+com.google.common.collect.Platform
+com.google.common.collect.Range
+com.google.common.collect.Ranges
+com.google.common.collect.Ranges$1
+com.google.common.collect.RegularContiguousSet
+com.google.common.collect.RegularContiguousSet$1
+com.google.common.collect.RegularContiguousSet$SerializedForm
+com.google.common.collect.RegularImmutableBiMap
+com.google.common.collect.RegularImmutableList
+com.google.common.collect.RegularImmutableList$1
+com.google.common.collect.RegularImmutableMap
+com.google.common.collect.RegularImmutableMap$EntrySet
+com.google.common.collect.RegularImmutableMap$KeySet
+com.google.common.collect.RegularImmutableMap$LinkedEntry
+com.google.common.collect.RegularImmutableMap$NonTerminalEntry
+com.google.common.collect.RegularImmutableMap$TerminalEntry
+com.google.common.collect.RegularImmutableMap$Values
+com.google.common.collect.RegularImmutableMap$Values$1
+com.google.common.collect.RegularImmutableMultiset
+com.google.common.collect.RegularImmutableMultiset$1
+com.google.common.collect.RegularImmutableSet
+com.google.common.collect.RegularImmutableSortedMultiset
+com.google.common.collect.RegularImmutableSortedMultiset$1
+com.google.common.collect.RegularImmutableSortedMultiset$2
+com.google.common.collect.RegularImmutableSortedMultiset$CumulativeCountEntry
+com.google.common.collect.RegularImmutableSortedSet
+com.google.common.collect.ReverseNaturalOrdering
+com.google.common.collect.ReverseOrdering
+com.google.common.collect.RowSortedTable
+com.google.common.collect.Serialization
+com.google.common.collect.Serialization$1
+com.google.common.collect.Serialization$FieldSetter
+com.google.common.collect.SetMultimap
+com.google.common.collect.Sets:
+    81:81:public static com.google.common.collect.ImmutableSet immutableEnumSet(java.lang.Enum,java.lang.Enum[])
+    99:112:public static com.google.common.collect.ImmutableSet immutableEnumSet(java.lang.Iterable)
+    136:139:public static java.util.EnumSet newEnumSet(java.lang.Iterable,java.lang.Class)
+    156:156:public static java.util.HashSet newHashSet()
+    174:176:public static java.util.HashSet newHashSet(java.lang.Object[])
+    193:193:public static java.util.HashSet newHashSetWithExpectedSize(int)
+    210:210:public static java.util.HashSet newHashSet(java.lang.Iterable)
+    229:233:public static java.util.HashSet newHashSet(java.util.Iterator)
+    263:270:public static java.util.LinkedHashSet newLinkedHashSet(java.lang.Iterable)
+    285:285:public static java.util.TreeSet newTreeSet()
+    305:309:public static java.util.TreeSet newTreeSet(java.lang.Iterable)
+    324:324:public static java.util.TreeSet newTreeSet(java.util.Comparator)
+    338:338:public static java.util.Set newIdentityHashSet()
+    358:364:public static java.util.EnumSet complementOf(java.util.Collection)
+    381:382:public static java.util.EnumSet complementOf(java.util.Collection,java.lang.Class)
+    389:391:private static java.util.EnumSet makeComplementByHand(java.util.Collection,java.lang.Class)
+    434:434:public static java.util.Set newSetFromMap(java.util.Map)
+    564:569:public static com.google.common.collect.Sets$SetView union(java.util.Set,java.util.Set)
+    623:627:public static com.google.common.collect.Sets$SetView intersection(java.util.Set,java.util.Set)
+    660:664:public static com.google.common.collect.Sets$SetView difference(java.util.Set,java.util.Set)
+    694:698:public static com.google.common.collect.Sets$SetView symmetricDifference(java.util.Set,java.util.Set)
+    730:740:public static java.util.Set filter(java.util.Set,com.google.common.base.Predicate)
+    806:812:public static java.util.Set cartesianProduct(java.util.List)
+    862:862:public static java.util.Set cartesianProduct(java.util.Set[])
+    1026:1029:public static java.util.Set powerSet(java.util.Set)
+    1126:1130:static int hashCodeImpl(java.util.Set)
+    1137:1151:static boolean equalsImpl(java.util.Set,java.lang.Object)
+    1168:1168:static java.util.Set transform(java.util.Set,com.google.common.collect.Sets$InvertibleFunction)
+com.google.common.collect.Sets$1
+com.google.common.collect.Sets$2
+com.google.common.collect.Sets$3
+com.google.common.collect.Sets$CartesianSet
+com.google.common.collect.Sets$CartesianSet$1
+com.google.common.collect.Sets$CartesianSet$Axis
+com.google.common.collect.Sets$FilteredSet
+com.google.common.collect.Sets$InvertibleFunction
+com.google.common.collect.Sets$InvertibleFunction$1
+com.google.common.collect.Sets$PowerSet
+com.google.common.collect.Sets$PowerSet$1
+com.google.common.collect.Sets$PowerSet$1$1
+com.google.common.collect.Sets$PowerSet$BitFilteredSetIterator
+com.google.common.collect.Sets$SetFromMap
+com.google.common.collect.Sets$SetView
+com.google.common.collect.Sets$TransformedSet
+com.google.common.collect.SingletonImmutableList
+com.google.common.collect.SingletonImmutableList$1
+com.google.common.collect.SingletonImmutableMap
+com.google.common.collect.SingletonImmutableMap$Values
+com.google.common.collect.SingletonImmutableSet
+com.google.common.collect.SortedIterable
+com.google.common.collect.SortedIterables
+com.google.common.collect.SortedIterables$1
+com.google.common.collect.SortedIterables$2
+com.google.common.collect.SortedLists
+com.google.common.collect.SortedLists$1
+com.google.common.collect.SortedLists$KeyAbsentBehavior
+com.google.common.collect.SortedLists$KeyAbsentBehavior$1
+com.google.common.collect.SortedLists$KeyAbsentBehavior$2
+com.google.common.collect.SortedLists$KeyAbsentBehavior$3
+com.google.common.collect.SortedLists$KeyPresentBehavior
+com.google.common.collect.SortedLists$KeyPresentBehavior$1
+com.google.common.collect.SortedLists$KeyPresentBehavior$2
+com.google.common.collect.SortedLists$KeyPresentBehavior$3
+com.google.common.collect.SortedLists$KeyPresentBehavior$4
+com.google.common.collect.SortedLists$KeyPresentBehavior$5
+com.google.common.collect.SortedMapDifference
+com.google.common.collect.SortedMaps
+com.google.common.collect.SortedMaps$1
+com.google.common.collect.SortedMaps$2
+com.google.common.collect.SortedMaps$3
+com.google.common.collect.SortedMaps$FilteredSortedMap
+com.google.common.collect.SortedMaps$SortedMapDifferenceImpl
+com.google.common.collect.SortedMaps$TransformedEntriesSortedMap
+com.google.common.collect.SortedMultiset
+com.google.common.collect.SortedMultisets
+com.google.common.collect.SortedMultisets$DescendingMultiset
+com.google.common.collect.SortedMultisets$DescendingMultiset$1
+com.google.common.collect.SortedMultisets$DescendingMultiset$2
+com.google.common.collect.SortedMultisets$ElementSet
+com.google.common.collect.SortedSetMultimap
+com.google.common.collect.SortedTreeMultiset
+com.google.common.collect.SortedTreeMultiset$1
+com.google.common.collect.SortedTreeMultiset$2
+com.google.common.collect.SortedTreeMultiset$3
+com.google.common.collect.SortedTreeMultiset$4
+com.google.common.collect.SortedTreeMultiset$5
+com.google.common.collect.SortedTreeMultiset$AddModifier
+com.google.common.collect.SortedTreeMultiset$ConditionalSetCountModifier
+com.google.common.collect.SortedTreeMultiset$MultisetModifier
+com.google.common.collect.SortedTreeMultiset$Node
+com.google.common.collect.SortedTreeMultiset$RemoveModifier
+com.google.common.collect.SortedTreeMultiset$SetCountModifier
+com.google.common.collect.StandardRowSortedTable
+com.google.common.collect.StandardRowSortedTable$1
+com.google.common.collect.StandardRowSortedTable$RowKeySortedSet
+com.google.common.collect.StandardRowSortedTable$RowSortedMap
+com.google.common.collect.StandardTable
+com.google.common.collect.StandardTable$1
+com.google.common.collect.StandardTable$2
+com.google.common.collect.StandardTable$CellIterator
+com.google.common.collect.StandardTable$CellSet
+com.google.common.collect.StandardTable$Column
+com.google.common.collect.StandardTable$Column$EntrySet
+com.google.common.collect.StandardTable$Column$EntrySetIterator
+com.google.common.collect.StandardTable$Column$EntrySetIterator$1
+com.google.common.collect.StandardTable$Column$KeySet
+com.google.common.collect.StandardTable$Column$KeySet$1
+com.google.common.collect.StandardTable$Column$Values
+com.google.common.collect.StandardTable$Column$Values$1
+com.google.common.collect.StandardTable$Column$Values$2
+com.google.common.collect.StandardTable$ColumnKeyIterator
+com.google.common.collect.StandardTable$ColumnKeySet
+com.google.common.collect.StandardTable$ColumnMap
+com.google.common.collect.StandardTable$ColumnMap$ColumnMapEntrySet
+com.google.common.collect.StandardTable$ColumnMap$ColumnMapEntrySet$1
+com.google.common.collect.StandardTable$ColumnMap$ColumnMapValues
+com.google.common.collect.StandardTable$Row
+com.google.common.collect.StandardTable$Row$1
+com.google.common.collect.StandardTable$Row$RowEntrySet
+com.google.common.collect.StandardTable$Row$RowEntrySet$1
+com.google.common.collect.StandardTable$Row$RowEntrySet$1$1
+com.google.common.collect.StandardTable$RowKeySet
+com.google.common.collect.StandardTable$RowMap
+com.google.common.collect.StandardTable$RowMap$EntryIterator
+com.google.common.collect.StandardTable$RowMap$EntrySet
+com.google.common.collect.StandardTable$TableCollection
+com.google.common.collect.StandardTable$TableSet
+com.google.common.collect.StandardTable$Values
+com.google.common.collect.StandardTable$Values$1
+com.google.common.collect.Synchronized
+com.google.common.collect.Synchronized$1
+com.google.common.collect.Synchronized$SynchronizedAsMap
+com.google.common.collect.Synchronized$SynchronizedAsMapEntries
+com.google.common.collect.Synchronized$SynchronizedAsMapEntries$1
+com.google.common.collect.Synchronized$SynchronizedAsMapEntries$1$1
+com.google.common.collect.Synchronized$SynchronizedAsMapValues
+com.google.common.collect.Synchronized$SynchronizedAsMapValues$1
+com.google.common.collect.Synchronized$SynchronizedBiMap
+com.google.common.collect.Synchronized$SynchronizedCollection
+com.google.common.collect.Synchronized$SynchronizedList
+com.google.common.collect.Synchronized$SynchronizedListMultimap
+com.google.common.collect.Synchronized$SynchronizedMap
+com.google.common.collect.Synchronized$SynchronizedMultimap
+com.google.common.collect.Synchronized$SynchronizedMultiset
+com.google.common.collect.Synchronized$SynchronizedObject
+com.google.common.collect.Synchronized$SynchronizedRandomAccessList
+com.google.common.collect.Synchronized$SynchronizedSet
+com.google.common.collect.Synchronized$SynchronizedSetMultimap
+com.google.common.collect.Synchronized$SynchronizedSortedMap
+com.google.common.collect.Synchronized$SynchronizedSortedSet
+com.google.common.collect.Synchronized$SynchronizedSortedSetMultimap
+com.google.common.collect.Table
+com.google.common.collect.Table$Cell
+com.google.common.collect.Tables
+com.google.common.collect.Tables$AbstractCell
+com.google.common.collect.Tables$ImmutableCell
+com.google.common.collect.Tables$TransformedTable
+com.google.common.collect.Tables$TransformedTable$1
+com.google.common.collect.Tables$TransformedTable$2
+com.google.common.collect.Tables$TransformedTable$3
+com.google.common.collect.Tables$TransformedTable$CellSet
+com.google.common.collect.Tables$TransposeTable
+com.google.common.collect.Tables$TransposeTable$1
+com.google.common.collect.Tables$TransposeTable$CellSet
+com.google.common.collect.TransformedImmutableList
+com.google.common.collect.TransformedImmutableList$1
+com.google.common.collect.TransformedImmutableList$TransformedView
+com.google.common.collect.TreeBasedTable
+com.google.common.collect.TreeBasedTable$1
+com.google.common.collect.TreeBasedTable$Factory
+com.google.common.collect.TreeBasedTable$MergingIterator
+com.google.common.collect.TreeBasedTable$MergingIterator$1
+com.google.common.collect.TreeBasedTable$TreeRow
+com.google.common.collect.TreeMultimap
+com.google.common.collect.TreeMultiset
+com.google.common.collect.TreeMultiset$SortedMapBasedElementSet
+com.google.common.collect.UnmodifiableListIterator
+com.google.common.collect.UsingToStringOrdering
+com.google.common.collect.WellBehavedMap
+com.google.common.collect.WellBehavedMap$KeyToEntryConverter
+com.google.common.collect.WellBehavedMap$KeyToEntryConverter$1
+com.google.common.collect.package-info
+com.google.common.eventbus.AllowConcurrentEvents
+com.google.common.eventbus.AnnotatedHandlerFinder
+com.google.common.eventbus.AsyncEventBus
+com.google.common.eventbus.AsyncEventBus$1
+com.google.common.eventbus.DeadEvent
+com.google.common.eventbus.EventBus
+com.google.common.eventbus.EventBus$1
+com.google.common.eventbus.EventBus$2
+com.google.common.eventbus.EventBus$3
+com.google.common.eventbus.EventBus$4
+com.google.common.eventbus.EventBus$EventWithHandler
+com.google.common.eventbus.EventHandler
+com.google.common.eventbus.HandlerFindingStrategy
+com.google.common.eventbus.Subscribe
+com.google.common.eventbus.SynchronizedEventHandler
+com.google.common.io.AppendableWriter
+com.google.common.io.ByteArrayDataInput
+com.google.common.io.ByteArrayDataOutput
+com.google.common.io.ByteProcessor
+com.google.common.io.ByteStreams
+com.google.common.io.ByteStreams$1
+com.google.common.io.ByteStreams$2
+com.google.common.io.ByteStreams$3
+com.google.common.io.ByteStreams$4
+com.google.common.io.ByteStreams$5
+com.google.common.io.ByteStreams$ByteArrayDataInputStream
+com.google.common.io.ByteStreams$ByteArrayDataOutputStream
+com.google.common.io.CharStreams
+com.google.common.io.CharStreams$1
+com.google.common.io.CharStreams$2
+com.google.common.io.CharStreams$3
+com.google.common.io.CharStreams$4
+com.google.common.io.Closeables
+com.google.common.io.CountingInputStream
+com.google.common.io.CountingOutputStream
+com.google.common.io.FileBackedOutputStream
+com.google.common.io.FileBackedOutputStream$1
+com.google.common.io.FileBackedOutputStream$2
+com.google.common.io.FileBackedOutputStream$MemoryOutput
+com.google.common.io.Files
+com.google.common.io.Files$1
+com.google.common.io.Files$2
+com.google.common.io.Flushables
+com.google.common.io.InputSupplier
+com.google.common.io.LimitInputStream
+com.google.common.io.LineBuffer
+com.google.common.io.LineProcessor
+com.google.common.io.LineReader
+com.google.common.io.LineReader$1
+com.google.common.io.LittleEndianDataInputStream
+com.google.common.io.LittleEndianDataOutputStream
+com.google.common.io.MultiInputStream
+com.google.common.io.MultiReader
+com.google.common.io.NullOutputStream
+com.google.common.io.OutputSupplier
+com.google.common.io.PatternFilenameFilter
+com.google.common.io.Resources
+com.google.common.io.Resources$1
+com.google.common.io.package-info
+com.google.common.net.HostAndPort
+com.google.common.net.HostSpecifier
+com.google.common.net.InetAddresses
+com.google.common.net.InetAddresses$TeredoInfo
+com.google.common.net.InternetDomainName
+com.google.common.net.TldPatterns
+com.google.common.net.package-info
+com.google.common.primitives.Booleans
+com.google.common.primitives.Booleans$BooleanArrayAsList
+com.google.common.primitives.Booleans$LexicographicalComparator
+com.google.common.primitives.Bytes
+com.google.common.primitives.Bytes$ByteArrayAsList
+com.google.common.primitives.Chars
+com.google.common.primitives.Chars$CharArrayAsList
+com.google.common.primitives.Chars$LexicographicalComparator
+com.google.common.primitives.Doubles
+com.google.common.primitives.Doubles$DoubleArrayAsList
+com.google.common.primitives.Doubles$LexicographicalComparator
+com.google.common.primitives.Floats
+com.google.common.primitives.Floats$FloatArrayAsList
+com.google.common.primitives.Floats$LexicographicalComparator
+com.google.common.primitives.Ints
+com.google.common.primitives.Ints$IntArrayAsList
+com.google.common.primitives.Ints$LexicographicalComparator
+com.google.common.primitives.Longs
+com.google.common.primitives.Longs$LexicographicalComparator
+com.google.common.primitives.Longs$LongArrayAsList
+com.google.common.primitives.Primitives
+com.google.common.primitives.Shorts
+com.google.common.primitives.Shorts$LexicographicalComparator
+com.google.common.primitives.Shorts$ShortArrayAsList
+com.google.common.primitives.SignedBytes
+com.google.common.primitives.SignedBytes$LexicographicalComparator
+com.google.common.primitives.UnsignedBytes
+com.google.common.primitives.UnsignedBytes$LexicographicalComparatorHolder
+com.google.common.primitives.UnsignedBytes$LexicographicalComparatorHolder$PureJavaComparator
+com.google.common.primitives.UnsignedBytes$LexicographicalComparatorHolder$UnsafeComparator
+com.google.common.primitives.UnsignedBytes$LexicographicalComparatorHolder$UnsafeComparator$1
+com.google.common.primitives.UnsignedLongs
+com.google.common.primitives.UnsignedLongs$LexicographicalComparator
+com.google.common.primitives.package-info
+com.google.common.util.concurrent.AbstractCheckedFuture
+com.google.common.util.concurrent.AbstractExecutionThreadService
+com.google.common.util.concurrent.AbstractExecutionThreadService$1
+com.google.common.util.concurrent.AbstractExecutionThreadService$1$1
+com.google.common.util.concurrent.AbstractExecutionThreadService$2
+com.google.common.util.concurrent.AbstractFuture
+com.google.common.util.concurrent.AbstractFuture$Sync
+com.google.common.util.concurrent.AbstractIdleService
+com.google.common.util.concurrent.AbstractIdleService$1
+com.google.common.util.concurrent.AbstractIdleService$1$1
+com.google.common.util.concurrent.AbstractIdleService$1$2
+com.google.common.util.concurrent.AbstractIdleService$2
+com.google.common.util.concurrent.AbstractListenableFuture
+com.google.common.util.concurrent.AbstractListeningExecutorService
+com.google.common.util.concurrent.AbstractService
+com.google.common.util.concurrent.AbstractService$1
+com.google.common.util.concurrent.AbstractService$Transition
+com.google.common.util.concurrent.Atomics
+com.google.common.util.concurrent.Callables
+com.google.common.util.concurrent.Callables$1
+com.google.common.util.concurrent.CheckedFuture
+com.google.common.util.concurrent.ExecutionError
+com.google.common.util.concurrent.ExecutionList
+com.google.common.util.concurrent.ExecutionList$RunnableExecutorPair
+com.google.common.util.concurrent.FakeTimeLimiter
+com.google.common.util.concurrent.ForwardingBlockingQueue
+com.google.common.util.concurrent.ForwardingCheckedFuture
+com.google.common.util.concurrent.ForwardingCheckedFuture$SimpleForwardingCheckedFuture
+com.google.common.util.concurrent.ForwardingExecutorService
+com.google.common.util.concurrent.ForwardingFuture
+com.google.common.util.concurrent.ForwardingFuture$SimpleForwardingFuture
+com.google.common.util.concurrent.ForwardingListenableFuture
+com.google.common.util.concurrent.ForwardingListenableFuture$SimpleForwardingListenableFuture
+com.google.common.util.concurrent.ForwardingListeningExecutorService
+com.google.common.util.concurrent.ForwardingService
+com.google.common.util.concurrent.FutureCallback
+com.google.common.util.concurrent.Futures
+com.google.common.util.concurrent.Futures$1
+com.google.common.util.concurrent.Futures$2
+com.google.common.util.concurrent.Futures$3
+com.google.common.util.concurrent.Futures$4
+com.google.common.util.concurrent.Futures$5
+com.google.common.util.concurrent.Futures$6
+com.google.common.util.concurrent.Futures$7
+com.google.common.util.concurrent.Futures$8
+com.google.common.util.concurrent.Futures$ChainingListenableFuture
+com.google.common.util.concurrent.Futures$ChainingListenableFuture$1
+com.google.common.util.concurrent.Futures$ListFuture
+com.google.common.util.concurrent.Futures$ListFuture$1
+com.google.common.util.concurrent.Futures$ListFuture$2
+com.google.common.util.concurrent.Futures$MappingCheckedFuture
+com.google.common.util.concurrent.JdkFutureAdapters
+com.google.common.util.concurrent.JdkFutureAdapters$ListenableFutureAdapter
+com.google.common.util.concurrent.JdkFutureAdapters$ListenableFutureAdapter$1
+com.google.common.util.concurrent.ListenableFuture
+com.google.common.util.concurrent.ListenableFutureTask
+com.google.common.util.concurrent.ListeningExecutorService
+com.google.common.util.concurrent.ListeningScheduledExecutorService
+com.google.common.util.concurrent.Monitor
+com.google.common.util.concurrent.Monitor$Guard
+com.google.common.util.concurrent.MoreExecutors
+com.google.common.util.concurrent.MoreExecutors$1
+com.google.common.util.concurrent.MoreExecutors$ListeningDecorator
+com.google.common.util.concurrent.MoreExecutors$SameThreadExecutorService
+com.google.common.util.concurrent.MoreExecutors$ScheduledListeningDecorator
+com.google.common.util.concurrent.Service
+com.google.common.util.concurrent.Service$State
+com.google.common.util.concurrent.SettableFuture
+com.google.common.util.concurrent.SimpleTimeLimiter
+com.google.common.util.concurrent.SimpleTimeLimiter$1
+com.google.common.util.concurrent.SimpleTimeLimiter$1$1
+com.google.common.util.concurrent.ThreadFactoryBuilder
+com.google.common.util.concurrent.ThreadFactoryBuilder$1
+com.google.common.util.concurrent.TimeLimiter
+com.google.common.util.concurrent.UncaughtExceptionHandlers
+com.google.common.util.concurrent.UncaughtExceptionHandlers$Exiter
+com.google.common.util.concurrent.UncheckedExecutionException
+com.google.common.util.concurrent.UncheckedTimeoutException
+com.google.common.util.concurrent.UninterruptibleFuture
+com.google.common.util.concurrent.Uninterruptibles
+com.google.common.util.concurrent.package-info
+javax.annotation.CheckForNull
+javax.annotation.CheckForSigned
+javax.annotation.CheckReturnValue
+javax.annotation.Detainted
+javax.annotation.MatchesPattern
+javax.annotation.MatchesPattern$Checker
+javax.annotation.Nonnegative
+javax.annotation.Nonnegative$Checker
+javax.annotation.Nonnull
+javax.annotation.Nonnull$Checker
+javax.annotation.Nullable
+javax.annotation.OverridingMethodsMustInvokeSuper
+javax.annotation.ParametersAreNonnullByDefault
+javax.annotation.ParametersAreNullableByDefault
+javax.annotation.PropertyKey
+javax.annotation.RegEx
+javax.annotation.RegEx$Checker
+javax.annotation.Signed
+javax.annotation.Syntax
+javax.annotation.Tainted
+javax.annotation.Untainted
+javax.annotation.WillClose
+javax.annotation.WillCloseWhenClosed
+javax.annotation.WillNotClose
+javax.annotation.concurrent.GuardedBy
+javax.annotation.concurrent.Immutable
+javax.annotation.concurrent.NotThreadSafe
+javax.annotation.concurrent.ThreadSafe
+javax.annotation.meta.Exclusive
+javax.annotation.meta.Exhaustive
+javax.annotation.meta.TypeQualifier
+javax.annotation.meta.TypeQualifierDefault
+javax.annotation.meta.TypeQualifierNickname
+javax.annotation.meta.TypeQualifierValidator
+javax.annotation.meta.When
+us.blanshard.sudoku.android.GridWidget:
+    private static final int THIN_LINE_WIDTH
+    private static final int NORMAL_THICK_LINE_WIDTH
+    private static final int SMALL_THICK_LINE_WIDTH
+    private static final int SMALL_SIZE_CUTOFF
+us.blanshard.sudoku.android.R
+us.blanshard.sudoku.android.R$attr
+us.blanshard.sudoku.android.R$drawable
+us.blanshard.sudoku.android.R$id
+us.blanshard.sudoku.android.R$layout
+us.blanshard.sudoku.android.R$string
+us.blanshard.sudoku.core.Block:
+    37:37:public static us.blanshard.sudoku.core.Block of(int)
+    69:69:public us.blanshard.sudoku.core.Unit$Type getType()
+    1:1:public static us.blanshard.sudoku.core.Unit ofIndex(int)
+us.blanshard.sudoku.core.Column:
+    36:36:public static us.blanshard.sudoku.core.Column of(int)
+    55:55:public us.blanshard.sudoku.core.Unit$Type getType()
+    1:1:public static us.blanshard.sudoku.core.Unit ofIndex(int)
+us.blanshard.sudoku.core.Generator:
+    public abstract boolean honorsSymmetry()
+us.blanshard.sudoku.core.Generator$1:
+    43:43:public boolean honorsSymmetry()
+us.blanshard.sudoku.core.Generator$2:
+    56:56:public boolean honorsSymmetry()
+us.blanshard.sudoku.core.Generator$3:
+    70:70:public boolean honorsSymmetry()
+us.blanshard.sudoku.core.Grid:
+    65:67:public us.blanshard.sudoku.core.Grid$State getState()
+    71:71:public boolean isSolved()
+    78:89:public java.util.Collection getBrokenLocations()
+    241:244:public java.lang.String toFlatString()
+    252:264:public static us.blanshard.sudoku.core.Grid fromString(java.lang.String)
+us.blanshard.sudoku.core.Grid$Builder:
+    122:124:public us.blanshard.sudoku.core.Grid$Builder clear()
+    129:129:public boolean containsKey(us.blanshard.sudoku.core.Location)
+    134:134:public us.blanshard.sudoku.core.Numeral get(us.blanshard.sudoku.core.Location)
+    151:151:public int size()
+us.blanshard.sudoku.core.Grid$State
+us.blanshard.sudoku.core.Location:
+    public static final int COUNT
+us.blanshard.sudoku.core.Marks:
+    private static final short ALL_BITS
+us.blanshard.sudoku.core.Marks$Builder:
+    114:114:public us.blanshard.sudoku.core.Grid asGrid()
+us.blanshard.sudoku.core.NumSet:
+    68:68:public us.blanshard.sudoku.core.NumSet not()
+    73:73:public us.blanshard.sudoku.core.NumSet and(us.blanshard.sudoku.core.NumSet)
+    78:78:public us.blanshard.sudoku.core.NumSet or(us.blanshard.sudoku.core.NumSet)
+    83:83:public us.blanshard.sudoku.core.NumSet xor(us.blanshard.sudoku.core.NumSet)
+us.blanshard.sudoku.core.Numeral:
+    43:43:public static us.blanshard.sudoku.core.Numeral ofIndex(int)
+us.blanshard.sudoku.core.Row:
+    36:36:public static us.blanshard.sudoku.core.Row of(int)
+    55:55:public us.blanshard.sudoku.core.Unit$Type getType()
+    1:1:public static us.blanshard.sudoku.core.Unit ofIndex(int)
+us.blanshard.sudoku.core.Symmetry:
+    118:118:public us.blanshard.sudoku.core.Grid generate(java.util.Random)
+us.blanshard.sudoku.core.Unit:
+    public static final int COUNT
+    44:44:public static java.util.List allUnits()
+    49:51:public static us.blanshard.sudoku.core.Unit ofIndex(int)
+    56:56:public final us.blanshard.sudoku.core.NumSet getConflicts(us.blanshard.sudoku.core.Grid)
+    61:61:public final us.blanshard.sudoku.core.NumSet getMissing(us.blanshard.sudoku.core.Grid)
+    65:73:final short getConflictBits(us.blanshard.sudoku.core.Grid)
+    77:84:final short getMissingBits(us.blanshard.sudoku.core.Grid)
+    public abstract us.blanshard.sudoku.core.Unit$Type getType()
+us.blanshard.sudoku.core.Unit$AllUnits
+us.blanshard.sudoku.core.UnitSubset:
+    60:60:public us.blanshard.sudoku.core.UnitSubset not()
+    65:65:public us.blanshard.sudoku.core.UnitSubset and(us.blanshard.sudoku.core.UnitSubset)
+    70:70:public us.blanshard.sudoku.core.UnitSubset or(us.blanshard.sudoku.core.UnitSubset)
+    75:75:public us.blanshard.sudoku.core.UnitSubset xor(us.blanshard.sudoku.core.UnitSubset)
+    80:80:public us.blanshard.sudoku.core.UnitSubset minus(us.blanshard.sudoku.core.UnitSubset)
+    97:97:public us.blanshard.sudoku.core.Location get(int)
+us.blanshard.sudoku.stats.GenStats
+us.blanshard.sudoku.stats.Slow

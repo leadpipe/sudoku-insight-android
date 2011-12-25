@@ -1,0 +1,355 @@
+com.google.common.base.Joiner -> a.a.a.b.b:
+    java.lang.String separator -> a
+    com.google.common.base.Joiner on(java.lang.String) -> a
+    com.google.common.base.Joiner$MapJoiner withKeyValueSeparator(java.lang.String) -> b
+com.google.common.base.Joiner$MapJoiner -> a.a.a.b.a:
+    com.google.common.base.Joiner joiner -> a
+    java.lang.String keyValueSeparator -> b
+com.google.common.base.Preconditions -> a.a.a.b.c:
+    java.lang.Object checkNotNull(java.lang.Object) -> a
+com.google.common.collect.Collections2 -> a.a.a.a.f:
+    com.google.common.base.Joiner STANDARD_JOINER -> a
+    java.util.Collection cast(java.lang.Iterable) -> a
+com.google.common.collect.Iterables -> a.a.a.a.e:
+    java.lang.Iterable concat(java.lang.Iterable,java.lang.Iterable) -> a
+com.google.common.collect.Iterables$2 -> a.a.a.a.b:
+    java.lang.Iterable val$inputs -> a
+    java.util.Iterator iterator() -> iterator
+com.google.common.collect.Iterables$3 -> a.a.a.a.c:
+    java.util.Iterator val$iterableIterator -> a
+    boolean hasNext() -> hasNext
+    java.lang.Object next() -> next
+com.google.common.collect.Iterables$IterableWithToString -> a.a.a.a.k:
+    java.lang.String toString() -> toString
+com.google.common.collect.Iterators -> a.a.a.a.d:
+    com.google.common.collect.UnmodifiableIterator EMPTY_ITERATOR -> a
+    java.util.Iterator EMPTY_MODIFIABLE_ITERATOR -> b
+    com.google.common.collect.UnmodifiableIterator emptyIterator() -> a
+    java.lang.String toString(java.util.Iterator) -> a
+    java.util.Iterator concat(java.util.Iterator) -> b
+com.google.common.collect.Iterators$1 -> a.a.a.a.h:
+    boolean hasNext() -> hasNext
+    java.lang.Object next() -> next
+com.google.common.collect.Iterators$2 -> a.a.a.a.i:
+    boolean hasNext() -> hasNext
+    java.lang.Object next() -> next
+    void remove() -> remove
+com.google.common.collect.Iterators$5 -> a.a.a.a.g:
+    java.util.Iterator current -> a
+    java.util.Iterator removeFrom -> b
+    java.util.Iterator val$inputs -> c
+    boolean hasNext() -> hasNext
+    java.lang.Object next() -> next
+    void remove() -> remove
+com.google.common.collect.Lists -> a.a.a.a.j:
+    java.util.ArrayList newArrayList(java.lang.Iterable) -> a
+    java.util.ArrayList newArrayList(java.util.Iterator) -> a
+com.google.common.collect.Maps -> a.a.a.a.a:
+    com.google.common.base.Joiner$MapJoiner STANDARD_JOINER -> a
+    java.util.EnumMap newEnumMap(java.lang.Class) -> a
+com.google.common.collect.UnmodifiableIterator -> a.a.a.a.l:
+    void remove() -> remove
+us.blanshard.sudoku.android.GridWidget -> us.blanshard.sudoku.android.GridWidget:
+    int mThickLineWidth -> a
+    us.blanshard.sudoku.core.Grid mGrid -> b
+    void initWidget() -> a
+    void onMeasure(int,int) -> onMeasure
+    void onDraw(android.graphics.Canvas) -> onDraw
+us.blanshard.sudoku.android.SudokuActivity -> us.blanshard.sudoku.android.SudokuActivity:
+    void onCreate(android.os.Bundle) -> onCreate
+us.blanshard.sudoku.core.Block -> us.blanshard.sudoku.a.i:
+    int number -> b
+    int index -> c
+    java.util.List ALL -> d
+    us.blanshard.sudoku.core.Block[] instances -> e
+    us.blanshard.sudoku.core.Block ofIndex(int) -> a
+    us.blanshard.sudoku.core.Block ofIndices(int,int) -> a
+    int rowIndex() -> a
+    int columnIndex() -> b
+    int unitIndex() -> c
+    boolean contains(us.blanshard.sudoku.core.Location) -> a
+    java.lang.String toString() -> toString
+us.blanshard.sudoku.core.Column -> us.blanshard.sudoku.a.am:
+    int number -> b
+    int index -> c
+    java.util.List ALL -> d
+    us.blanshard.sudoku.core.Column[] instances -> e
+    us.blanshard.sudoku.core.Column ofIndex(int) -> a
+    int unitIndex() -> c
+    boolean contains(us.blanshard.sudoku.core.Location) -> a
+    java.lang.String toString() -> toString
+us.blanshard.sudoku.core.Generator -> us.blanshard.sudoku.a.r:
+    us.blanshard.sudoku.core.Generator SIMPLE -> c
+    us.blanshard.sudoku.core.Generator SUBTRACTIVE -> a
+    us.blanshard.sudoku.core.Generator SUBTRACTIVE_RANDOM -> b
+    us.blanshard.sudoku.core.Generator[] ENUM$VALUES -> d
+    us.blanshard.sudoku.core.Grid generate(java.util.Random,us.blanshard.sudoku.core.Symmetry,us.blanshard.sudoku.core.Grid) -> a
+    us.blanshard.sudoku.core.Grid generate(java.util.Random,us.blanshard.sudoku.core.Symmetry) -> a
+    us.blanshard.sudoku.core.Grid$Builder buildToMaximal(java.util.Random,us.blanshard.sudoku.core.Symmetry,us.blanshard.sudoku.core.Grid,java.util.List) -> a
+    us.blanshard.sudoku.core.Grid subtract(java.util.Random,us.blanshard.sudoku.core.Symmetry,us.blanshard.sudoku.core.Grid$Builder,java.util.List) -> a
+    us.blanshard.sudoku.core.Generator[] values() -> values
+    us.blanshard.sudoku.core.Generator valueOf(java.lang.String) -> valueOf
+us.blanshard.sudoku.core.Generator$1 -> us.blanshard.sudoku.a.a:
+    us.blanshard.sudoku.core.Grid generate(java.util.Random,us.blanshard.sudoku.core.Symmetry,us.blanshard.sudoku.core.Grid) -> a
+us.blanshard.sudoku.core.Generator$2 -> us.blanshard.sudoku.a.k:
+    us.blanshard.sudoku.core.Grid generate(java.util.Random,us.blanshard.sudoku.core.Symmetry,us.blanshard.sudoku.core.Grid) -> a
+us.blanshard.sudoku.core.Generator$3 -> us.blanshard.sudoku.a.l:
+    us.blanshard.sudoku.core.Grid generate(java.util.Random,us.blanshard.sudoku.core.Symmetry,us.blanshard.sudoku.core.Grid) -> a
+us.blanshard.sudoku.core.Grid -> us.blanshard.sudoku.a.o:
+    byte[] squares -> b
+    us.blanshard.sudoku.core.Grid BLANK -> a
+    us.blanshard.sudoku.core.Grid$Builder builder() -> a
+    us.blanshard.sudoku.core.Grid$Builder asBuilder() -> b
+    void clear() -> clear
+    boolean containsKey(java.lang.Object) -> containsKey
+    boolean containsKey(us.blanshard.sudoku.core.Location) -> b
+    boolean containsValue(java.lang.Object) -> containsValue
+    java.util.Set entrySet() -> entrySet
+    boolean equals(java.lang.Object) -> equals
+    us.blanshard.sudoku.core.Numeral get(java.lang.Object) -> a
+    us.blanshard.sudoku.core.Numeral get(us.blanshard.sudoku.core.Location) -> a
+    int hashCode() -> hashCode
+    int size() -> size
+    java.lang.String toString() -> toString
+    java.lang.Object get(java.lang.Object) -> get
+    java.lang.Object remove(java.lang.Object) -> remove
+    java.lang.Object put(java.lang.Object,java.lang.Object) -> put
+    byte[] access$3(us.blanshard.sudoku.core.Grid) -> a
+us.blanshard.sudoku.core.Grid$Builder -> us.blanshard.sudoku.a.ah:
+    us.blanshard.sudoku.core.Grid grid -> a
+    boolean built -> b
+    us.blanshard.sudoku.core.Grid grid() -> b
+    us.blanshard.sudoku.core.Grid build() -> a
+    us.blanshard.sudoku.core.Grid$Builder put(us.blanshard.sudoku.core.Location,us.blanshard.sudoku.core.Numeral) -> a
+    us.blanshard.sudoku.core.Grid$Builder remove(us.blanshard.sudoku.core.Location) -> a
+us.blanshard.sudoku.core.Grid$EntrySet -> us.blanshard.sudoku.a.x:
+    us.blanshard.sudoku.core.Grid this$0 -> a
+    boolean addAll(java.util.Collection) -> addAll
+    void clear() -> clear
+    boolean contains(java.lang.Object) -> contains
+    boolean isEmpty() -> isEmpty
+    java.util.Iterator iterator() -> iterator
+    boolean remove(java.lang.Object) -> remove
+    int size() -> size
+    boolean add(java.lang.Object) -> add
+us.blanshard.sudoku.core.Grid$GridEntry -> us.blanshard.sudoku.a.v:
+    int index -> a
+    us.blanshard.sudoku.core.Grid this$0 -> b
+    us.blanshard.sudoku.core.Numeral getValue() -> a
+    boolean equals(java.lang.Object) -> equals
+    int hashCode() -> hashCode
+    java.lang.String toString() -> toString
+    java.lang.Object getValue() -> getValue
+    java.lang.Object getKey() -> getKey
+    java.lang.Object setValue(java.lang.Object) -> setValue
+us.blanshard.sudoku.core.Grid$Iter -> us.blanshard.sudoku.a.ai:
+    int nextIndex -> a
+    us.blanshard.sudoku.core.Grid this$0 -> b
+    boolean hasNext() -> hasNext
+    void stepIndex() -> a
+    void remove() -> remove
+    java.lang.Object next() -> next
+us.blanshard.sudoku.core.Location -> us.blanshard.sudoku.a.d:
+    us.blanshard.sudoku.core.Row row -> a
+    us.blanshard.sudoku.core.Column column -> b
+    us.blanshard.sudoku.core.Block block -> c
+    java.util.Map unitSubsets -> d
+    java.util.List peers -> e
+    int index -> f
+    java.util.List ALL -> g
+    us.blanshard.sudoku.core.Location[] peersArray -> h
+    us.blanshard.sudoku.core.Location[] instances -> i
+    us.blanshard.sudoku.core.Location of(us.blanshard.sudoku.core.Row,us.blanshard.sudoku.core.Column) -> a
+    us.blanshard.sudoku.core.Location of(int,int) -> a
+    us.blanshard.sudoku.core.Location of(int) -> a
+    java.lang.String toString() -> toString
+    java.util.Iterator iterator(byte[]) -> a
+    int compareTo(java.lang.Object) -> compareTo
+us.blanshard.sudoku.core.Location$Iter -> us.blanshard.sudoku.a.ag:
+    byte[] indices -> a
+    int next -> b
+    boolean hasNext() -> hasNext
+    void remove() -> remove
+    java.lang.Object next() -> next
+us.blanshard.sudoku.core.Marks -> us.blanshard.sudoku.a.al:
+    short[] bits -> a
+    short[] unitBits -> b
+    us.blanshard.sudoku.core.Grid asGrid() -> a
+    us.blanshard.sudoku.core.NumSet get(us.blanshard.sudoku.core.Location) -> a
+    us.blanshard.sudoku.core.UnitSubset get(us.blanshard.sudoku.core.Unit,us.blanshard.sudoku.core.Numeral) -> a
+    boolean equals(java.lang.Object) -> equals
+    int hashCode() -> hashCode
+    java.lang.String toString() -> toString
+    java.lang.StringBuilder append(us.blanshard.sudoku.core.NumSet,int,java.lang.StringBuilder) -> a
+    java.lang.StringBuilder append(char,int,java.lang.StringBuilder) -> a
+    short[] access$1(us.blanshard.sudoku.core.Marks) -> a
+    short[] access$2(us.blanshard.sudoku.core.Marks) -> b
+us.blanshard.sudoku.core.Marks$Builder -> us.blanshard.sudoku.a.e:
+    us.blanshard.sudoku.core.Marks marks -> a
+    boolean built -> b
+    us.blanshard.sudoku.core.Marks build() -> a
+    us.blanshard.sudoku.core.NumSet get(us.blanshard.sudoku.core.Location) -> a
+    boolean assignAll(java.util.Map) -> a
+    boolean assign(us.blanshard.sudoku.core.Location,us.blanshard.sudoku.core.Numeral) -> a
+    boolean eliminate(us.blanshard.sudoku.core.Location,us.blanshard.sudoku.core.Numeral) -> b
+us.blanshard.sudoku.core.NumSet -> us.blanshard.sudoku.a.c:
+    short bits -> a
+    byte[] nums -> b
+    us.blanshard.sudoku.core.NumSet[] instances -> c
+    us.blanshard.sudoku.core.NumSet ofBits(int) -> a
+    us.blanshard.sudoku.core.NumSet of(us.blanshard.sudoku.core.Numeral[]) -> a
+    us.blanshard.sudoku.core.NumSet minus(us.blanshard.sudoku.core.NumSet) -> a
+    boolean contains(us.blanshard.sudoku.core.Numeral) -> a
+    boolean contains(java.lang.Object) -> contains
+    us.blanshard.sudoku.core.Numeral get$78a83c56() -> a
+    java.util.Iterator iterator() -> iterator
+    int size() -> size
+    boolean equals(java.lang.Object) -> equals
+    int hashCode() -> hashCode
+    byte[] access$0(us.blanshard.sudoku.core.NumSet) -> b
+us.blanshard.sudoku.core.NumSet$Iter -> us.blanshard.sudoku.a.t:
+    int nextIndex -> a
+    us.blanshard.sudoku.core.NumSet this$0 -> b
+    boolean hasNext() -> hasNext
+    void remove() -> remove
+    java.lang.Object next() -> next
+us.blanshard.sudoku.core.Numeral -> us.blanshard.sudoku.a.w:
+    int number -> a
+    int index -> b
+    short bit -> c
+    java.util.List ALL -> d
+    us.blanshard.sudoku.core.Numeral[] instances -> e
+    us.blanshard.sudoku.core.Numeral of(int) -> a
+    java.lang.String toString() -> toString
+    boolean equals(java.lang.Object) -> equals
+    int hashCode() -> hashCode
+    int compareTo(java.lang.Object) -> compareTo
+us.blanshard.sudoku.core.Row -> us.blanshard.sudoku.a.ak:
+    int number -> b
+    int index -> c
+    java.util.List ALL -> d
+    us.blanshard.sudoku.core.Row[] instances -> e
+    us.blanshard.sudoku.core.Row ofIndex(int) -> a
+    int unitIndex() -> c
+    boolean contains(us.blanshard.sudoku.core.Location) -> a
+    java.lang.String toString() -> toString
+us.blanshard.sudoku.core.Solver -> us.blanshard.sudoku.a.f:
+    us.blanshard.sudoku.core.Grid start -> a
+    java.util.Random random -> b
+    us.blanshard.sudoku.core.Solver$Strategy strategy -> c
+    us.blanshard.sudoku.core.Marks startMarks -> d
+    us.blanshard.sudoku.core.Location[] locations -> e
+    us.blanshard.sudoku.core.Solver$Iter iterator() -> a
+    java.util.Iterator iterator() -> iterator
+    us.blanshard.sudoku.core.Grid access$1(us.blanshard.sudoku.core.Solver) -> a
+    us.blanshard.sudoku.core.Marks access$2(us.blanshard.sudoku.core.Solver) -> b
+    us.blanshard.sudoku.core.Location[] access$3(us.blanshard.sudoku.core.Solver) -> c
+    java.util.Random access$4(us.blanshard.sudoku.core.Solver) -> d
+    us.blanshard.sudoku.core.Solver$Assignment[] access$5(us.blanshard.sudoku.core.Marks,us.blanshard.sudoku.core.Location) -> a
+us.blanshard.sudoku.core.Solver$Assignment -> us.blanshard.sudoku.a.u:
+    us.blanshard.sudoku.core.Marks marks -> a
+    us.blanshard.sudoku.core.Location location -> b
+    us.blanshard.sudoku.core.Numeral numeral -> c
+us.blanshard.sudoku.core.Solver$Iter -> us.blanshard.sudoku.a.q:
+    boolean nextComputed -> a
+    us.blanshard.sudoku.core.Grid next -> b
+    int stepCount -> c
+    us.blanshard.sudoku.core.Solver$Worklist worklist -> d
+    us.blanshard.sudoku.core.Solver this$0 -> e
+    int getStepCount() -> a
+    boolean hasNext() -> hasNext
+    us.blanshard.sudoku.core.Grid next() -> b
+    void remove() -> remove
+    java.lang.Object next() -> next
+us.blanshard.sudoku.core.Solver$Result -> us.blanshard.sudoku.a.aa:
+    us.blanshard.sudoku.core.Grid start -> b
+    int numSolutions -> a
+    int numSteps -> c
+    int numStepsAfterSolution -> d
+    us.blanshard.sudoku.core.Grid solution -> e
+    us.blanshard.sudoku.core.Solver this$0 -> f
+us.blanshard.sudoku.core.Solver$Strategy -> us.blanshard.sudoku.a.s:
+    us.blanshard.sudoku.core.Solver$Strategy SIMPLE -> a
+    us.blanshard.sudoku.core.Solver$Strategy FAST -> b
+    us.blanshard.sudoku.core.Solver$Strategy[] ENUM$VALUES -> c
+    us.blanshard.sudoku.core.Solver$Iter getIterator(us.blanshard.sudoku.core.Solver) -> a
+    us.blanshard.sudoku.core.Solver$Strategy[] values() -> values
+    us.blanshard.sudoku.core.Solver$Strategy valueOf(java.lang.String) -> valueOf
+us.blanshard.sudoku.core.Solver$Strategy$1 -> us.blanshard.sudoku.a.h:
+    us.blanshard.sudoku.core.Solver$Iter getIterator(us.blanshard.sudoku.core.Solver) -> a
+us.blanshard.sudoku.core.Solver$Strategy$2 -> us.blanshard.sudoku.a.j:
+    us.blanshard.sudoku.core.Solver$Iter getIterator(us.blanshard.sudoku.core.Solver) -> a
+us.blanshard.sudoku.core.Solver$Worklist -> us.blanshard.sudoku.a.b:
+    us.blanshard.sudoku.core.Grid found -> a
+    java.util.ArrayDeque worklist -> b
+    us.blanshard.sudoku.core.Location[] locations -> c
+    us.blanshard.sudoku.core.Solver this$0 -> d
+    us.blanshard.sudoku.core.Grid getFound() -> a
+    boolean isComplete() -> b
+    boolean isCompleteOrFoundSomething() -> c
+    int run(int) -> a
+    boolean pushNextAssignments(us.blanshard.sudoku.core.Marks) -> a
+us.blanshard.sudoku.core.Symmetry -> us.blanshard.sudoku.a.p:
+    us.blanshard.sudoku.core.Symmetry RANDOM -> a
+    us.blanshard.sudoku.core.Symmetry CLASSIC -> c
+    us.blanshard.sudoku.core.Symmetry MIRROR -> b
+    us.blanshard.sudoku.core.Symmetry DOUBLE_MIRROR -> d
+    us.blanshard.sudoku.core.Symmetry DIAGONAL -> e
+    us.blanshard.sudoku.core.Symmetry ROTATIONAL -> f
+    us.blanshard.sudoku.core.Symmetry BLOCKWISE -> g
+    us.blanshard.sudoku.core.Symmetry[] values -> h
+    us.blanshard.sudoku.core.Symmetry[] ENUM$VALUES -> i
+    us.blanshard.sudoku.core.Symmetry choose(java.util.Random) -> a
+    java.lang.Iterable expand(us.blanshard.sudoku.core.Location) -> a
+    us.blanshard.sudoku.core.Symmetry[] values() -> values
+    us.blanshard.sudoku.core.Symmetry valueOf(java.lang.String) -> valueOf
+us.blanshard.sudoku.core.Symmetry$1 -> us.blanshard.sudoku.a.ae:
+    java.lang.Iterable expand(us.blanshard.sudoku.core.Location) -> a
+us.blanshard.sudoku.core.Symmetry$2 -> us.blanshard.sudoku.a.af:
+    java.lang.Iterable expand(us.blanshard.sudoku.core.Location) -> a
+us.blanshard.sudoku.core.Symmetry$3 -> us.blanshard.sudoku.a.y:
+    java.lang.Iterable expand(us.blanshard.sudoku.core.Location) -> a
+us.blanshard.sudoku.core.Symmetry$4 -> us.blanshard.sudoku.a.ab:
+    java.lang.Iterable expand(us.blanshard.sudoku.core.Location) -> a
+us.blanshard.sudoku.core.Symmetry$5 -> us.blanshard.sudoku.a.ac:
+    java.lang.Iterable expand(us.blanshard.sudoku.core.Location) -> a
+us.blanshard.sudoku.core.Symmetry$6 -> us.blanshard.sudoku.a.ad:
+    java.lang.Iterable expand(us.blanshard.sudoku.core.Location) -> a
+us.blanshard.sudoku.core.Symmetry$7 -> us.blanshard.sudoku.a.n:
+    java.lang.Iterable expand(us.blanshard.sudoku.core.Location) -> a
+us.blanshard.sudoku.core.Unit -> us.blanshard.sudoku.a.z:
+    byte[] locations -> a
+    int unitIndex() -> c
+    boolean contains(us.blanshard.sudoku.core.Location) -> a
+    int indexOf(us.blanshard.sudoku.core.Location) -> b
+    us.blanshard.sudoku.core.Location get(int) -> b
+    int size() -> size
+    boolean contains(java.lang.Object) -> contains
+    java.util.Iterator iterator() -> iterator
+us.blanshard.sudoku.core.Unit$Type -> us.blanshard.sudoku.a.aj:
+    us.blanshard.sudoku.core.Unit$Type ROW -> a
+    us.blanshard.sudoku.core.Unit$Type COLUMN -> b
+    us.blanshard.sudoku.core.Unit$Type BLOCK -> c
+    us.blanshard.sudoku.core.Unit$Type[] ENUM$VALUES -> d
+    us.blanshard.sudoku.core.Unit$Type[] values() -> values
+    us.blanshard.sudoku.core.Unit$Type valueOf(java.lang.String) -> valueOf
+us.blanshard.sudoku.core.UnitSubset -> us.blanshard.sudoku.a.m:
+    us.blanshard.sudoku.core.Unit unit -> a
+    short bits -> b
+    us.blanshard.sudoku.core.NumSet set -> c
+    us.blanshard.sudoku.core.UnitSubset ofBits(us.blanshard.sudoku.core.Unit,int) -> a
+    us.blanshard.sudoku.core.UnitSubset of(us.blanshard.sudoku.core.Unit,us.blanshard.sudoku.core.Location[]) -> a
+    boolean contains(java.lang.Object) -> contains
+    int getIndex$134621() -> a
+    java.util.Iterator iterator() -> iterator
+    int size() -> size
+    boolean equals(java.lang.Object) -> equals
+    int hashCode() -> hashCode
+    int bitFor(us.blanshard.sudoku.core.Unit,us.blanshard.sudoku.core.Location) -> a
+    us.blanshard.sudoku.core.NumSet access$0(us.blanshard.sudoku.core.UnitSubset) -> a
+us.blanshard.sudoku.core.UnitSubset$Iter -> us.blanshard.sudoku.a.g:
+    java.util.Iterator setIter -> a
+    us.blanshard.sudoku.core.UnitSubset this$0 -> b
+    boolean hasNext() -> hasNext
+    void remove() -> remove
+    java.lang.Object next() -> next
