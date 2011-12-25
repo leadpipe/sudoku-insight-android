@@ -105,6 +105,13 @@ public enum Symmetry {
   }
 
   /**
+   * Chooses one of the symmetries at random, avoiding RANDOM.
+   */
+  public static Symmetry choosePleasing(Random random) {
+    return values[1 + random.nextInt(values.length - 1)];
+  }
+
+  /**
    * Expands the given location into the set of locations that accompany it in
    * this symmetry's pattern. The given location is included in the resulting
    * set.
