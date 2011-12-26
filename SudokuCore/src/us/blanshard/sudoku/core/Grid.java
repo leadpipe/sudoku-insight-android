@@ -119,7 +119,12 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
 
     /** Resets the grid to empty. */
     public Builder clear() {
-      grid = BLANK;
+      return reset(BLANK);
+    }
+
+    /** Resets this builder to match the given grid. */
+    public Builder reset(Grid grid) {
+      this.grid = grid;
       built = true;
       return this;
     }
