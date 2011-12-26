@@ -27,71 +27,57 @@ import us.blanshard.sudoku.core.Numeral;
  */
 public abstract class Move {
 
-  /** When the move took place, in system millis. */
+  /** When the move took place, in elapsed millis. */
   public final long timestamp;
 
   /** The trail ID this applies to, or -1 for the whole state. */
   public final int id;
 
-  protected Move(Clock clock, int id) {
-    this.timestamp = clock.now();
+  protected Move(long timestamp, int id) {
+    this.timestamp = timestamp;
     this.id = id;
   }
 
-  /** Performs this move on the given game state, returns true if it worked. */
-  abstract boolean apply(Sudoku.State state);
+  /** Performs this move on the given game, returns true if it worked. */
+  abstract boolean apply(Sudoku game);
 
-  public Sudoku.Base getBaseState(Sudoku.State state) {
-    return id < 0 ? state : state.getTrail(id);
+  public Sudoku.State getState(Sudoku game) {
+    return id < 0 ? game.getState() : game.getTrail(id);
   }
 
   public static class Set extends Move {
     public final Location loc;
     public final Numeral num;
 
-    public Set(Clock clock, Location loc, Numeral num) {
-      this(clock, -1, loc, num);
+    public Set(long timestamp, Location loc, Numeral num) {
+      this(timestamp, -1, loc, num);
     }
 
-    public Set(Clock clock, int id, Location loc, Numeral num) {
-      super(clock, id);
+    public Set(long timestamp, int id, Location loc, Numeral num) {
+      super(timestamp, id);
       this.loc = checkNotNull(loc);
       this.num = checkNotNull(num);
     }
 
-    @Override boolean apply(Sudoku.State state) {
-      return getBaseState(state).actuallySet(loc, num);
+    @Override boolean apply(Sudoku game) {
+      return getState(game).actuallySet(loc, num);
     }
   }
 
   public static class Clear extends Move {
     public final Location loc;
 
-    public Clear(Clock clock, Location loc) {
-      this(clock, -1, loc);
+    public Clear(long timestamp, Location loc) {
+      this(timestamp, -1, loc);
     }
 
-    public Clear(Clock clock, int id, Location loc) {
-      super(clock, id);
+    public Clear(long timestamp, int id, Location loc) {
+      super(timestamp, id);
       this.loc = checkNotNull(loc);
     }
 
-    @Override boolean apply(Sudoku.State state) {
-      return getBaseState(state).actuallyClear(loc);
-    }
-  }
-
-  public static class Reset extends Move {
-    public Reset(Clock clock) {
-      this(clock, -1);
-    }
-
-    public Reset(Clock clock, int id) {
-      super(clock, id);
-    }
-
-    @Override boolean apply(Sudoku.State state) {
-      return getBaseState(state).actuallyReset();
+    @Override boolean apply(Sudoku game) {
+      return getState(game).actuallyClear(loc);
     }
   }
 }

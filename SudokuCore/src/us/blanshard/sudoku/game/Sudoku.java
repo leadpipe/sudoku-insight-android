@@ -19,6 +19,8 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 
+import com.google.common.base.Stopwatch;
+import com.google.common.base.Ticker;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -32,64 +34,119 @@ import java.util.List;
  */
 public final class Sudoku {
 
-  /** The clock. */
-  private final Clock clock;
-
   /** The initial clues. */
   private final Grid puzzle;
-
-  /** The current state. */
-  private final State state;
 
   /** The complete history of moves made in this game. */
   private final List<Move> history;
 
+  /** The initial elapsed milliseconds; non-zero for restored games. */
+  private final long initialMillis;
+
+  /** The object keeping track of further elapsed time. */
+  private final Stopwatch stopwatch;
+
+  /** The current state. */
+  private final State state;
+
+  /** Trails we've created. */
+  private final List<Trail> trails = Lists.newArrayList();
+
   public Sudoku(Grid puzzle) {
-    this(puzzle, ImmutableList.<Move>of());
+    this(puzzle, ImmutableList.<Move>of(), 0);
   }
 
-  public Sudoku(Grid puzzle, List<Move> history) {
-    this(Clock.SYSTEM, puzzle, history);
+  public Sudoku(Sudoku that) {
+    this(that, Ticker.systemTicker());
   }
 
-  public Sudoku(Clock clock, Grid puzzle, List<Move> history) {
-    this.clock = clock;
+  public Sudoku(Sudoku that, Ticker ticker) {
+    this(that.puzzle, that.history, that.elapsedMillis(), ticker);
+  }
+
+  public Sudoku(Grid puzzle, List<Move> history, long initialMillis) {
+    this(puzzle, history, initialMillis, Ticker.systemTicker());
+  }
+
+  public Sudoku(Grid puzzle, List<Move> history, long initialMillis, Ticker ticker) {
     this.puzzle = puzzle;
-    this.state = new State();
     this.history = Lists.newArrayList(history);
+    this.initialMillis = initialMillis;
+    this.stopwatch = new Stopwatch(ticker);
+    this.state = new State();
 
     for (Move move : history) {
-      if (!move.apply(state))
+      if (!move.apply(this))
         throw new IllegalArgumentException("Bad move: " + move);
     }
+
+    stopwatch.start();
   }
 
   public Grid getPuzzle() {
     return puzzle;
   }
 
-  public State getState() {
-    return state;
-  }
-
   public List<Move> getHistory() {
     return Collections.unmodifiableList(history);
   }
 
+  /** Returns the total elapsed time in milliseconds. */
+  public long elapsedMillis() {
+    return initialMillis + stopwatch.elapsedMillis();
+  }
+
+  /** Tells whether the puzzle is in its normal running state. */
+  public boolean isRunning() {
+    return stopwatch.isRunning();
+  }
+
+  /** Pauses the puzzle.  No moves are possible while the puzzle is paused. */
+  public void pause() {
+    if (stopwatch.isRunning()) stopwatch.stop();
+  }
+
+  /** Resumes the puzzle from a paused state. */
+  public void resume() {
+    if (!stopwatch.isRunning()) stopwatch.start();
+  }
+
+  public State getState() {
+    return state;
+  }
+
+  /** Starts a new trail. */
+  public Trail newTrail() {
+    Trail trail = new Trail(trails.size());
+    trails.add(trail);
+    return trail;
+  }
+
+  /** Returns the trail with the given ID, creating it if need be. */
+  public Trail getTrail(int id) {
+    while (id >= trails.size()) newTrail();
+    return trails.get(id);
+  }
+
+  public int getNumTrails() {
+    return trails.size();
+  }
+
   /** Applies the given move to this puzzle, adds it to the history if it worked. */
   public boolean move(Move move) {
-    if (!move.apply(state)) return false;
+    if (!isRunning()) return false;
+    if (!move.apply(this)) return false;
     history.add(move);
     return true;
   }
 
   /**
-   * Shared base class for State and Trail.
+   * The current state of play of a Sudoku puzzle.
    */
-  public abstract class Base {
+  public class State {
     protected final Grid.Builder gridBuilder;
 
-    private Base() {
+    private State() {
       gridBuilder = puzzle.asBuilder();
     }
 
@@ -106,12 +163,10 @@ public final class Sudoku {
      * Sets or clears the given location, tells whether it worked.  It only
      * doesn't work if the location contains one of the puzzle's original clues.
      */
-    public abstract boolean set(Location loc, Numeral num);
-
-    /**
-     * Resets the state to just the original clues.
-     */
-    public abstract void reset();
+    public boolean set(Location loc, Numeral num) {
+      return move(num == null ? new Move.Clear(elapsedMillis(), loc)
+                  : new Move.Set(elapsedMillis(), loc, num));
+    }
 
     boolean actuallySet(Location loc, Numeral num) {
       if (puzzle.containsKey(loc)) return false;
@@ -124,49 +179,12 @@ public final class Sudoku {
       gridBuilder.remove(loc);
       return true;
     }
-
-    boolean actuallyReset() {
-      gridBuilder.reset(puzzle);
-      return true;
-    }
-  }
-
-  /**
-   * The current state of play of a Sudoku puzzle.
-   */
-  public final class State extends Base {
-    private final List<Trail> trails = Lists.newArrayList();
-
-    @Override public boolean set(Location loc, Numeral num) {
-      return move(num == null ? new Move.Clear(clock, loc) : new Move.Set(clock, loc, num));
-    }
-
-    @Override public void reset() {
-      move(new Move.Reset(clock));
-    }
-
-    public int getNumTrails() {
-      return trails.size();
-    }
-
-    /** Starts a new trail. */
-    public Trail newTrail() {
-      Trail trail = new Trail(trails.size());
-      trails.add(trail);
-      return trail;
-    }
-
-    /** Returns the trail with the given ID, creating it if need be. */
-    public Trail getTrail(int id) {
-      while (id >= trails.size()) newTrail();
-      return trails.get(id);
-    }
   }
 
   /**
    * A trail within a puzzle.
    */
-  public final class Trail extends Base {
+  public final class Trail extends State {
     private final int id;
     private Location first;
 
@@ -179,17 +197,14 @@ public final class Sudoku {
     }
 
     /** Returns the first location set in this trail, or null if none yet. */
-    public Location getFirst() {
+    public Location getTrailhead() {
       return first;
     }
 
     /** Sets or clears the given location, tells whether it worked. */
     @Override public boolean set(Location loc, Numeral num) {
-      return move(num == null ? new Move.Clear(clock, id, loc) : new Move.Set(clock, id, loc, num));
-    }
-
-    @Override public void reset() {
-      move(new Move.Reset(clock, id));
+      return move(num == null ? new Move.Clear(elapsedMillis(), id, loc)
+                  : new Move.Set(elapsedMillis(), id, loc, num));
     }
 
     @Override boolean actuallySet(Location loc, Numeral num) {
@@ -202,11 +217,6 @@ public final class Sudoku {
     @Override boolean actuallyClear(Location loc) {
       if (loc == first) return false;
       return super.actuallyClear(loc);
-    }
-
-    @Override boolean actuallyReset() {
-      first = null;
-      return super.actuallyReset();
     }
   }
 }

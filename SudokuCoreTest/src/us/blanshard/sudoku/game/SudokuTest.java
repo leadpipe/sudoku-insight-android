@@ -16,8 +16,8 @@ limitations under the License.
 package us.blanshard.sudoku.game;
 
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 import us.blanshard.sudoku.core.Generator;
@@ -25,6 +25,9 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Symmetry;
+
+import com.google.common.base.Ticker;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
@@ -49,19 +52,14 @@ public class SudokuTest {
     assertEquals(2 * (81 - puzzle.size()), game.getHistory().size());
     assertEquals(puzzle, game.getState().getGrid());
 
-    game.getState().reset();
-
-    assertEquals(1 + 2 * (81 - puzzle.size()), game.getHistory().size());
-    assertEquals(puzzle, game.getState().getGrid());
-
-    Sudoku game2 = new Sudoku(puzzle, game.getHistory());
+    Sudoku game2 = new Sudoku(game);
     assertEquals(puzzle, game2.getState().getGrid());
     assertEquals(game.getHistory().size(), game2.getHistory().size());
   }
 
   @Test public void trails() {
     Sudoku game = new Sudoku(puzzle);
-    Sudoku.Trail trail = game.getState().newTrail();
+    Sudoku.Trail trail = game.newTrail();
 
     Location first = null, last = null;
 
@@ -74,7 +72,7 @@ public class SudokuTest {
       assertEquals(canChange, trail.set(loc, Numeral.of(9)));
     }
 
-    assertSame(first, trail.getFirst());
+    assertSame(first, trail.getTrailhead());
     assertEquals(81, trail.getGrid().size());
     assertEquals(Grid.State.BROKEN, trail.getGrid().getState());
 
@@ -83,21 +81,55 @@ public class SudokuTest {
 
     assertEquals(true, trail.set(last, null));
 
-    Sudoku game2 = new Sudoku(puzzle, game.getHistory());
-    assertSame(first, game2.getState().getTrail(0).getFirst());
-    assertEquals(trail.getGrid(), game2.getState().getTrail(0).getGrid());
+    Sudoku game2 = new Sudoku(game);
+    assertSame(first, game2.getTrail(0).getTrailhead());
+    assertEquals(trail.getGrid(), game2.getTrail(0).getGrid());
 
-    assertEquals(1, game.getState().getNumTrails());
+    assertEquals(1, game.getNumTrails());
     assertEquals(0, trail.getId());
+  }
 
-    trail.reset();
-    assertEquals(puzzle, trail.getGrid());
-    assertNull(trail.getFirst());
+  @Test public void stopwatch() {
+    final long oneMs = MILLISECONDS.toNanos(1);
+    // A ticker that advances by one millisecond each time it's read.
+    Ticker ticker = new Ticker() {
+      long value = 0;
+      @Override public long read() { return value += oneMs; }
+    };
+
+    Sudoku game = new Sudoku(puzzle, ImmutableList.<Move>of(), 123, ticker);
+    assertEquals(124, game.elapsedMillis());
+    assertEquals(true, game.isRunning());
+
+    game.resume();  // Has no effect
+    assertEquals(true, game.isRunning());
+
+    game.pause();
+    assertEquals(125, game.elapsedMillis());
+    assertEquals(false, game.isRunning());
+
+    game.pause();  // Has no effect
+    assertEquals(125, game.elapsedMillis());
+    assertEquals(false, game.isRunning());
+
+    Location first = null;
+    for (Location loc : Location.ALL) {
+      assertEquals(false, game.getState().set(loc, Numeral.of(1)));
+      if (first == null && puzzle.get(loc) == null) first = loc;
+    }
+
+    assertEquals(125, game.elapsedMillis());
+
+    game.resume();
+    assertEquals(126, game.elapsedMillis());
+    assertEquals(true, game.isRunning());
+
+    assertEquals(true, game.getState().set(first, Numeral.of(1)));
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void badHistory() {
     Location given = puzzle.keySet().iterator().next();
-    new Sudoku(puzzle, asList((Move) new Move.Set(Clock.SYSTEM, given, Numeral.of(1))));
+    new Sudoku(puzzle, asList((Move) new Move.Set(0, given, Numeral.of(1))), 0);
   }
 }
