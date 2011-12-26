@@ -1,10 +1,8 @@
 package us.blanshard.sudoku.android;
 
-import us.blanshard.sudoku.core.Generator;
-import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
-import us.blanshard.sudoku.core.Symmetry;
+import us.blanshard.sudoku.game.Sudoku;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -16,7 +14,6 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import java.util.Map;
-import java.util.Random;
 
 public class GridWidget extends View {
 
@@ -26,7 +23,7 @@ public class GridWidget extends View {
   private static final int SMALL_SIZE_CUTOFF = 200;
 
   private int mThickLineWidth = NORMAL_THICK_LINE_WIDTH;
-  private Grid mGrid;
+  private Sudoku mGame;
 
   public GridWidget(Context context, AttributeSet attrs) {
     super(context, attrs);
@@ -40,10 +37,15 @@ public class GridWidget extends View {
 
   private void initWidget() {
     setBackgroundColor(Color.WHITE);
-    if (!isInEditMode()) {
-      Random random = new Random();
-      mGrid = Generator.SIMPLE.generate(random, Symmetry.choosePleasing(random));
-    }
+  }
+
+  public Sudoku getGame() {
+    return mGame;
+  }
+
+  public void setGame(Sudoku game) {
+    this.mGame = game;
+    invalidate();
   }
 
   @Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -106,7 +108,7 @@ public class GridWidget extends View {
       canvas.drawLine(level, start, level, end, paint);
     }
 
-    if (mGrid != null) {
+    if (mGame != null) {
       paint.setTypeface(Typeface.DEFAULT_BOLD);
       paint.setAntiAlias(true);
       paint.setStyle(Paint.Style.FILL);
@@ -116,7 +118,7 @@ public class GridWidget extends View {
       float toBaseline = (squareSize - paint.getTextSize()) / 2 - paint.ascent();
       float toCenter = squareSize / 2.0f;
 
-      for (Map.Entry<Location, Numeral> entry : mGrid.entrySet()) {
+      for (Map.Entry<Location, Numeral> entry : mGame.getPuzzle().entrySet()) {
         Location loc = entry.getKey();
         int br = loc.block.rowIndex(), bc = loc.block.columnIndex();
         int rb = loc.row.index - 3 * br, cb = loc.column.index - 3 * bc;
