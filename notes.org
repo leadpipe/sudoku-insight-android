@@ -1,23 +1,23 @@
 * Solver
-** DONE Replace units & all strategies with various takes on locations
-** DONE Generate stats, summarize, compare
-** DONE Separate worklist processing from the iterator
-** DONE Go with the shuffle variant of the solver
-** DONE Experiment with different params for fast solver
 
 * Generator
-** DONE Investigate solving an empty grid: how slow can it get?
-   - A: not very
-** DONE Put together a generator that keeps adding givens until it finds a unique solution
-** DONE Play with subsequently subtracting givens
 ** TODO What about non-unique puzzles?
 
 * Hints
 ** TODO Start work on basic visual strategies
 
+* Game
+** DONE Write basic gameplay
+   - moves
+   - undo/redo (actually this needs to happen at the app level, right?)
+   - complete timestamped history
+   - trails
+
 * App
-** TODO Write basic grid display
-** TODO Write basic gameplay
+** DONE Write basic grid display
+** TODO Write input method thingy
+** TODO Look into data backup
+** TODO Make database for game state
 
 * Math
 ** Pathological grids
