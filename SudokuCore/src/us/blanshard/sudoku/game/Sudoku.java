@@ -101,12 +101,12 @@ public final class Sudoku {
     return stopwatch.isRunning();
   }
 
-  /** Pauses the puzzle.  No moves are possible while the puzzle is paused. */
-  public void pause() {
+  /** Suspends the puzzle.  No moves are possible while the puzzle is suspended. */
+  public void suspend() {
     if (stopwatch.isRunning()) stopwatch.stop();
   }
 
-  /** Resumes the puzzle from a paused state. */
+  /** Resumes the puzzle from a suspended state. */
   public void resume() {
     if (!stopwatch.isRunning()) stopwatch.start();
   }

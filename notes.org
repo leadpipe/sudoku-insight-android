@@ -20,7 +20,7 @@
    - check out ExecutionListeners
 ** TODO Fix trails so their first move can be undone
    - still ok to disallow other modifications to trailhead
-** TODO Rename pause to suspend
+** DONE Rename pause to suspend
 
 * App
 ** DONE Write basic grid display

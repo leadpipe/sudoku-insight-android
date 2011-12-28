@@ -104,11 +104,11 @@ public class SudokuTest {
     game.resume();  // Has no effect
     assertEquals(true, game.isRunning());
 
-    game.pause();
+    game.suspend();
     assertEquals(125, game.elapsedMillis());
     assertEquals(false, game.isRunning());
 
-    game.pause();  // Has no effect
+    game.suspend();  // Has no effect
     assertEquals(125, game.elapsedMillis());
     assertEquals(false, game.isRunning());
 

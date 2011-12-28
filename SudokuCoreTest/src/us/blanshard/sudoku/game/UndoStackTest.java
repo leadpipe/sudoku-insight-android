@@ -15,24 +15,15 @@ limitations under the License.
 */
 package us.blanshard.sudoku.game;
 
-import static java.util.Arrays.asList;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
-import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
-import us.blanshard.sudoku.core.Symmetry;
-
-import com.google.common.base.Ticker;
-import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
-
-import java.util.Random;
 
 public class UndoStackTest {
   Sudoku game = new Sudoku(Grid.BLANK);
@@ -83,7 +74,7 @@ public class UndoStackTest {
     stack.doCommand(new MoveCommand(game.getState(), Location.of(1), Numeral.of(1)));
     stack.undo();
 
-    game.pause();  // No moves allowed while game is paused
+    game.suspend();  // No moves allowed while game is suspended.
     try {
       stack.doCommand(new MoveCommand(game.getState(), Location.of(2), Numeral.of(1)));
       fail();
@@ -97,7 +88,7 @@ public class UndoStackTest {
 
   @Test public void undo_exception() throws CommandException {
     stack.doCommand(new MoveCommand(game.getState(), Location.of(0), Numeral.of(1)));
-    game.pause();
+    game.suspend();
     try {
       stack.undo();
       fail();
@@ -113,7 +104,7 @@ public class UndoStackTest {
   @Test public void redo_exception() throws CommandException {
     stack.doCommand(new MoveCommand(game.getState(), Location.of(0), Numeral.of(1)));
     stack.undo();
-    game.pause();
+    game.suspend();
     try {
       stack.redo();
       fail();
