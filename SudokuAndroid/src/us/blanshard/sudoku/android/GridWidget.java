@@ -15,11 +15,12 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import java.util.Arrays;
-import java.util.Map;
+
+import javax.annotation.Nullable;
 
 public class GridWidget extends View {
 
-  private static final float RADIUS_FACTOR = 0.65f;
+  private static final float RADIUS_FACTOR = 0.8f;
   private static final int THIN_LINE_WIDTH = 1;
   private static final int NORMAL_THICK_LINE_WIDTH = 3;
   private static final int SMALL_THICK_LINE_WIDTH = 2;
@@ -36,6 +37,8 @@ public class GridWidget extends View {
 
   private int mPointerId = INVALID_POINTER_ID;
   private Location mLocation;
+  private int mChoice;
+  private Numeral mDefaultChoice;
 
   public GridWidget(Context context, AttributeSet attrs) {
     super(context, attrs);
@@ -57,6 +60,17 @@ public class GridWidget extends View {
 
   public void setGame(Sudoku game) {
     this.mGame = game;
+    mPointerId = INVALID_POINTER_ID;
+    mLocation = null;
+    invalidate();
+  }
+
+  @Nullable public Numeral getDefaultChoice() {
+    return mDefaultChoice;
+  }
+
+  public void setDefaultChoice(@Nullable Numeral defaultChoice) {
+    this.mDefaultChoice = defaultChoice;
     invalidate();
   }
 
@@ -132,41 +146,78 @@ public class GridWidget extends View {
 
     paint.setAntiAlias(true);
     paint.setStyle(Paint.Style.FILL);
+    paint.setTextAlign(Align.CENTER);
+
+    paint.setTextSize(mSquareSize * 0.75f);
+    float toBaseline = (mSquareSize - paint.getTextSize()) / 2 - paint.ascent() - 1;
+    float toCenter = mSquareSize / 2.0f;
 
     if (mGame != null) {
-      paint.setTypeface(Typeface.DEFAULT_BOLD);
-      paint.setTextSize(mSquareSize * 0.75f);
-      paint.setTextAlign(Align.CENTER);
-      paint.setFakeBoldText(true);
-      float toBaseline = (mSquareSize - paint.getTextSize()) / 2 - paint.ascent() - 1;
-      float toCenter = mSquareSize / 2.0f;
-
-      for (Map.Entry<Location, Numeral> entry : mGame.getPuzzle().entrySet()) {
-        Location loc = entry.getKey();
-        float left = mOffsetsX[loc.column.index];
-        float top = mOffsetsY[loc.row.index];
-        canvas.drawText(entry.getValue().toString(), left + toCenter, top + toBaseline, paint);
+      for (Location loc : Location.ALL) {
+        Numeral num = mGame.getPuzzle().get(loc);
+        if (num != null) {
+          paint.setTypeface(Typeface.DEFAULT_BOLD);
+          paint.setFakeBoldText(true);
+        } else if ((num = mGame.getState().get(loc)) != null) {
+          paint.setTypeface(Typeface.DEFAULT);
+          paint.setFakeBoldText(false);
+        }
+        if (num != null) {
+          float left = mOffsetsX[loc.column.index];
+          float top = mOffsetsY[loc.row.index];
+          canvas.drawText(num.toString(), left + toCenter, top + toBaseline, paint);
+        }
       }
     }
 
     if (mLocation != null) {
-      float cx = mOffsetsX[mLocation.column.index] + mSquareSize / 2.0f;
-      float cy = mOffsetsY[mLocation.row.index] + mSquareSize / 2.0f;
+      float x = mOffsetsX[mLocation.column.index];
+      float y = mOffsetsY[mLocation.row.index];
+      float cx = x + mSquareSize / 2.0f;
+      float cy = y + mSquareSize / 2.0f;
       float r = mSquareSize * RADIUS_FACTOR;
-      paint.setColor(Color.argb(128, 180, 180, 180));
+      paint.setColor(Color.argb(0xe0, 0xf0, 0xf0, 0xf0));
       canvas.drawCircle(cx, cy, r, paint);
+
+      paint.setTypeface(Typeface.DEFAULT);
+      paint.setFakeBoldText(false);
+      paint.setColor(Color.BLACK);
+
+      if (mChoice >= 0) {
+        // TODO(leadpipe): should we not draw the "clear this" choice if the square is presently blank?
+        drawChoice(mChoice, canvas, x + toCenter, y + toBaseline, paint);
+      }
+
+      paint.setTextSize(Math.max(7, mSquareSize * 0.33f));
+
+      toBaseline = - paint.ascent() / 2.0f;
+      float r2 = r - toBaseline;
+      for (int i = 0; i <= 9; ++i) {
+        double radians = i * Math.PI / 6 - Math.PI / 2;
+        x = r2 * (float) Math.cos(radians);
+        y = r2 * (float) Math.sin(radians);
+        drawChoice(i, canvas, x + cx, y + cy + toBaseline, paint);
+      }
     }
+  }
+
+  private void drawChoice(int choice, Canvas canvas, float x, float y, Paint paint) {
+    String text = choice > 0 ? String.valueOf(choice) : "\u25a1";  // white square
+    canvas.drawText(text, x, y, paint);
   }
 
   @Override public boolean onTouchEvent(MotionEvent event) {
     switch (event.getActionMasked()) {
       case MotionEvent.ACTION_DOWN:
       case MotionEvent.ACTION_POINTER_DOWN:
-        if (mPointerId == INVALID_POINTER_ID) {
+        if (mPointerId == INVALID_POINTER_ID && mGame != null) {
           int index = event.getActionIndex();
           mLocation = getLocation(event.getX(index), event.getY(index));
           if (mLocation != null) {
             mPointerId = event.getPointerId(index);
+            Numeral num = mGame == null || mGame.getState().get(mLocation) == null
+                ? mDefaultChoice : mGame.getState().get(mLocation);
+            mChoice = num == null ? 0 : num.number;
             invalidateTouchPoint();
           }
         }
@@ -183,15 +234,40 @@ public class GridWidget extends View {
       case MotionEvent.ACTION_MOVE:
       case MotionEvent.ACTION_OUTSIDE:
         if (mPointerId != INVALID_POINTER_ID) {
-          // light up a different sector?
-          // invalidate region?
+          int index = event.findPointerIndex(mPointerId);
+          int choice = mChoice;
+          if (index >= 0) {
+            float x = event.getX(index);
+            float y = event.getY(index);
+            float cx = mOffsetsX[mLocation.column.index] + mSquareSize / 2.0f;
+            float cy = mOffsetsY[mLocation.row.index] + mSquareSize / 2.0f;
+            float r = mSquareSize * RADIUS_FACTOR;
+            double d = Math.hypot(x - cx, y - cy);
+            if (d > r * 1.25) {
+              choice = -1;  // Pull away from center to cancel
+            } else if (d > r * 0.5) {
+              double radians = x >= cx ? Math.acos((cy - y) / d) : Math.PI + Math.acos((y - cy) / d);
+              int num = (int) (radians / Math.PI * 6 + 0.5);
+              choice = num == 12 ? 0 : num > 9 ? -1 : num;
+            }
+          }
+
+          if (choice != mChoice) {
+            mChoice = choice;
+            invalidateTouchPoint();
+          }
         }
         break;
 
       case MotionEvent.ACTION_UP:
       case MotionEvent.ACTION_POINTER_UP:
         if (mPointerId == event.getPointerId(event.getActionIndex())) {
-          // set value
+          if (mGame != null && mChoice >= 0) {
+            Numeral num = mChoice == 0 ? null : Numeral.of(mChoice);
+            if (num != mGame.getState().get(mLocation)) {
+              mGame.getState().set(mLocation, mDefaultChoice = num);
+            }
+          }
           invalidateTouchPoint();
           mPointerId = INVALID_POINTER_ID;
           mLocation = null;
@@ -205,9 +281,13 @@ public class GridWidget extends View {
     int xi = findGridIndex(x, mOffsetsX);
     int yi = findGridIndex(y, mOffsetsY);
     if (xi < 0 || yi < 0 || xi >= 9 || yi >= 9) return null;
-    // TODO(leadpipe): probably want to ignore values too close to edges.
-    // Also ignore locations containing the givens?
-    return Location.ofIndices(yi, xi);
+    // Ignore touches too close to the edges of squares.
+    if (x < mOffsetsX[xi] + 2 || x > mOffsetsX[xi] + mSquareSize - 2) return null;
+    if (y < mOffsetsY[yi] + 2 || y > mOffsetsY[yi] + mSquareSize - 2) return null;
+    // Also ignore locations containing the givens.
+    Location loc = Location.ofIndices(yi, xi);
+    if (mGame != null && mGame.getPuzzle().containsKey(loc)) return null;
+    return loc;
   }
 
   private int findGridIndex(float value, int[] offsets) {
