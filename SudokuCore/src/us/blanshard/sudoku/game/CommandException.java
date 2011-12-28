@@ -16,14 +16,22 @@ limitations under the License.
 package us.blanshard.sudoku.game;
 
 /**
- * A component of an {@link UndoStack}: an action that can be undone and redone.
+ * A checked exception for {@linkplain Command commands}.
  *
  * @author Luke Blanshard
  */
-public interface Command {
-  /** Executes the command, again or for the first time. */
-  void redo() throws CommandException;
+public class CommandException extends Exception {
+  private static final long serialVersionUID = 1L;
 
-  /** Puts things back the way they were before the command was done. */
-  void undo() throws CommandException;
+  public CommandException(String message) {
+    super(message);
+  }
+
+  public CommandException(Throwable cause) {
+    super(cause);
+  }
+
+  public CommandException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

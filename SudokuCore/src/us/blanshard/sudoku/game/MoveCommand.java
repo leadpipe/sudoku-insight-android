@@ -42,11 +42,17 @@ public class MoveCommand implements Command {
     this.prevNum = state.get(loc);
   }
 
-  @Override public void redo() {
-    state.set(loc, num);
+  @Override public void redo() throws CommandException {
+    set(num);
   }
 
-  @Override public void undo() {
-    state.set(loc, prevNum);
+  @Override public void undo() throws CommandException {
+    set(prevNum);
+  }
+
+  private void set(Numeral num) throws CommandException {
+    if (!state.set(loc, num)) {
+      throw new CommandException("Unable to modify location " + loc);
+    }
   }
 }

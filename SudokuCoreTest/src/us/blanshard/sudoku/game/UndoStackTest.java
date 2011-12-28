@@ -19,6 +19,7 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
 import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
@@ -37,7 +38,7 @@ public class UndoStackTest {
   Sudoku game = new Sudoku(Grid.BLANK);
   UndoStack stack = new UndoStack();
 
-  @Test public void doCommand() {
+  @Test public void doCommand() throws CommandException {
     stack.doCommand(new MoveCommand(game.getState(), Location.of(0), Numeral.of(1)));
     assertEquals(true, stack.canUndo());
     assertEquals(false, stack.canRedo());
@@ -45,7 +46,26 @@ public class UndoStackTest {
     assertSame(Numeral.of(1), game.getState().get(Location.of(0)));
   }
 
-  @Test public void doCommand_clear() {
+  @Test public void undo() throws CommandException {
+    stack.doCommand(new MoveCommand(game.getState(), Location.of(0), Numeral.of(1)));
+    stack.undo();
+    assertSame(null, game.getState().get(Location.of(0)));
+    assertEquals(false, stack.canUndo());
+    assertEquals(true, stack.canRedo());
+    assertEquals(2, game.getHistory().size());
+  }
+
+  @Test public void redo() throws CommandException {
+    stack.doCommand(new MoveCommand(game.getState(), Location.of(0), Numeral.of(1)));
+    stack.undo();
+    stack.redo();
+    assertSame(Numeral.of(1), game.getState().get(Location.of(0)));
+    assertEquals(true, stack.canUndo());
+    assertEquals(false, stack.canRedo());
+    assertEquals(3, game.getHistory().size());
+  }
+
+  @Test public void doCommand_clear() throws CommandException {
     stack.doCommand(new MoveCommand(game.getState(), Location.of(0), Numeral.of(1)));
     stack.doCommand(new MoveCommand(game.getState(), Location.of(1), Numeral.of(1)));
     stack.undo();
@@ -58,30 +78,59 @@ public class UndoStackTest {
     assertEquals(4, game.getHistory().size());
   }
 
-  @Test public void undo() {
+  @Test public void doCommand_exception() throws CommandException {
+    stack.doCommand(new MoveCommand(game.getState(), Location.of(0), Numeral.of(1)));
+    stack.doCommand(new MoveCommand(game.getState(), Location.of(1), Numeral.of(1)));
+    stack.undo();
+
+    game.pause();  // No moves allowed while game is paused
+    try {
+      stack.doCommand(new MoveCommand(game.getState(), Location.of(2), Numeral.of(1)));
+      fail();
+    } catch (CommandException e) {
+      // Expected
+    }
+
+    // Ensure failed command didn't alter the ability to redo.
+    assertEquals(true, stack.canRedo());
+  }
+
+  @Test public void undo_exception() throws CommandException {
+    stack.doCommand(new MoveCommand(game.getState(), Location.of(0), Numeral.of(1)));
+    game.pause();
+    try {
+      stack.undo();
+      fail();
+    } catch (CommandException e) {
+      // Expected
+    }
+    assertSame(Numeral.of(1), game.getState().get(Location.of(0)));
+    assertEquals(true, stack.canUndo());
+    assertEquals(false, stack.canRedo());
+    assertEquals(1, game.getHistory().size());
+  }
+
+  @Test public void redo_exception() throws CommandException {
     stack.doCommand(new MoveCommand(game.getState(), Location.of(0), Numeral.of(1)));
     stack.undo();
+    game.pause();
+    try {
+      stack.redo();
+      fail();
+    } catch (CommandException e) {
+      // Expected
+    }
     assertSame(null, game.getState().get(Location.of(0)));
     assertEquals(false, stack.canUndo());
     assertEquals(true, stack.canRedo());
     assertEquals(2, game.getHistory().size());
   }
 
-  @Test public void redo() {
-    stack.doCommand(new MoveCommand(game.getState(), Location.of(0), Numeral.of(1)));
-    stack.undo();
-    stack.redo();
-    assertSame(Numeral.of(1), game.getState().get(Location.of(0)));
-    assertEquals(true, stack.canUndo());
-    assertEquals(false, stack.canRedo());
-    assertEquals(3, game.getHistory().size());
-  }
-
-  @Test(expected = IllegalStateException.class) public void undo_none() {
+  @Test(expected = IllegalStateException.class) public void undo_none() throws CommandException {
     stack.undo();
   }
 
-  @Test(expected = IllegalStateException.class) public void redo_none() {
+  @Test(expected = IllegalStateException.class) public void redo_none() throws CommandException {
     stack.redo();
   }
 }

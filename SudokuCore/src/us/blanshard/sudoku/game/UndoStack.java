@@ -33,11 +33,11 @@ public class UndoStack {
   private int pointer;
 
   /** Pushes the given command on the stack, and executes it. */
-  public void doCommand(Command command) {
-    checkNotNull(command);
+  public void doCommand(Command command) throws CommandException {
+    command.redo();  // Execute first, so an exception won't affect the stack.
     if (pointer < commands.size()) commands.subList(pointer, commands.size()).clear();
     commands.add(command);
-    redo();
+    pointer = commands.size();
   }
 
   /** Tells whether there is a command available to be undone. */
@@ -46,9 +46,11 @@ public class UndoStack {
   }
 
   /** Undoes the previous command. */
-  public void undo() {
+  public void undo() throws CommandException {
     checkState(pointer > 0);
-    commands.get(--pointer).undo();
+    commands.get(pointer - 1).undo();
+    // Decrement after undoing so an exception won't affect the stack.
+    --pointer;
   }
 
   /** Tells whether there is a command available to be redone. */
@@ -57,8 +59,10 @@ public class UndoStack {
   }
 
   /** Redoes the next command. */
-  public void redo() {
+  public void redo() throws CommandException {
     checkState(pointer < commands.size());
-    commands.get(pointer++).redo();
+    commands.get(pointer).redo();
+    // Increment after redoing so an exception won't affect the stack.
+    ++pointer;
   }
 }
