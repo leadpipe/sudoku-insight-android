@@ -215,8 +215,13 @@ public final class Sudoku {
     }
 
     @Override boolean actuallyClear(Location loc) {
-      if (loc == first) return false;
-      return super.actuallyClear(loc);
+      if (loc == first && gridBuilder.size() > 1 + puzzle.size()) {
+        // You can only clear the trailhead after you've cleared everything else.
+        return false;
+      }
+      boolean answer = super.actuallyClear(loc);
+      if (answer && loc == first) first = null;
+      return answer;
     }
   }
 }

@@ -81,11 +81,23 @@ public class SudokuTest {
 
     assertEquals(true, trail.set(last, null));
 
+    // Ensure the trailhead can be cleared iff it's the last loc set
+    Sudoku.Trail trail2 = game.newTrail();
+    assertEquals(true, trail2.set(first, Numeral.of(1)));
+    assertEquals(true, trail2.set(last, Numeral.of(1)));
+    assertEquals(false, trail2.set(first, Numeral.of(2)));
+    assertEquals(false, trail2.set(first, null));
+    assertEquals(true, trail2.set(last, null));
+    // It's now the last loc left
+    assertEquals(false, trail2.set(first, Numeral.of(3)));  // Still can't set
+    assertEquals(true, trail2.set(first, null));  // But can clear
+    assertSame(null, trail2.getTrailhead());
+
     Sudoku game2 = new Sudoku(game);
     assertSame(first, game2.getTrail(0).getTrailhead());
     assertEquals(trail.getGrid(), game2.getTrail(0).getGrid());
 
-    assertEquals(1, game.getNumTrails());
+    assertEquals(2, game.getNumTrails());
     assertEquals(0, trail.getId());
   }
 

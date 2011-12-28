@@ -18,7 +18,7 @@
 ** TODO Add Sudoku.Listener
    - notify on moves
    - check out ExecutionListeners
-** TODO Fix trails so their first move can be undone
+** DONE Fix trails so their first move can be undone
    - still ok to disallow other modifications to trailhead
 ** DONE Rename pause to suspend
 
