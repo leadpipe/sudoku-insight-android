@@ -2,11 +2,11 @@
 <classpath>
 	<classpathentry excluding="**/stats/*" kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/Users/leadpipe/insight/lib/guava-10.0.1.jar" sourcepath="/Users/leadpipe/insight/lib/guava-10.0.1-sources.jar">
+	<classpathentry kind="lib" path="/SharedLibs/guava-10.0.1.jar" sourcepath="/SharedLibs/guava-10.0.1-sources.jar">
 		<attributes>
-			<attribute name="javadoc_location" value="jar:file:/Users/leadpipe/insight/lib/guava-10.0.1-javadoc.jar!/"/>
+			<attribute name="javadoc_location" value="jar:platform:/resource/SharedLibs/guava-10.0.1-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/leadpipe/insight/lib/jsr305.jar"/>
+	<classpathentry kind="lib" path="/SharedLibs/jsr305.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
