@@ -19,6 +19,10 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
@@ -26,16 +30,29 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Symmetry;
 
+import com.google.common.base.Predicate;
 import com.google.common.base.Ticker;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Random;
 
+@RunWith(MockitoJUnitRunner.class)
 public class SudokuTest {
-  Random random = new Random(0);
-  Grid puzzle = Generator.SIMPLE.generate(random, Symmetry.BLOCKWISE);
+  static final Random random = new Random(0);
+  static final Grid puzzle = Generator.SIMPLE.generate(random, Symmetry.BLOCKWISE);
+  static final Location openLocation = Iterables.find(Location.ALL, new Predicate<Location>() {
+    @Override public boolean apply(Location loc) {
+      return !puzzle.containsKey(loc);
+    }
+  });
+  @Mock Sudoku.Listener listener;
 
   @Test public void state() {
     Sudoku game = new Sudoku(puzzle);
@@ -105,11 +122,11 @@ public class SudokuTest {
     final long oneMs = MILLISECONDS.toNanos(1);
     // A ticker that advances by one millisecond each time it's read.
     Ticker ticker = new Ticker() {
-      long value = 0;
-      @Override public long read() { return value += oneMs; }
-    };
+        long value = 0;
+        @Override public long read() { return value += oneMs; }
+      };
 
-    Sudoku game = new Sudoku(puzzle, ImmutableList.<Move>of(), 123, ticker);
+    Sudoku game = new Sudoku(puzzle, Sudoku.nullRegistry(), ImmutableList.<Move>of(), 123, ticker);
     assertEquals(124, game.elapsedMillis());
     assertEquals(true, game.isRunning());
 
@@ -139,9 +156,162 @@ public class SudokuTest {
     assertEquals(true, game.getState().set(first, Numeral.of(1)));
   }
 
+  // Tests for listeners
+
+  @Test public void shouldCallListenerOnGameCreated() {
+    // given
+    Sudoku.Registry registry = Sudoku.newRegistry();
+    registry.addListener(listener);
+
+    // when
+    Sudoku game = new Sudoku(puzzle, registry);
+
+    // then
+    verify(listener).gameCreated(game);
+  }
+
+  @Test public void shouldNotCallListenerAfterListenerRemoval() {
+    // given
+    Sudoku.Registry registry = Sudoku.newRegistry();
+    registry.addListener(listener);
+    registry.removeListener(listener);
+
+    // when
+    Sudoku game = new Sudoku(puzzle, registry);
+
+    // then
+    verify(listener, never()).gameCreated(game);
+  }
+
+  @Test public void shouldCallListenerOnGameSuspended() {
+    // given
+    Sudoku game = new Sudoku(puzzle);
+    game.getListenerRegistry().addListener(listener);
+
+    // when
+    game.suspend();
+
+    // then
+    verify(listener).gameSuspended(game);
+  }
+
+  @Test public void shouldNotCallListenerOnGameAlreadySuspended() {
+    // given
+    Sudoku game = new Sudoku(puzzle);
+    game.suspend();
+    game.getListenerRegistry().addListener(listener);
+
+    // when
+    game.suspend();
+
+    // then
+    verify(listener, never()).gameSuspended(game);
+  }
+
+  @Test public void shouldCallListenerOnGameResumed() {
+    // given
+    Sudoku game = new Sudoku(puzzle);
+    game.suspend();
+    game.getListenerRegistry().addListener(listener);
+
+    // when
+    game.resume();
+
+    // then
+    verify(listener).gameResumed(game);
+  }
+
+  @Test public void shouldNotCallListenerOnGameAlreadyResumed() {
+    // given
+    Sudoku game = new Sudoku(puzzle);
+    game.getListenerRegistry().addListener(listener);
+
+    // when
+    game.resume();
+
+    // then
+    verify(listener, never()).gameResumed(game);
+  }
+
+  @Test public void shouldCallListenerOnMoveMade() {
+    // given
+    Sudoku game = new Sudoku(puzzle);
+    game.getListenerRegistry().addListener(listener);
+
+    // when
+    game.getState().set(openLocation, Numeral.of(1));
+
+    // then
+    ArgumentCaptor<Move> captor = ArgumentCaptor.forClass(Move.class);
+    verify(listener).moveMade(same(game), captor.capture());
+    Move.Set move = (Move.Set) captor.getValue();
+    assertSame(openLocation, move.loc);
+    assertSame(Numeral.of(1), move.num);
+  }
+
+  @Test public void shouldNotCallListenerOnMoveNotMade() {
+    // given
+    Sudoku game = new Sudoku(puzzle);
+    game.getListenerRegistry().addListener(listener);
+    game.suspend();
+
+    // when
+    game.getState().set(openLocation, Numeral.of(1));
+
+    // then
+    verify(listener, never()).moveMade(same(game), any(Move.class));
+  }
+
+  @Test public void shouldCallListenerOnTrailCreated() {
+    // given
+    Sudoku game = new Sudoku(puzzle);
+    game.getListenerRegistry().addListener(listener);
+
+    // when
+    Sudoku.Trail trail = game.getTrail(0);
+
+    // then
+    verify(listener).trailCreated(game, trail);
+  }
+
+  @Test public void shouldNotCallListenerOnTrailNotCreated() {
+    // given
+    Sudoku game = new Sudoku(puzzle);
+    game.getTrail(0);
+    game.getListenerRegistry().addListener(listener);
+
+    // when
+    Sudoku.Trail trail = game.getTrail(0);
+
+    // then
+    verify(listener, never()).trailCreated(game, trail);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void shouldThrowOnAddingToNullRegistry() {
+    // given
+    Sudoku.Registry registry = Sudoku.nullRegistry();
+
+    // when
+    registry.addListener(listener);
+
+    // then: throw expected exception
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void shouldThrowOnRemovingFromNullRegistry() {
+    // given
+    Sudoku.Registry registry = Sudoku.nullRegistry();
+
+    // when
+    registry.removeListener(listener);
+
+    // then: throw expected exception
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void badHistory() {
     Location given = puzzle.keySet().iterator().next();
-    new Sudoku(puzzle, asList((Move) new Move.Set(0, given, Numeral.of(1))), 0);
+    new Sudoku(puzzle, Sudoku.nullRegistry(), asList((Move) new Move.Set(0, given, Numeral.of(1))), 0);
   }
 }

@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.game;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
@@ -25,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -36,6 +39,9 @@ public final class Sudoku {
 
   /** The initial clues. */
   private final Grid puzzle;
+
+  /** Our listeners. */
+  private final Registry registry;
 
   /** The complete history of moves made in this game. */
   private final List<Move> history;
@@ -53,23 +59,24 @@ public final class Sudoku {
   private final List<Trail> trails = Lists.newArrayList();
 
   public Sudoku(Grid puzzle) {
-    this(puzzle, ImmutableList.<Move>of(), 0);
+    this(puzzle, newRegistry());
+  }
+
+  public Sudoku(Grid puzzle, Registry registry) {
+    this(puzzle, registry, ImmutableList.<Move>of(), 0);
   }
 
   public Sudoku(Sudoku that) {
-    this(that, Ticker.systemTicker());
+    this(that.puzzle, that.registry, that.history, that.elapsedMillis());
   }
 
-  public Sudoku(Sudoku that, Ticker ticker) {
-    this(that.puzzle, that.history, that.elapsedMillis(), ticker);
+  public Sudoku(Grid puzzle, Registry registry, List<Move> history, long initialMillis) {
+    this(puzzle, registry, history, initialMillis, Ticker.systemTicker());
   }
 
-  public Sudoku(Grid puzzle, List<Move> history, long initialMillis) {
-    this(puzzle, history, initialMillis, Ticker.systemTicker());
-  }
-
-  public Sudoku(Grid puzzle, List<Move> history, long initialMillis, Ticker ticker) {
-    this.puzzle = puzzle;
+  Sudoku(Grid puzzle, Registry registry, List<Move> history, long initialMillis, Ticker ticker) {
+    this.puzzle = checkNotNull(puzzle);
+    this.registry = checkNotNull(registry);
     this.history = Lists.newArrayList(history);
     this.initialMillis = initialMillis;
     this.stopwatch = new Stopwatch(ticker);
@@ -81,10 +88,25 @@ public final class Sudoku {
     }
 
     stopwatch.start();
+    registry.asListener().gameCreated(this);
   }
 
   public Grid getPuzzle() {
     return puzzle;
+  }
+
+  public Registry getListenerRegistry() {
+    return registry;
+  }
+
+  /** Returns a listener registry that refuses to take listeners. */
+  public static Registry nullRegistry() {
+    return NULL_REGISTRY;
+  }
+
+  /** Creates a registry that does the normal thing. */
+  public static Registry newRegistry() {
+    return new NormalRegistry();
   }
 
   public List<Move> getHistory() {
@@ -103,12 +125,18 @@ public final class Sudoku {
 
   /** Suspends the puzzle.  No moves are possible while the puzzle is suspended. */
   public void suspend() {
-    if (stopwatch.isRunning()) stopwatch.stop();
+    if (stopwatch.isRunning()) {
+      stopwatch.stop();
+      registry.asListener().gameSuspended(this);
+    }
   }
 
   /** Resumes the puzzle from a suspended state. */
   public void resume() {
-    if (!stopwatch.isRunning()) stopwatch.start();
+    if (!stopwatch.isRunning()) {
+      stopwatch.start();
+      registry.asListener().gameResumed(this);
+    }
   }
 
   public State getState() {
@@ -119,6 +147,7 @@ public final class Sudoku {
   public Trail newTrail() {
     Trail trail = new Trail(trails.size());
     trails.add(trail);
+    registry.asListener().trailCreated(this, trail);
     return trail;
   }
 
@@ -137,7 +166,60 @@ public final class Sudoku {
     if (!isRunning()) return false;
     if (!move.apply(this)) return false;
     history.add(move);
+    registry.asListener().moveMade(this, move);
     return true;
+  }
+
+  /**
+   * A callback interface for interested parties to find out what's going on in
+   * a Sudoku.
+   */
+  public interface Listener {
+    /** Called when a new Sudoku instance is created. */
+    void gameCreated(Sudoku game);
+
+    /** Called when a Sudoku has been suspended. */
+    void gameSuspended(Sudoku game);
+
+    /** Called when a Sudoku has been resumed. */
+    void gameResumed(Sudoku game);
+
+    /** Called when a move has been successfully made in a Sudoku. */
+    void moveMade(Sudoku game, Move move);
+
+    /** Called when a new trail has been created. */
+    void trailCreated(Sudoku game, Trail trail);
+  }
+
+  /**
+   * A null implementation of {@link Listener} so you can have a listener
+   * without having to implement every method.
+   */
+  public static class Adapter implements Listener {
+    @Override public void gameCreated(Sudoku game) {}
+    @Override public void gameSuspended(Sudoku game) {}
+    @Override public void gameResumed(Sudoku game) {}
+    @Override public void moveMade(Sudoku game, Move move) {}
+    @Override public void trailCreated(Sudoku game, Trail trail) {}
+  }
+
+  /**
+   * An object that keeps track of the {@linkplain Listener listeners} on behalf
+   * of one or more Sudokus.
+   */
+  public abstract static class Registry {
+
+    /** Adds a listener to the registry. */
+    public abstract void addListener(Listener listener);
+
+    /** Removes a listener from the registry. */
+    public abstract void removeListener(Listener listener);
+
+    /**
+     * Exposes the registry as a listener itself, so the Sudoku has a single
+     * instance to address.
+     */
+    protected abstract Listener asListener();
   }
 
   /**
@@ -222,6 +304,60 @@ public final class Sudoku {
       boolean answer = super.actuallyClear(loc);
       if (answer && loc == first) first = null;
       return answer;
+    }
+  }
+
+  private static final Listener NULL_LISTENER = new Adapter();
+  private static final Registry NULL_REGISTRY = new NullRegistry();
+
+  private static class NullRegistry extends Registry {
+    @Override public void addListener(Listener listener) {
+      throw new UnsupportedOperationException();
+    }
+    @Override public void removeListener(Listener listener) {
+      throw new UnsupportedOperationException();
+    }
+    @Override protected Listener asListener() { return NULL_LISTENER; }
+  }
+
+  private static class NormalRegistry extends Registry implements Listener {
+    private final List<Listener> listeners = new LinkedList<Listener>();
+
+    @Override public void addListener(Listener listener) {
+      listeners.add(listener);
+    }
+
+    @Override public void removeListener(Listener listener) {
+      listeners.remove(listener);
+    }
+
+    @Override protected Listener asListener() {
+      return this;
+    }
+
+    @Override public void gameCreated(Sudoku game) {
+      for (Listener listener : listeners)
+        listener.gameCreated(game);
+    }
+
+    @Override public void gameSuspended(Sudoku game) {
+      for (Listener listener : listeners)
+        listener.gameSuspended(game);
+    }
+
+    @Override public void gameResumed(Sudoku game) {
+      for (Listener listener : listeners)
+        listener.gameResumed(game);
+    }
+
+    @Override public void moveMade(Sudoku game, Move move) {
+      for (Listener listener : listeners)
+        listener.moveMade(game, move);
+    }
+
+    @Override public void trailCreated(Sudoku game, Trail trail) {
+      for (Listener listener : listeners)
+        listener.trailCreated(game, trail);
     }
   }
 }

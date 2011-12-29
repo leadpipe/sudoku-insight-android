@@ -15,9 +15,10 @@
 ** DONE Add command exception, checked
    - make stack propagate exception before altering state
    - have move command throw if move fails
-** TODO Add Sudoku.Listener
+** DONE Add Sudoku.Listener
    - notify on moves
-   - check out ExecutionListeners
+   - on suspend/resume
+   - etc
 ** DONE Fix trails so their first move can be undone
    - still ok to disallow other modifications to trailhead
 ** DONE Rename pause to suspend
