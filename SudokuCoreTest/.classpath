@@ -4,11 +4,12 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SudokuCore"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="/Users/leadpipe/Downloads/guava-10.0.1.jar" sourcepath="/Users/leadpipe/Downloads/guava-10.0.1-sources.jar">
+	<classpathentry kind="lib" path="/Users/leadpipe/insight/lib/guava-10.0.1.jar" sourcepath="/Users/leadpipe/insight/lib/guava-10.0.1-sources.jar">
 		<attributes>
-			<attribute name="javadoc_location" value="jar:file:/Users/leadpipe/Downloads/guava-10.0.1-javadoc.jar!/"/>
+			<attribute name="javadoc_location" value="jar:file:/Users/leadpipe/insight/lib/guava-10.0.1-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/leadpipe/Downloads/jsr305.jar"/>
+	<classpathentry kind="lib" path="/Users/leadpipe/insight/lib/jsr305.jar"/>
+	<classpathentry kind="lib" path="/Users/leadpipe/insight/lib/mockito-all-1.9.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
