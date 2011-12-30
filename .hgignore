@@ -24,3 +24,6 @@ syntax: glob
 
 # Eclipse bin directories
 bin
+
+# Maven dependencies
+SharedLibs/*.jar
