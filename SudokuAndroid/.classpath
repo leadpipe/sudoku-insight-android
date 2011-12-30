@@ -11,5 +11,17 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="/SharedLibs/jsr305.jar"/>
+	<classpathentry kind="lib" path="/SharedLibs/guice-no_aop.jar" sourcepath="/SharedLibs/guice-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/SharedLibs/guice-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/SharedLibs/roboguice.jar" sourcepath="/SharedLibs/roboguice-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/SharedLibs/roboguice-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/SharedLibs/javax.inject.jar"/>
+	<classpathentry kind="lib" path="/Users/leadpipe/Applications/android-sdk-macosx/extras/android/support/v4/android-support-v4.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

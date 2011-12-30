@@ -20,7 +20,7 @@
             <version>2.4</version>
             <configuration>
               <outputDirectory>${project.build.directory}</outputDirectory>
-              <excludeTransitive>true</excludeTransitive>
+              <excludeTransitive>false</excludeTransitive>
               <stripVersion>true</stripVersion>
             </configuration>
           </plugin>

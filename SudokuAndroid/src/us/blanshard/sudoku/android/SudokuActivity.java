@@ -1,23 +1,24 @@
 package us.blanshard.sudoku.android;
 
+import roboguice.activity.RoboActivity;
+import roboguice.inject.InjectView;
+
 import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Symmetry;
 import us.blanshard.sudoku.game.Sudoku;
 
-import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
 import java.util.Random;
 
-public class SudokuActivity extends Activity {
-  private GridWidget mGridWidget;
+public class SudokuActivity extends RoboActivity {
+  @InjectView(R.id.gridWidget) GridWidget mGridWidget;
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.board);
-    mGridWidget = (GridWidget) findViewById(R.id.gridWidget);
 
     Object prevGame = getLastNonConfigurationInstance();
     if (prevGame == null) new MakePuzzle().execute(new Random());
@@ -37,6 +38,5 @@ public class SudokuActivity extends Activity {
     @Override protected void onPostExecute(Grid result) {
       mGridWidget.setGame(new Sudoku(result));
     }
-
   }
 }
