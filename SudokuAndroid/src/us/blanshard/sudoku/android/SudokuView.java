@@ -2,8 +2,6 @@ package us.blanshard.sudoku.android;
 
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
-import us.blanshard.sudoku.game.Move;
-import us.blanshard.sudoku.game.MoveCommand;
 import us.blanshard.sudoku.game.Sudoku;
 
 import android.content.Context;
@@ -20,7 +18,12 @@ import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
-public class GridWidget extends View {
+public class SudokuView extends View {
+
+  public interface OnMoveListener {
+    /** Called when the user has indicated a desire to make the given move. */
+    void onMove(Sudoku.State state, Location loc, Numeral num);
+  }
 
   private static final float RADIUS_FACTOR = 0.8f;
   private static final int THIN_LINE_WIDTH = 1;
@@ -30,7 +33,7 @@ public class GridWidget extends View {
 
   private static final int INVALID_POINTER_ID = -1; // MotionEvent.INVALID_POINTER_ID;
 
-  private SudokuActivity mActivity;
+  private OnMoveListener mOnMoveListener;
   private Sudoku mGame;
 
   private int mThickLineWidth = NORMAL_THICK_LINE_WIDTH;
@@ -43,12 +46,12 @@ public class GridWidget extends View {
   private int mChoice;
   private Numeral mDefaultChoice;
 
-  public GridWidget(Context context, AttributeSet attrs) {
+  public SudokuView(Context context, AttributeSet attrs) {
     super(context, attrs);
     initWidget();
   }
 
-  public GridWidget(Context context, AttributeSet attrs, int defStyle) {
+  public SudokuView(Context context, AttributeSet attrs, int defStyle) {
     super(context, attrs, defStyle);
     initWidget();
   }
@@ -57,15 +60,14 @@ public class GridWidget extends View {
     setBackgroundColor(Color.WHITE);
   }
 
-  void setActivity(SudokuActivity activity) {
-    mActivity = activity;
-    activity.getRegistry().addListener(new Sudoku.Adapter() {
-      @Override public void moveMade(Sudoku game, Move move) {
-        if (game == mGame) {
-          invalidateLocation(move.getLocation());
-        }
-      }
-    });
+  public void setOnMoveListener(OnMoveListener onMoveListener) {
+    mOnMoveListener = onMoveListener;
+  }
+
+  public void invalidateLocation(Location loc) {
+    int x = mOffsetsX[loc.column.index];
+    int y = mOffsetsY[loc.row.index];
+    invalidate(x, y, x + mSquareSize, y + mSquareSize);
   }
 
   public Sudoku getGame() {
@@ -198,7 +200,6 @@ public class GridWidget extends View {
       paint.setColor(Color.BLACK);
 
       if (mChoice >= 0) {
-        // TODO(leadpipe): should we not draw the "clear this" choice if the square is presently blank?
         drawChoice(mChoice, canvas, x + toCenter, y + toBaseline, paint);
       }
 
@@ -279,8 +280,8 @@ public class GridWidget extends View {
           if (mGame != null && mChoice >= 0) {
             Numeral num = mChoice == 0 ? null : Numeral.of(mChoice);
             if (num != mGame.getState().get(mLocation)) {
-              mActivity.doCommand(
-                  new MoveCommand(mGame.getState(), mLocation, mDefaultChoice = num));
+              mDefaultChoice = num;
+              if (mOnMoveListener != null) mOnMoveListener.onMove(mGame.getState(), mLocation, num);
             }
           }
           invalidateTouchPoint();
@@ -311,12 +312,6 @@ public class GridWidget extends View {
       i = -i - 2;  // -i - 1 is the insertion point, so this is the slot the value is in.
     }
     return i;
-  }
-
-  private void invalidateLocation(Location loc) {
-    int x = mOffsetsX[loc.column.index];
-    int y = mOffsetsY[loc.row.index];
-    invalidate(x, y, x + mSquareSize, y + mSquareSize);
   }
 
   private void invalidateTouchPoint() {

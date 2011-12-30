@@ -6,10 +6,15 @@ import roboguice.inject.InjectView;
 
 import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Symmetry;
 import us.blanshard.sudoku.game.Command;
 import us.blanshard.sudoku.game.CommandException;
+import us.blanshard.sudoku.game.Move;
+import us.blanshard.sudoku.game.MoveCommand;
 import us.blanshard.sudoku.game.Sudoku;
+import us.blanshard.sudoku.game.Sudoku.State;
 import us.blanshard.sudoku.game.UndoStack;
 
 import android.os.AsyncTask;
@@ -22,11 +27,11 @@ import android.widget.Toast;
 import java.util.Random;
 
 @ContentView(R.layout.board)
-public class SudokuActivity extends RoboActivity implements OnClickListener {
+public class SudokuActivity extends RoboActivity implements OnClickListener, SudokuView.OnMoveListener {
   private UndoStack mUndoStack = new UndoStack();
   private Sudoku mGame;
   private Sudoku.Registry mRegistry = Sudoku.newRegistry();
-  @InjectView(R.id.gridWidget) GridWidget mGridWidget;
+  @InjectView(R.id.sudokuView) SudokuView mSudokuView;
   @InjectView(R.id.undo) Button mUndoButton;
   @InjectView(R.id.redo) Button mRedoButton;
 
@@ -55,7 +60,7 @@ public class SudokuActivity extends RoboActivity implements OnClickListener {
 
   public void setGame(Sudoku game) {
     mGame = game;
-    mGridWidget.setGame(game);
+    mSudokuView.setGame(game);
   }
 
   public void showError(String s) {
@@ -83,6 +88,12 @@ public class SudokuActivity extends RoboActivity implements OnClickListener {
       showError("Unrecognized click view " + v);
   }
 
+  // OnMoveListener
+
+  @Override public void onMove(State state, Location loc, Numeral num) {
+    doCommand(new MoveCommand(state, loc, num));
+  }
+
   // Activity overrides
 
   @Override public void onCreate(Bundle savedInstanceState) {
@@ -92,7 +103,12 @@ public class SudokuActivity extends RoboActivity implements OnClickListener {
     mRedoButton.setOnClickListener(this);
     updateButtonStates();
 
-    mGridWidget.setActivity(this);
+    mSudokuView.setOnMoveListener(this);
+    mRegistry.addListener(new Sudoku.Adapter() {
+      @Override public void moveMade(Sudoku game, Move move) {
+        mSudokuView.invalidateLocation(move.getLocation());
+      }
+    });
 
     new MakePuzzle().execute(new Random());
   }
