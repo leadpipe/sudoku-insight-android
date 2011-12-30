@@ -45,6 +45,8 @@ public abstract class Move {
     return id < 0 ? game.getState() : game.getTrail(id);
   }
 
+  public abstract Location getLocation();
+
   public static class Set extends Move {
     public final Location loc;
     public final Numeral num;
@@ -62,6 +64,10 @@ public abstract class Move {
     @Override boolean apply(Sudoku game) {
       return getState(game).actuallySet(loc, num);
     }
+
+    @Override public Location getLocation() {
+      return loc;
+    }
   }
 
   public static class Clear extends Move {
@@ -78,6 +84,10 @@ public abstract class Move {
 
     @Override boolean apply(Sudoku game) {
       return getState(game).actuallyClear(loc);
+    }
+
+    @Override public Location getLocation() {
+      return loc;
     }
   }
 }

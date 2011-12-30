@@ -26,18 +26,22 @@
 * App
 ** DONE Write basic grid display
 ** DONE Write input method thingy
+** DONE Guice-ify the app with roboguice
+** DONE Add undo/redo buttons
+** TODO Write landscape layout
+** TODO Manage game suspension/resumption from activity
+** TODO Add timer display
+** TODO Have separate view to show while generating puzzles, button to start playing
 ** TODO Decide on, implement basic trail workflow
    - going with buttons/lists outside the grid for now
    - we'll simplify it later
-** TODO Guice-ify the app with roboguice
-** TODO Manage game suspension/resumption from activity
-** TODO Add timer display
-** TODO Add undo/redo buttons
-** TODO Have separate view to show while generating puzzles, button to start playing
-** TODO Write landscape layout
-** TODO Emulate ICS activity bar
-** TODO Look into data backup
 ** TODO Make database for game state
+** TODO Deal with the app lifecycle
+   - onPause: save to db
+   - need to save undo state as well
+** TODO Emulate ICS activity bar
+   - or maybe I should just do this as an ICS app to start?
+** TODO Look into data backup
 
 * Math
 ** Pathological grids

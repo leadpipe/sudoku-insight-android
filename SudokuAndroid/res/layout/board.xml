@@ -4,15 +4,33 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/hello" />
-
     <us.blanshard.sudoku.android.GridWidget
         android:id="@+id/gridWidget"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="2dp"/>
 
+    <RelativeLayout
+        android:id="@+id/relativeLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <Button
+            android:id="@+id/redo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:text="@string/redo" />
+
+        <Button
+            android:id="@+id/undo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:text="@string/undo" />
+
+    </RelativeLayout>
+    
 </LinearLayout>

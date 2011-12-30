@@ -2,6 +2,8 @@ package us.blanshard.sudoku.android;
 
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.game.Move;
+import us.blanshard.sudoku.game.MoveCommand;
 import us.blanshard.sudoku.game.Sudoku;
 
 import android.content.Context;
@@ -28,6 +30,7 @@ public class GridWidget extends View {
 
   private static final int INVALID_POINTER_ID = -1; // MotionEvent.INVALID_POINTER_ID;
 
+  private SudokuActivity mActivity;
   private Sudoku mGame;
 
   private int mThickLineWidth = NORMAL_THICK_LINE_WIDTH;
@@ -52,6 +55,17 @@ public class GridWidget extends View {
 
   private void initWidget() {
     setBackgroundColor(Color.WHITE);
+  }
+
+  void setActivity(SudokuActivity activity) {
+    mActivity = activity;
+    activity.getRegistry().addListener(new Sudoku.Adapter() {
+      @Override public void moveMade(Sudoku game, Move move) {
+        if (game == mGame) {
+          invalidateLocation(move.getLocation());
+        }
+      }
+    });
   }
 
   public Sudoku getGame() {
@@ -265,7 +279,8 @@ public class GridWidget extends View {
           if (mGame != null && mChoice >= 0) {
             Numeral num = mChoice == 0 ? null : Numeral.of(mChoice);
             if (num != mGame.getState().get(mLocation)) {
-              mGame.getState().set(mLocation, mDefaultChoice = num);
+              mActivity.doCommand(
+                  new MoveCommand(mGame.getState(), mLocation, mDefaultChoice = num));
             }
           }
           invalidateTouchPoint();
@@ -296,6 +311,12 @@ public class GridWidget extends View {
       i = -i - 2;  // -i - 1 is the insertion point, so this is the slot the value is in.
     }
     return i;
+  }
+
+  private void invalidateLocation(Location loc) {
+    int x = mOffsetsX[loc.column.index];
+    int y = mOffsetsY[loc.row.index];
+    invalidate(x, y, x + mSquareSize, y + mSquareSize);
   }
 
   private void invalidateTouchPoint() {
