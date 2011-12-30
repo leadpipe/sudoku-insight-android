@@ -27,6 +27,9 @@
 ** DONE Write basic grid display
 ** DONE Write input method thingy
 ** TODO Decide on, implement basic trail workflow
+   - going with buttons/lists outside the grid for now
+   - we'll simplify it later
+** TODO Guice-ify the app with roboguice
 ** TODO Manage game suspension/resumption from activity
 ** TODO Add timer display
 ** TODO Add undo/redo buttons
