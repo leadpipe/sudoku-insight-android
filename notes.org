@@ -28,7 +28,10 @@
 ** DONE Write input method thingy
 ** DONE Guice-ify the app with roboguice
 ** DONE Add undo/redo buttons
-** TODO Write landscape layout
+** DONE Add undo/redo icons
+   - http://findicons.com/icon/177416/undo_blue
+   - http://www.webdesignerdepot.com/2009/03/200-free-exclusive-icons-siena/
+** DONE Write landscape layout; put undo and redo next to each other
 ** TODO Manage game suspension/resumption from activity
 ** TODO Add timer display
 ** TODO Have separate view to show while generating puzzles, button to start playing
