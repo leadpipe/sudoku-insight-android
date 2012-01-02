@@ -88,8 +88,20 @@ public class SudokuActivity extends RoboActivity implements SudokuView.OnMoveLis
   }
 
   public void trailCheckChanged(TrailItem item, boolean isChecked) {
+    if (isChecked) {
+      int count = 0;
+      for (int i = 0; i < mTrailAdapter.getCount(); ++i) {
+        TrailItem item2 = mTrailAdapter.getItem(i);
+        if (item2.shown) {
+          if (++count >= MAX_VISIBLE_TRAILS)
+            item2.shown = false;
+        }
+      }
+    }
     item.shown = isChecked;
     fixVisibleItems();
+    if (isChecked)
+      mTrailsList.smoothScrollToPosition(mTrailAdapter.getPosition(item));
   }
 
   // Listener implementations
@@ -123,13 +135,23 @@ public class SudokuActivity extends RoboActivity implements SudokuView.OnMoveLis
         }
         break;
       case R.id.newTrail: {
+        boolean recycled = false;
         int trailId = mTrailAdapter.getCount();
-        // TODO: recycle existing unused trail
-        double hue = (trailId + 1) * 8.0 / 19;
-        hue = hue - Math.floor(hue);
-        int color = Color.HSVToColor(new float[] { (float) hue * 360, 0.5f, 0.5f });
-        TrailItem item = new TrailItem(mGame.getTrail(trailId), color, true);
-        makeActiveTrailItem(item);
+        for (int i = 0; i < trailId; ++i) {
+          TrailItem item = mTrailAdapter.getItem(i);
+          if (item.trail.getTrailhead() == null) {
+            recycled = true;
+            makeActiveTrailItem(item);
+            break;
+          }
+        }
+        if (!recycled) {
+          double hue = (trailId + 1) * 5.0 / 17;
+          hue = hue - Math.floor(hue);
+          int color = Color.HSVToColor(new float[] { (float) hue * 360, 1f, 0.5f });
+          TrailItem item = new TrailItem(mGame.getTrail(trailId), color, true);
+          makeActiveTrailItem(item);
+        }
         break;
       }
       default:
@@ -142,8 +164,7 @@ public class SudokuActivity extends RoboActivity implements SudokuView.OnMoveLis
     makeActiveTrailItem(mTrailAdapter.getItem(position));
   }
 
-  @Override public boolean onItemLongClick(
-      AdapterView<?> parent, View view, int position, long id) {
+  @Override public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
     // We don't actually do anything on long click, except swallow it so it
     // doesn't get treated as a regular click.
     return true;
@@ -221,6 +242,8 @@ public class SudokuActivity extends RoboActivity implements SudokuView.OnMoveLis
     mTrailAdapter.clear();
     for (TrailItem item : Iterables.concat(vis, invis))
       mTrailAdapter.add(item);
+    if (vis.size() > MAX_VISIBLE_TRAILS)
+      vis.subList(MAX_VISIBLE_TRAILS, vis.size()).clear();
     mSudokuView.setTrails(vis);
     if (vis.isEmpty() && mSolutionTrailToggle.isChecked())
       mSolutionTrailToggle.setChecked(false);

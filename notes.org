@@ -34,14 +34,16 @@
    - http://www.webdesignerdepot.com/2009/03/200-free-exclusive-icons-siena/
 ** DONE Write landscape layout; put undo and redo next to each other
 ** TODO Make own icons using docs
-** TODO See what the 3 variants of bold look like, choose the best one
+** DONE See what the 3 variants of bold look like, choose the best one
 ** TODO Manage game suspension/resumption from activity
 ** TODO Add timer display
 ** TODO Have separate view to show while generating puzzles, button to start playing
 ** DONE Decide on, implement basic trail workflow
    - going with buttons/lists outside the grid for now
    - we'll simplify it later
-** TODO Implement trail I/O
+** DONE Implement trail I/O
+** TODO Figure out how to change the theme: use a white one
+** TODO Tweak the trail colors so they're excellent with a white background
 ** TODO Make database for game state
 ** TODO Deal with the app lifecycle
    - onPause: save to db

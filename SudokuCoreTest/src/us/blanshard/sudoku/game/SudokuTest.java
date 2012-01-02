@@ -105,9 +105,9 @@ public class SudokuTest {
     assertEquals(false, trail2.set(first, Numeral.of(2)));
     assertEquals(false, trail2.set(first, null));
     assertEquals(true, trail2.set(last, null));
-    // It's now the last loc left
-    assertEquals(false, trail2.set(first, Numeral.of(3)));  // Still can't set
-    assertEquals(true, trail2.set(first, null));  // But can clear
+    // It's now the last loc left, can modify it
+    assertEquals(true, trail2.set(first, Numeral.of(3)));
+    assertEquals(true, trail2.set(first, null));
     assertSame(null, trail2.getTrailhead());
 
     Sudoku game2 = new Sudoku(game);

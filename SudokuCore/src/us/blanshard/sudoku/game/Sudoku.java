@@ -87,8 +87,9 @@ public final class Sudoku {
         throw new IllegalArgumentException("Bad move: " + move);
     }
 
-    stopwatch.start();
     registry.asListener().gameCreated(this);
+    if (!state.getGrid().isSolved())
+      resume();
   }
 
   public Grid getPuzzle() {
@@ -242,24 +243,42 @@ public final class Sudoku {
     }
 
     /**
-     * Sets or clears the given location, tells whether it worked.  It only
-     * doesn't work if the location contains one of the puzzle's original clues.
+     * Returns the number of locations in this State that have been set, not
+     * counting the puzzle's clue locations.
+     */
+    public int getSetCount() {
+      return gridBuilder.size() - puzzle.size();
+    }
+
+    /**
+     * Sets or clears the given location, tells whether it worked. It usually
+     * only doesn't work if the location contains one of the puzzle's original
+     * clues.
      */
     public boolean set(Location loc, Numeral num) {
       return move(num == null ? new Move.Clear(elapsedMillis(), loc)
                   : new Move.Set(elapsedMillis(), loc, num));
     }
 
+    /** Tells whether a call to {@link #set} will succeed. */
+    public boolean canModify(Location loc) {
+      return !puzzle.containsKey(loc);
+    }
+
     boolean actuallySet(Location loc, Numeral num) {
-      if (puzzle.containsKey(loc)) return false;
-      gridBuilder.put(loc, num);
-      return true;
+      if (canModify(loc)) {
+        gridBuilder.put(loc, num);
+        return true;
+      }
+      return false;
     }
 
     boolean actuallyClear(Location loc) {
-      if (puzzle.containsKey(loc)) return false;
-      gridBuilder.remove(loc);
-      return true;
+      if (canModify(loc)) {
+        gridBuilder.remove(loc);
+        return true;
+      }
+      return false;
     }
   }
 
@@ -289,18 +308,17 @@ public final class Sudoku {
                   : new Move.Set(elapsedMillis(), id, loc, num));
     }
 
+    @Override public boolean canModify(Location loc) {
+      return super.canModify(loc) && (loc != first || getSetCount() == 1);
+    }
+
     @Override boolean actuallySet(Location loc, Numeral num) {
-      if (loc == first) return false;
       boolean answer = super.actuallySet(loc, num);
       if (answer && first == null) first = loc;
       return answer;
     }
 
     @Override boolean actuallyClear(Location loc) {
-      if (loc == first && gridBuilder.size() > 1 + puzzle.size()) {
-        // You can only clear the trailhead after you've cleared everything else.
-        return false;
-      }
       boolean answer = super.actuallyClear(loc);
       if (answer && loc == first) first = null;
       return answer;

@@ -14,6 +14,8 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,7 +38,7 @@ public class SudokuView extends View {
 
   private OnMoveListener mOnMoveListener;
   private Sudoku mGame;
-  private List<TrailItem> mTrails;
+  private List<TrailItem> mTrails = ImmutableList.<TrailItem> of();
   private boolean mTrailActive;
 
   private int mThickLineWidth = NORMAL_THICK_LINE_WIDTH;
@@ -44,10 +46,13 @@ public class SudokuView extends View {
   private int[] mOffsetsX;
   private int[] mOffsetsY;
 
+  private Sudoku.State mState;
   private int mPointerId = INVALID_POINTER_ID;
   private Location mLocation;
   private int mChoice;
   private Numeral mDefaultChoice;
+  private static final float[] TRAIL_X_CENTER = { 0.8f, 0.15f, 0.85f, 0.15f };
+  private static final float[] TRAIL_Y_TOP = { 0.5f, 0f, 0f, 0.6f };
 
   public SudokuView(Context context, AttributeSet attrs) {
     super(context, attrs);
@@ -96,11 +101,6 @@ public class SudokuView extends View {
 
   @Nullable public Numeral getDefaultChoice() {
     return mDefaultChoice;
-  }
-
-  public void setDefaultChoice(@Nullable Numeral defaultChoice) {
-    this.mDefaultChoice = defaultChoice;
-    invalidate();
   }
 
   @Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -154,47 +154,69 @@ public class SudokuView extends View {
     for (int i = 0; i < 3; ++i)
       for (int j = 1; j < 3; ++j) {
         int index = 3 * i + j;
-        canvas.drawLine(mOffsetsX[0], mOffsetsY[index] - halfThin,
-                        mOffsetsX[9], mOffsetsY[index] - halfThin, paint);
-        canvas.drawLine(mOffsetsX[index] - halfThin, mOffsetsY[0],
-                        mOffsetsX[index] - halfThin, mOffsetsY[9], paint);
+        canvas.drawLine(mOffsetsX[0], mOffsetsY[index] - halfThin, mOffsetsX[9], mOffsetsY[index]
+            - halfThin, paint);
+        canvas.drawLine(mOffsetsX[index] - halfThin, mOffsetsY[0], mOffsetsX[index] - halfThin,
+            mOffsetsY[9], paint);
       }
 
     paint.setStrokeWidth(mThickLineWidth);
 
-    canvas.drawRect(mOffsetsX[0] - halfThick, mOffsetsY[0] - halfThick,
-                    mOffsetsX[9] - halfThick, mOffsetsY[9] - halfThick, paint);
+    canvas.drawRect(mOffsetsX[0] - halfThick, mOffsetsY[0] - halfThick, mOffsetsX[9] - halfThick,
+        mOffsetsY[9] - halfThick, paint);
 
     for (int i = 1; i < 3; ++i) {
       int index = 3 * i;
-      canvas.drawLine(mOffsetsX[0], mOffsetsY[index] - halfThick,
-                      mOffsetsX[9], mOffsetsY[index] - halfThick, paint);
-      canvas.drawLine(mOffsetsX[index] - halfThick, mOffsetsY[0],
-                      mOffsetsX[index] - halfThick, mOffsetsY[9], paint);
+      canvas.drawLine(mOffsetsX[0], mOffsetsY[index] - halfThick, mOffsetsX[9], mOffsetsY[index]
+          - halfThick, paint);
+      canvas.drawLine(mOffsetsX[index] - halfThick, mOffsetsY[0], mOffsetsX[index] - halfThick,
+          mOffsetsY[9], paint);
     }
 
     paint.setAntiAlias(true);
     paint.setStyle(Paint.Style.FILL);
     paint.setTextAlign(Align.CENTER);
 
-    paint.setTextSize(mSquareSize * 0.75f);
+    float textSize = mSquareSize * 0.75f;
+    paint.setTextSize(textSize);
     float toBaseline = (mSquareSize - paint.getTextSize()) / 2 - paint.ascent() - 1;
     float toCenter = mSquareSize / 2.0f;
 
     if (mGame != null) {
       for (Location loc : Location.ALL) {
         Numeral num = mGame.getPuzzle().get(loc);
-        if (num != null) {
+        boolean given = num != null;
+        if (given) {
           paint.setTypeface(Typeface.DEFAULT_BOLD);
           paint.setFakeBoldText(true);
         } else if ((num = mGame.getState().get(loc)) != null) {
           paint.setTypeface(Typeface.DEFAULT);
           paint.setFakeBoldText(false);
         }
+        float left = mOffsetsX[loc.column.index];
+        float top = mOffsetsY[loc.row.index];
         if (num != null) {
-          float left = mOffsetsX[loc.column.index];
-          float top = mOffsetsY[loc.row.index];
           canvas.drawText(num.toString(), left + toCenter, top + toBaseline, paint);
+        }
+        if (!given && !mTrails.isEmpty()) {
+          paint.setTypeface(Typeface.DEFAULT);
+          paint.setFakeBoldText(false);
+          for (int i = 0; i < mTrails.size(); ++i) {
+            TrailItem item = mTrails.get(i);
+            if ((num = item.trail.get(loc)) != null) {
+              paint.setTextSize(mSquareSize * (i == 0 ? 0.5f : 0.35f));
+              if (item.trail.getTrailhead() == loc) {
+                paint.setColor(Color.rgb(0xff, 0xff, 0xc0));
+                canvas.drawCircle(left + mSquareSize * TRAIL_X_CENTER[i], top + mSquareSize
+                    * TRAIL_Y_TOP[i] - paint.ascent() / 2, -paint.ascent() / 2, paint);
+              }
+              paint.setColor(item.color);
+              canvas.drawText(num.toString(), left + mSquareSize * TRAIL_X_CENTER[i], top
+                  + mSquareSize * TRAIL_Y_TOP[i] - paint.ascent(), paint);
+            }
+          }
+          paint.setTextSize(textSize);
+          paint.setColor(Color.BLACK);
         }
       }
     }
@@ -210,7 +232,10 @@ public class SudokuView extends View {
 
       paint.setTypeface(Typeface.DEFAULT);
       paint.setFakeBoldText(false);
-      paint.setColor(Color.BLACK);
+      int color = Color.BLACK;
+      if (mTrailActive && !mTrails.isEmpty())
+        color = mTrails.get(0).color;
+      paint.setColor(color);
 
       if (mChoice >= 0) {
         drawChoice(mChoice, canvas, x + toCenter, y + toBaseline, paint);
@@ -218,7 +243,7 @@ public class SudokuView extends View {
 
       paint.setTextSize(Math.max(7, mSquareSize * 0.33f));
 
-      toBaseline = - paint.ascent() / 2.0f;
+      toBaseline = -paint.ascent() / 2.0f;
       float r2 = r - toBaseline;
       for (int i = 0; i <= 9; ++i) {
         double radians = i * Math.PI / 6 - Math.PI / 2;
@@ -230,7 +255,8 @@ public class SudokuView extends View {
   }
 
   private void drawChoice(int choice, Canvas canvas, float x, float y, Paint paint) {
-    String text = choice > 0 ? String.valueOf(choice) : "\u25a1";  // white square
+    String text = choice > 0 ? String.valueOf(choice) : "\u25a1"; // white
+                                                                  // square
     canvas.drawText(text, x, y, paint);
   }
 
@@ -241,10 +267,12 @@ public class SudokuView extends View {
         if (mPointerId == INVALID_POINTER_ID && mGame != null) {
           int index = event.getActionIndex();
           mLocation = getLocation(event.getX(index), event.getY(index));
-          if (mLocation != null) {
+          mState = mGame.getState();
+          if (mTrailActive && !mTrails.isEmpty())
+            mState = mTrails.get(0).trail;
+          if (mLocation != null && mState.canModify(mLocation)) {
             mPointerId = event.getPointerId(index);
-            Numeral num = mGame == null || mGame.getState().get(mLocation) == null
-                ? mDefaultChoice : mGame.getState().get(mLocation);
+            Numeral num = mState.get(mLocation) == null ? mDefaultChoice : mState.get(mLocation);
             mChoice = num == null ? 0 : num.number;
             invalidateTouchPoint();
           }
@@ -271,10 +299,11 @@ public class SudokuView extends View {
             float cy = mOffsetsY[mLocation.row.index] + mSquareSize / 2.0f;
             float r = mSquareSize * RADIUS_FACTOR;
             double d = Math.hypot(x - cx, y - cy);
-            if (d > r * 1.25) {
-              choice = -1;  // Pull away from center to cancel
+            if (d > r * 1.5) {
+              choice = -1; // Pull away from center to cancel
             } else if (d > r * 0.5) {
-              double radians = x >= cx ? Math.acos((cy - y) / d) : Math.PI + Math.acos((y - cy) / d);
+              double radians =
+                  x >= cx ? Math.acos((cy - y) / d) : Math.PI + Math.acos((y - cy) / d);
               int num = (int) (radians / Math.PI * 6 + 0.5);
               choice = num == 12 ? 0 : num > 9 ? -1 : num;
             }
@@ -290,11 +319,13 @@ public class SudokuView extends View {
       case MotionEvent.ACTION_UP:
       case MotionEvent.ACTION_POINTER_UP:
         if (mPointerId == event.getPointerId(event.getActionIndex())) {
-          if (mGame != null && mChoice >= 0) {
+          if (mState != null && mChoice >= 0) {
             Numeral num = mChoice == 0 ? null : Numeral.of(mChoice);
-            if (num != mGame.getState().get(mLocation)) {
+            if (num != mState.get(mLocation)) {
               mDefaultChoice = num;
-              if (mOnMoveListener != null) mOnMoveListener.onMove(mGame.getState(), mLocation, num);
+              if (mOnMoveListener != null) {
+                mOnMoveListener.onMove(mState, mLocation, num);
+              }
             }
           }
           invalidateTouchPoint();
@@ -309,20 +340,22 @@ public class SudokuView extends View {
   private Location getLocation(float x, float y) {
     int xi = findGridIndex(x, mOffsetsX);
     int yi = findGridIndex(y, mOffsetsY);
-    if (xi < 0 || yi < 0 || xi >= 9 || yi >= 9) return null;
+    if (xi < 0 || yi < 0 || xi >= 9 || yi >= 9)
+      return null;
     // Ignore touches too close to the edges of squares.
-    if (x < mOffsetsX[xi] + 2 || x > mOffsetsX[xi] + mSquareSize - 2) return null;
-    if (y < mOffsetsY[yi] + 2 || y > mOffsetsY[yi] + mSquareSize - 2) return null;
-    // Also ignore locations containing the givens.
-    Location loc = Location.ofIndices(yi, xi);
-    if (mGame != null && mGame.getPuzzle().containsKey(loc)) return null;
-    return loc;
+    if (x < mOffsetsX[xi] + 2 || x > mOffsetsX[xi] + mSquareSize - 2)
+      return null;
+    if (y < mOffsetsY[yi] + 2 || y > mOffsetsY[yi] + mSquareSize - 2)
+      return null;
+
+    return Location.ofIndices(yi, xi);
   }
 
   private int findGridIndex(float value, int[] offsets) {
     int i = Arrays.binarySearch(offsets, (int) value);
     if (i < 0) {
-      i = -i - 2;  // -i - 1 is the insertion point, so this is the slot the value is in.
+      i = -i - 2; // -i - 1 is the insertion point, so this is the slot the
+                  // value is in.
     }
     return i;
   }
