@@ -20,17 +20,26 @@ public final class R {
         public static final int undo=0x7f020006;
     }
     public static final class id {
-        public static final int redo=0x7f050002;
-        public static final int relativeLayout1=0x7f050000;
+        public static final int boardLayout=0x7f050000;
+        public static final int newTrail=0x7f050005;
+        public static final int redo=0x7f050003;
+        public static final int solutionTrailToggle=0x7f050006;
         public static final int sudokuView=0x7f050001;
-        public static final int undo=0x7f050003;
+        public static final int trail_item_checkbox=0x7f050008;
+        public static final int trail_item_label=0x7f050007;
+        public static final int trails=0x7f050004;
+        public static final int undo=0x7f050002;
     }
     public static final class layout {
         public static final int board=0x7f030000;
+        public static final int trail_item=0x7f030001;
     }
     public static final class string {
         public static final int app_name=0x7f040000;
+        public static final int new_trail=0x7f040003;
         public static final int redo=0x7f040002;
+        public static final int solution=0x7f040004;
+        public static final int trail=0x7f040005;
         public static final int undo=0x7f040001;
     }
 }

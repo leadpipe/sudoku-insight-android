@@ -15,6 +15,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import java.util.Arrays;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -35,6 +36,8 @@ public class SudokuView extends View {
 
   private OnMoveListener mOnMoveListener;
   private Sudoku mGame;
+  private List<TrailItem> mTrails;
+  private boolean mTrailActive;
 
   private int mThickLineWidth = NORMAL_THICK_LINE_WIDTH;
   private int mSquareSize;
@@ -78,6 +81,16 @@ public class SudokuView extends View {
     this.mGame = game;
     mPointerId = INVALID_POINTER_ID;
     mLocation = null;
+    invalidate();
+  }
+
+  public void setTrails(List<TrailItem> trails) {
+    mTrails = trails;
+    invalidate();
+  }
+
+  public void setTrailActive(boolean flag) {
+    mTrailActive = flag;
     invalidate();
   }
 

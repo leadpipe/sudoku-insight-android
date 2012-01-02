@@ -4,5 +4,8 @@
     <string name="app_name">Sudoku Insight</string>
     <string name="undo">Undo</string>
     <string name="redo">Redo</string>
-
+    <string name="new_trail">New Trail</string>
+    <string name="solution">Solution</string>
+    <string name="trail">Trail</string>
+    
 </resources>
