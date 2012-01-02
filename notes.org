@@ -7,41 +7,13 @@
 ** TODO Start work on basic visual strategies
 
 * Game
-** DONE Write basic gameplay
-   - moves
-   - complete timestamped history
-   - trails
-** DONE Undo stack
-** DONE Add command exception, checked
-   - make stack propagate exception before altering state
-   - have move command throw if move fails
-** DONE Add Sudoku.Listener
-   - notify on moves
-   - on suspend/resume
-   - etc
-** DONE Fix trails so their first move can be undone
-   - still ok to disallow other modifications to trailhead
-** DONE Rename pause to suspend
 ** TODO Make undo stack able to be saved/restored
 
 * App
-** DONE Write basic grid display
-** DONE Write input method thingy
-** DONE Guice-ify the app with roboguice
-** DONE Add undo/redo buttons
-** DONE Add undo/redo icons
-   - http://findicons.com/icon/177416/undo_blue
-   - http://www.webdesignerdepot.com/2009/03/200-free-exclusive-icons-siena/
-** DONE Write landscape layout; put undo and redo next to each other
 ** TODO Make own icons using docs
-** DONE See what the 3 variants of bold look like, choose the best one
 ** TODO Manage game suspension/resumption from activity
 ** TODO Add timer display
 ** TODO Have separate view to show while generating puzzles, button to start playing
-** DONE Decide on, implement basic trail workflow
-   - going with buttons/lists outside the grid for now
-   - we'll simplify it later
-** DONE Implement trail I/O
 ** TODO Figure out how to change the theme: use a white one
 ** TODO Tweak the trail colors so they're excellent with a white background
 ** TODO Make database for game state
