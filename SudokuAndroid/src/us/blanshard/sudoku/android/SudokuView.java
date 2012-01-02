@@ -86,6 +86,7 @@ public class SudokuView extends View {
     this.mGame = game;
     mPointerId = INVALID_POINTER_ID;
     mLocation = null;
+    setKeepScreenOn(game != null);
     invalidate();
   }
 
