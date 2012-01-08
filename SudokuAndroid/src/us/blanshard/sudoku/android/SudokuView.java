@@ -267,11 +267,12 @@ public class SudokuView extends View {
       case MotionEvent.ACTION_POINTER_DOWN:
         if (mPointerId == INVALID_POINTER_ID && mGame != null) {
           int index = event.getActionIndex();
-          mLocation = getLocation(event.getX(index), event.getY(index));
+          Location loc = getLocation(event.getX(index), event.getY(index));
           mState = mGame.getState();
           if (mTrailActive && !mTrails.isEmpty())
             mState = mTrails.get(0).trail;
-          if (mLocation != null && mState.canModify(mLocation)) {
+          if (loc != null && mState.canModify(loc)) {
+            mLocation = loc;
             mPointerId = event.getPointerId(index);
             Numeral num = mState.get(mLocation) == null ? mDefaultChoice : mState.get(mLocation);
             mChoice = num == null ? 0 : num.number;
