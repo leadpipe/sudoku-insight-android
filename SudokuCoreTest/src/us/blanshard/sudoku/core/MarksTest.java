@@ -42,13 +42,23 @@ public class MarksTest {
 
   private Marks build() {
     Marks.Builder b = Marks.builder();
-    assertTrue(b.assignAllRecursively(builder.build()));
+    assertTrue(b.assignAll(builder.build()));
     return b.build();
   }
 
   @Test public void get() {
     assertEquals(set(7), marks.get(loc(4, 1)));
     assertEquals(set(3, 5, 8), marks.get(loc(4, 2)));
+    assertEquals(UnitSubset.of(Row.of(4), loc(4, 1)), marks.get(Row.of(4), Numeral.of(7)));
+    assertEquals(UnitSubset.of(Row.of(4), loc(4, 3), loc(4, 6), loc(4, 7), loc(4, 8)),
+        marks.get(Row.of(4), Numeral.of(4)));
+  }
+
+  @Test public void assign_failure() {
+    Marks.Builder builder = marks.asBuilder();
+    assertEquals(false, builder.assign(loc(1, 2), Numeral.of(1)));
+    assertEquals(0, builder.get(loc(1, 2)).size());
+    assertEquals(0, builder.get(Block.of(1), Numeral.of(4)).size());
   }
 
   @Test public void equals() {
@@ -68,11 +78,13 @@ public class MarksTest {
 
   @Test public void strings() {
     Marks.Builder builder = Marks.builder();
+    Marks.Builder builder2 = Marks.builder();
     int start = 0;
     for (Row row : Row.ALL) {
       int index = start;
       for (Location loc : row) {
         assertEquals(true, builder.assignRecursively(loc, Numeral.ofIndex(index % 9)));
+        assertEquals(true, builder2.assign(loc, Numeral.ofIndex(index % 9)));
         ++index;
       }
       start = start + 3 + (row.number % 3 == 0 ? 1 : 0);
@@ -83,5 +95,7 @@ public class MarksTest {
     String s = "123456789456789123789123456234567891567891234891234567345678912678912345912345678";
     assertEquals(s, grid.toFlatString());
     assertEquals(grid.toString(), marks.toString());
+    assertEquals(marks, builder2.build());
+    assertEquals(grid, builder2.asGrid());
   }
 }

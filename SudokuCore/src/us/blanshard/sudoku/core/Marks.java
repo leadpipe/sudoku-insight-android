@@ -83,12 +83,9 @@ public final class Marks {
     private boolean built;
 
     private Builder() {
-      short[] bits = new short[81];
-      Arrays.fill(bits, ALL_BITS);
-      short[] unitBits = new short[Unit.COUNT * 9];
-      Arrays.fill(unitBits, ALL_BITS);
-      this.marks = new Marks(bits, unitBits);
+      this.marks = new Marks(new short[81], new short[Unit.COUNT * 9]);
       this.built = false;
+      clear();
     }
 
     private Builder(Marks marks) {
@@ -123,16 +120,64 @@ public final class Marks {
     }
 
     /**
+     * Resets this builder to a state of all possibilities open.
+     */
+    public Builder clear() {
+      Arrays.fill(marks().bits, ALL_BITS);
+      Arrays.fill(marks.unitBits, ALL_BITS);
+      return this;
+    }
+
+    /**
+     * Assigns the given numeral to the given location.  Returns true if this
+     * assignment is (locally) consistent with the rules of Sudoku.
+     */
+    public boolean assign(Location loc, Numeral num) {
+      boolean answer = true;
+
+      // Remove this numeral from this location's peers.
+      for (Location peer : loc.peers)
+        answer &= eliminate(peer, num);
+
+      // Remove the other numerals from this location.
+      NumSet others = get(loc).minus(NumSet.of(num));
+      for (Numeral other : others)
+        answer &= eliminate(loc, other);
+
+      return answer && marks.bits[loc.index] == num.bit;
+    }
+
+    /**
+     * Eliminates the given numeral as a possibility for the given location, and
+     * the location as a possibility for the numeral within the location's
+     * units.  Returns false if any of these sets ends up empty.
+     */
+    public boolean eliminate(Location loc, Numeral num) {
+      boolean answer = true;
+
+      if ((marks().bits[loc.index] &= ~num.bit) == 0)
+        answer = false;  // This location has no possibilities left
+
+      for (UnitSubset unitSubset : loc.unitSubsets.values()) {
+        if ((marks.unitBits[unitSubset.unit.unitIndex() * 9 + num.index] &= ~unitSubset.bits) == 0)
+          answer = false;  // This numeral has no possible locations left in this unit
+      }
+
+      return answer;
+    }
+
+    /**
      * Assigns all the associated locations and numerals in the given map (note
      * that {@link Grid} is this kind of map), returns true if they could all be
      * assigned.
      */
-    public boolean assignAllRecursively(Map<Location, Numeral> grid) {
-      for (Map.Entry<Location, Numeral> entry : grid.entrySet()) {
-        if (!assignRecursively(entry.getKey(), entry.getValue()))
-          return false;
-      }
-      return true;
+    public boolean assignAll(Map<Location, Numeral> grid) {
+      boolean answer = true;
+
+      for (Map.Entry<Location, Numeral> entry : grid.entrySet())
+        answer &= assign(entry.getKey(), entry.getValue());
+
+      return answer;
     }
 
     /**
@@ -144,9 +189,22 @@ public final class Marks {
     public boolean assignRecursively(Location loc, Numeral num) {
       NumSet others = get(loc).minus(NumSet.of(num));
       for (Numeral other : others)
-        if (!eliminate(loc, other))
+        if (!eliminateRecursively(loc, other))
           return false;
       return marks.bits[loc.index] == num.bit;
+    }
+
+    /**
+     * Recursively assigns all the associated locations and numerals in the
+     * given map (note that {@link Grid} is this kind of map), returns true if
+     * they could all be assigned.
+     */
+    public boolean assignAllRecursively(Map<Location, Numeral> grid) {
+      for (Map.Entry<Location, Numeral> entry : grid.entrySet()) {
+        if (!assignRecursively(entry.getKey(), entry.getValue()))
+          return false;
+      }
+      return true;
     }
 
     /**
@@ -154,7 +212,7 @@ public final class Marks {
      * location, returns true if all the ramifications of that elimination are
      * consistent with the rules of Sudoku.
      */
-    private boolean eliminate(Location loc, Numeral num) {
+    private boolean eliminateRecursively(Location loc, Numeral num) {
       if (!get(loc).contains(num))
         return true;  // already eliminated
 
@@ -168,7 +226,7 @@ public final class Marks {
         // Last possibility left.  Eliminate it from this location's peers.
         Numeral last = remaining.iterator().next();
         for (Location peer : loc.peers)
-          if (!eliminate(peer, last))
+          if (!eliminateRecursively(peer, last))
             return false;
       }
 
@@ -176,7 +234,7 @@ public final class Marks {
       // single remaining slot in the unit for this numeral, and if so, assign
       // it there.
       for (UnitSubset unitSubset : loc.unitSubsets.values()) {
-        if (!eliminateFromUnit(num, unitSubset))
+        if (!eliminateRecursivelyFromUnit(num, unitSubset))
           return false;
       }
 
@@ -184,11 +242,12 @@ public final class Marks {
     }
 
     /**
-     * Eliminates the given numeral from the given unit subset's unit, return
-     * false if a contradiction is found.  The given subset is guaranteed to be
-     * a singleton.
+     * Eliminates the location in the given unit subset from the locations in
+     * the unit that could contain the given numeral.  Returns false if a
+     * contradiction is found.  The given subset is guaranteed to be a
+     * singleton.
      */
-    private boolean eliminateFromUnit(Numeral num, UnitSubset unitSubset) {
+    private boolean eliminateRecursivelyFromUnit(Numeral num, UnitSubset unitSubset) {
       // Remove this location from the possible locations within this unit
       // that this numeral may be assigned.
       marks.unitBits[unitSubset.unit.unitIndex() * 9 + num.index] &= ~unitSubset.bits;
