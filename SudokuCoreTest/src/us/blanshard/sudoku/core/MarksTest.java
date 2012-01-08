@@ -42,7 +42,7 @@ public class MarksTest {
 
   private Marks build() {
     Marks.Builder b = Marks.builder();
-    assertTrue(b.assignAll(builder.build()));
+    assertTrue(b.assignAllRecursively(builder.build()));
     return b.build();
   }
 
@@ -72,7 +72,7 @@ public class MarksTest {
     for (Row row : Row.ALL) {
       int index = start;
       for (Location loc : row) {
-        assertEquals(true, builder.assign(loc, Numeral.ofIndex(index % 9)));
+        assertEquals(true, builder.assignRecursively(loc, Numeral.ofIndex(index % 9)));
         ++index;
       }
       start = start + 3 + (row.number % 3 == 0 ? 1 : 0);

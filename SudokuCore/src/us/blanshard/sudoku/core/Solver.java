@@ -120,7 +120,7 @@ public final class Solver implements Iterable<Grid> {
     this.strategy = strategy;
 
     Marks.Builder builder = Marks.builder();
-    if (!builder.assignAll(start)) {
+    if (!builder.assignAllRecursively(start)) {
       // This puzzle is not solvable.
       this.startMarks = null;
       this.locations = null;
@@ -280,7 +280,7 @@ public final class Solver implements Iterable<Grid> {
       while (!worklist.isEmpty() && count++ < maxSteps) {
         Assignment assignment = worklist.removeFirst();
         Marks.Builder builder = assignment.marks.asBuilder();
-        if (builder.assign(assignment.location, assignment.numeral)) {
+        if (builder.assignRecursively(assignment.location, assignment.numeral)) {
           Marks marks = builder.build();
           if (!pushNextAssignments(marks)) {
             found = marks.asGrid();

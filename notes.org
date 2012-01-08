@@ -4,12 +4,18 @@
 ** TODO What about non-unique puzzles?
 
 * Hints
+** TODO Add non-recursive assignment to Marks
 ** TODO Start work on basic visual strategies
 
 * Game
 ** TODO Make undo stack able to be saved/restored
+** TODO Rename getState to getSolution or getSolutionState
 
 * App
+** TODO Move trail controls into the list header
+** TODO Have solution/trail button just be ON/OFF
+** TODO Have grid vary display based on solution/trail input state
+** TODO Design the whole app, with fragments
 ** TODO Make own icons using docs
 ** TODO Manage game suspension/resumption from activity
 ** TODO Add timer display
@@ -23,6 +29,19 @@
 ** TODO Emulate ICS activity bar
    - or maybe I should just do this as an ICS app to start?
 ** TODO Look into data backup
+
+** Fragments
+   - The board: solve a puzzle
+     - show hints
+   - Review your solution
+   - Choose a puzzle to solve
+     - from a curated set
+     - from a generator
+     - from puzzles I solved in the past
+     - from puzzles I'm partway through
+   - Enter a puzzle
+   - Rate a puzzle?
+
 
 * Math
 ** Pathological grids

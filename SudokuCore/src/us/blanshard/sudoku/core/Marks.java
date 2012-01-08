@@ -127,19 +127,21 @@ public final class Marks {
      * that {@link Grid} is this kind of map), returns true if they could all be
      * assigned.
      */
-    public boolean assignAll(Map<Location, Numeral> grid) {
+    public boolean assignAllRecursively(Map<Location, Numeral> grid) {
       for (Map.Entry<Location, Numeral> entry : grid.entrySet()) {
-        if (!assign(entry.getKey(), entry.getValue()))
+        if (!assignRecursively(entry.getKey(), entry.getValue()))
           return false;
       }
       return true;
     }
 
     /**
-     * Assigns the given numeral to the given location, returns true if all the
-     * ramifications of that assignment are consistent with the rules of Sudoku.
+     * Assigns the given numeral to the given location, recursively assigning
+     * numerals to other locations when they become the only possibilities.
+     * Returns true if all the assignments that follow from this assignment are
+     * consistent with the rules of Sudoku.
      */
-    public boolean assign(Location loc, Numeral num) {
+    public boolean assignRecursively(Location loc, Numeral num) {
       NumSet others = get(loc).minus(NumSet.of(num));
       for (Numeral other : others)
         if (!eliminate(loc, other))
@@ -152,7 +154,7 @@ public final class Marks {
      * location, returns true if all the ramifications of that elimination are
      * consistent with the rules of Sudoku.
      */
-    public boolean eliminate(Location loc, Numeral num) {
+    private boolean eliminate(Location loc, Numeral num) {
       if (!get(loc).contains(num))
         return true;  // already eliminated
 
@@ -196,7 +198,7 @@ public final class Marks {
         return false;  // no possibilities left in this assignment set
 
       if (remaining.size() == 1  // Last possibility left.  Assign it.
-          && !assign(remaining.iterator().next(), num))
+          && !assignRecursively(remaining.iterator().next(), num))
         return false;
 
       return true;

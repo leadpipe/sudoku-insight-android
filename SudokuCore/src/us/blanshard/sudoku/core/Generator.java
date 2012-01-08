@@ -119,7 +119,7 @@ public enum Generator {
         used.add(randomLoc);
         for (Location loc : symmetry.expand(randomLoc)) {
           gridBuilder.put(loc, target.get(loc));
-          marksBuilder.assign(loc, target.get(loc));
+          marksBuilder.assignRecursively(loc, target.get(loc));
         }
       }
     }

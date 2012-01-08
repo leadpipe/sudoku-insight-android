@@ -111,7 +111,7 @@ public class GeneratorTest {
   private void ensureBasicProperties(Grid grid) {
     assertEquals(true, grid.size() >= 17);
     assertEquals(true, Sets.newHashSet(grid.values()).size() >= 8);
-    assertEquals(true, Marks.builder().assignAll(grid));
+    assertEquals(true, Marks.builder().assignAllRecursively(grid));
     assertEquals(1, Solver.solve(grid, random).numSolutions);
   }
 }
