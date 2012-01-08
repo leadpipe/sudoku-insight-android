@@ -4,7 +4,7 @@
 ** TODO What about non-unique puzzles?
 
 * Hints
-** TODO Add non-recursive assignment to Marks
+** DONE Add non-recursive assignment to Marks
 ** TODO Start work on basic visual strategies
 
 * Game
