@@ -1,3 +1,18 @@
+/*
+Copyright 2012 Google Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package us.blanshard.sudoku.android;
 
 import android.view.View;
@@ -10,12 +25,12 @@ import android.widget.TextView;
 
 public class TrailAdapter extends ArrayAdapter<TrailItem> implements OnCheckedChangeListener {
 
-  private final SudokuActivity mActivity;
+  private final SudokuFragment mFragment;
   private boolean mBuildingView;
 
-  public TrailAdapter(SudokuActivity activity) {
-    super(activity, R.layout.trail_item);
-    mActivity = activity;
+  public TrailAdapter(SudokuFragment fragment) {
+    super(fragment.getActivity(), R.layout.trail_item);
+    mFragment = fragment;
   }
 
   private class ViewHolder {
@@ -24,7 +39,7 @@ public class TrailAdapter extends ArrayAdapter<TrailItem> implements OnCheckedCh
     CheckBox checkbox;
 
     public ViewHolder() {
-      rowView = mActivity.getLayoutInflater().inflate(R.layout.trail_item, null);
+      rowView = mFragment.getActivity().getLayoutInflater().inflate(R.layout.trail_item, null);
       label = (TextView) rowView.findViewById(R.id.trail_item_label);
       checkbox = (CheckBox) rowView.findViewById(R.id.trail_item_checkbox);
     }
@@ -59,6 +74,6 @@ public class TrailAdapter extends ArrayAdapter<TrailItem> implements OnCheckedCh
 
   @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
     if (!mBuildingView)
-      mActivity.trailCheckChanged((TrailItem) buttonView.getTag(), isChecked);
+      mFragment.trailCheckChanged((TrailItem) buttonView.getTag(), isChecked);
   }
 }
