@@ -2,10 +2,9 @@
 <resources>
 
     <string name="app_name">Sudoku Insight</string>
-    <string name="undo">Undo</string>
-    <string name="redo">Redo</string>
-    <string name="new_trail">New Trail</string>
-    <string name="solution">Solution</string>
-    <string name="trail">Trail</string>
-    
+    <string name="app_title">Insight</string>
+    <string name="menu_undo">Undo</string>
+    <string name="menu_redo">Redo</string>
+    <string name="menu_new_trail">New Trail</string>
+
 </resources>

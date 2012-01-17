@@ -15,8 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import roboguice.activity.RoboFragmentActivity;
-import roboguice.inject.ContentView;
 import roboguice.inject.InjectFragment;
 
 import us.blanshard.sudoku.core.Generator;
@@ -31,21 +29,17 @@ import java.util.Random;
 
 import javax.inject.Inject;
 
-@ContentView(R.layout.main)
-public class SudokuActivity extends RoboFragmentActivity {
+public class SudokuActivity extends ActionBarActivity {
   @InjectFragment(R.id.board_fragment) SudokuFragment mFragment;
   @Inject Sudoku.Registry mRegistry;
-
-  // Public methods
 
   public void setPuzzle(Grid puzzle) {
     mFragment.setGame(new Sudoku(puzzle, mRegistry));
   }
 
-  // Activity overrides
-
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    setContentView(R.layout.main);  // Can't use @ContentView, it does things too early.
 
     new MakePuzzle().execute(new Random());
   }

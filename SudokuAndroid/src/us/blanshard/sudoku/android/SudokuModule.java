@@ -19,6 +19,8 @@ import roboguice.inject.ContextSingleton;
 
 import us.blanshard.sudoku.game.Sudoku;
 
+import android.app.Activity;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 
@@ -34,5 +36,9 @@ public class SudokuModule extends AbstractModule {
 
   @Provides @ContextSingleton Sudoku.Registry provideRegistry() {
     return Sudoku.newRegistry();
+  }
+
+  @Provides @ContextSingleton ActionBarHelper provideActionBarHelper(Activity activity) {
+    return ActionBarHelper.createInstance(activity);
   }
 }

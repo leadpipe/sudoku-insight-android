@@ -32,13 +32,14 @@ import us.blanshard.sudoku.game.UndoStack;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
-import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ListView;
@@ -59,18 +60,16 @@ import javax.inject.Inject;
  */
 @ContextSingleton
 public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveListener,
-    OnCheckedChangeListener, OnClickListener, OnItemClickListener, OnItemLongClickListener {
+    OnCheckedChangeListener, OnItemClickListener, OnItemLongClickListener {
   private static final int MAX_VISIBLE_TRAILS = 4;
 
   private UndoStack mUndoStack = new UndoStack();
   private Sudoku mGame;
   @Inject Sudoku.Registry mRegistry;
+  @Inject ActionBarHelper mActionBarHelper;
   private TrailAdapter mTrailAdapter;
-  @InjectView(R.id.sudokuView) SudokuView mSudokuView;
-  @InjectView(R.id.undo) Button mUndoButton;
-  @InjectView(R.id.redo) Button mRedoButton;
-  @InjectView(R.id.newTrail) Button mNewTrailButton;
-  @InjectView(R.id.solutionTrailToggle) ToggleButton mSolutionTrailToggle;
+  @InjectView(R.id.sudoku_view) SudokuView mSudokuView;
+  @InjectView(R.id.edit_trail_toggle) ToggleButton mEditTrailToggle;
   @InjectView(R.id.trails) ListView mTrailsList;
 
   // Public methods
@@ -78,7 +77,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
   public void doCommand(Command command) {
     try {
       mUndoStack.doCommand(command);
-      updateUndoButtonStates();
+      invalidateOptionsMenu();
     } catch (CommandException e) {
       showError(e.getMessage());
     }
@@ -95,7 +94,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
   public void setGame(Sudoku game) {
     mGame = game;
     mSudokuView.setGame(game);
-    mNewTrailButton.setEnabled(game != null);
+    invalidateOptionsMenu();
   }
 
   public void showError(String s) {
@@ -126,52 +125,8 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
   }
 
   @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-    if (buttonView == mSolutionTrailToggle) {
+    if (buttonView == mEditTrailToggle) {
       mSudokuView.setTrailActive(isChecked);
-    }
-  }
-
-  @Override public void onClick(View v) {
-    switch (v.getId()) {
-      case R.id.undo:
-        try {
-          mUndoStack.undo();
-          updateUndoButtonStates();
-        } catch (CommandException e) {
-          showError(e.getMessage());
-        }
-        break;
-      case R.id.redo:
-        try {
-          mUndoStack.redo();
-          updateUndoButtonStates();
-        } catch (CommandException e) {
-          showError(e.getMessage());
-        }
-        break;
-      case R.id.newTrail: {
-        boolean recycled = false;
-        int trailId = mTrailAdapter.getCount();
-        for (int i = 0; i < trailId; ++i) {
-          TrailItem item = mTrailAdapter.getItem(i);
-          if (item.trail.getTrailhead() == null) {
-            recycled = true;
-            makeActiveTrailItem(item);
-            break;
-          }
-        }
-        if (!recycled) {
-          double hue = (trailId + 1) * 5.0 / 17;
-          hue = hue - Math.floor(hue);
-          int color = Color.HSVToColor(new float[] { (float) hue * 360, 1f, 0.5f });
-          TrailItem item = new TrailItem(mGame.getTrail(trailId), color, true);
-          makeActiveTrailItem(item);
-        }
-        break;
-      }
-      default:
-        showError("Unrecognized click view " + v);
-        break;
     }
   }
 
@@ -189,20 +144,84 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
       Bundle savedInstanceState) {
+    setHasOptionsMenu(true);
     return inflater.inflate(R.layout.board, container, true);
+  }
+
+  @Override public void onCreateOptionsMenu(Menu menu, MenuInflater menuInflater) {
+    menuInflater.inflate(R.menu.board, menu);
+    super.onCreateOptionsMenu(menu, menuInflater);
+  }
+
+  @Override public void onPrepareOptionsMenu(Menu menu) {
+    for (int i = 0; i < menu.size(); ++i) {
+      MenuItem item = menu.getItem(i);
+      switch (item.getItemId()) {
+        case R.id.menu_undo:
+          item.setEnabled(mUndoStack.canUndo());
+          break;
+
+        case R.id.menu_redo:
+          item.setEnabled(mUndoStack.canRedo());
+          break;
+
+        case R.id.menu_new_trail:
+          item.setEnabled(mGame != null);
+          break;
+      }
+    }
+  }
+
+  @Override public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case R.id.menu_undo:
+        try {
+          mUndoStack.undo();
+          invalidateOptionsMenu();
+        } catch (CommandException e) {
+          showError(e.getMessage());
+        }
+        return true;
+
+      case R.id.menu_redo:
+        try {
+          mUndoStack.redo();
+          invalidateOptionsMenu();
+        } catch (CommandException e) {
+          showError(e.getMessage());
+        }
+        return true;
+
+      case R.id.menu_new_trail:
+        boolean recycled = false;
+        int trailId = mTrailAdapter.getCount();
+        for (int i = 0; i < trailId; ++i) {
+          TrailItem trailItem = mTrailAdapter.getItem(i);
+          if (trailItem.trail.getTrailhead() == null) {
+            recycled = true;
+            makeActiveTrailItem(trailItem);
+            break;
+          }
+        }
+        if (!recycled) {
+          double hue = (trailId + 1) * 5.0 / 17;
+          hue = hue - Math.floor(hue);
+          int color = Color.HSVToColor(new float[] { (float) hue * 360, 1f, 0.5f });
+          TrailItem trailItem = new TrailItem(mGame.getTrail(trailId), color, true);
+          makeActiveTrailItem(trailItem);
+        }
+        return true;
+
+      default:
+        return false;
+    }
   }
 
   @Override public void onViewCreated(View view, Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
 
-    mUndoButton.setOnClickListener(this);
-    mRedoButton.setOnClickListener(this);
-    updateUndoButtonStates();
-
-    mNewTrailButton.setOnClickListener(this);
-    mNewTrailButton.setEnabled(false);
-    mSolutionTrailToggle.setOnCheckedChangeListener(this);
-    mSolutionTrailToggle.setEnabled(false);
+    mEditTrailToggle.setOnCheckedChangeListener(this);
+    mEditTrailToggle.setEnabled(false);
 
     mTrailAdapter = new TrailAdapter(this);
     mTrailsList.setAdapter(mTrailAdapter);
@@ -223,11 +242,6 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
 
   // Private methods
 
-  private void updateUndoButtonStates() {
-    mUndoButton.setEnabled(mUndoStack.canUndo());
-    mRedoButton.setEnabled(mUndoStack.canRedo());
-  }
-
   private void makeActiveTrail(Sudoku.Trail trail) {
     for (int i = 0; i < mTrailAdapter.getCount(); ++i) {
       TrailItem item = mTrailAdapter.getItem(i);
@@ -244,7 +258,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     mTrailAdapter.insert(item, 0);
     mTrailsList.smoothScrollToPosition(0);
     fixVisibleItems();
-    mSolutionTrailToggle.setChecked(true);
+    mEditTrailToggle.setChecked(true);
   }
 
   private void fixVisibleItems() {
@@ -263,8 +277,12 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     if (vis.size() > MAX_VISIBLE_TRAILS)
       vis.subList(MAX_VISIBLE_TRAILS, vis.size()).clear();
     mSudokuView.setTrails(vis);
-    if (vis.isEmpty() && mSolutionTrailToggle.isChecked())
-      mSolutionTrailToggle.setChecked(false);
-    mSolutionTrailToggle.setEnabled(!vis.isEmpty());
+    if (vis.isEmpty() && mEditTrailToggle.isChecked())
+      mEditTrailToggle.setChecked(false);
+    mEditTrailToggle.setEnabled(!vis.isEmpty());
+  }
+
+  private void invalidateOptionsMenu() {
+    mActionBarHelper.invalidateOptionsMenu();
   }
 }

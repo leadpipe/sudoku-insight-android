@@ -2,61 +2,36 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/boardLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
-    
+    android:layout_height="match_parent"
+    >
+
     <us.blanshard.sudoku.android.SudokuView
-        android:id="@+id/sudokuView"
+        android:id="@+id/sudoku_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:padding="2dp"/>
+        android:layout_alignParentTop="true"
+        android:padding="2dp"
+        />
 
-    <Button
-        android:id="@+id/undo"
+    <ToggleButton
+        android:id="@+id/edit_trail_toggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@+id/sudokuView"
-        android:drawableTop="@drawable/undo"
-        android:text="@string/undo" />
-
-    <Button
-        android:id="@+id/redo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@+id/undo"
-        android:drawableTop="@drawable/redo"
-        android:text="@string/redo" />
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        />
 
     <ListView
         android:id="@+id/trails"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:choiceMode="singleChoice"
         android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_toRightOf="@+id/redo" >
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/sudoku_view"
+        android:layout_toLeftOf="@+id/edit_trail_toggle"
+        android:choiceMode="singleChoice"
+        >
     </ListView>
 
-    <Button
-        android:id="@+id/newTrail"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toLeftOf="@+id/trails"
-        android:layout_marginTop="8dp"
-        android:text="@string/new_trail" />
-
-    <ToggleButton
-        android:id="@+id/solutionTrailToggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/newTrail"
-        android:layout_below="@+id/newTrail" 
-        android:textOn="@string/trail"
-        android:textOff="@string/solution"
-        />
-       
 </RelativeLayout>

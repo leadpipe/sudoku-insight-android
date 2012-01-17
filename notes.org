@@ -27,12 +27,15 @@
 ** TODO Rename getState to getSolution or getSolutionState
 
 * App
-** TODO Make an action bar, move controls there
-** TODO Have solution/trail button just be ON/OFF
-** TODO Figure out how to change the theme: use a white one
+** DONE Make an action bar, move controls there
+** DONE Have solution/trail button just be ON/OFF
+** DONE Figure out how to change the theme: use a white one
 ** TODO Have grid vary display based on solution/trail input state
+** TODO Change yellow dot to bold numeral for trailhead
+** TODO Improve new-trail icon
+** TODO Give visual indication when try to set an unsettable location
 ** TODO Design the whole app, with fragments
-** TODO Make own icons using docs
+** TODO Make icons for launcher, home
 ** TODO Manage game suspension/resumption from activity
 ** TODO Add timer display
 ** TODO Have separate view to show while generating puzzles, button to start playing
@@ -41,8 +44,6 @@
 ** TODO Deal with the app lifecycle
    - onPause: save to db
    - need to save undo state as well
-** TODO Emulate ICS activity bar
-   - or maybe I should just do this as an ICS app to start?
 ** TODO Look into data backup
 
 ** Fragments
