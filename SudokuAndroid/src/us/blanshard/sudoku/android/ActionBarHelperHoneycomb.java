@@ -18,6 +18,7 @@ package us.blanshard.sudoku.android;
 
 import android.app.Activity;
 import android.content.Context;
+import android.support.v4.app.Fragment;
 
 /**
  * An extension of {@link ActionBarHelper} that provides Android 3.0-specific functionality for
@@ -36,6 +37,10 @@ public class ActionBarHelperHoneycomb extends ActionBarHelper {
      */
     protected Context getActionBarThemedContext() {
         return mActivity;
+    }
+
+    @Override public void onAttachFragment(Fragment fragment) {
+        // Just override to ignore the fragment -- not needed in honeycomb and later
     }
 
     /**{@inheritDoc}*/

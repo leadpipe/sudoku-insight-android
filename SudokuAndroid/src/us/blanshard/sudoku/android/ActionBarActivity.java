@@ -19,6 +19,7 @@ package us.blanshard.sudoku.android;
 import roboguice.activity.RoboFragmentActivity;
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.Menu;
 import android.view.MenuInflater;
 
@@ -75,6 +76,11 @@ public abstract class ActionBarActivity extends RoboFragmentActivity {
         retValue |= mActionBarHelper.onCreateOptionsMenu(menu);
         retValue |= super.onCreateOptionsMenu(menu);
         return retValue;
+    }
+
+    @Override public void onAttachFragment(Fragment fragment) {
+        super.onAttachFragment(fragment);
+        mActionBarHelper.onAttachFragment(fragment);
     }
 
     /**{@inheritDoc}*/

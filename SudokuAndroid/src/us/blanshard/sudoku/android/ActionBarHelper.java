@@ -19,6 +19,8 @@ package us.blanshard.sudoku.android;
 import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 
@@ -32,7 +34,7 @@ import android.view.MenuInflater;
  * in Android 3.0 and later.
  */
 public abstract class ActionBarHelper {
-    protected Activity mActivity;
+    protected final Activity mActivity;
 
     /**
      * Factory method for creating {@link ActionBarHelper} objects for a
@@ -93,5 +95,11 @@ public abstract class ActionBarHelper {
      * Invalidates the options menu, specifically the action bar.
      */
     public void invalidateOptionsMenu() {
+    }
+
+    /**
+     * Action bar helper code to be run in {@link FragmentActivity#onAttachFragment}.
+     */
+    public void onAttachFragment(Fragment fragment) {
     }
 }

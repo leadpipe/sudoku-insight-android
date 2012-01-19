@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.InflateException;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -33,11 +34,14 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.google.common.collect.Lists;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -50,6 +54,7 @@ public class ActionBarHelperBase extends ActionBarHelper {
 
     protected Set<Integer> mActionItemIds = new HashSet<Integer>();
     private Menu mMenu;
+    private List<Fragment> mFragments;
 
     protected ActionBarHelperBase(Activity activity) {
         super(activity);
@@ -72,6 +77,8 @@ public class ActionBarHelperBase extends ActionBarHelper {
         mMenu = menu;
         mActivity.onCreatePanelMenu(Window.FEATURE_OPTIONS_PANEL, menu);
         mActivity.onPrepareOptionsMenu(menu);
+        if (mFragments != null)
+            for (Fragment f : mFragments) f.onPrepareOptionsMenu(mMenu);
         for (int i = 0; i < menu.size(); i++) {
             MenuItem item = menu.getItem(i);
             if (mActionItemIds.contains(item.getItemId())) {
@@ -130,6 +137,11 @@ public class ActionBarHelperBase extends ActionBarHelper {
         }
     }
 
+    @Override public void onAttachFragment(Fragment fragment) {
+        if (mFragments == null) mFragments = Lists.newArrayList();
+        mFragments.add(fragment);
+    }
+
     /**
      * Returns a {@link android.view.MenuInflater} that can read action bar metadata on
      * pre-Honeycomb devices.
@@ -145,6 +157,8 @@ public class ActionBarHelperBase extends ActionBarHelper {
         ViewGroup actionBarCompat = getActionBarCompat();
         if (actionBarCompat != null) {
             mActivity.onPrepareOptionsMenu(mMenu);
+            if (mFragments != null)
+                for (Fragment f : mFragments) f.onPrepareOptionsMenu(mMenu);
             for (int i = 0, count = actionBarCompat.getChildCount(); i < count; ++i) {
                 View button = actionBarCompat.getChildAt(i);
                 MenuItem item = (MenuItem) button.getTag();
@@ -195,6 +209,7 @@ public class ActionBarHelperBase extends ActionBarHelper {
         actionButton.setScaleType(ImageView.ScaleType.CENTER);
         actionButton.setContentDescription(item.getTitle());
         actionButton.setTag(item);
+        actionButton.setEnabled(item.isEnabled());
         actionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
