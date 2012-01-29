@@ -15,7 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.game;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.Lists;
