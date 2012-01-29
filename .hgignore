@@ -27,3 +27,6 @@ bin
 
 # Maven dependencies
 SharedLibs/*.jar
+
+# Data files in the stats directory
+stats/*.tsv
