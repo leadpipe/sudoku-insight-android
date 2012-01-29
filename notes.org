@@ -1,10 +1,10 @@
 * Solver
 
 * Generator
+** TODO Add method for choosing symmetry based on an enum set
 ** TODO What about non-unique puzzles?
 
 * Hints
-** DONE Add non-recursive assignment to Marks
 ** TODO Add LocSet?
 ** TODO Start work on basic visual strategies
 
@@ -14,7 +14,9 @@
      - empty set for possible assignments: highlight location or unit & numeral?
    - single possible numeral for location or location for unit & numeral
      - block & numeral: easiest to see
+       - pointing numeral elimination is also easy to see
      - row/column & numeral: next
+       - degree of difficulty depends on number of unset locations
      - location: hardest
    - locked sets: naked/hidden sets: draw each set in its own color, show the
      numerals in each location with missing numerals crossed out
@@ -23,13 +25,10 @@
      be, ...
 
 * Game
-** TODO Make undo stack able to be saved/restored
+** TODO Add gson serialization for game and undo stack
 ** TODO Rename getState to getSolution or getSolutionState
 
 * App
-** DONE Make an action bar, move controls there
-** DONE Have solution/trail button just be ON/OFF
-** DONE Figure out how to change the theme: use a white one
 ** TODO Have grid vary display based on solution/trail input state
 ** TODO Change yellow dot to bold numeral for trailhead
 ** TODO Improve new-trail icon
@@ -38,9 +37,17 @@
 ** TODO Make icons for launcher, home
 ** TODO Manage game suspension/resumption from activity
 ** TODO Add timer display
+** TODO Have an input clock-face widget separate from the grid, which tracks the current input numeral
 ** TODO Have separate view to show while generating puzzles, button to start playing
 ** TODO Tweak the trail colors so they're excellent with a white background
 ** TODO Make database for game state
+   - keyed by flat string of givens
+   - need entire move history, at least of games in progress
+   - plus undo stack
+   - plus order of trails and how many are visible
+   - for historical games, we want:
+     - elapsed time
+     - when completed (or abandoned?)
 ** TODO Deal with the app lifecycle
    - onPause: save to db
    - need to save undo state as well
