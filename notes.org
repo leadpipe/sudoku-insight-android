@@ -25,8 +25,8 @@
      be, ...
 
 * Game
-** TODO Add gson serialization for game and undo stack
-** TODO Rename getState to getSolution or getSolutionState
+** DONE Add gson serialization for game and undo stack
+** TODO Rename getState to... what?
 
 * App
 ** TODO Have grid vary display based on solution/trail input state
