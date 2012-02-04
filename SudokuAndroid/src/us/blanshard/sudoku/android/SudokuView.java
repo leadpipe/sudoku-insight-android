@@ -15,6 +15,9 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import static us.blanshard.sudoku.core.Numeral.number;
+import static us.blanshard.sudoku.core.Numeral.numeral;
+
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.game.Sudoku;
@@ -290,7 +293,7 @@ public class SudokuView extends View {
             mLocation = loc;
             mPointerId = event.getPointerId(index);
             Numeral num = mState.get(mLocation) == null ? mDefaultChoice : mState.get(mLocation);
-            mChoice = num == null ? 0 : num.number;
+            mChoice = number(num);
             invalidateTouchPoint();
           }
         }
@@ -337,7 +340,7 @@ public class SudokuView extends View {
       case MotionEvent.ACTION_POINTER_UP:
         if (mPointerId == event.getPointerId(event.getActionIndex())) {
           if (mState != null && mChoice >= 0) {
-            Numeral num = mChoice == 0 ? null : Numeral.of(mChoice);
+            Numeral num = numeral(mChoice);
             if (num != mState.get(mLocation)) {
               mDefaultChoice = num;
               if (mOnMoveListener != null) {

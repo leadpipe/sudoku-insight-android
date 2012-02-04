@@ -16,9 +16,13 @@ limitations under the License.
 package us.blanshard.sudoku.game;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static us.blanshard.sudoku.game.GameJson.JOINER;
+import static us.blanshard.sudoku.game.GameJson.SPLITTER;
 
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
+
+import java.util.Iterator;
 
 /**
  * A single move in a Sudoku game.  Has nested classes for all defined moves.
@@ -41,8 +45,16 @@ public abstract class Move {
   /** Performs this move on the given game, returns true if it worked. */
   abstract boolean apply(Sudoku game);
 
-  public Sudoku.State getState(Sudoku game) {
-    return id < 0 ? game.getState() : game.getTrail(id);
+  /** Renders this move as a string for json.  Can be reversed by {@link #fromJsonValue}. */
+  abstract String toJsonValue();
+
+  static Move fromJsonValue(String value) {
+    Iterator<String> it = SPLITTER.split(value).iterator();
+    long timestamp = Long.parseLong(it.next());
+    int id = Integer.parseInt(it.next());
+    Location loc = Location.of(Integer.parseInt(it.next()));
+    return it.hasNext() ? new Set(timestamp, id, loc, Numeral.of(Integer.parseInt(it.next())))
+        : new Clear(timestamp, id, loc);
   }
 
   public abstract Location getLocation();
@@ -62,7 +74,11 @@ public abstract class Move {
     }
 
     @Override boolean apply(Sudoku game) {
-      return getState(game).actuallySet(loc, num);
+      return game.getState(id).actuallySet(loc, num);
+    }
+
+    @Override String toJsonValue() {
+      return JOINER.join(timestamp, id, loc.index, num.number);
     }
 
     @Override public Location getLocation() {
@@ -83,7 +99,11 @@ public abstract class Move {
     }
 
     @Override boolean apply(Sudoku game) {
-      return getState(game).actuallyClear(loc);
+      return game.getState(id).actuallyClear(loc);
+    }
+
+    @Override String toJsonValue() {
+      return JOINER.join(timestamp, id, loc.index);
     }
 
     @Override public Location getLocation() {

@@ -144,6 +144,10 @@ public final class Sudoku {
     return state;
   }
 
+  public State getState(int id) {
+    return id < 0 ? state : getTrail(id);
+  }
+
   /** Starts a new trail. */
   public Trail newTrail() {
     Trail trail = new Trail(trails.size());
@@ -233,6 +237,10 @@ public final class Sudoku {
       gridBuilder = puzzle.asBuilder();
     }
 
+    int getId() {
+      return -1;
+    }
+
     /** Returns the set numeral, or null. */
     public Numeral get(Location loc) {
       return gridBuilder.get(loc);
@@ -293,7 +301,7 @@ public final class Sudoku {
       this.id = id;
     }
 
-    public int getId() {
+    @Override public int getId() {
       return id;
     }
 

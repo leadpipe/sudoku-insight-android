@@ -16,9 +16,14 @@ limitations under the License.
 package us.blanshard.sudoku.game;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static us.blanshard.sudoku.core.Numeral.number;
+import static us.blanshard.sudoku.core.Numeral.numeral;
+import static us.blanshard.sudoku.game.GameJson.JOINER;
 
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
+
+import java.util.Iterator;
 
 import javax.annotation.Nullable;
 
@@ -30,16 +35,28 @@ import javax.annotation.Nullable;
  * @author Luke Blanshard
  */
 public class MoveCommand implements Command {
-  private final Sudoku.State state;
-  private final Location loc;
-  private final Numeral num;
-  private final Numeral prevNum;
+  final Sudoku.State state;
+  final Location loc;
+  final Numeral num;
+  final Numeral prevNum;
 
   public MoveCommand(Sudoku.State state, Location loc, @Nullable Numeral num) {
+    this(state, loc, num, state.get(loc));
+  }
+
+  MoveCommand(Sudoku.State state, Location loc, @Nullable Numeral num, @Nullable Numeral prevNum) {
     this.state = checkNotNull(state);
     this.loc = checkNotNull(loc);
     this.num = num;
-    this.prevNum = state.get(loc);
+    this.prevNum = prevNum;
+  }
+
+  static MoveCommand fromJsonValues(Iterator<String> values, Sudoku game) {
+    int id = Integer.parseInt(values.next());
+    Location loc = Location.of(Integer.parseInt(values.next()));
+    Numeral num = numeral(Integer.parseInt(values.next()));
+    Numeral prevNum = numeral(Integer.parseInt(values.next()));
+    return new MoveCommand(game.getState(id), loc, num, prevNum);
   }
 
   @Override public void redo() throws CommandException {
@@ -48,6 +65,10 @@ public class MoveCommand implements Command {
 
   @Override public void undo() throws CommandException {
     set(prevNum);
+  }
+
+  @Override public String toJsonValue() {
+    return JOINER.join("move", state.getId(), loc.index, number(num), number(prevNum));
   }
 
   private void set(Numeral num) throws CommandException {

@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.game;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkPositionIndex;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.Lists;
@@ -28,40 +30,53 @@ import java.util.List;
  */
 public class UndoStack {
 
-  private final List<Command> commands = Lists.newArrayList();
-  private int pointer;
+  final List<Command> commands;
+  private int position;
+
+  public UndoStack() {
+    this(Lists.<Command>newArrayList(), 0);
+  }
+
+  UndoStack(List<Command> commands, int position) {
+    this.commands = checkNotNull(commands);
+    this.position = checkPositionIndex(position, commands.size());
+  }
+
+  int getPosition() {
+    return position;
+  }
 
   /** Pushes the given command on the stack, and executes it. */
   public void doCommand(Command command) throws CommandException {
     command.redo();  // Execute first, so an exception won't affect the stack.
-    if (pointer < commands.size()) commands.subList(pointer, commands.size()).clear();
+    if (position < commands.size()) commands.subList(position, commands.size()).clear();
     commands.add(command);
-    pointer = commands.size();
+    position = commands.size();
   }
 
   /** Tells whether there is a command available to be undone. */
   public boolean canUndo() {
-    return pointer > 0;
+    return position > 0;
   }
 
   /** Undoes the previous command. */
   public void undo() throws CommandException {
-    checkState(pointer > 0);
-    commands.get(pointer - 1).undo();
+    checkState(position > 0);
+    commands.get(position - 1).undo();
     // Decrement after undoing so an exception won't affect the stack.
-    --pointer;
+    --position;
   }
 
   /** Tells whether there is a command available to be redone. */
   public boolean canRedo() {
-    return pointer < commands.size();
+    return position < commands.size();
   }
 
   /** Redoes the next command. */
   public void redo() throws CommandException {
-    checkState(pointer < commands.size());
-    commands.get(pointer).redo();
+    checkState(position < commands.size());
+    commands.get(position).redo();
     // Increment after redoing so an exception won't affect the stack.
-    ++pointer;
+    ++position;
   }
 }

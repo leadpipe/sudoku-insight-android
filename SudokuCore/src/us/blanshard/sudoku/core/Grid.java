@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.core;
 
+import static us.blanshard.sudoku.core.Numeral.numeral;
+
 import com.google.common.collect.Sets;
 
 import java.util.AbstractMap;
@@ -267,10 +269,6 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
           String.format("Grid.fromString requires 81 locations, got %d in %s", index, s));
     }
     return builder.build();
-  }
-
-  private static Numeral numeral(int num) {
-    return num == 0 ? null : Numeral.of(num);
   }
 
   private class EntrySet extends AbstractSet<Entry<Location, Numeral>>

@@ -16,24 +16,20 @@ limitations under the License.
 package us.blanshard.sudoku.game;
 
 import static java.util.Arrays.asList;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static us.blanshard.sudoku.game.Fixtures.fakeTicker;
+import static us.blanshard.sudoku.game.Fixtures.makeGame;
+import static us.blanshard.sudoku.game.Fixtures.openLocation;
+import static us.blanshard.sudoku.game.Fixtures.puzzle;
 
-import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
-import us.blanshard.sudoku.core.Symmetry;
-
-import com.google.common.base.Predicate;
-import com.google.common.base.Ticker;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,21 +37,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.Random;
-
 @RunWith(MockitoJUnitRunner.class)
 public class SudokuTest {
-  static final Random random = new Random(0);
-  static final Grid puzzle = Generator.SIMPLE.generate(random, Symmetry.BLOCKWISE);
-  static final Location openLocation = Iterables.find(Location.ALL, new Predicate<Location>() {
-    @Override public boolean apply(Location loc) {
-      return !puzzle.containsKey(loc);
-    }
-  });
   @Mock Sudoku.Listener listener;
 
   @Test public void state() {
-    Sudoku game = new Sudoku(puzzle);
+    Sudoku game = makeGame(puzzle);
     assertSame(puzzle, game.getPuzzle());
     assertEquals(0, game.getHistory().size());
     assertEquals(puzzle, game.getState().getGrid());
@@ -75,7 +62,7 @@ public class SudokuTest {
   }
 
   @Test public void trails() {
-    Sudoku game = new Sudoku(puzzle);
+    Sudoku game = makeGame(puzzle);
     Sudoku.Trail trail = game.newTrail();
 
     Location first = null, last = null;
@@ -119,14 +106,7 @@ public class SudokuTest {
   }
 
   @Test public void stopwatch() {
-    final long oneMs = MILLISECONDS.toNanos(1);
-    // A ticker that advances by one millisecond each time it's read.
-    Ticker ticker = new Ticker() {
-        long value = 0;
-        @Override public long read() { return value += oneMs; }
-      };
-
-    Sudoku game = new Sudoku(puzzle, Sudoku.nullRegistry(), ImmutableList.<Move>of(), 123, ticker);
+    Sudoku game = makeGame(puzzle, 123, fakeTicker());
     assertEquals(124, game.elapsedMillis());
     assertEquals(true, game.isRunning());
 
@@ -164,7 +144,7 @@ public class SudokuTest {
     registry.addListener(listener);
 
     // when
-    Sudoku game = new Sudoku(puzzle, registry);
+    Sudoku game = makeGame(puzzle, registry);
 
     // then
     verify(listener).gameCreated(game);
@@ -177,7 +157,7 @@ public class SudokuTest {
     registry.removeListener(listener);
 
     // when
-    Sudoku game = new Sudoku(puzzle, registry);
+    Sudoku game = makeGame(puzzle, registry);
 
     // then
     verify(listener, never()).gameCreated(game);
@@ -185,7 +165,7 @@ public class SudokuTest {
 
   @Test public void shouldCallListenerOnGameSuspended() {
     // given
-    Sudoku game = new Sudoku(puzzle);
+    Sudoku game = makeGame(puzzle, Sudoku.newRegistry());
     game.getListenerRegistry().addListener(listener);
 
     // when
@@ -197,7 +177,7 @@ public class SudokuTest {
 
   @Test public void shouldNotCallListenerOnGameAlreadySuspended() {
     // given
-    Sudoku game = new Sudoku(puzzle);
+    Sudoku game = makeGame(puzzle, Sudoku.newRegistry());
     game.suspend();
     game.getListenerRegistry().addListener(listener);
 
@@ -210,7 +190,7 @@ public class SudokuTest {
 
   @Test public void shouldCallListenerOnGameResumed() {
     // given
-    Sudoku game = new Sudoku(puzzle);
+    Sudoku game = makeGame(puzzle, Sudoku.newRegistry());
     game.suspend();
     game.getListenerRegistry().addListener(listener);
 
@@ -223,7 +203,7 @@ public class SudokuTest {
 
   @Test public void shouldNotCallListenerOnGameAlreadyResumed() {
     // given
-    Sudoku game = new Sudoku(puzzle);
+    Sudoku game = makeGame(puzzle, Sudoku.newRegistry());
     game.getListenerRegistry().addListener(listener);
 
     // when
@@ -235,7 +215,7 @@ public class SudokuTest {
 
   @Test public void shouldCallListenerOnMoveMade() {
     // given
-    Sudoku game = new Sudoku(puzzle);
+    Sudoku game = makeGame(puzzle, Sudoku.newRegistry());
     game.getListenerRegistry().addListener(listener);
 
     // when
@@ -251,7 +231,7 @@ public class SudokuTest {
 
   @Test public void shouldNotCallListenerOnMoveNotMade() {
     // given
-    Sudoku game = new Sudoku(puzzle);
+    Sudoku game = makeGame(puzzle, Sudoku.newRegistry());
     game.getListenerRegistry().addListener(listener);
     game.suspend();
 
@@ -264,7 +244,7 @@ public class SudokuTest {
 
   @Test public void shouldCallListenerOnTrailCreated() {
     // given
-    Sudoku game = new Sudoku(puzzle);
+    Sudoku game = makeGame(puzzle, Sudoku.newRegistry());
     game.getListenerRegistry().addListener(listener);
 
     // when
@@ -276,7 +256,7 @@ public class SudokuTest {
 
   @Test public void shouldNotCallListenerOnTrailNotCreated() {
     // given
-    Sudoku game = new Sudoku(puzzle);
+    Sudoku game = makeGame(puzzle, Sudoku.newRegistry());
     game.getTrail(0);
     game.getListenerRegistry().addListener(listener);
 

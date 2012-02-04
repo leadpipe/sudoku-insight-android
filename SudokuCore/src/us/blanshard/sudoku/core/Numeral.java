@@ -43,6 +43,16 @@ public final class Numeral implements Comparable<Numeral> {
     return instances[index];
   }
 
+  /** Converts 0 to null, 1-9 to the corresponding numeral. */
+  public static Numeral numeral(int number) {
+    return number == 0 ? null : of(number);
+  }
+
+  /** Converts null to 0, non-null to the corresponding number. */
+  public static int number(Numeral num) {
+    return num == null ? 0 : num.number;
+  }
+
   /** All the numerals. */
   public static final List<Numeral> ALL;
 

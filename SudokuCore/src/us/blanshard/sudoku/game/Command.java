@@ -26,4 +26,7 @@ public interface Command {
 
   /** Puts things back the way they were before the command was done. */
   void undo() throws CommandException;
+
+  /** Renders this command as a string for json. */
+  String toJsonValue();
 }

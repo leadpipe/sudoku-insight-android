@@ -233,8 +233,8 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     mRegistry.addListener(new Sudoku.Adapter() {
       @Override public void moveMade(Sudoku game, Move move) {
         mSudokuView.invalidateLocation(move.getLocation());
-        if (move.getState(game) instanceof Sudoku.Trail) {
-          makeActiveTrail((Sudoku.Trail) move.getState(game));
+        if (move.id >= 0) {
+          makeActiveTrail(game.getTrail(move.id));
         }
       }
     });
