@@ -29,17 +29,24 @@
 ** TODO Rename getState to... what?
 
 * App
+** TODO Deal with game states
+   - playing
+   - complete -- suspend timer, disallow further moves
+     - stop undo as well?
+     - show a congrats message (for now)
+   - full but wrong -- highlight broken locations
+     - revert to playing state (and redraw everything) on any move
 ** TODO Have grid vary display based on solution/trail input state
-** TODO Change yellow dot to bold numeral for trailhead
+** DONE Change yellow dot to bold numeral for trailhead
 ** TODO Improve new-trail icon
 ** TODO Give visual indication when try to set an unsettable location
 ** TODO Design the whole app, with fragments
 ** TODO Make icons for launcher, home
-** TODO Manage game suspension/resumption from activity
-** TODO Add timer display
+** DONE Manage game suspension/resumption from activity
+** DONE Add timer display
 ** TODO Have an input clock-face widget separate from the grid, which tracks the current input numeral
 ** TODO Have separate view to show while generating puzzles, button to start playing
-** TODO Tweak the trail colors so they're excellent with a white background
+** DONE Tweak the trail colors so they're excellent with a white background
 ** TODO Make database for game state
    - keyed by flat string of givens
    - need entire move history, at least of games in progress
