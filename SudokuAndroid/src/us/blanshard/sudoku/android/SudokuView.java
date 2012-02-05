@@ -222,22 +222,20 @@ public class SudokuView extends View {
           canvas.drawText(num.toString(), left + toCenter, top + toBaseline, paint);
         }
         if (!given && !mTrails.isEmpty()) {
-          paint.setTypeface(Typeface.DEFAULT);
           paint.setFakeBoldText(false);
           for (int i = 0; i < mTrails.size(); ++i) {
             TrailItem item = mTrails.get(i);
             if ((num = item.trail.get(loc)) != null) {
               paint.setTextSize(mSquareSize * (i == 0 ? 0.5f : 0.35f));
-              if (item.trail.getTrailhead() == loc) {
-                paint.setColor(Color.rgb(0xff, 0xff, 0xc0));
-                canvas.drawCircle(left + mSquareSize * TRAIL_X_CENTER[i], top + mSquareSize
-                    * TRAIL_Y_TOP[i] - paint.ascent() / 2, -paint.ascent() / 2, paint);
-              }
               paint.setColor(item.color);
+              boolean isTrailhead = loc == item.trail.getTrailhead();
+              paint.setTypeface(isTrailhead ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+              paint.setTextSkewX(isTrailhead ? -0.125f : 0);
               canvas.drawText(num.toString(), left + mSquareSize * TRAIL_X_CENTER[i], top
                   + mSquareSize * TRAIL_Y_TOP[i] - paint.ascent(), paint);
             }
           }
+          paint.setTextSkewX(0);
           paint.setTextSize(textSize);
           paint.setColor(Color.BLACK);
         }

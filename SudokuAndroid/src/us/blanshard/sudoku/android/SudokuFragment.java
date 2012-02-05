@@ -105,7 +105,10 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     mGame = game;
     mUndoStack = new UndoStack();
     mSudokuView.setGame(game);
-    updateTrails(Lists.<TrailItem>newArrayList(), Lists.<TrailItem>newArrayList());
+    List<TrailItem> vis = Lists.newArrayList(), invis = Lists.newArrayList();
+    for (int i = game.getNumTrails() - 1; i >= 0; --i)
+      invis.add(makeTrailItem(i, false));
+    updateTrails(vis, invis);
     mSudokuView.setDefaultChoice(Numeral.of(1));
     invalidateOptionsMenu();
   }
@@ -252,7 +255,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
           }
         }
         if (!recycled) {
-          makeActiveTrailItem(makeTrailItem(trailId));
+          makeActiveTrailItem(makeTrailItem(trailId, true));
         }
         return true;
 
@@ -296,11 +299,11 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     }
   }
 
-  private TrailItem makeTrailItem(int trailId) {
+  private TrailItem makeTrailItem(int trailId, boolean shown) {
     double hue = (trailId + 1) * 5.0 / 17;
     hue = hue - Math.floor(hue);
-    int color = Color.HSVToColor(new float[] { (float) hue * 360, 1f, 0.5f });
-    TrailItem trailItem = new TrailItem(mGame.getTrail(trailId), color, true);
+    int color = Color.HSVToColor(new float[] { (float) hue * 360, 1f, 0.625f });
+    TrailItem trailItem = new TrailItem(mGame.getTrail(trailId), color, shown);
     return trailItem;
   }
 
@@ -375,13 +378,8 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
   private void restoreTrails(JSONArray trailOrder, int numVisibleTrails) throws JSONException {
     List<TrailItem> vis = Lists.newArrayList(), invis = Lists.newArrayList();
     for (int i = 0; i < trailOrder.length(); ++i) {
-      TrailItem item = makeTrailItem(trailOrder.getInt(i));
-      if (i < numVisibleTrails) {
-        vis.add(item);
-      } else {
-        invis.add(item);
-        item.shown = false;
-      }
+      TrailItem item = makeTrailItem(trailOrder.getInt(i), i < numVisibleTrails);
+      (item.shown ? vis : invis).add(item);
     }
     updateTrails(vis, invis);
   }
