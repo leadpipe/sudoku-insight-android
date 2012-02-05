@@ -15,14 +15,19 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import static us.blanshard.sudoku.core.Numeral.number;
+import static us.blanshard.sudoku.core.Numeral.numeral;
+
 import roboguice.fragment.RoboFragment;
 import roboguice.inject.ContextSingleton;
 import roboguice.inject.InjectView;
 
+import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.game.Command;
 import us.blanshard.sudoku.game.CommandException;
+import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.MoveCommand;
 import us.blanshard.sudoku.game.Sudoku;
@@ -31,6 +36,7 @@ import us.blanshard.sudoku.game.UndoStack;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -48,6 +54,10 @@ import android.widget.ToggleButton;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -93,7 +103,10 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
 
   public void setGame(Sudoku game) {
     mGame = game;
+    mUndoStack = new UndoStack();
     mSudokuView.setGame(game);
+    updateTrails(Lists.<TrailItem>newArrayList(), Lists.<TrailItem>newArrayList());
+    mSudokuView.setDefaultChoice(Numeral.of(1));
     invalidateOptionsMenu();
   }
 
@@ -153,6 +166,41 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     super.onCreateOptionsMenu(menu, menuInflater);
   }
 
+  @Override public void onActivityCreated(Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+    try {
+      if (savedInstanceState != null && savedInstanceState.containsKey("puzzle")) {
+        Grid puzzle = Grid.fromString(savedInstanceState.getString("puzzle"));
+        List<Move> history = GameJson.toHistory(new JSONArray(savedInstanceState.getString("history")));
+        long elapsedMillis = savedInstanceState.getLong("elapsedMillis");
+        setGame(new Sudoku(puzzle, mRegistry, history, elapsedMillis));
+        if (savedInstanceState.containsKey("uiState")) {
+          JSONObject uiState = new JSONObject(savedInstanceState.getString("uiState"));
+          mUndoStack = GameJson.toUndoStack(uiState.getJSONObject("undo"), mGame);
+          mSudokuView.setDefaultChoice(numeral(uiState.getInt("defaultChoice")));
+          restoreTrails(uiState.getJSONArray("trailOrder"), uiState.getInt("numVisibleTrails"));
+          mEditTrailToggle.setChecked(uiState.getBoolean("trailActive"));
+        }
+      }
+    } catch (JSONException e) {
+      Log.e("SudokuFragment", "Unable to restore state from " + savedInstanceState, e);
+    }
+  }
+
+  @Override public void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+    if (mGame != null) {
+      outState.putString("puzzle", mGame.getPuzzle().toFlatString());
+      outState.putString("history", GameJson.fromHistory(mGame.getHistory()).toString());
+      outState.putLong("elapsedMillis", mGame.elapsedMillis());
+      try {
+        outState.putString("uiState", makeUiState().toString());
+      } catch (JSONException e) {
+        Log.e("SudokuFragment", "Unable to save UI state", e);
+      }
+    }
+  }
+
   @Override public void onPrepareOptionsMenu(Menu menu) {
     for (int i = 0; i < menu.size(); ++i) {
       MenuItem item = menu.getItem(i);
@@ -204,11 +252,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
           }
         }
         if (!recycled) {
-          double hue = (trailId + 1) * 5.0 / 17;
-          hue = hue - Math.floor(hue);
-          int color = Color.HSVToColor(new float[] { (float) hue * 360, 1f, 0.5f });
-          TrailItem trailItem = new TrailItem(mGame.getTrail(trailId), color, true);
-          makeActiveTrailItem(trailItem);
+          makeActiveTrailItem(makeTrailItem(trailId));
         }
         return true;
 
@@ -252,6 +296,14 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     }
   }
 
+  private TrailItem makeTrailItem(int trailId) {
+    double hue = (trailId + 1) * 5.0 / 17;
+    hue = hue - Math.floor(hue);
+    int color = Color.HSVToColor(new float[] { (float) hue * 360, 1f, 0.5f });
+    TrailItem trailItem = new TrailItem(mGame.getTrail(trailId), color, true);
+    return trailItem;
+  }
+
   private void makeActiveTrailItem(TrailItem item) {
     mTrailAdapter.remove(item);
     item.shown = true;
@@ -271,6 +323,14 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
       for (TrailItem item : vis.subList(MAX_VISIBLE_TRAILS, vis.size())) {
         item.shown = false;
       }
+    updateTrails(vis, invis);
+  }
+
+  /**
+   * @param vis  trails visible in the grid
+   * @param invis  trails in the list but not shown
+   */
+  private void updateTrails(List<TrailItem> vis, List<TrailItem> invis) {
     mTrailAdapter.clear();
     for (TrailItem item : Iterables.concat(vis, invis))
       mTrailAdapter.add(item);
@@ -284,5 +344,45 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
 
   private void invalidateOptionsMenu() {
     mActionBarHelper.invalidateOptionsMenu();
+  }
+
+  private JSONObject makeUiState() throws JSONException {
+    JSONObject object = new JSONObject();
+    object.put("undo", GameJson.fromUndoStack(mUndoStack));
+    object.put("defaultChoice", number(mSudokuView.getDefaultChoice()));
+    object.put("trailOrder", makeTrailOrder());
+    object.put("numVisibleTrails", countVisibleTrails());
+    object.put("trailActive", mEditTrailToggle.isChecked());
+    return object;
+  }
+
+  private JSONArray makeTrailOrder() {
+    JSONArray array = new JSONArray();
+    for (int i = 0; i < mTrailAdapter.getCount(); ++i) {
+      array.put(mTrailAdapter.getItemId(i));
+    }
+    return array;
+  }
+
+  private int countVisibleTrails() {
+    int count = 0;
+    for (int i = 0; i < mTrailAdapter.getCount(); ++i) {
+      if (mTrailAdapter.getItem(i).shown) ++count;
+    }
+    return count;
+  }
+
+  private void restoreTrails(JSONArray trailOrder, int numVisibleTrails) throws JSONException {
+    List<TrailItem> vis = Lists.newArrayList(), invis = Lists.newArrayList();
+    for (int i = 0; i < trailOrder.length(); ++i) {
+      TrailItem item = makeTrailItem(trailOrder.getInt(i));
+      if (i < numVisibleTrails) {
+        vis.add(item);
+      } else {
+        invis.add(item);
+        item.shown = false;
+      }
+    }
+    updateTrails(vis, invis);
   }
 }

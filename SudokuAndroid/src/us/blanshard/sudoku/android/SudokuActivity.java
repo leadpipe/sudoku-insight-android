@@ -51,7 +51,9 @@ public class SudokuActivity extends ActionBarActivity {
     }
 
     @Override protected void onPostExecute(Grid result) {
-      setPuzzle(result);
+      if (mFragment.getGame() == null) {
+        setPuzzle(result);
+      }
     }
   }
 }

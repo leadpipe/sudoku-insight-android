@@ -122,6 +122,10 @@ public class SudokuView extends View {
     return mDefaultChoice;
   }
 
+  public void setDefaultChoice(@Nullable Numeral num) {
+    mDefaultChoice = num;
+  }
+
   @Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     int wMode = MeasureSpec.getMode(widthMeasureSpec);
     int wSize = MeasureSpec.getSize(widthMeasureSpec);
