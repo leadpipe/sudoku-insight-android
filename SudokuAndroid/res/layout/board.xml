@@ -20,6 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/sudoku_view"
+        android:layout_marginRight="4dp"
         />
 
     <ListView
@@ -30,8 +31,9 @@
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/sudoku_view"
         android:layout_toLeftOf="@+id/edit_trail_toggle"
-        android:choiceMode="singleChoice"
-        >
+        android:layout_marginLeft="4dp"
+        android:choiceMode="singleChoice" >
+
     </ListView>
 
 </RelativeLayout>
