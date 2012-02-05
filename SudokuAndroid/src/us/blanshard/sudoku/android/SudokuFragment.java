@@ -49,6 +49,7 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -81,6 +82,24 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
   @InjectView(R.id.sudoku_view) SudokuView mSudokuView;
   @InjectView(R.id.edit_trail_toggle) ToggleButton mEditTrailToggle;
   @InjectView(R.id.trails) ListView mTrailsList;
+  @InjectView(R.id.timer) TextView mTimer;
+
+  private final Runnable timerUpdater = new Runnable() {
+    @Override public void run() {
+      String time = "";
+      if (mGame != null) {
+        long millis = mGame.elapsedMillis();
+        long secs = millis / 1000;
+        time = String.format("%d:%02d", secs / 60, secs % 60);
+        if (mGame.isRunning()) {
+          mTimer.postDelayed(timerUpdater, (secs + 1) * 1000 - millis);
+        }
+      }
+      if (mTimer != null) {
+        mTimer.setText(time);
+      }
+    }
+  };
 
   // Public methods
 
@@ -106,11 +125,13 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     mUndoStack = new UndoStack();
     mSudokuView.setGame(game);
     List<TrailItem> vis = Lists.newArrayList(), invis = Lists.newArrayList();
-    for (int i = game.getNumTrails() - 1; i >= 0; --i)
-      invis.add(makeTrailItem(i, false));
+    if (game != null)
+      for (int i = game.getNumTrails() - 1; i >= 0; --i)
+        invis.add(makeTrailItem(i, false));
     updateTrails(vis, invis);
     mSudokuView.setDefaultChoice(Numeral.of(1));
     invalidateOptionsMenu();
+    if (game != null) game.resume();
   }
 
   public void showError(String s) {
@@ -204,6 +225,16 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     }
   }
 
+  @Override public void onPause() {
+    super.onPause();
+    if (mGame != null) mGame.suspend();
+  }
+
+  @Override public void onResume() {
+    super.onResume();
+    if (mGame != null) mGame.resume();
+  }
+
   @Override public void onPrepareOptionsMenu(Menu menu) {
     for (int i = 0; i < menu.size(); ++i) {
       MenuItem item = menu.getItem(i);
@@ -279,9 +310,17 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     mSudokuView.setOnMoveListener(this);
     mRegistry.addListener(new Sudoku.Adapter() {
       @Override public void moveMade(Sudoku game, Move move) {
-        mSudokuView.invalidateLocation(move.getLocation());
-        if (move.id >= 0) {
-          makeActiveTrail(game.getTrail(move.id));
+        if (game == mGame) {
+          mSudokuView.invalidateLocation(move.getLocation());
+          if (move.id >= 0) {
+            makeActiveTrail(game.getTrail(move.id));
+          }
+        }
+      }
+
+      @Override public void gameResumed(Sudoku game) {
+        if (game == mGame) {
+          mTimer.post(timerUpdater);
         }
       }
     });

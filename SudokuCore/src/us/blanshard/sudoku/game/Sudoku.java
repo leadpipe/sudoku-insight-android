@@ -88,8 +88,6 @@ public final class Sudoku {
     }
 
     registry.asListener().gameCreated(this);
-    if (!state.getGrid().isSolved())
-      resume();
   }
 
   public Grid getPuzzle() {
@@ -125,19 +123,21 @@ public final class Sudoku {
   }
 
   /** Suspends the puzzle.  No moves are possible while the puzzle is suspended. */
-  public void suspend() {
+  public Sudoku suspend() {
     if (stopwatch.isRunning()) {
       stopwatch.stop();
       registry.asListener().gameSuspended(this);
     }
+    return this;
   }
 
   /** Resumes the puzzle from a suspended state. */
-  public void resume() {
+  public Sudoku resume() {
     if (!stopwatch.isRunning()) {
       stopwatch.start();
       registry.asListener().gameResumed(this);
     }
+    return this;
   }
 
   public State getState() {

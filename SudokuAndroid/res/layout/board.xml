@@ -33,8 +33,18 @@
         android:layout_below="@+id/sudoku_view"
         android:layout_toLeftOf="@+id/edit_trail_toggle"
         android:layout_marginLeft="8dp"
-        android:choiceMode="singleChoice" >
+        android:choiceMode="singleChoice"
+        />
 
-    </ListView>
+    <TextView
+        android:id="@+id/timer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@+id/trails"
+        android:inputType="none"
+        android:gravity="center"
+        />
 
 </RelativeLayout>

@@ -26,7 +26,7 @@ import us.blanshard.sudoku.core.Numeral;
 import org.junit.Test;
 
 public class UndoStackTest {
-  Sudoku game = new Sudoku(Grid.BLANK);
+  Sudoku game = new Sudoku(Grid.BLANK).resume();
   UndoStack stack = new UndoStack();
 
   @Test public void doCommand() throws CommandException {

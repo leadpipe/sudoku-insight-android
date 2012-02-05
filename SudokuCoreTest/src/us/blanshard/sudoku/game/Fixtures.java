@@ -54,7 +54,8 @@ public class Fixtures {
   }
 
   static Sudoku makeGame(Grid puzzle, Sudoku.Registry registry) {
-    return new Sudoku(puzzle, registry, ImmutableList.<Move>of(), 0, fakeTicker());
+    return new Sudoku(puzzle, registry, ImmutableList.<Move>of(), 0, fakeTicker())
+        .resume();
   }
 
   static Sudoku makeGame(Grid puzzle, Ticker ticker) {
@@ -63,6 +64,7 @@ public class Fixtures {
 
   static Sudoku makeGame(Grid puzzle, long initialMillis, Ticker ticker) {
     return new Sudoku(
-        puzzle, Sudoku.nullRegistry(), ImmutableList.<Move>of(), initialMillis, ticker);
+        puzzle, Sudoku.nullRegistry(), ImmutableList.<Move>of(), initialMillis, ticker)
+        .resume();
   }
 }
