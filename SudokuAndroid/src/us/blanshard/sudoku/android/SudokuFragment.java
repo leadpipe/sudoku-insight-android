@@ -60,6 +60,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -76,6 +78,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
 
   private UndoStack mUndoStack = new UndoStack();
   private Sudoku mGame;
+  private Grid.State mState;
   @Inject Sudoku.Registry mRegistry;
   @Inject ActionBarHelper mActionBarHelper;
   private TrailAdapter mTrailAdapter;
@@ -122,6 +125,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
 
   public void setGame(Sudoku game) {
     mGame = game;
+    mState = Grid.State.INCOMPLETE;
     mUndoStack = new UndoStack();
     mSudokuView.setGame(game);
     List<TrailItem> vis = Lists.newArrayList(), invis = Lists.newArrayList();
@@ -131,10 +135,17 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     updateTrails(vis, invis);
     mSudokuView.setDefaultChoice(Numeral.of(1));
     invalidateOptionsMenu();
-    if (game != null) game.resume();
+    if (game != null) {
+      updateState();
+      game.resume();
+    }
   }
 
   public void showError(String s) {
+    showStatus(s);
+  }
+
+  public void showStatus(String s) {
     Toast.makeText(getActivity(), s, Toast.LENGTH_LONG).show();
   }
 
@@ -236,19 +247,20 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
   }
 
   @Override public void onPrepareOptionsMenu(Menu menu) {
+    boolean going = mState != Grid.State.SOLVED;
     for (int i = 0; i < menu.size(); ++i) {
       MenuItem item = menu.getItem(i);
       switch (item.getItemId()) {
         case R.id.menu_undo:
-          item.setEnabled(mUndoStack.canUndo());
+          item.setEnabled(going && mUndoStack.canUndo());
           break;
 
         case R.id.menu_redo:
-          item.setEnabled(mUndoStack.canRedo());
+          item.setEnabled(going && mUndoStack.canRedo());
           break;
 
         case R.id.menu_new_trail:
-          item.setEnabled(mGame != null);
+          item.setEnabled(going && mGame != null);
           break;
       }
     }
@@ -315,6 +327,9 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
           if (move.id >= 0) {
             makeActiveTrail(game.getTrail(move.id));
           }
+          updateState();
+          if (mState == Grid.State.SOLVED) showStatus("Congratulations!");
+          else if (mState == Grid.State.BROKEN) showStatus("Oops!");
         }
       }
 
@@ -421,5 +436,23 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
       (item.shown ? vis : invis).add(item);
     }
     updateTrails(vis, invis);
+  }
+
+  private void updateState() {
+    if (mGame.isFull()) {
+      Collection<Location> broken = mGame.getState().getGrid().getBrokenLocations();
+      mSudokuView.setBrokenLocations(broken);
+      if (broken.isEmpty()) {
+        mState = Grid.State.SOLVED;
+        mSudokuView.setEditable(false);
+        mGame.suspend();
+        invalidateOptionsMenu();
+      } else {
+        mState = Grid.State.BROKEN;
+      }
+    } else if (mState != Grid.State.INCOMPLETE) {
+      mState = Grid.State.INCOMPLETE;
+      mSudokuView.setBrokenLocations(Collections.<Location>emptySet());
+    }
   }
 }

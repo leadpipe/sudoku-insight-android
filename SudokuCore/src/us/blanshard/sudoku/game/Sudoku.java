@@ -175,6 +175,11 @@ public final class Sudoku {
     return true;
   }
 
+  /** Does every location in the state have a numeral in it? */
+  public boolean isFull() {
+    return state.gridBuilder.size() == Location.COUNT;
+  }
+
   /**
    * A callback interface for interested parties to find out what's going on in
    * a Sudoku.

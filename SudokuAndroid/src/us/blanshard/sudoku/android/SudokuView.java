@@ -35,6 +35,8 @@ import android.view.View;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -56,6 +58,8 @@ public class SudokuView extends View {
 
   private OnMoveListener mOnMoveListener;
   private Sudoku mGame;
+  private boolean mEditable;
+  private Collection<Location> mBroken;
   private List<TrailItem> mTrails = ImmutableList.<TrailItem> of();
   private boolean mTrailActive;
 
@@ -102,9 +106,24 @@ public class SudokuView extends View {
 
   public void setGame(Sudoku game) {
     this.mGame = game;
+    setEditable(true);
+    mBroken = Collections.<Location>emptySet();
     mPointerId = INVALID_POINTER_ID;
     mLocation = null;
-    setKeepScreenOn(game != null);
+    invalidate();
+  }
+
+  public boolean isEditable() {
+    return mEditable;
+  }
+
+  public void setEditable(boolean editable) {
+    mEditable = mGame != null && editable;
+    setKeepScreenOn(mEditable);
+  }
+
+  public void setBrokenLocations(Collection<Location> broken) {
+    mBroken = broken;
     invalidate();
   }
 
@@ -216,6 +235,7 @@ public class SudokuView extends View {
           paint.setTypeface(Typeface.DEFAULT);
           paint.setFakeBoldText(false);
         }
+        paint.setColor(mBroken.contains(loc) ? Color.RED : Color.BLACK);
         float left = mOffsetsX[loc.column.index];
         float top = mOffsetsY[loc.row.index];
         if (num != null) {
@@ -285,7 +305,7 @@ public class SudokuView extends View {
     switch (event.getActionMasked()) {
       case MotionEvent.ACTION_DOWN:
       case MotionEvent.ACTION_POINTER_DOWN:
-        if (mPointerId == INVALID_POINTER_ID && mGame != null) {
+        if (mPointerId == INVALID_POINTER_ID && mEditable) {
           int index = event.getActionIndex();
           Location loc = getLocation(event.getX(index), event.getY(index));
           mState = mGame.getState();
@@ -321,7 +341,7 @@ public class SudokuView extends View {
             float cy = mOffsetsY[mLocation.row.index] + mSquareSize / 2.0f;
             float r = mSquareSize * RADIUS_FACTOR;
             double d = Math.hypot(x - cx, y - cy);
-            if (d > r * 1.5) {
+            if (d > r * 2) {
               choice = -1; // Pull away from center to cancel
             } else if (d > r * 0.5) {
               double radians =
