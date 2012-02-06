@@ -29,9 +29,9 @@
 ** TODO Rename getState to... what?
 
 * App
-** TODO Deal with game states
+** DONE Deal with game states
    - playing
-   - complete -- suspend timer, disallow further moves
+   - solved -- suspend timer, disallow further moves
      - stop undo as well?
      - show a congrats message (for now)
    - full but wrong -- highlight broken locations
