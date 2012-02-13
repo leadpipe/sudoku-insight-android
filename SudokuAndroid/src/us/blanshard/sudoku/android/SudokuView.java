@@ -49,7 +49,7 @@ public class SudokuView extends View {
   }
 
   private static final double CLOCK_RADIUS_FACTOR = 0.85;
-  private static final int CLOCK_RADIUS_DP = 40;  // 1/4"
+  private static final int CLOCK_RADIUS_DP = 50;  // 5/16"
   private static final int THIN_LINE_WIDTH = 1;
   private static final int NORMAL_THICK_LINE_WIDTH = 3;
   private static final int SMALL_THICK_LINE_WIDTH = 2;
