@@ -17,8 +17,6 @@ package us.blanshard.sudoku.core;
 
 import static us.blanshard.sudoku.core.Numeral.numeral;
 
-import com.google.common.collect.Sets;
-
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.Arrays;
@@ -76,14 +74,21 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
   /**
    * Returns locations that have duplicate values for some unit.
    */
-  public Collection<Location> getBrokenLocations() {
-    Collection<Location> answer = Sets.newHashSet();
+  public Set<Location> getBrokenLocations() {
+    Set<Location> answer = new LocSet();
     for (Unit unit : Unit.allUnits()) {
       int bits = 0;
       for (Location loc : unit) {
         Numeral num = get(loc);
         if (num != null) {
-          if ((bits & num.bit) != 0) answer.add(loc);
+          if ((bits & num.bit) != 0) {
+            answer.add(loc);
+            for (Location firstLoc : unit)
+              if (get(firstLoc) == num) {
+                answer.add(firstLoc);
+                break;
+              }
+          }
           bits |= num.bit;
         }
       }

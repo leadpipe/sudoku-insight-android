@@ -147,4 +147,17 @@ public class GridTest {
     assertEquals(g.toString(), g2.toString());
     assertEquals(g, g2);
   }
+
+  @Test public void getBrokenLocations() {
+    // given
+    Grid grid = Grid.builder()
+      .put(Location.of(1, 1), Numeral.of(1))
+      .put(Location.of(1, 9), Numeral.of(1))
+      .put(Location.of(9, 1), Numeral.of(1))
+      .put(Location.of(7, 3), Numeral.of(1))
+      .build();
+
+    // then
+    assertEquals(grid.keySet(), grid.getBrokenLocations());
+  }
 }
