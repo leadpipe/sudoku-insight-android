@@ -47,10 +47,6 @@ public final class Column extends Unit {
     return 9 + index;
   }
 
-  @Override public boolean contains(Location loc) {
-    return loc.index % 9 == index;
-  }
-
   @Override public Type getType() {
     return Type.COLUMN;
   }

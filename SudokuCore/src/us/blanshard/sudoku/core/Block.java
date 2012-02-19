@@ -60,11 +60,6 @@ public final class Block extends Unit {
     return 18 + index;
   }
 
-  @Override public boolean contains(Location loc) {
-    return loc.index / 27 == rowIndex()
-        && loc.index % 9 / 3  == columnIndex();
-  }
-
   @Override public Type getType() {
     return Type.BLOCK;
   }

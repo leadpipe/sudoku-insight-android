@@ -48,14 +48,17 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
   }
 
   /** Returns the singleton set containing the given location within the given unit. */
-  public static UnitSubset singleton(Unit unit, Location loc) {
-    return ofBits(unit, bitFor(unit, loc));
+  static UnitSubset singleton(Unit unit, Location loc) {
+    for (int i = 0; i < 9; ++i)
+      if (unit.locations[i] == loc.index)
+        return ofBits(unit, 1 << i);
+    throw new IllegalArgumentException("Location " + loc + " is not in unit " + unit);
   }
 
   public boolean contains(Location loc) {
-    if (unit.contains(loc))
-      return (bits & bitFor(unit, loc)) != 0;
-    return false;
+    UnitSubset that = loc.unitSubsets.get(unit.getType());
+    return this.unit == that.unit
+        && (this.bits & that.bits) != 0;
   }
 
   @Override public boolean contains(Object o) {
@@ -93,13 +96,6 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
   @Override public int hashCode() {
     // Must match Set's contract, no shortcut to iterating and adding.
     return super.hashCode();
-  }
-
-  private static int bitFor(Unit unit, Location loc) {
-    int index = unit.indexOf(loc);
-    if (index < 0)
-      throw new IllegalArgumentException("Location " + loc + " is not in unit " + unit);
-    return 1 << index;
   }
 
   private class Iter implements Iterator<Location> {

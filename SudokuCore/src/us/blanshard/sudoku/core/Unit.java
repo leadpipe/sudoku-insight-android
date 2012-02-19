@@ -87,15 +87,16 @@ public abstract class Unit extends AbstractCollection<Location> implements Colle
   /** The index of this unit in {@link #allUnits}. */
   public abstract int unitIndex();
 
-  public abstract boolean contains(Location loc);
   public abstract Type getType();
+
+  public final boolean contains(Location loc) {
+    return loc.unitSubsets.get(getType()).unit == this;
+  }
 
   /** Returns the index of the given location within this unit, or -1. */
   public final int indexOf(Location loc) {
-    for (int i = 0; i < 9; ++i)
-      if (locations[i] == loc.index)
-        return i;
-    return -1;
+    UnitSubset set = loc.unitSubsets.get(getType());
+    return set.unit == this ? set.getIndex(0) : -1;
   }
 
   /** Returns the location at the given index within this unit. */
