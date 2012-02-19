@@ -35,14 +35,9 @@ public final class NumSet extends AbstractSet<Numeral> implements Set<Numeral> {
   private NumSet(short bits) {
     this.bits = bits;
 
-    int count = 0;
-    for (int i = bits; i != 0; ) {
-      ++count;
-      i = i & (i - 1);  // A bit-counting trick.
-    }
-    this.nums = new byte[count];
+    this.nums = new byte[Integer.bitCount(bits)];
     byte num = 1;
-    count = 0;
+    int count = 0;
     for (int bit = 1; bit <= bits; bit = bit << 1, ++num) {
       if ((bits & bit) != 0) {
         nums[count++] = num;
