@@ -10,25 +10,43 @@
 
 ** Kinds of insight
    - illegal move/impossible state
-     - direct conflict: paint conflicting numbers in red?
-     - empty set for possible assignments: highlight location or unit & numeral?
+     - direct conflict (paint conflicting numbers in red?)
+     - empty set for possible assignments (highlight location or unit & numeral?)
    - single possible numeral for location or location for unit & numeral
      - block & numeral: easiest to see
        - pointing numeral elimination is also easy to see
      - row/column & numeral: next
        - degree of difficulty depends on number of unset locations
      - location: hardest
-   - locked sets: naked/hidden sets: draw each set in its own color, show the
-     numerals in each location with missing numerals crossed out
-   - intersection reduction as a lead-in to an implied assignment: outline unit
-     where the numeral is limited, highlighting squares where the numeral could
-     be, ...
+   - locked sets: naked/hidden sets (draw each set in its own color, show the
+     numerals in each location with missing numerals crossed out)
+   - unit overlap as a lead-in to an implied assignment: outline unit where the
+     numeral is limited, highlighting squares where the numeral could be, ...
+   - contradictions, assignments that eventually lead to an impossible state
+
+** Data needed for kinds of insight
+   - illegal move
+     - set of locations with conflicting assignments
+   - impossible state
+     - 1: location with all numerals blocked
+     - 2: unit & numeral: all locations blocked for the numeral
+   - forced location: unit, numeral, location
+   - forced numeral: location, numeral
+   - locked sets: unit subset, num set for each set
+   - unit overlap: unit subset, overlapping unit, numeral
+   - series (actually trees) of insights (stop at assignments)
+   - what about forcing chains?  these will be series of insights including
+     assignments as interior nodes, leading to contradictions
 
 * Game
 ** DONE Add gson serialization for game and undo stack
 ** TODO Rename getState to... what?
 
 * App
+** TODO Have a mode that shows a summary of current insights
+   - updated on every move
+   - and on switch between input states (shown in color when a trail is on)
+   - have a way to open a dialog with a full list of the insights
 ** DONE Deal with game states
    - playing
    - solved -- suspend timer, disallow further moves
@@ -36,7 +54,7 @@
      - show a congrats message (for now)
    - full but wrong -- highlight broken locations
      - revert to playing state (and redraw everything) on any move
-** TODO Have grid vary display based on solution/trail input state
+** TODO Have grid vary display based on solution/trail input state (?)
 ** DONE Change yellow dot to bold numeral for trailhead
 ** TODO Improve new-trail icon
 ** TODO Give visual indication when try to set an unsettable location
