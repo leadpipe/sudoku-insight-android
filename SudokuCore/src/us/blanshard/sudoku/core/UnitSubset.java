@@ -47,37 +47,9 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
     return new UnitSubset(unit, (short) bits);
   }
 
-  /** Returns the set containing the given locations within the given unit. */
-  public static UnitSubset of(Unit unit, Location... locs) {
-    short bits = 0;
-    for (Location loc : locs)
-      bits |= bitFor(unit, loc);
-    return new UnitSubset(unit, bits);
-  }
-
-  /** Returns the complement of this set. */
-  public UnitSubset not() {
-    return ofBits(unit, 511 & (~this.bits));
-  }
-
-  /** Returns the intersection of this set and another one. */
-  public UnitSubset and(UnitSubset that) {
-    return ofBits(unit, this.bits & that.bits);
-  }
-
-  /** Returns the union of this set and another one. */
-  public UnitSubset or(UnitSubset that) {
-    return ofBits(unit, this.bits | that.bits);
-  }
-
-  /** Returns the symmetric difference of this set and another one. */
-  public UnitSubset xor(UnitSubset that) {
-    return ofBits(unit, this.bits ^ that.bits);
-  }
-
-  /** Returns the asymmetric difference of this set and another one. */
-  public UnitSubset minus(UnitSubset that) {
-    return ofBits(unit, this.bits & (~that.bits));
+  /** Returns the singleton set containing the given location within the given unit. */
+  public static UnitSubset singleton(Unit unit, Location loc) {
+    return ofBits(unit, bitFor(unit, loc));
   }
 
   public boolean contains(Location loc) {
@@ -113,7 +85,7 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
     if (this == o) return true;
     if (o instanceof UnitSubset) {
       UnitSubset that = (UnitSubset) o;
-      return this.unit == that.unit && this.bits == that.bits;
+      if (this.unit == that.unit) return this.bits == that.bits;
     }
     return super.equals(o);
   }

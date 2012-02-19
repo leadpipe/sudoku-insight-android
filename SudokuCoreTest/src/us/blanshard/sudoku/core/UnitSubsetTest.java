@@ -20,12 +20,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Iterator;
-import java.util.Set;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableSet;
+import java.util.Iterator;
+import java.util.Set;
 
 public class UnitSubsetTest {
 
@@ -40,28 +40,6 @@ public class UnitSubsetTest {
     assertEquals(set(4), ImmutableSet.of(Location.of(5, 4)));
     assertSame(unit.get(4 - 1), Location.of(5, 4));
     assertEquals(set(1, 8), ImmutableSet.of(Location.of(4, 4), Location.of(6, 5)));
-  }
-
-  @Test public void not() {
-    assertEquals(set(1,2,3,4,5,6,7,8,9), set().not());
-    assertEquals(set(1,3,5,7,9), set(2,4,6,8).not());
-  }
-
-  @Test public void and() {
-    assertEquals(set(4,5), set(3,4,5).and(set(4,5,6)));
-    assertEquals(set(), set(3,4,5).and(set(6,7,8)));
-  }
-
-  @Test public void or() {
-    assertEquals(set(1,2,3), set(1,2).or(set(1,3)));
-  }
-
-  @Test public void xor() {
-    assertEquals(set(2,3), set(1,2).xor(set(1,3)));
-  }
-
-  @Test public void minus() {
-    assertEquals(set(2,3), set(1,2,3,8).minus(set(1,8)));
   }
 
   @Test public void contains() {

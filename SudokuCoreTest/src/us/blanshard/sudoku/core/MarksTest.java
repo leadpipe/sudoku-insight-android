@@ -49,9 +49,8 @@ public class MarksTest {
   @Test public void get() {
     assertEquals(set(7), marks.get(loc(4, 1)));
     assertEquals(set(3, 5, 8), marks.get(loc(4, 2)));
-    assertEquals(UnitSubset.of(Row.of(4), loc(4, 1)), marks.get(Row.of(4), Numeral.of(7)));
-    assertEquals(UnitSubset.of(Row.of(4), loc(4, 3), loc(4, 6), loc(4, 7), loc(4, 8)),
-        marks.get(Row.of(4), Numeral.of(4)));
+    assertEquals(UnitSubset.singleton(Row.of(4), loc(4, 1)), marks.get(Row.of(4), Numeral.of(7)));
+    assertEquals(UnitSubset.ofBits(Row.of(4), 0xe4), marks.get(Row.of(4), Numeral.of(4)));
   }
 
   @Test public void assign_failure() {

@@ -38,9 +38,9 @@ public class LocationTest {
 
   @Test public void unitSubsets() {
     for (Location loc : Location.ALL) {
-      assertEquals(UnitSubset.of(loc.row, loc), loc.unitSubsets.get(Unit.Type.ROW));
-      assertEquals(UnitSubset.of(loc.column, loc), loc.unitSubsets.get(Unit.Type.COLUMN));
-      assertEquals(UnitSubset.of(loc.block, loc), loc.unitSubsets.get(Unit.Type.BLOCK));
+      assertEquals(UnitSubset.singleton(loc.row, loc), loc.unitSubsets.get(Unit.Type.ROW));
+      assertEquals(UnitSubset.singleton(loc.column, loc), loc.unitSubsets.get(Unit.Type.COLUMN));
+      assertEquals(UnitSubset.singleton(loc.block, loc), loc.unitSubsets.get(Unit.Type.BLOCK));
       for (UnitSubset subset : loc.unitSubsets.values()) {
         assertEquals(true, subset.contains(loc));
         assertEquals(1, subset.size());

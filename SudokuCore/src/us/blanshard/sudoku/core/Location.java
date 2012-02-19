@@ -102,9 +102,9 @@ public final class Location implements Comparable<Location> {
     this.column = Column.ofIndex(index % 9);
     this.block = Block.ofIndex(index / 27 * 3 + index % 9 / 3);
     Map<Unit.Type, UnitSubset> subsets = Maps.newEnumMap(Unit.Type.class);
-    subsets.put(Unit.Type.ROW, UnitSubset.of(row, this));
-    subsets.put(Unit.Type.COLUMN, UnitSubset.of(column, this));
-    subsets.put(Unit.Type.BLOCK, UnitSubset.of(block, this));
+    subsets.put(Unit.Type.ROW, UnitSubset.singleton(row, this));
+    subsets.put(Unit.Type.COLUMN, UnitSubset.singleton(column, this));
+    subsets.put(Unit.Type.BLOCK, UnitSubset.singleton(block, this));
     this.unitSubsets = Collections.unmodifiableMap(subsets);
     this.peersArray = new Location[20];  // Filled in later, see static block below.
     this.peers = Collections.unmodifiableList(Arrays.asList(peersArray));
