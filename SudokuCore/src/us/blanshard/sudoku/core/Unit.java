@@ -61,6 +61,16 @@ public abstract class Unit extends AbstractCollection<Location> implements Colle
     return NumSet.ofBits(getMissingBits(grid));
   }
 
+  /** Returns the subset of this unit that overlaps the given locations. */
+  public final UnitSubset intersect(Collection<Location> locs) {
+    return UnitSubset.ofBits(this, getOverlappingBits(locs));
+  }
+
+  /** Returns the subset of this unit that does not overlap the given locations. */
+  public final UnitSubset subtract(Collection<Location> locs) {
+    return UnitSubset.ofBits(this, 511 ^ getOverlappingBits(locs));
+  }
+
   final short getConflictBits(Grid grid) {
     short bits = 0, seen = 0;
     for (Location loc : this) {
@@ -84,13 +94,21 @@ public abstract class Unit extends AbstractCollection<Location> implements Colle
     return bits;
   }
 
+  final int getOverlappingBits(Collection<Location> locs) {
+    int bits = 0;
+    for (int i = 0; i < 9; ++i)
+      if (locs.contains(get(i)))
+        bits |= 1 << i;
+    return bits;
+  }
+
   /** The index of this unit in {@link #allUnits}. */
   public abstract int unitIndex();
 
   public abstract Type getType();
 
   public final boolean contains(Location loc) {
-    return loc.unitSubsets.get(getType()).unit == this;
+    return loc.unit(getType()) == this;
   }
 
   /** Returns the index of the given location within this unit, or -1. */

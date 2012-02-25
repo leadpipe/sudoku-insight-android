@@ -19,6 +19,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static us.blanshard.sudoku.core.NumSetTest.set;
 
+import us.blanshard.sudoku.core.Unit.Type;
+
 import org.junit.Test;
 
 public class UnitTest {  // What're the odds?
@@ -78,5 +80,53 @@ public class UnitTest {  // What're the odds?
     assertEquals(set(1, 3, 5, 6, 7, 8, 9), Column.of(9).getMissing(grid));
     assertEquals(set(1, 2, 3, 4, 5, 6, 7, 8, 9), Block.of(9).getMissing(grid));
     assertEquals(set(1, 2, 3, 4, 5, 8, 9), Block.of(4).getMissing(grid));
+  }
+
+  @Test public void intersectAndSubtract() {
+    int blockOverlapCount = 0;
+    for (Unit u1 : Unit.allUnits())
+      for (Unit u2 : Unit.allUnits()) {
+        UnitSubset i = u1.intersect(u2);
+        assertEquals(i, u2.intersect(u1));
+        assertEquals(LocSet.intersect(u1, u2), i);
+        UnitSubset s1 = u1.subtract(u2);
+        UnitSubset s2 = u2.subtract(u1);
+        assertEquals(s1.size(), s2.size());
+        assertEquals(LocSet.subtract(u1, u2), s1);
+        assertEquals(LocSet.subtract(u2, u1), s2);
+        if (u1 == u2) {
+          assertEquals(9, i.size());
+          assertEquals(0, s1.size());
+        } else if (u1.getType() == u2.getType()) {
+          assertEquals(0, i.size());
+          assertEquals(9, s1.size());
+        } else if (u1.getType() == Type.BLOCK || u2.getType() == Type.BLOCK) {
+          if (i.isEmpty()) {
+            assertEquals(9, s1.size());
+          } else {
+            ++blockOverlapCount;
+            assertEquals(3, i.size());
+            assertEquals(6, s1.size());
+          }
+        } else {
+          assertEquals(1, i.size());
+          assertEquals(8, s1.size());
+          Location loc = i.get(0);
+          assertEquals(loc.unit(u1.getType()), u1);
+          assertEquals(loc.unit(u2.getType()), u2);
+        }
+      }
+    assertEquals(2 * 9 * 6, blockOverlapCount);
+  }
+
+  @Test public void indexOf() {
+    for (Unit u : Unit.allUnits())
+      for (Location loc : Location.ALL) {
+        int i = u.indexOf(loc);
+        assertEquals(i >= 0, loc.unit(u.getType()) == u);
+        if (i >= 0) {
+          assertEquals(loc, u.get(i));
+        }
+      }
   }
 }

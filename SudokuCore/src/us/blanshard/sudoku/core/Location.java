@@ -67,6 +67,10 @@ public final class Location implements Comparable<Location> {
   /** All locations. */
   public static final List<Location> ALL;
 
+  public Unit unit(Unit.Type type) {
+    return unitSubsets.get(type).unit;
+  }
+
   @Override public int compareTo(Location that) {
     return this.index - that.index;
   }
