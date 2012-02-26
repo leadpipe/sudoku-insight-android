@@ -242,7 +242,8 @@ public final class Sudoku {
       gridBuilder = puzzle.asBuilder();
     }
 
-    int getId() {
+    /** This state's ID within the game.  Reversed by {@link #getState(int)}. */
+    public int getId() {
       return -1;
     }
 

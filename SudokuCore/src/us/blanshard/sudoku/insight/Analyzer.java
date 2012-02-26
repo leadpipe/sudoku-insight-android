@@ -15,20 +15,24 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.game.Sudoku;
 
+import java.util.Random;
 import java.util.Set;
 
 /**
  * Analyzes a Sudoku game state, producing a series of insights about it.  Also
- * has the capability to rate a puzzle.
+ * has the capability to {@linkplain #rate rate a puzzle}.
  *
  * @author Luke Blanshard
  */
@@ -39,6 +43,7 @@ public class Analyzer {
    * the callback as they are finished.
    */
   public enum Phase {
+    START,
     ERRORS,
     SINGLETONS,
     COMPLETE,
@@ -54,39 +59,49 @@ public class Analyzer {
     void phase(Phase phase);
   }
 
-  private final Grid puzzle;
-  private final Grid work;
+  private final Sudoku game;
+  private final Callback callback;
+  private final Grid solution;
+  private volatile Grid analysisTarget;
 
-  public Analyzer(Sudoku.State gameState) {
-    this(gameState.getGame().getPuzzle(), gameState.getGrid());
-  }
-
-  private Analyzer(Grid puzzle) {
-    this(puzzle, puzzle);
-  }
-
-  private Analyzer(Grid puzzle, Grid work) {
-    this.puzzle = puzzle;
-    this.work = work;
+  public Analyzer(Sudoku game, Callback callback) {
+    this.game = checkNotNull(game);
+    this.callback = checkNotNull(callback);
+    this.solution = checkNotNull(Solver.solve(game.getPuzzle(), new Random()).solution);
+    setAnalysisTargetId(-1);
   }
 
   /**
-   * Analyzes the game state, providing found insights to the given callback.
-   * This may be a time-consuming operation; if run as a background thread it
-   * can be stopped early by interrupting the thread.
+   * Takes a snapshot of the game's current progress in the given state for use
+   * by {@link #analyze} the next time it's called.
    */
-  public void analyze(Callback callback) throws InterruptedException {
+  public void setAnalysisTargetId(int stateId) {
+    analysisTarget = game.getState(stateId).getGrid();
+  }
+
+  /**
+   * Analyzes the {@linkplain #setAnalysisTargetId current target}, providing
+   * found insights to the callback.  This may be a time-consuming operation; if
+   * run as a background thread it can be stopped early by interrupting the
+   * thread.
+   */
+  public void analyze() throws InterruptedException {
+    Grid work = this.analysisTarget;
+    callback.phase(Phase.START);
+
     Marks.Builder builder = Marks.builder();
     boolean ok = builder.assignAll(work);
     Marks marks = builder.build();
 
     try {
-      findErrors(marks, ok, callback);
+      findErrors(work, marks, ok);
       callback.phase(Phase.ERRORS);
 
-      findSingletonLocations(marks, callback);
-      findSingletonNumerals(marks, callback);
+      findSingletonLocations(work, marks);
+      findSingletonNumerals(work, marks);
       callback.phase(Phase.SINGLETONS);
+
+      // TODO(leadpipe): additional phases: locked sets, unit overlap, contradictions
 
       callback.phase(Phase.COMPLETE);
     } catch (InterruptedException e) {
@@ -109,16 +124,18 @@ public class Analyzer {
     if (Thread.interrupted()) throw new InterruptedException();
   }
 
-  private void findErrors(Marks marks, boolean ok, Callback callback) throws InterruptedException {
+  private void findErrors(Grid work, Marks marks, boolean ok) throws InterruptedException {
     checkInterruption();
     if (!ok) {
       Set<Location> broken = work.getBrokenLocations();
       if (broken.size() > 0)
         callback.take(new IllegalMove(broken));
+
+      // TODO(leadpipe): look for empty sets in the marks
     }
   }
 
-  private void findSingletonLocations(Marks marks, Callback callback) throws InterruptedException {
+  private void findSingletonLocations(Grid work, Marks marks) throws InterruptedException {
     checkInterruption();
     for (Unit unit : Unit.allUnits())
       for (Numeral num : Numeral.ALL) {
@@ -131,7 +148,7 @@ public class Analyzer {
       }
   }
 
-  private void findSingletonNumerals(Marks marks, Callback callback) throws InterruptedException {
+  private void findSingletonNumerals(Grid work, Marks marks) throws InterruptedException {
     checkInterruption();
     for (Location loc : Location.ALL)
       if (!work.containsKey(loc)) {
