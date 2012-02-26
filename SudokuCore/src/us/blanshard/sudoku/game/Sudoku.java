@@ -246,6 +246,10 @@ public final class Sudoku {
       return -1;
     }
 
+    public Sudoku getGame() {
+      return Sudoku.this;
+    }
+
     /** Returns the set numeral, or null. */
     public Numeral get(Location loc) {
       return gridBuilder.get(loc);
@@ -308,6 +312,10 @@ public final class Sudoku {
 
     @Override public int getId() {
       return id;
+    }
+
+    @Override public Grid getGrid() {
+      return state.getGrid().asBuilder().putAll(gridBuilder.entrySet()).build();
     }
 
     /** Returns the first location set in this trail, or null if none yet. */

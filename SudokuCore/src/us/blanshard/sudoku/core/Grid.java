@@ -158,9 +158,21 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
       return this;
     }
 
+    /** Sets all the locations given. */
+    public Builder putAll(Collection<Entry<Location, Numeral>> entries) {
+      for (Entry<Location, Numeral> e : entries)
+        put(e.getKey(), e.getValue());
+      return this;
+    }
+
     /** Returns the number of squares filled in. */
     public int size() {
       return grid.size();
+    }
+
+    /** Returns the assignments set in this builder. */
+    public Set<Entry<Location, Numeral>> entrySet() {
+      return grid.entrySet();
     }
   }
 
