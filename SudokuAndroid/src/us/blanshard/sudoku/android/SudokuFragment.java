@@ -33,6 +33,8 @@ import us.blanshard.sudoku.game.MoveCommand;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.Sudoku.State;
 import us.blanshard.sudoku.game.UndoStack;
+import us.blanshard.sudoku.insight.Analyzer;
+import us.blanshard.sudoku.insight.InsightSum;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -72,12 +74,18 @@ import javax.inject.Inject;
  * @author Luke Blanshard
  */
 @ContextSingleton
-public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveListener,
-    OnCheckedChangeListener, OnItemClickListener, OnItemLongClickListener {
+public class SudokuFragment
+    extends RoboFragment
+    implements SudokuView.OnMoveListener, OnCheckedChangeListener, OnItemClickListener,
+               OnItemLongClickListener, View.OnClickListener {
   private static final int MAX_VISIBLE_TRAILS = 4;
 
   private UndoStack mUndoStack = new UndoStack();
   private Sudoku mGame;
+  private final InsightWell mInsightWell = new InsightWell(this);
+  Analyzer mAnalyzer;
+  private InsightSum mInsightSum;
+  private boolean mShowInsights = true;
   private Grid.State mState;
   @Inject Sudoku.Registry mRegistry;
   @Inject ActionBarHelper mActionBarHelper;
@@ -86,6 +94,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
   @InjectView(R.id.edit_trail_toggle) ToggleButton mEditTrailToggle;
   @InjectView(R.id.trails) ListView mTrailsList;
   @InjectView(R.id.timer) TextView mTimer;
+  @InjectView(R.id.insights) TextView mInsights;
 
   private final Runnable timerUpdater = new Runnable() {
     @Override public void run() {
@@ -109,7 +118,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
   public void doCommand(Command command) {
     try {
       mUndoStack.doCommand(command);
-      invalidateOptionsMenu();
+      stateChanged();
     } catch (CommandException e) {
       showError(e.getMessage());
     }
@@ -125,6 +134,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
 
   public void setGame(Sudoku game) {
     mGame = game;
+    mAnalyzer = game == null ? null : new Analyzer(game, mInsightWell);
     mState = Grid.State.INCOMPLETE;
     mUndoStack = new UndoStack();
     mSudokuView.setGame(game);
@@ -134,11 +144,16 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
         invis.add(makeTrailItem(i, false));
     updateTrails(vis, invis);
     mSudokuView.setDefaultChoice(Numeral.of(1));
-    invalidateOptionsMenu();
+    stateChanged();
     if (game != null) {
       updateState();
       game.resume();
     }
+  }
+
+  public void setInsights(InsightSum insights) {
+    mInsightSum = insights;
+    mInsights.setText(insights == null ? "" : insights.getSummary());
   }
 
   public void showError(String s) {
@@ -175,6 +190,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
   @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
     if (buttonView == mEditTrailToggle) {
       mSudokuView.setTrailActive(isChecked);
+      stateChanged();
     }
   }
 
@@ -186,6 +202,12 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     // We don't actually do anything on long click, except swallow it so it
     // doesn't get treated as a regular click.
     return true;
+  }
+
+  @Override public void onClick(View v) {
+    if (v == mInsights && mInsightSum != null) {
+      InsightsFragment.newInstance(mInsightSum.toString()).show(getFragmentManager(), "insights");
+    }
   }
 
   // Fragment overrides
@@ -271,7 +293,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
       case R.id.menu_undo:
         try {
           mUndoStack.undo();
-          invalidateOptionsMenu();
+          stateChanged();
         } catch (CommandException e) {
           showError(e.getMessage());
         }
@@ -280,7 +302,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
       case R.id.menu_redo:
         try {
           mUndoStack.redo();
-          invalidateOptionsMenu();
+          stateChanged();
         } catch (CommandException e) {
           showError(e.getMessage());
         }
@@ -318,6 +340,8 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     mTrailsList.setEnabled(true);
     mTrailsList.setOnItemClickListener(this);
     mTrailsList.setOnItemLongClickListener(this);
+
+    mInsights.setOnClickListener(this);
 
     mSudokuView.setOnMoveListener(this);
     mRegistry.addListener(new Sudoku.Adapter() {
@@ -399,8 +423,13 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
     mEditTrailToggle.setEnabled(!vis.isEmpty());
   }
 
-  private void invalidateOptionsMenu() {
+  private void stateChanged() {
     mActionBarHelper.invalidateOptionsMenu();
+    setInsights(null);
+    if (mShowInsights && mState != Grid.State.SOLVED) {
+      mInsightWell.refill();
+      mInsights.setTextColor(mSudokuView.getInputColor());
+    }
   }
 
   private JSONObject makeUiState() throws JSONException {
@@ -446,7 +475,7 @@ public class SudokuFragment extends RoboFragment implements SudokuView.OnMoveLis
         mState = Grid.State.SOLVED;
         mSudokuView.setEditable(false);
         mGame.suspend();
-        invalidateOptionsMenu();
+        stateChanged();
       } else {
         mState = Grid.State.BROKEN;
       }

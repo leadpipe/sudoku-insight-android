@@ -152,6 +152,19 @@ public class SudokuView extends View {
     mDefaultChoice = num;
   }
 
+  public Sudoku.State getInputState() {
+    if (mGame == null) return null;
+    if (mTrailActive && !mTrails.isEmpty())
+      return mTrails.get(0).trail;
+    return mGame.getState();
+  }
+
+  public int getInputColor() {
+    if (mTrailActive && !mTrails.isEmpty())
+      return mTrails.get(0).color;
+    return Color.BLACK;
+  }
+
   @Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     int wMode = MeasureSpec.getMode(widthMeasureSpec);
     int wSize = MeasureSpec.getSize(widthMeasureSpec);
@@ -286,9 +299,7 @@ public class SudokuView extends View {
 
       paint.setTypeface(Typeface.DEFAULT);
       paint.setFakeBoldText(false);
-      int color = Color.BLACK;
-      if (mTrailActive && !mTrails.isEmpty())
-        color = mTrails.get(0).color;
+      int color = getInputColor();
       paint.setColor(color);
 
       if (mChoice >= 0) {
@@ -324,9 +335,7 @@ public class SudokuView extends View {
           int index = event.getActionIndex();
           float x = event.getX(index), y = event.getY(index);
           Location loc = getLocation(x, y);
-          mState = mGame.getState();
-          if (mTrailActive && !mTrails.isEmpty())
-            mState = mTrails.get(0).trail;
+          mState = getInputState();
           if (loc != null && mState.canModify(loc)) {
             mLocation = loc;
             mPointerId = event.getPointerId(index);

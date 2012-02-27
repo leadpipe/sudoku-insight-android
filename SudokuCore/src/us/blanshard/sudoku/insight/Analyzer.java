@@ -55,8 +55,8 @@ public class Analyzer {
    * traversed.
    */
   public interface Callback {
-    void take(Insight insight);
     void phase(Phase phase);
+    void take(Insight insight);
   }
 
   private final Sudoku game;
@@ -85,7 +85,7 @@ public class Analyzer {
    * run as a background thread it can be stopped early by interrupting the
    * thread.
    */
-  public void analyze() throws InterruptedException {
+  public void analyze() {
     Grid work = this.analysisTarget;
     callback.phase(Phase.START);
 
@@ -97,16 +97,17 @@ public class Analyzer {
       findErrors(work, marks, ok);
       callback.phase(Phase.ERRORS);
 
-      findSingletonLocations(work, marks);
-      findSingletonNumerals(work, marks);
-      callback.phase(Phase.SINGLETONS);
+      if (ok) {
+        findSingletonLocations(work, marks);
+        findSingletonNumerals(work, marks);
+        callback.phase(Phase.SINGLETONS);
 
-      // TODO(leadpipe): additional phases: locked sets, unit overlap, contradictions
+        // TODO(leadpipe): additional phases: locked sets, unit overlap, contradictions
+      }
 
       callback.phase(Phase.COMPLETE);
     } catch (InterruptedException e) {
       callback.phase(Phase.INTERRUPTED);
-      throw e;
     }
   }
 

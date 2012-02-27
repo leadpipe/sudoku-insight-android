@@ -6,5 +6,7 @@
     <string name="menu_undo">Undo</string>
     <string name="menu_redo">Redo</string>
     <string name="menu_new_trail">New Trail</string>
+    <string name="dialog_insights_title">Insights</string>
+    <string name="button_done">Done</string>
 
 </resources>
