@@ -97,13 +97,11 @@ public class Analyzer {
       findErrors(work, marks, ok);
       callback.phase(Phase.ERRORS);
 
-      if (ok) {
-        findSingletonLocations(work, marks);
-        findSingletonNumerals(work, marks);
-        callback.phase(Phase.SINGLETONS);
+      findSingletonLocations(work, marks);
+      findSingletonNumerals(work, marks);
+      callback.phase(Phase.SINGLETONS);
 
-        // TODO(leadpipe): additional phases: locked sets, unit overlap, contradictions
-      }
+      // TODO(leadpipe): additional phases: locked sets, unit overlap, contradictions
 
       callback.phase(Phase.COMPLETE);
     } catch (InterruptedException e) {
@@ -132,7 +130,18 @@ public class Analyzer {
       if (broken.size() > 0)
         callback.take(new IllegalMove(broken));
 
-      // TODO(leadpipe): look for empty sets in the marks
+      for (Unit unit : Unit.allUnits())
+        for (Numeral num : Numeral.ALL) {
+          UnitSubset set = marks.get(unit, num);
+          if (set.isEmpty())
+            callback.take(new BlockedUnitNumeral(unit, num));
+        }
+
+      for (Location loc : Location.ALL) {
+        NumSet set = marks.get(loc);
+        if (set.isEmpty())
+          callback.take(new BlockedLocation(loc));
+      }
     }
   }
 

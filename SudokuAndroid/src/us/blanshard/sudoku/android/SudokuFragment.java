@@ -146,8 +146,8 @@ public class SudokuFragment
     mSudokuView.setDefaultChoice(Numeral.of(1));
     stateChanged();
     if (game != null) {
-      updateState();
       game.resume();
+      updateState();
     }
   }
 
@@ -322,6 +322,7 @@ public class SudokuFragment
         if (!recycled) {
           makeActiveTrailItem(makeTrailItem(trailId, true));
         }
+        stateChanged();
         return true;
 
       default:

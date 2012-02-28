@@ -18,7 +18,10 @@ package us.blanshard.sudoku.insight;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.LocSet;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import java.util.List;
 
 /**
  * A collection of insights about a Sudoku board.
@@ -28,26 +31,35 @@ import com.google.common.collect.Maps;
 public class InsightSum implements Insight, Cloneable {
 
   private final LocSet errors;
+  private final List<String> errorUnitNumerals;
   private final Grid.Builder assignments;
   private boolean complete;
 
   public InsightSum() {
-    this(new LocSet(), Grid.BLANK);
+    this(new LocSet(), Lists.<String>newArrayList(), Grid.BLANK);
   }
 
   public InsightSum(InsightSum that) {
-    this(new LocSet(that.errors), that.assignments.build());
+    this(new LocSet(that.errors),
+         Lists.newArrayList(that.errorUnitNumerals),
+         that.assignments.build());
     this.complete = that.complete;
   }
 
-  private InsightSum(LocSet errors, Grid assignments) {
+  private InsightSum(LocSet errors, List<String> errorUnitNumerals, Grid assignments) {
     this.errors = errors;
+    this.errorUnitNumerals = errorUnitNumerals;
     this.assignments = assignments.asBuilder();
   }
 
   public void append(Insight insight) {
     if (insight instanceof IllegalMove) {
       errors.addAll(((IllegalMove) insight).getConflictingLocations());
+    } else if (insight instanceof BlockedLocation) {
+      errors.add(((BlockedLocation) insight).getLocation());
+    } else if (insight instanceof BlockedUnitNumeral) {
+      BlockedUnitNumeral b = (BlockedUnitNumeral) insight;
+      errorUnitNumerals.add(b.getUnit() + ":" + b.getNumeral());
     } else if (insight instanceof ForcedNumeral) {
       ForcedNumeral f = (ForcedNumeral) insight;
       assignments.put(f.getLocation(), f.getNumeral());
@@ -72,7 +84,7 @@ public class InsightSum implements Insight, Cloneable {
   public String getSummary() {
     StringBuilder sb = new StringBuilder();
     int count;
-    if (errors.size() > 0) {
+    if (errors.size() > 0 || errorUnitNumerals.size() > 0) {
       sb.append("Error");
     } else if ((count = assignments.size()) > 0) {
       if (count == 1) sb.append("1 move");
@@ -89,6 +101,8 @@ public class InsightSum implements Insight, Cloneable {
     StringBuilder sb = new StringBuilder();
     if (errors.size() > 0)
       sb.append("Error locations: ").append(errors).append("\n\n");
+    if (errorUnitNumerals.size() > 0)
+      sb.append("Error unit/numerals: ").append(errorUnitNumerals).append("\n\n");
     if (assignments.size() > 0)
       sb.append("Moves: ").append(Maps.newLinkedHashMap(assignments.build())).append("\n\n");
     if (!complete)
