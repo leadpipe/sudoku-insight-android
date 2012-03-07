@@ -67,7 +67,14 @@ public final class Marks {
    * Returns the set of numerals that could go in the given location.
    */
   public NumSet get(Location loc) {
-    return NumSet.ofBits(bits[loc.index]);
+    return NumSet.ofBits(getBits(loc));
+  }
+
+  /**
+   * Returns the bit-set corresponding to {@link #get(Location)}.
+   */
+  public int getBits(Location loc) {
+    return bits[loc.index];
   }
 
   /**
@@ -75,7 +82,14 @@ public final class Marks {
    * given numeral.
    */
   public UnitSubset get(Unit unit, Numeral num) {
-    return UnitSubset.ofBits(unit, unitBits[unit.unitIndex() * 9 + num.index]);
+    return UnitSubset.ofBits(unit, getBits(unit, num));
+  }
+
+  /**
+   * Returns the bit-set corresponding to {@link #get(Unit,Numeral)}.
+   */
+  public int getBits(Unit unit, Numeral num) {
+    return unitBits[unit.unitIndex() * 9 + num.index];
   }
 
   public static final class Builder {
@@ -115,8 +129,16 @@ public final class Marks {
       return marks.get(loc);
     }
 
+    public int getBits(Location loc) {
+      return marks.getBits(loc);
+    }
+
     public UnitSubset get(Unit unit, Numeral num) {
       return marks.get(unit, num);
+    }
+
+    public int getBits(Unit unit, Numeral num) {
+      return marks.getBits(unit, num);
     }
 
     /**

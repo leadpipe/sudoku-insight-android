@@ -17,16 +17,24 @@ package us.blanshard.sudoku.insight;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import us.blanshard.sudoku.core.Block;
+import us.blanshard.sudoku.core.Column;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.Row;
 import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.game.Sudoku;
 
+import com.google.common.collect.Maps;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -44,6 +52,7 @@ public class Analyzer {
    */
   public enum Phase {
     START,
+    OVERLAPS_AND_SETS,
     ERRORS,
     SINGLETONS,
     COMPLETE,
@@ -91,17 +100,23 @@ public class Analyzer {
 
     Marks.Builder builder = Marks.builder();
     boolean ok = builder.assignAll(work);
-    Marks marks = builder.build();
 
     try {
+      ok = findOverlapsAndSets(builder, ok);
+      callback.phase(Phase.OVERLAPS_AND_SETS);
+
+      Marks marks = builder.build();
+
       findErrors(work, marks, ok);
       callback.phase(Phase.ERRORS);
 
-      findSingletonLocations(work, marks);
-      findSingletonNumerals(work, marks);
-      callback.phase(Phase.SINGLETONS);
+      if (ok) {
+        findSingletonLocations(work, marks);
+        findSingletonNumerals(work, marks);
+        callback.phase(Phase.SINGLETONS);
 
-      // TODO(leadpipe): additional phases: locked sets, unit overlap, contradictions
+        // TODO(leadpipe): look for chains that lead to contradiction
+      }
 
       callback.phase(Phase.COMPLETE);
     } catch (InterruptedException e) {
@@ -121,6 +136,210 @@ public class Analyzer {
 
   private static void checkInterruption() throws InterruptedException {
     if (Thread.interrupted()) throw new InterruptedException();
+  }
+
+  /** Bit for tracking errors noticed through overlap and set detection. */
+  private static final int ERROR_BIT = 1;
+  /** Bit for tracking new overlaps or sets detected. */
+  private static final int CHANGE_BIT = 2;
+
+  private static class SetState {
+    private final Map<Unit, NumSet> nums = Maps.newHashMap();
+    private final Map<Unit, UnitSubset> locs = Maps.newHashMap();
+
+    NumSet getNums(Unit unit) {
+      NumSet set = nums.get(unit);
+      return set == null ? NumSet.of() : set;
+    }
+
+    UnitSubset getLocs(Unit unit) {
+      UnitSubset set = locs.get(unit);
+      return set == null ? UnitSubset.of(unit) : set;
+    }
+
+    void add(NumSet nums, UnitSubset locs) {
+      this.nums.put(locs.unit, nums.or(getNums(locs.unit)));
+      this.locs.put(locs.unit, locs.or(getLocs(locs.unit)));
+    }
+  }
+
+  private boolean findOverlapsAndSets(Marks.Builder builder, boolean ok) throws InterruptedException {
+    SetState setState = new SetState();
+    int progressBits = ERROR_BIT;  // We reset it if ok is true
+    boolean first = ok;  // Just a way to do nothing if not ok
+    while (first || progressBits == CHANGE_BIT) {
+      progressBits = findOverlaps(builder);
+      if (first || progressBits == CHANGE_BIT) {
+        progressBits = findSets(builder, setState);
+      }
+      first = false;
+    }
+    return (progressBits & ERROR_BIT) == 0;
+  }
+
+  /**
+   * The bit patterns for unit subsets of overlapping units with 2 or 3
+   * locations, for rows or columns overlapping with blocks, and for blocks
+   * overlapping with rows.
+   */
+  private static final int[] OVERLAP_BITS = {
+    0007, 0006, 0005, 0003, 0070, 0060, 0050, 0030, 0700, 0600, 0500, 0300};
+  /**
+   * Like {@code OVERLAP_BITS} but for blocks overlapping with columns.
+   */
+  private static final int[] OVERLAP_BITS_2 = {
+    0111, 0110, 0101, 0011, 0222, 0220, 0202, 0022, 0444, 0440, 0404, 0044};
+  static {
+    Arrays.sort(OVERLAP_BITS);
+    Arrays.sort(OVERLAP_BITS_2);
+  }
+
+  private int findOverlaps(Marks.Builder builder) throws InterruptedException {
+    checkInterruption();
+    int progressBits = 0;
+    for (Numeral num : Numeral.ALL) {
+      progressBits |= findOverlaps(builder, num, Block.ALL, Unit.Type.ROW, OVERLAP_BITS);
+      progressBits |= findOverlaps(builder, num, Block.ALL, Unit.Type.COLUMN, OVERLAP_BITS_2);
+      progressBits |= findOverlaps(builder, num, Row.ALL, Unit.Type.BLOCK, OVERLAP_BITS);
+      progressBits |= findOverlaps(builder, num, Column.ALL, Unit.Type.BLOCK, OVERLAP_BITS);
+    }
+    return progressBits;
+  }
+
+  private int findOverlaps(Marks.Builder builder, Numeral num, List<? extends Unit> units,
+                           Unit.Type overlappingType, int[] bits) {
+    int progressBits = 0;
+    for (Unit unit : units) {
+      int index = Arrays.binarySearch(bits, builder.getBits(unit, num));
+      if (index >= 0) {
+        UnitSubset set = UnitSubset.ofBits(unit, bits[index]);
+        Unit overlappingUnit = set.get(0).unit(overlappingType);
+        UnitSubset overlap = builder.get(overlappingUnit, num);
+        if (overlap.size() > set.size()) {
+          // There's something to eliminate.
+          callback.take(new Overlap(unit, num, overlappingUnit));
+          progressBits |= CHANGE_BIT;
+          for (Location loc : overlap)
+            if (!set.contains(loc) && !builder.eliminate(loc, num))
+              progressBits |= ERROR_BIT;
+        }
+      }
+    }
+    return progressBits;
+  }
+
+  private static final int MAX_SET_SIZE = 4;
+
+  private int findSets(Marks.Builder builder, SetState setState) throws InterruptedException {
+    int progressBits = 0;
+    int[] indices = new int[MAX_SET_SIZE];
+    for (Unit unit : Unit.allUnits()) {
+      thisUnit: while (true) {
+        for (int size = 2; size <= MAX_SET_SIZE; ++size) {
+          int bits = findNakedSets(builder, setState, unit, size, indices);
+          bits |= findHiddenSets(builder, setState, unit, size, indices);
+          progressBits |= bits;
+          if ((bits & CHANGE_BIT) != 0)
+            continue thisUnit;
+        }
+        break thisUnit;
+      }
+    }
+    return progressBits;
+  }
+
+  private int findNakedSets(Marks.Builder builder, SetState setState, Unit unit, int size, int[] indices) {
+    int progressBits = 0;
+    UnitSubset inSets = setState.getLocs(unit);
+    UnitSubset toCheck = UnitSubset.of(unit);
+    int unsetCount = 0;
+    for (Location loc : unit) {
+      NumSet possible = builder.get(loc);
+      if (possible.size() > 1) {
+        ++unsetCount;
+        if (possible.size() <= size && !inSets.contains(loc)) {
+          toCheck = toCheck.with(loc);
+        }
+      }
+    }
+    if (toCheck.size() >= size && unsetCount > size) {
+      firstSubset(size, indices);
+      do {
+        int bits = 0;
+        for (int i = 0; i < size; ++i)
+          bits |= builder.get(toCheck.get(indices[i])).bits;
+        NumSet nums = NumSet.ofBits(bits);
+        if (nums.size() == size) {
+          UnitSubset locs = UnitSubset.of(unit);
+          for (int i = 0; i < size; ++i)
+            locs = locs.with(toCheck.get(indices[i]));
+          setState.add(nums, locs);
+          callback.take(new LockedSet(nums, locs));
+          progressBits |= CHANGE_BIT;
+          for (Location loc : locs.not())
+            for (Numeral num : nums)
+              if (!builder.eliminate(loc, num))
+                progressBits |= ERROR_BIT;
+          break;
+        }
+      } while (nextSubset(size, indices, toCheck.size()));
+    }
+    return progressBits;
+  }
+
+  private int findHiddenSets(Marks.Builder builder, SetState setState, Unit unit, int size, int[] indices) {
+    int progressBits = 0;
+    NumSet inSets = setState.getNums(unit);
+    NumSet toCheck = NumSet.of();
+    int unsetCount = 0;
+    for (Numeral num : Numeral.ALL) {
+      UnitSubset possible = builder.get(unit, num);
+      if (possible.size() > 1) {
+        ++unsetCount;
+        if (possible.size() <= size && !inSets.contains(num)) {
+          toCheck = toCheck.with(num);
+        }
+      }
+    }
+    if (toCheck.size() >= size && unsetCount > size) {
+      firstSubset(size, indices);
+      do {
+        int bits = 0;
+        for (int i = 0; i < size; ++i)
+          bits |= builder.get(unit, toCheck.get(indices[i])).bits;
+        UnitSubset locs = UnitSubset.ofBits(unit, bits);
+        if (locs.size() == size) {
+          NumSet nums = NumSet.of();
+          for (int i = 0; i < size; ++i)
+            nums = nums.with(toCheck.get(indices[i]));
+          setState.add(nums, locs);
+          callback.take(new LockedSet(nums, locs));
+          progressBits |= CHANGE_BIT;
+          for (Location loc : locs)
+            for (Numeral num : nums.not())
+              if (!builder.eliminate(loc, num))
+                progressBits |= ERROR_BIT;
+          break;
+        }
+      } while (nextSubset(size, indices, toCheck.size()));
+    }
+    return progressBits;
+  }
+
+  private static void firstSubset(int size, int[] indices) {
+    for (int i = 0; i < size; ++i)
+      indices[i] = i;
+  }
+
+  private static boolean nextSubset(int size, int[] indices, int count) {
+    for (int i = size; i-- > 0; --count) {
+      if (++indices[i] < count) {
+        while (++i < size)
+          indices[i] = 1 + indices[i - 1];
+        return true;
+      }
+    }
+    return false;
   }
 
   private void findErrors(Grid work, Marks marks, boolean ok) throws InterruptedException {

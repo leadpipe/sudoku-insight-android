@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.core;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -47,12 +49,57 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
     return new UnitSubset(unit, (short) bits);
   }
 
+  /** Returns the set containing the given locations within the given unit. */
+  public static UnitSubset of(Unit unit, Location... locs) {
+    short bits = 0;
+    for (Location loc : locs) {
+      UnitSubset singleton = loc.unitSubsets.get(unit.getType());
+      checkArgument(singleton.unit == unit);
+      bits |= singleton.bits;
+    }
+    return new UnitSubset(unit, bits);
+  }
+
   /** Returns the singleton set containing the given location within the given unit. */
   static UnitSubset singleton(Unit unit, Location loc) {
     for (int i = 0; i < 9; ++i)
       if (unit.locations[i] == loc.index)
         return ofBits(unit, 1 << i);
     throw new IllegalArgumentException("Location " + loc + " is not in unit " + unit);
+  }
+
+  /** Returns the union of this set with the singleton containing the given location. */
+  public UnitSubset with(Location loc) {
+    return or(loc.unitSubsets.get(unit.getType()));
+  }
+
+  /** Returns the complement of this set. */
+  public UnitSubset not() {
+    return ofBits(unit, 511 & (~this.bits));
+  }
+
+  /** Returns the intersection of this set and another one. */
+  public UnitSubset and(UnitSubset that) {
+    checkArgument(that.unit == this.unit);
+    return ofBits(unit, this.bits & that.bits);
+  }
+
+  /** Returns the union of this set and another one. */
+  public UnitSubset or(UnitSubset that) {
+    checkArgument(that.unit == this.unit);
+    return ofBits(unit, this.bits | that.bits);
+  }
+
+  /** Returns the symmetric difference of this set and another one. */
+  public UnitSubset xor(UnitSubset that) {
+    checkArgument(that.unit == this.unit);
+    return ofBits(unit, this.bits ^ that.bits);
+  }
+
+  /** Returns the asymmetric difference of this set and another one. */
+  public UnitSubset minus(UnitSubset that) {
+    checkArgument(that.unit == this.unit);
+    return ofBits(unit, this.bits & (~that.bits));
   }
 
   public boolean contains(Location loc) {

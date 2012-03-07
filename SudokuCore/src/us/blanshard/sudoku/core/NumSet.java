@@ -58,6 +58,11 @@ public final class NumSet extends AbstractSet<Numeral> implements Set<Numeral> {
     return instances[bits];
   }
 
+  /** Returns the union of this set and the singleton of the given numeral. */
+  public NumSet with(Numeral num) {
+    return instances[this.bits | num.bit];
+  }
+
   /** Returns the complement of this set. */
   public NumSet not() {
     return instances[511 & (~this.bits)];
