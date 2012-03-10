@@ -65,7 +65,7 @@ public enum Generator {
       Grid start = SUBTRACTIVE.generate(random, symmetry, target);
       if (symmetry == Symmetry.RANDOM) return start;
       return subtract(
-          random, Symmetry.RANDOM, start.asBuilder(), Lists.newArrayList(start.keySet()));
+          random, Symmetry.RANDOM, start.toBuilder(), Lists.newArrayList(start.keySet()));
     }
     @Override public boolean honorsSymmetry() { return false; }
   };
@@ -143,7 +143,7 @@ public enum Generator {
       for (Location loc : symmetry.expand(usedLoc))
         gridBuilder.remove(loc);
       if (!hasUniqueSolution(gridBuilder.build(), random))
-        gridBuilder = prev.asBuilder();
+        gridBuilder = prev.toBuilder();
     }
     return gridBuilder.build();
   }

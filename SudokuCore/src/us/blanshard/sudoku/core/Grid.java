@@ -50,7 +50,7 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
   }
 
   /** Returns a mutable version of this grid. */
-  public Builder asBuilder() {
+  public Builder toBuilder() {
     return new Builder(this);
   }
 

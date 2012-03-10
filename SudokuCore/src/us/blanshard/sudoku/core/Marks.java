@@ -45,15 +45,15 @@ public final class Marks {
     return new Builder();
   }
 
-  public Builder asBuilder() {
+  public Builder toBuilder() {
     return new Builder(this);
   }
 
-  public Grid asGrid() {
-    return asGridBuilder().build();
+  public Grid toGrid() {
+    return toGridBuilder().build();
   }
 
-  public Grid.Builder asGridBuilder() {
+  public Grid.Builder toGridBuilder() {
     Grid.Builder builder = Grid.builder();
     for (Location loc : Location.ALL) {
       NumSet possible = get(loc);
@@ -122,7 +122,7 @@ public final class Marks {
     }
 
     public Grid asGrid() {
-      return marks.asGrid();
+      return marks.toGrid();
     }
 
     public NumSet get(Location loc) {

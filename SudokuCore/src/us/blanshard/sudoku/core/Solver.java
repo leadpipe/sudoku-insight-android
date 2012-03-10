@@ -246,7 +246,7 @@ public final class Solver implements Iterable<Grid> {
         this.locations = Solver.this.locations.clone();
         Collections.shuffle(Arrays.asList(this.locations), random);
         if (!pushNextAssignments(startMarks)) {
-          found = startMarks.asGrid();
+          found = startMarks.toGrid();
         }
       }
     }
@@ -279,11 +279,11 @@ public final class Solver implements Iterable<Grid> {
       int count = 0;
       while (!worklist.isEmpty() && count++ < maxSteps) {
         Assignment assignment = worklist.removeFirst();
-        Marks.Builder builder = assignment.marks.asBuilder();
+        Marks.Builder builder = assignment.marks.toBuilder();
         if (builder.assignRecursively(assignment.location, assignment.numeral)) {
           Marks marks = builder.build();
           if (!pushNextAssignments(marks)) {
-            found = marks.asGrid();
+            found = marks.toGrid();
             break;
           }
         }

@@ -54,7 +54,7 @@ public class MarksTest {
   }
 
   @Test public void assign_failure() {
-    Marks.Builder builder = marks.asBuilder();
+    Marks.Builder builder = marks.toBuilder();
     assertEquals(false, builder.assign(loc(1, 2), Numeral.of(1)));
     assertEquals(0, builder.get(loc(1, 2)).size());
     assertEquals(0, builder.get(Block.of(1), Numeral.of(4)).size());
@@ -90,7 +90,7 @@ public class MarksTest {
     }
 
     Marks marks = builder.build();
-    Grid grid = marks.asGrid();
+    Grid grid = marks.toGrid();
     String s = "123456789456789123789123456234567891567891234891234567345678912678912345912345678";
     assertEquals(s, grid.toFlatString());
     assertEquals(grid.toString(), marks.toString());

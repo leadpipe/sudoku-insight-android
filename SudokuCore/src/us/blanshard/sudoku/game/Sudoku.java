@@ -239,7 +239,7 @@ public final class Sudoku {
     protected final Grid.Builder gridBuilder;
 
     private State() {
-      gridBuilder = puzzle.asBuilder();
+      gridBuilder = puzzle.toBuilder();
     }
 
     /** This state's ID within the game.  Reversed by {@link #getState(int)}. */
@@ -316,7 +316,7 @@ public final class Sudoku {
     }
 
     @Override public Grid getGrid() {
-      return state.getGrid().asBuilder().putAll(gridBuilder.entrySet()).build();
+      return state.getGrid().toBuilder().putAll(gridBuilder.entrySet()).build();
     }
 
     /** Returns the first location set in this trail, or null if none yet. */

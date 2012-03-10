@@ -60,7 +60,7 @@ public class InsightSum implements Insight, Cloneable {
     this.errorUnitNumerals = errorUnitNumerals;
     this.overlaps = overlaps;
     this.sets = sets;
-    this.assignments = assignments.asBuilder();
+    this.assignments = assignments.toBuilder();
   }
 
   public void append(Insight insight) {
