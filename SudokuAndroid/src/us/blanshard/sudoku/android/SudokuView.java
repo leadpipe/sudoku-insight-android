@@ -49,7 +49,7 @@ public class SudokuView extends View {
   }
 
   private static final double CLOCK_RADIUS_FACTOR = 0.85;
-  private static final int CLOCK_RADIUS_DP = 50;  // 5/16"
+  private static final int CLOCK_RADIUS_DP = 60;  // 3/8"
   private static final int THIN_LINE_WIDTH = 1;
   private static final int NORMAL_THICK_LINE_WIDTH = 3;
   private static final int SMALL_THICK_LINE_WIDTH = 2;
@@ -296,6 +296,8 @@ public class SudokuView extends View {
       canvas.drawCircle(mPreviewX, mPreviewY, half, paint);
       if (mPreviewX2 > mPreviewX)
         canvas.drawCircle(mPreviewX2, mPreviewY, half, paint);
+      paint.setColor(Color.argb(0xe0, 0xe0, 0xe0, 0xe0));
+      canvas.drawRect(x, y, x + mSquareSize, y + mSquareSize, paint);
 
       paint.setTypeface(Typeface.DEFAULT);
       paint.setFakeBoldText(false);
@@ -344,6 +346,10 @@ public class SudokuView extends View {
             float half = mSquareSize * 0.5f;
             mCenterX = mOffsetsX[loc.column.index] + half;
             mCenterY = mOffsetsY[loc.row.index] + half;
+            if (mCenterX - mClockRadius < 0) mCenterX = mClockRadius;
+            if (mCenterX + mClockRadius > getWidth()) mCenterX = getWidth() - mClockRadius;
+            if (mCenterY - mClockRadius < 0) mCenterY = mClockRadius;
+            if (mCenterY + mClockRadius > getHeight()) mCenterY = getHeight() - mClockRadius;
             if (mCenterY > mClockRadius + mSquareSize) {
               mPreviewX2 = mPreviewX = mCenterX;
               mPreviewY = mCenterY - mClockRadius - half;
@@ -388,13 +394,18 @@ public class SudokuView extends View {
             float cy = mPointerY;
             float r = mClockRadius;
             double d = Math.hypot(x - cx, y - cy);
-            if (d > r * 2) {
-              choice = -1;  // Pull away from center to cancel
-            } else if (d > mSquareSize * 0.3) {
-              double radians =
-                  x >= cx ? Math.acos((cy - y) / d) : Math.PI + Math.acos((y - cy) / d);
-              int num = (int) (radians / Math.PI * 6 + 0.5);
-              choice = num == 12 ? 0 : num > 9 ? -1 : num;
+            if (d > mSquareSize * 0.3) {  // Don't change anything until there's some perceptible movement
+              cx = mCenterX;
+              cy = mCenterY;
+              d = Math.hypot(x - cx, y - cy);
+              if (d > r * 2) {
+                choice = -1;  // Pull away from center to cancel
+              } else {
+                double radians =
+                    x >= cx ? Math.acos((cy - y) / d) : Math.PI + Math.acos((y - cy) / d);
+                int num = (int) (radians / Math.PI * 6 + 0.5);
+                choice = num == 12 ? 0 : num > 9 ? -1 : num;
+              }
             }
           }
 
