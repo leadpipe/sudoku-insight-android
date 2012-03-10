@@ -103,9 +103,10 @@ public class InsightSum implements Insight, Cloneable {
     if (errors.size() > 0 || errorUnitNumerals.size() > 0) {
       sb.append("Error");
     } else if (assignments.size() > 0 || overlaps.size() > 0 || sets.size() > 0) {
-      appendCount(sb, sets.size(), "set");
-      appendCount(sb, overlaps.size(), "overlap");
-      appendCount(sb, assignments.size(), "move");
+      appendCountLine(sb, sets.size(), "set");
+      if (sets.size() > 1) appendCount(sb.append(" in "), sets.keySet().size(), "unit");
+      appendCountLine(sb, overlaps.size(), "overlap");
+      appendCountLine(sb, assignments.size(), "move");
       if (!complete) sb.append("...");
     } else if (!complete) {
       sb.append("Working...");
@@ -115,12 +116,16 @@ public class InsightSum implements Insight, Cloneable {
     return sb.toString();
   }
 
-  private void appendCount(StringBuilder sb, int count, String singular) {
+  private void appendCountLine(StringBuilder sb, int count, String singular) {
     if (count > 0) {
       if (sb.length() > 0) sb.append('\n');
-      sb.append(count).append(' ').append(singular);
-      if (count > 1) sb.append('s');
+      appendCount(sb, count, singular);
     }
+  }
+
+  private void appendCount(StringBuilder sb, int count, String singular) {
+    sb.append(count).append(' ').append(singular);
+    if (count > 1) sb.append('s');
   }
 
   @Override public String toString() {
