@@ -52,9 +52,7 @@ public class Analyzer {
    */
   public enum Phase {
     START,
-    OVERLAPS_AND_SETS,
-    ERRORS,
-    SINGLETONS,
+    ELEMENTARY,
     COMPLETE,
     INTERRUPTED;
   }
@@ -102,21 +100,17 @@ public class Analyzer {
     boolean ok = builder.assignAll(work);
 
     try {
+      findErrors(work, builder.build(), ok);
+
       ok = findOverlapsAndSets(builder, ok);
-      callback.phase(Phase.OVERLAPS_AND_SETS);
 
       Marks marks = builder.build();
 
-      findErrors(work, marks, ok);
-      callback.phase(Phase.ERRORS);
+      findSingletonLocations(work, marks);
+      findSingletonNumerals(work, marks);
+      callback.phase(Phase.ELEMENTARY);
 
-      if (ok) {
-        findSingletonLocations(work, marks);
-        findSingletonNumerals(work, marks);
-        callback.phase(Phase.SINGLETONS);
-
-        // TODO(leadpipe): look for chains that lead to contradiction
-      }
+      // TODO(leadpipe): look for chains that lead to contradiction
 
       callback.phase(Phase.COMPLETE);
     } catch (InterruptedException e) {
