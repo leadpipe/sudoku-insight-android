@@ -55,7 +55,8 @@ public class SudokuView extends View {
   private static final int SMALL_THICK_LINE_WIDTH = 2;
   private static final int SMALL_SIZE_CUTOFF = 200;
 
-  private static final int INVALID_POINTER_ID = -1; // MotionEvent.INVALID_POINTER_ID;
+  private static final int INVALID_POINTER_ID = -1;  // MotionEvent.INVALID_POINTER_ID;
+  private static final long DEBOUNCE_MS = 50;  // A borderline choice won't flip as you lift your finger
 
   private OnMoveListener mOnMoveListener;
   private Sudoku mGame;
@@ -74,10 +75,13 @@ public class SudokuView extends View {
   private int mPointerId = INVALID_POINTER_ID;
   private Location mLocation;
 
-  private float mCenterX, mCenterY, mPreviewX, mPreviewY, mPreviewX2;
+  private float mPreviewX, mPreviewY, mPreviewX2;
   private float mPointerX, mPointerY;
+  private boolean mChanging;
 
   private int mChoice;
+  private int mPreviousChoice;
+  private long mChoiceChangeTimestamp;
   private Numeral mDefaultChoice;
 
   private static final float[] TRAIL_X_CENTER = { 0.8f, 0.15f, 0.85f, 0.15f };
@@ -288,8 +292,8 @@ public class SudokuView extends View {
     if (mLocation != null) {
       float x = mOffsetsX[mLocation.column.index];
       float y = mOffsetsY[mLocation.row.index];
-      float cx = mCenterX;
-      float cy = mCenterY;
+      float cx = mPointerX;
+      float cy = mPointerY;
       float r = mClockRadius;
       paint.setColor(Color.argb(0xe0, 0xf0, 0xf0, 0xf0));
       canvas.drawCircle(cx, cy, r, paint);
@@ -343,32 +347,31 @@ public class SudokuView extends View {
             mPointerId = event.getPointerId(index);
             mPointerX = x;
             mPointerY = y;
+            mChanging = false;
             float half = mSquareSize * 0.5f;
-            mCenterX = mOffsetsX[loc.column.index] + half;
-            mCenterY = mOffsetsY[loc.row.index] + half;
-            if (mCenterX - mClockRadius < 0) mCenterX = mClockRadius;
-            if (mCenterX + mClockRadius > getWidth()) mCenterX = getWidth() - mClockRadius;
-            if (mCenterY - mClockRadius < 0) mCenterY = mClockRadius;
-            if (mCenterY + mClockRadius > getHeight()) mCenterY = getHeight() - mClockRadius;
-            if (mCenterY > mClockRadius + mSquareSize) {
-              mPreviewX2 = mPreviewX = mCenterX;
-              mPreviewY = mCenterY - mClockRadius - half;
+            float cx = mOffsetsX[loc.column.index] + half;
+            float cy = mOffsetsY[loc.row.index] + half;
+            if (cy > mClockRadius + mSquareSize) {
+              mPreviewX2 = mPreviewX = cx;
+              mPreviewY = cy - mClockRadius - half;
             } else {
               mPreviewY = half;
               float h = mClockRadius + half;
-              y = mCenterY - half;
+              y = cy - half;
               x = (float) Math.sqrt(h*h - y*y);
               if (x < half) {
                 x = half;
                 y = (float) Math.sqrt(h*h - x*x);
-                mPreviewY = mCenterY - y;
+                mPreviewY = cy - y;
               }
-              mPreviewX = mCenterX - x;
-              mPreviewX2 = mCenterX + x;
+              mPreviewX = cx - x;
+              mPreviewX2 = cx + x;
             }
 
             Numeral num = mState.get(mLocation);
             mChoice = number(num == null ? mDefaultChoice : num);
+            mPreviousChoice = mChoice;
+            mChoiceChangeTimestamp = event.getEventTime();
             invalidateTouchPoint();
           }
         }
@@ -394,23 +397,22 @@ public class SudokuView extends View {
             float cy = mPointerY;
             float r = mClockRadius;
             double d = Math.hypot(x - cx, y - cy);
-            if (d > mSquareSize * 0.3) {  // Don't change anything until there's some perceptible movement
-              cx = mCenterX;
-              cy = mCenterY;
-              d = Math.hypot(x - cx, y - cy);
-              if (d > r * 2) {
-                choice = -1;  // Pull away from center to cancel
-              } else {
-                double radians =
-                    x >= cx ? Math.acos((cy - y) / d) : Math.PI + Math.acos((y - cy) / d);
-                int num = (int) (radians / Math.PI * 6 + 0.5);
-                choice = num == 12 ? 0 : num > 9 ? -1 : num;
-              }
+            if (d > r * 2) {
+              choice = -1;  // Pull away from center to cancel
+            } else if (mChanging || d > mSquareSize * 0.3) {
+              // Don't change anything until there's some perceptible movement
+              mChanging = true;
+              double radians =
+                x >= cx ? Math.acos((cy - y) / d) : Math.PI + Math.acos((y - cy) / d);
+              int num = (int) (radians / Math.PI * 6 + 0.5);
+              choice = num == 12 ? 0 : num > 9 ? -1 : num;
             }
           }
 
           if (choice != mChoice) {
+            mPreviousChoice = mChoice;
             mChoice = choice;
+            mChoiceChangeTimestamp = event.getEventTime();
             invalidateTouchPoint();
           }
         }
@@ -420,6 +422,8 @@ public class SudokuView extends View {
       case MotionEvent.ACTION_POINTER_UP:
         if (mPointerId == event.getPointerId(event.getActionIndex())) {
           if (mState != null && mChoice >= 0) {
+            if (mChoice != mPreviousChoice && event.getEventTime() - mChoiceChangeTimestamp < DEBOUNCE_MS)
+              mChoice = mPreviousChoice;
             Numeral num = numeral(mChoice);
             if (num != mState.get(mLocation)) {
               mDefaultChoice = num;
@@ -460,7 +464,10 @@ public class SudokuView extends View {
   }
 
   private void invalidateTouchPoint() {
-    invalidateCircle(mCenterX, mCenterY, mClockRadius);
+    invalidateCircle(mPointerX, mPointerY, mClockRadius);
+    int x = mOffsetsX[mLocation.column.index];
+    int y = mOffsetsY[mLocation.row.index];
+    invalidate(x, y, x + mSquareSize, y + mSquareSize);
     invalidateCircle(mPreviewX, mPreviewY, mSquareSize * 0.5f);
     if (mPreviewX2 > mPreviewX) {
       invalidateCircle(mPreviewX2, mPreviewY, mSquareSize * 0.5f);
