@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * An immutable Sudoku grid: each location may have a numeral set, the class is
  * a Map from Location to Numeral.  The nested Builder class is a mutable
@@ -146,10 +148,20 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
       return grid.get(loc);
     }
 
+    /** Returns the given location's assignment in the grid, or null. */
+    @Nullable Assignment getAssignment(Location loc) {
+      return grid.getAssignment(loc);
+    }
+
     /** Sets the numeral for the given location. */
     public Builder put(Location key, Numeral value) {
       grid().squares[key.index] = (byte) value.number;
       return this;
+    }
+
+    /** Makes the given assignment. */
+    public Builder assign(Assignment assignment) {
+      return put(assignment.location, assignment.numeral);
     }
 
     /** Erases the given location. */
@@ -219,6 +231,12 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
 
   public Numeral get(Location loc) {
     return numeral(squares[loc.index]);
+  }
+
+  /** Returns the given location's assignment in this grid, or null. */
+  @Nullable Assignment getAssignment(Location loc) {
+    Numeral num = get(loc);
+    return num == null ? null : Assignment.of(loc, num);
   }
 
   @Override public int hashCode() {

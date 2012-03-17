@@ -170,6 +170,14 @@ public final class Marks {
     }
 
     /**
+     * Makes the given assignment, returns true if it is (locally) consistent
+     * with the rules of Sudoku.
+     */
+    public boolean assign(Assignment assignment) {
+      return assign(assignment.location, assignment.numeral);
+    }
+
+    /**
      * Eliminates the given numeral as a possibility for the given location, and
      * the location as a possibility for the numeral within the location's
      * units.  Returns false if any of these sets ends up empty.
@@ -186,6 +194,14 @@ public final class Marks {
       }
 
       return answer;
+    }
+
+    /**
+     * Eliminates the given assignment, returns true if this is (locally)
+     * consistent with the rules of Sudoku.
+     */
+    public boolean eliminate(Assignment assignment) {
+      return eliminate(assignment.location, assignment.numeral);
     }
 
     /**

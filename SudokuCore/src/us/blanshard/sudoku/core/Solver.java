@@ -236,7 +236,7 @@ public final class Solver implements Iterable<Grid> {
    */
   public final class Worklist {
     @Nullable private Grid found;
-    private final ArrayDeque<Assignment> worklist = new ArrayDeque<Assignment>();
+    private final ArrayDeque<WorkItem> worklist = new ArrayDeque<WorkItem>();
     private final Location[] locations;
 
     public Worklist() {
@@ -245,7 +245,7 @@ public final class Solver implements Iterable<Grid> {
       } else {
         this.locations = Solver.this.locations.clone();
         Collections.shuffle(Arrays.asList(this.locations), random);
-        if (!pushNextAssignments(startMarks)) {
+        if (!pushNextItems(startMarks)) {
           found = startMarks.toGrid();
         }
       }
@@ -278,11 +278,11 @@ public final class Solver implements Iterable<Grid> {
       found = null;
       int count = 0;
       while (!worklist.isEmpty() && count++ < maxSteps) {
-        Assignment assignment = worklist.removeFirst();
-        Marks.Builder builder = assignment.marks.toBuilder();
-        if (builder.assignRecursively(assignment.location, assignment.numeral)) {
+        WorkItem item = worklist.removeFirst();
+        Marks.Builder builder = item.marks.toBuilder();
+        if (builder.assignRecursively(item.location, item.numeral)) {
           Marks marks = builder.build();
-          if (!pushNextAssignments(marks)) {
+          if (!pushNextItems(marks)) {
             found = marks.toGrid();
             break;
           }
@@ -291,16 +291,16 @@ public final class Solver implements Iterable<Grid> {
       return count;
     }
 
-    /** Returns true if there are more assignments to be made. */
-    private boolean pushNextAssignments(Marks marks) {
-      Assignment[] assignments = chooseNextAssignments(marks);
-      if (assignments == null) return false;  // No more assignments.
+    /** Returns true if there is more work to do. */
+    private boolean pushNextItems(Marks marks) {
+      WorkItem[] items = chooseNextItems(marks);
+      if (items == null) return false;  // No more work.
 
       // Push all possibilities onto the stack in random order.
-      for (int last = assignments.length; last-- > 0; ) {
+      for (int last = items.length; last-- > 0; ) {
         int index = random.nextInt(last + 1);
-        worklist.addFirst(assignments[index]);
-        if (index != last) assignments[index] = assignments[last];
+        worklist.addFirst(items[index]);
+        if (index != last) items[index] = items[last];
       }
       return true;
     }
@@ -309,7 +309,7 @@ public final class Solver implements Iterable<Grid> {
      * Chooses a random set of mutually exclusive assignments from those
      * available in the given marks, or null if there aren't any left.
      */
-    @Nullable private Assignment[] chooseNextAssignments(Marks marks) {
+    @Nullable private WorkItem[] chooseNextItems(Marks marks) {
       int size = 9;
       int count = 0;
       Location current = null;
@@ -322,7 +322,7 @@ public final class Solver implements Iterable<Grid> {
         }
         // Take the first size-2 location:
         if (size == 2)
-          return makeAssignments(marks, loc);
+          return makeItems(marks, loc);
 
         // Maintain a random choice of the smallest size seen so far.
         if (random.nextInt(++count) == 0) {
@@ -330,25 +330,25 @@ public final class Solver implements Iterable<Grid> {
         }
       }
       if (count == 0) return null;
-      return makeAssignments(marks, current);
+      return makeItems(marks, current);
     }
   }
 
-  private static Assignment[] makeAssignments(Marks marks, Location loc) {
+  private static WorkItem[] makeItems(Marks marks, Location loc) {
     NumSet set = marks.get(loc);
-    Assignment[] answer = new Assignment[set.size()];
+    WorkItem[] answer = new WorkItem[set.size()];
     int i = 0;
     for (Numeral n : set)
-      answer[i++] = new Assignment(marks, loc, n);
+      answer[i++] = new WorkItem(marks, loc, n);
     return answer;
   }
 
-  private static class Assignment {
+  private static class WorkItem {
     final Marks marks;
     final Location location;
     final Numeral numeral;
 
-    Assignment(Marks marks, Location location, Numeral numeral) {
+    WorkItem(Marks marks, Location location, Numeral numeral) {
       this.marks = marks;
       this.location = location;
       this.numeral = numeral;
