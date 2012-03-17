@@ -422,6 +422,7 @@ public class SudokuFragment
     if (vis.isEmpty() && mEditTrailToggle.isChecked())
       mEditTrailToggle.setChecked(false);
     mEditTrailToggle.setEnabled(!vis.isEmpty());
+    stateChanged();
   }
 
   private void stateChanged() {
