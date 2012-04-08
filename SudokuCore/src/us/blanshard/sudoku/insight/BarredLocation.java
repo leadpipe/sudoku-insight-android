@@ -17,22 +17,33 @@ package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Location;
 
-import java.util.Collection;
-
 /**
- * Describes an actual conflict on a Sudoku board: a set of locations within a
- * unit that are all assigned the same numeral.
+ * Holds a location that is prevented by the rules of the game from being
+ * assigned any numeral.
  *
  * @author Luke Blanshard
  */
-public class IllegalMove implements Insight {
-  private final Collection<Location> conflictingLocations;
+public class BarredLocation extends Insight.Atom {
+  private final Location location;
 
-  public IllegalMove(Collection<Location> conflictingLocations) {
-    this.conflictingLocations = conflictingLocations;
+  BarredLocation(Location location, Pattern pattern) {
+    super(Insight.Type.BARRED_LOCATION, pattern);
+    this.location = location;
   }
 
-  public Collection<Location> getConflictingLocations() {
-    return conflictingLocations;
+  public Location getLocation() {
+    return location;
+  }
+
+  @Override boolean isError() {
+    return true;
+  }
+
+  @Override @Nullable public Assignment getAssignment() {
+    return null;
+  }
+
+  @Override Collection<Assignment> getEliminations() {
+    return Collections.<Assignment>emptySet();
   }
 }

@@ -324,17 +324,35 @@ public class Analyzer {
   private void findErrors(Grid work, Marks marks, boolean ok) throws InterruptedException {
     checkInterruption();
     if (!ok) {
-      Set<Location> broken = work.getBrokenLocations();
-      if (broken.size() > 0)
-        callback.take(new IllegalMove(broken));
+      for (Unit unit : Unit.allUnits()) {
 
-      for (Unit unit : Unit.allUnits())
+        // First look for actual conflicting assignments in this unit.
+        NumSet seen = NumSet.ofBits(0);
+        NumSet conflicting = NumSet.ofBits(0);
+        for (Location loc : unit) {
+          Numeral num = work.get(loc);
+          if (num != null) {
+            if (seen.contains(num)) conflicting = conflicting.with(num);
+            seen = seen.with(num);
+          }
+        }
+        for (Numeral num : conflicting) {
+          UnitSubset locs = UnitSubset.ofBits(unit, 0);
+          for (Location loc : unit)
+            if (work.get(loc) == num) locs = locs.with(loc);
+          callback.take(new ConflictingNumeral(num, locs));
+        }
+
+        // Then look for numerals that have no possible assignments left in this
+        // unit.
         for (Numeral num : Numeral.ALL) {
           UnitSubset set = marks.get(unit, num);
           if (set.isEmpty())
             callback.take(new BlockedUnitNumeral(unit, num));
         }
+      }
 
+      // Finally, look for locations that have no possible assignments left.
       for (Location loc : Location.ALL) {
         NumSet set = marks.get(loc);
         if (set.isEmpty())

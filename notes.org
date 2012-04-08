@@ -38,6 +38,26 @@
    - what about forcing chains?  these will be series of insights including
      assignments as interior nodes, leading to contradictions
 
+** Patterns for kinds of insight
+   - illegal move
+     - (conflicting numerals are in the same) block or line
+   - blocked location
+     - 2 or 3 of the location's units have all 9 numerals, so same patterns as
+       for forced numeral: block(n)&line(m); lines(m,p); all(n,m,p)
+   - blocked unit/numeral
+     - block or line (that's blocked)
+   - forced location
+     - block or line (in which it's forced)
+   - forced numeral
+     - as above, but also with block or line (that have all but 1 location
+       filled)
+   - overlap
+     - block overlapping line
+     - line overlapping block
+   - locked set
+     - block vs line
+     - hidden vs naked
+
 * Game
 ** DONE Add gson serialization for game and undo stack
 ** TODO Rename getState to... what?

@@ -16,28 +16,29 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Numeral;
-import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.core.UnitSubset;
 
 /**
- * Describes a situation where there are no possible locations within a unit for
- * a given numeral.
+ * Describes an actual conflict on a Sudoku board: a set of locations within a
+ * unit that are all assigned the same numeral.
  *
  * @author Luke Blanshard
  */
-public class BlockedUnitNumeral implements Insight {
-  private final Unit unit;
+public class Conflict extends Insight.Atom {
   private final Numeral numeral;
+  private final UnitSubset locations;
 
-  public BlockedUnitNumeral(Unit unit, Numeral numeral) {
-    this.unit = unit;
+  Conflict(Numeral numeral, UnitSubset locations) {
+    super(Insight.Type.CONFLICT, Pattern.conflict(locations.unit.getType()));
     this.numeral = numeral;
-  }
-
-  public Unit getUnit() {
-    return unit;
+    this.locations = locations;
   }
 
   public Numeral getNumeral() {
     return numeral;
+  }
+
+  public UnitSubset getLocations() {
+    return Locations;
   }
 }

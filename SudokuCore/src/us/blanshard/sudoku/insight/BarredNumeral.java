@@ -15,22 +15,30 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
-import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.Unit;
 
 /**
- * Holds a location that is prevented by the rules of the game from being
- * assigned any numeral.
+ * Describes a situation where there are no possible locations within a unit for
+ * a given numeral.
  *
  * @author Luke Blanshard
  */
-public class BlockedLocation implements Insight {
-  private final Location location;
+public class BarredNumeral extends Insight.Atom {
+  private final Numeral numeral;
+  private final Unit unit;
 
-  public BlockedLocation(Location location) {
-    this.location = location;
+  public BarredNumeral(Numeral numeral, Unit unit) {
+    super(Insight.Type.BARRED_NUMERAL, Pattern.barredNumeral(unit.getType()));
+    this.numeral = numeral;
+    this.unit = unit;
   }
 
-  public Location getLocation() {
-    return location;
+  public Numeral getNumeral() {
+    return numeral;
+  }
+
+  public Unit getUnit() {
+    return unit;
   }
 }
