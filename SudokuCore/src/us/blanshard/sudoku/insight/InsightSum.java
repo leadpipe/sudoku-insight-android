@@ -25,12 +25,15 @@ import com.google.common.collect.Maps;
 
 import java.util.List;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 /**
- * A collection of insights about a Sudoku board.
+ * A collection of insights about a Sudoku board.  Not thread-safe.
  *
  * @author Luke Blanshard
  */
-public class InsightSum implements Insight, Cloneable {
+@NotThreadSafe
+public class InsightSum implements Cloneable {
 
   private final LocSet errors;
   private final List<String> errorUnitNumerals;
@@ -64,25 +67,40 @@ public class InsightSum implements Insight, Cloneable {
   }
 
   public void append(Insight insight) {
-    if (insight instanceof IllegalMove) {
-      errors.addAll(((IllegalMove) insight).getConflictingLocations());
-    } else if (insight instanceof BlockedLocation) {
-      errors.add(((BlockedLocation) insight).getLocation());
-    } else if (insight instanceof BlockedUnitNumeral) {
-      BlockedUnitNumeral b = (BlockedUnitNumeral) insight;
+    switch (insight.getType()) {
+    case CONFLICT:
+      errors.addAll(((Conflict) insight).getLocations());
+      break;
+    case BARRED_LOCATION:
+      errors.add(((BarredLoc) insight).getLocation());
+      break;
+    case BARRED_NUMERAL: {
+      BarredNum b = (BarredNum) insight;
       errorUnitNumerals.add(b.getUnit() + ":" + b.getNumeral());
-    } else if (insight instanceof ForcedNumeral) {
-      ForcedNumeral f = (ForcedNumeral) insight;
+      break;
+    }
+    case FORCED_LOCATION: {
+      ForcedNum f = (ForcedNum) insight;
       assignments.put(f.getLocation(), f.getNumeral());
-    } else if (insight instanceof ForcedLocation) {
-      ForcedLocation f = (ForcedLocation) insight;
+      break;
+    }
+    case FORCED_NUMERAL: {
+      ForcedLoc f = (ForcedLoc) insight;
       assignments.put(f.getLocation(), f.getNumeral());
-    } else if (insight instanceof Overlap) {
+      break;
+    }
+    case OVERLAP: {
       Overlap o = (Overlap) insight;
       overlaps.add(o.getUnit() + ":" + o.getNumeral() + ":" + o.getOverlappingUnit());
-    } else if (insight instanceof LockedSet) {
+      break;
+    }
+    case LOCKED_SET: {
       LockedSet l = (LockedSet) insight;
       sets.put(l.getLocations().unit, l);
+      break;
+    }
+    default:
+      break;
     }
   }
 

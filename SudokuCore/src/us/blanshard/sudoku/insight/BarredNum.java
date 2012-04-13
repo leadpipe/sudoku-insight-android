@@ -15,26 +15,28 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
-import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.Unit;
 
 /**
- * Describes a situation where there is only one possible numeral for a given
- * location.
+ * Describes a situation where there are no possible locations within a unit for
+ * a given numeral.
  *
  * @author Luke Blanshard
  */
-public class ForcedNumeral implements Insight {
-  private final Location location;
+public class BarredNum extends Insight.Atom {
+  private final Unit unit;
   private final Numeral numeral;
 
-  public ForcedNumeral(Location location, Numeral numeral) {
-    this.location = location;
+  public BarredNum(Grid grid, Unit unit, Numeral numeral) {
+    super(grid, Pattern.barredNumeral(grid, unit, numeral));
+    this.unit = unit;
     this.numeral = numeral;
   }
 
-  public Location getLocation() {
-    return location;
+  public Unit getUnit() {
+    return unit;
   }
 
   public Numeral getNumeral() {

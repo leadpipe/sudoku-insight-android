@@ -36,7 +36,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 /**
  * Analyzes a Sudoku game state, producing a series of insights about it.  Also
@@ -103,7 +102,7 @@ public class Analyzer {
     try {
       findErrors(work, marks, ok);
 
-      ok = findOverlapsAndSets(builder, ok);
+      ok = findOverlapsAndSets(work, builder, ok);
       marks = builder.build();
 
       findSingletonLocations(work, marks);
@@ -152,10 +151,11 @@ public class Analyzer {
     }
   }
 
-  private boolean findOverlapsAndSets(Marks.Builder builder, boolean ok) throws InterruptedException {
+  private boolean findOverlapsAndSets(Grid work, Marks.Builder builder, boolean ok)
+      throws InterruptedException {
     if (ok) {
-      ok &= findOverlaps(builder);
-      ok &= findSets(builder);
+      ok &= findOverlaps(work, builder);
+      ok &= findSets(work, builder);
     }
     return ok;
   }
@@ -177,20 +177,20 @@ public class Analyzer {
     Arrays.sort(OVERLAP_BITS_2);
   }
 
-  private boolean findOverlaps(Marks.Builder builder) throws InterruptedException {
+  private boolean findOverlaps(Grid work, Marks.Builder builder) throws InterruptedException {
     checkInterruption();
     boolean ok = true;
     Marks marks = builder.build();
     for (Numeral num : Numeral.ALL) {
-      ok &= findOverlaps(marks, builder, num, Block.ALL, Unit.Type.ROW, OVERLAP_BITS);
-      ok &= findOverlaps(marks, builder, num, Block.ALL, Unit.Type.COLUMN, OVERLAP_BITS_2);
-      ok &= findOverlaps(marks, builder, num, Row.ALL, Unit.Type.BLOCK, OVERLAP_BITS);
-      ok &= findOverlaps(marks, builder, num, Column.ALL, Unit.Type.BLOCK, OVERLAP_BITS);
+      ok &= findOverlaps(work, marks, builder, num, Block.ALL, Unit.Type.ROW, OVERLAP_BITS);
+      ok &= findOverlaps(work, marks, builder, num, Block.ALL, Unit.Type.COLUMN, OVERLAP_BITS_2);
+      ok &= findOverlaps(work, marks, builder, num, Row.ALL, Unit.Type.BLOCK, OVERLAP_BITS);
+      ok &= findOverlaps(work, marks, builder, num, Column.ALL, Unit.Type.BLOCK, OVERLAP_BITS);
     }
     return ok;
   }
 
-  private boolean findOverlaps(Marks marks, Marks.Builder builder, Numeral num,
+  private boolean findOverlaps(Grid work, Marks marks, Marks.Builder builder, Numeral num,
       List<? extends Unit> units, Unit.Type overlappingType, int[] bits) {
     boolean ok = true;
     for (Unit unit : units) {
@@ -201,7 +201,7 @@ public class Analyzer {
         UnitSubset overlap = marks.get(overlappingUnit, num);
         if (overlap.size() > set.size()) {
           // There's something to eliminate.
-          callback.take(new Overlap(unit, num, overlappingUnit));
+          callback.take(new Overlap(work, unit, num, overlappingUnit));
           for (Location loc : overlap)
             if (!set.contains(loc) && !builder.eliminate(loc, num))
               ok = false;
@@ -213,22 +213,22 @@ public class Analyzer {
 
   private static final int MAX_SET_SIZE = 4;
 
-  private boolean findSets(Marks.Builder builder) throws InterruptedException {
+  private boolean findSets(Grid work, Marks.Builder builder) throws InterruptedException {
     SetState setState = new SetState();
     Marks marks = builder.build();
     boolean ok = true;
     int[] indices = new int[MAX_SET_SIZE];
     for (Unit unit : Unit.allUnits()) {
       for (int size = 2; size <= MAX_SET_SIZE; ++size) {
-        ok &= findNakedSets(marks, builder, setState, unit, size, indices);
-        ok &= findHiddenSets(marks, builder, setState, unit, size, indices);
+        ok &= findNakedSets(work, marks, builder, setState, unit, size, indices);
+        ok &= findHiddenSets(work, marks, builder, setState, unit, size, indices);
       }
     }
     return ok;
   }
 
-  private boolean findNakedSets(
-      Marks marks, Marks.Builder builder, SetState setState, Unit unit, int size, int[] indices) {
+  private boolean findNakedSets(Grid work, Marks marks, Marks.Builder builder,
+      SetState setState, Unit unit, int size, int[] indices) {
     boolean ok = true;
     UnitSubset inSets = setState.getLocs(unit);
     UnitSubset toCheck = UnitSubset.of(unit);
@@ -254,7 +254,7 @@ public class Analyzer {
           for (int i = 0; i < size; ++i)
             locs = locs.with(toCheck.get(indices[i]));
           setState.add(nums, locs);
-          callback.take(new LockedSet(nums, locs));
+          callback.take(new LockedSet(work, nums, locs, true));
           for (Location loc : locs.not())
             for (Numeral num : nums)
               if (!builder.eliminate(loc, num))
@@ -266,8 +266,8 @@ public class Analyzer {
     return ok;
   }
 
-  private boolean findHiddenSets(
-      Marks marks, Marks.Builder builder, SetState setState, Unit unit, int size, int[] indices) {
+  private boolean findHiddenSets(Grid work, Marks marks, Marks.Builder builder,
+      SetState setState, Unit unit, int size, int[] indices) {
     boolean ok = true;
     NumSet inSets = setState.getNums(unit);
     NumSet toCheck = NumSet.of();
@@ -293,7 +293,7 @@ public class Analyzer {
           for (int i = 0; i < size; ++i)
             nums = nums.with(toCheck.get(indices[i]));
           setState.add(nums, locs);
-          callback.take(new LockedSet(nums, locs));
+          callback.take(new LockedSet(work, nums, locs, false));
           for (Location loc : locs)
             for (Numeral num : nums.not())
               if (!builder.eliminate(loc, num))
@@ -340,7 +340,7 @@ public class Analyzer {
           UnitSubset locs = UnitSubset.ofBits(unit, 0);
           for (Location loc : unit)
             if (work.get(loc) == num) locs = locs.with(loc);
-          callback.take(new ConflictingNumeral(num, locs));
+          callback.take(new Conflict(work, num, locs));
         }
 
         // Then look for numerals that have no possible assignments left in this
@@ -348,7 +348,7 @@ public class Analyzer {
         for (Numeral num : Numeral.ALL) {
           UnitSubset set = marks.get(unit, num);
           if (set.isEmpty())
-            callback.take(new BlockedUnitNumeral(unit, num));
+            callback.take(new BarredNum(work, unit, num));
         }
       }
 
@@ -356,7 +356,7 @@ public class Analyzer {
       for (Location loc : Location.ALL) {
         NumSet set = marks.get(loc);
         if (set.isEmpty())
-          callback.take(new BlockedLocation(loc));
+          callback.take(new BarredLoc(work, loc));
       }
     }
   }
@@ -369,7 +369,7 @@ public class Analyzer {
         if (set.size() == 1) {
           Location loc = set.get(0);
           if (!work.containsKey(loc))
-            callback.take(new ForcedLocation(unit, num, loc));
+            callback.take(new ForcedLoc(work, unit, num, loc));
         }
       }
   }
@@ -380,7 +380,7 @@ public class Analyzer {
       if (!work.containsKey(loc)) {
         NumSet set = marks.get(loc);
         if (set.size() == 1)
-          callback.take(new ForcedNumeral(loc, set.get(0)));
+          callback.take(new ForcedNum(work, loc, set.get(0)));
       }
   }
 }

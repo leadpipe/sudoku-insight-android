@@ -85,9 +85,9 @@ public class AnalyzerTest {
 
     analyzer.analyze();
 
-    verify(callback, never()).take(isA(IllegalMove.class));
-    verify(callback, never()).take(isA(BlockedUnitNumeral.class));
-    verify(callback, never()).take(isA(BlockedLocation.class));
+    verify(callback, never()).take(isA(Conflict.class));
+    verify(callback, never()).take(isA(BarredNum.class));
+    verify(callback, never()).take(isA(BarredLoc.class));
   }
 
   @Test public void unexpectedMoveInsight() {
@@ -124,10 +124,10 @@ public class AnalyzerTest {
 
     analyzer.analyze();
 
-    verify(callback, never()).take(isA(IllegalMove.class));
-    verify(callback, never()).take(isA(BlockedUnitNumeral.class));
-    verify(callback, never()).take(isA(BlockedLocation.class));
-  }
+    verify(callback, never()).take(isA(Conflict.class));
+    verify(callback, never()).take(isA(BarredNum.class));
+    verify(callback, never()).take(isA(BarredLoc.class));
+ }
 
   private void setAll(Sudoku.State state, Grid grid) {
     for (Location loc : grid.keySet())

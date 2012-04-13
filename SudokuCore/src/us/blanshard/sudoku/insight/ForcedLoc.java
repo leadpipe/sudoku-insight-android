@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
@@ -25,15 +26,24 @@ import us.blanshard.sudoku.core.Unit;
  *
  * @author Luke Blanshard
  */
-public class ForcedLocation implements Insight {
+public class ForcedLoc extends Insight.Atom {
   private final Unit unit;
   private final Numeral numeral;
   private final Location location;
 
-  public ForcedLocation(Unit unit, Numeral numeral, Location location) {
+  public ForcedLoc(Grid grid, Unit unit, Numeral numeral, Location location) {
+    super(grid, getPattern(grid, unit, numeral, location));
     this.unit = unit;
     this.numeral = numeral;
     this.location = location;
+  }
+
+  /** Chooses the appropriate pattern, LastLoc or ForcedLoc. */
+  private static Pattern getPattern(Grid grid, Unit unit, Numeral numeral, Location location) {
+    for (Location loc : unit)
+      if (loc != location && !grid.containsKey(loc))
+        return Pattern.forcedLocation(grid, unit, numeral);
+    return Pattern.lastLocation(unit);
   }
 
   public Unit getUnit() {

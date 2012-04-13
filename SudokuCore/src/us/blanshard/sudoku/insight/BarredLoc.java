@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 
 /**
@@ -23,27 +24,15 @@ import us.blanshard.sudoku.core.Location;
  *
  * @author Luke Blanshard
  */
-public class BarredLocation extends Insight.Atom {
+public class BarredLoc extends Insight.Atom {
   private final Location location;
 
-  BarredLocation(Location location, Pattern pattern) {
-    super(Insight.Type.BARRED_LOCATION, pattern);
+  BarredLoc(Grid grid, Location location) {
+    super(grid, Pattern.barredLocation(grid, location));
     this.location = location;
   }
 
   public Location getLocation() {
     return location;
-  }
-
-  @Override boolean isError() {
-    return true;
-  }
-
-  @Override @Nullable public Assignment getAssignment() {
-    return null;
-  }
-
-  @Override Collection<Assignment> getEliminations() {
-    return Collections.<Assignment>emptySet();
   }
 }

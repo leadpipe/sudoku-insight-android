@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 
@@ -24,12 +25,13 @@ import us.blanshard.sudoku.core.Unit;
  *
  * @author Luke Blanshard
  */
-public class Overlap implements Insight {
+public class Overlap extends Insight.Atom {
   private final Unit unit;
   private final Numeral numeral;
   private final Unit overlappingUnit;
 
-  public Overlap(Unit unit, Numeral numeral, Unit overlappingUnit) {
+  public Overlap(Grid grid, Unit unit, Numeral numeral, Unit overlappingUnit) {
+    super(grid, Pattern.overlap(grid, unit, overlappingUnit, numeral));
     this.unit = unit;
     this.numeral = numeral;
     this.overlappingUnit = overlappingUnit;

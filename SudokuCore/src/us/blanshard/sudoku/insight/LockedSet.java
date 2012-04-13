@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.UnitSubset;
 
@@ -24,11 +25,12 @@ import us.blanshard.sudoku.core.UnitSubset;
  *
  * @author Luke Blanshard
  */
-public class LockedSet implements Insight {
+public class LockedSet extends Insight.Atom {
   private final NumSet nums;
   private final UnitSubset locs;
 
-  public LockedSet(NumSet nums, UnitSubset locs) {
+  public LockedSet(Grid grid, NumSet nums, UnitSubset locs, boolean isNaked) {
+    super(grid, isNaked ? Pattern.nakedSet(grid, nums, locs) : Pattern.hiddenSet(grid, nums, locs));
     this.nums = nums;
     this.locs = locs;
   }

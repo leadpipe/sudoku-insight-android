@@ -22,15 +22,22 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
 
+import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.NumSet;
+import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.core.UnitSubset;
+
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import us.blanshard.sudoku.core.Unit;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -111,10 +118,29 @@ public abstract class Pattern {
     return new IllegalArgumentException("Argument(s) out of range: " + makeId(subclass, vector));
   }
 
+  static int countOpenLocs(Grid grid, UnitSubset locs) {
+    int numOpenLocs = 0;
+    for (Location loc : locs)
+      if (!grid.containsKey(loc))
+        ++numOpenLocs;
+    return numOpenLocs;
+  }
+
   static boolean isImplicit(Grid grid, Location loc, Numeral num) {
     for (Location peer : loc.peers)
       if (grid.get(peer) == num) return false;
     return true;
+  }
+
+  static int countImplicit(Grid grid, NumSet nums, UnitSubset locs, int max) {
+    int numImplicit = 0;
+    for (Location loc : locs)
+      for (Numeral num : nums)
+        if (isImplicit(grid, loc, num)) {
+          ++numImplicit;
+          if (numImplicit >= max) return max;
+        }
+    return numImplicit;
   }
 
   /**
@@ -330,7 +356,7 @@ public abstract class Pattern {
           int maxInMinorLineOnly = numInLinesOnly / 2;
           ARRAY[numImplicit][numInLinesOnly] = new BarredLoc[maxInMinorLineOnly + 1];
           for (int numInMinorLineOnly = minInMinorLineOnly;
-               numInMinorLine <= maxInMinorLineOnly; ++numInMinorLineOnly) {
+               numInMinorLineOnly <= maxInMinorLineOnly; ++numInMinorLineOnly) {
             BarredLoc instance = new BarredLoc(numImplicit, numInLinesOnly, numInMinorLineOnly);
             builder.add(instance);
             ARRAY[numImplicit][numInLinesOnly][numInMinorLineOnly] = instance;
@@ -469,7 +495,7 @@ public abstract class Pattern {
     }
 
     static Collection<LastLoc> all() {
-      return ImmutableCollection.of(BLOCK, LINE);
+      return ImmutableList.of(BLOCK, LINE);
     }
 
     static final LastLoc BLOCK = new LastLoc(UnitCategory.BLOCK);
@@ -497,7 +523,7 @@ public abstract class Pattern {
     private final int numOpenLocs;
     private final int numImplicit;
 
-    private ForcedLoc(UnitCategory category) {
+    private ForcedLoc(UnitCategory category, int numOpenLocs, int numImplicit) {
       super(Type.FORCED_LOCATION, category, numOpenLocs, numImplicit);
       this.category = category;
       this.numOpenLocs = numOpenLocs;
@@ -613,7 +639,7 @@ public abstract class Pattern {
           int maxInMinorLineOnly = numInLinesOnly / 2;
           ARRAY[numImplicit][numInLinesOnly] = new ForcedNum[maxInMinorLineOnly + 1];
           for (int numInMinorLineOnly = minInMinorLineOnly;
-               numInMinorLine <= maxInMinorLineOnly; ++numInMinorLineOnly) {
+               numInMinorLineOnly <= maxInMinorLineOnly; ++numInMinorLineOnly) {
             ForcedNum instance = new ForcedNum(numImplicit, numInLinesOnly, numInMinorLineOnly);
             builder.add(instance);
             ARRAY[numImplicit][numInLinesOnly][numInMinorLineOnly] = instance;
@@ -726,7 +752,7 @@ public abstract class Pattern {
   public static Overlap overlap(Grid grid, Unit unit1, Unit unit2, Numeral num) {
     int numOpenLocs = 0;
     int numImplicit = 0;
-    for (Location loc : unit1.minus(unit2)) {
+    for (Location loc : unit1.subtract(unit2)) {
       if (!grid.containsKey(loc)) {
         ++numOpenLocs;
         if (numImplicit < 2 && isImplicit(grid, loc, num))
@@ -739,10 +765,10 @@ public abstract class Pattern {
   /**
    * The patterns for a set of locations within a unit whose only possible
    * assignments are to a set of numerals of the same size.  Each instance of
-   * the pattern has a unit category, the size of the set (between 2 and 4), the
-   * number of open locations in that unit outside the set, and the number of
-   * those open locations that are only implicitly barred from being assigned
-   * the numeral.  The last number is capped at 2.
+   * the pattern has the unit's category, the size of the set (between 2 and 4),
+   * the number of open locations in that unit outside the set, and the number
+   * of numerals not in the set that are only implicitly barred from the set's
+   * locations.  The last number is capped at 2.
    */
   public static final class NakedSet extends Pattern {
     private final UnitCategory category;
@@ -751,7 +777,7 @@ public abstract class Pattern {
     private final int numImplicit;
 
     private NakedSet(UnitCategory category, int setSize, int numOpenLocs, int numImplicit) {
-      super(Type.OVERLAP, category, setSize, numOpenLocs, numImplicit);
+      super(Type.NAKED_SET, category, setSize, numOpenLocs, numImplicit);
       this.category = category;
       this.setSize = setSize;
       this.numOpenLocs = numOpenLocs;
@@ -787,7 +813,7 @@ public abstract class Pattern {
           int maxOpenLocs = 9 - setSize;
           ARRAY[cat][setSize] = new NakedSet[maxOpenLocs + 1][];
           for (int numOpenLocs = 0; numOpenLocs <= maxOpenLocs; ++numOpenLocs) {
-            int maxImplicit = min(2, numOpenLocs);
+            int maxImplicit = 2;
             ARRAY[cat][setSize][numOpenLocs] = new NakedSet[maxImplicit + 1];
             for (int numImplicit = 0; numImplicit <= maxImplicit; ++numImplicit) {
               NakedSet instance = new NakedSet(UnitCategory.value(cat), setSize, numOpenLocs, numImplicit);
@@ -811,25 +837,18 @@ public abstract class Pattern {
   }
 
   public static NakedSet nakedSet(Grid grid, NumSet nums, UnitSubset locs) {
-    int numOpenLocs = 0;
-    int numImplicit = 0;
-    for (Location loc : locs.not()) {
-      if (!grid.containsKey(loc)) {
-        ++numOpenLocs;
-        if (numImplicit < 2 && isImplicit(grid, loc, num))
-          ++numImplicit;
-      }
-    }
-    return nakedSet(UnitCategory.forUnit(unit), nums.size(), numOpenLocs, numImplicit);
+    int numOpenLocs = countOpenLocs(grid, locs.not());
+    int numImplicit = countImplicit(grid, nums.not(), locs, 2);
+    return nakedSet(UnitCategory.forUnit(locs.unit), nums.size(), numOpenLocs, numImplicit);
   }
 
   /**
    * The patterns for a set of numerals whose only possible assignments within a
    * unit are to a set of locations of the same size.  Each instance of the
-   * pattern has a unit category, the size of the set (between 2 and 4), the
+   * pattern has the unit's category, the size of the set (between 2 and 4), the
    * number of open locations in that unit outside the set, and the number of
    * those open locations that are only implicitly barred from being assigned
-   * the numeral.  The last number is capped at 2.
+   * the numerals.  The last number is capped at 2.
    */
   public static final class HiddenSet extends Pattern {
     private final UnitCategory category;
@@ -838,7 +857,7 @@ public abstract class Pattern {
     private final int numImplicit;
 
     private HiddenSet(UnitCategory category, int setSize, int numOpenLocs, int numImplicit) {
-      super(Type.OVERLAP, category, setSize, numOpenLocs, numImplicit);
+      super(Type.HIDDEN_SET, category, setSize, numOpenLocs, numImplicit);
       this.category = category;
       this.setSize = setSize;
       this.numOpenLocs = numOpenLocs;
@@ -874,7 +893,7 @@ public abstract class Pattern {
           int maxOpenLocs = 9 - setSize;
           ARRAY[cat][setSize] = new HiddenSet[maxOpenLocs + 1][];
           for (int numOpenLocs = 0; numOpenLocs <= maxOpenLocs; ++numOpenLocs) {
-            int maxImplicit = min(2, numOpenLocs);
+            int maxImplicit = 2;
             ARRAY[cat][setSize][numOpenLocs] = new HiddenSet[maxImplicit + 1];
             for (int numImplicit = 0; numImplicit <= maxImplicit; ++numImplicit) {
               HiddenSet instance = new HiddenSet(UnitCategory.value(cat), setSize, numOpenLocs, numImplicit);
@@ -898,21 +917,15 @@ public abstract class Pattern {
   }
 
   public static HiddenSet hiddenSet(Grid grid, NumSet nums, UnitSubset locs) {
-    int numOpenLocs = 0;
-    int numImplicit = 0;
-    for (Location loc : locs.not()) {
-      if (!grid.containsKey(loc)) {
-        ++numOpenLocs;
-        if (numImplicit < 2 && isImplicit(grid, loc, num))
-          ++numImplicit;
-      }
-    }
-    return hiddenSet(UnitCategory.forUnit(unit), nums.size(), numOpenLocs, numImplicit);
+    int numOpenLocs = countOpenLocs(grid, locs.not());
+    int numImplicit = countImplicit(grid, nums, locs.not(), 2);
+    return hiddenSet(UnitCategory.forUnit(locs.unit), nums.size(), numOpenLocs, numImplicit);
   }
 
   private enum AllPatterns {
     INSTANCE;
     private final ImmutableMap<String, Pattern> map;
+    @SuppressWarnings("unchecked")
     private AllPatterns() {
       this.map = Maps.uniqueIndex(
           Iterables.concat(
