@@ -80,12 +80,12 @@ public class InsightSum implements Cloneable {
       break;
     }
     case FORCED_LOCATION: {
-      ForcedNum f = (ForcedNum) insight;
+      ForcedLoc f = (ForcedLoc) insight;
       assignments.put(f.getLocation(), f.getNumeral());
       break;
     }
     case FORCED_NUMERAL: {
-      ForcedLoc f = (ForcedLoc) insight;
+      ForcedNum f = (ForcedNum) insight;
       assignments.put(f.getLocation(), f.getNumeral());
       break;
     }
