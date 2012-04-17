@@ -18,12 +18,15 @@ package us.blanshard.sudoku.insight;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 
+import javax.annotation.concurrent.ThreadSafe;
+
 /**
  * Holds a location that is prevented by the rules of the game from being
  * assigned any numeral.
  *
  * @author Luke Blanshard
  */
+@ThreadSafe
 public class BarredLoc extends Insight.Atom {
   private final Location location;
 

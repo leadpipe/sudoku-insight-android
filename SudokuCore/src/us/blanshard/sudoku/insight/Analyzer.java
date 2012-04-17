@@ -201,7 +201,7 @@ public class Analyzer {
         UnitSubset overlap = marks.get(overlappingUnit, num);
         if (overlap.size() > set.size()) {
           // There's something to eliminate.
-          callback.take(new Overlap(work, unit, num, overlappingUnit));
+          callback.take(new Overlap(work, unit, num, overlappingUnit, overlap));
           for (Location loc : overlap)
             if (!set.contains(loc) && !builder.eliminate(loc, num))
               ok = false;

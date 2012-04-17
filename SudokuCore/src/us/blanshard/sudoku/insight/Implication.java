@@ -17,6 +17,7 @@ package us.blanshard.sudoku.insight;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 
 import com.google.common.collect.ImmutableCollection;
@@ -26,11 +27,14 @@ import com.google.common.collect.Multiset;
 
 import java.util.Collection;
 
+import javax.annotation.concurrent.ThreadSafe;
+
 /**
  * Describes an atomic insight implied by one or more other insights.
  *
  * @author Luke Blanshard
  */
+@ThreadSafe
 public class Implication extends Insight.Molecule {
   private final ImmutableCollection<Insight> antecedents;
   private final Insight.Atom consequent;
@@ -39,6 +43,18 @@ public class Implication extends Insight.Molecule {
     super(grid, Insight.Type.IMPLICATION);
     this.antecedents = ImmutableList.copyOf(antecedents);
     this.consequent = checkNotNull(consequent);
+  }
+
+  @Override public boolean isError() {
+    return consequent.isError();
+  }
+
+  @Override public Collection<Assignment> getAssignments() {
+    return consequent.getAssignments();
+  }
+
+  @Override public Collection<Assignment> getEliminations() {
+    return consequent.getEliminations();
   }
 
   public ImmutableCollection<Insight> getAntecedents() {
@@ -51,17 +67,17 @@ public class Implication extends Insight.Molecule {
 
   @Override public Collection<Insight.Atom> getAtoms() {
     ImmutableList.Builder<Insight.Atom> builder = ImmutableList.builder();
-    builder.add(consequent);
     for (Insight i : antecedents)
       builder.addAll(i.getAtoms());
+    builder.add(consequent);
     return builder.build();
   }
 
   @Override public Multiset<Pattern> getPatterns() {
     ImmutableMultiset.Builder<Pattern> builder = ImmutableMultiset.builder();
-    builder.add(consequent.getPattern());
     for (Insight i : antecedents)
       builder.addAll(i.getPatterns());
+    builder.add(consequent.getPattern());
     return builder.build();
   }
 }

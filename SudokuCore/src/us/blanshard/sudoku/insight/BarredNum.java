@@ -19,12 +19,15 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 
+import javax.annotation.concurrent.ThreadSafe;
+
 /**
  * Describes a situation where there are no possible locations within a unit for
  * a given numeral.
  *
  * @author Luke Blanshard
  */
+@ThreadSafe
 public class BarredNum extends Insight.Atom {
   private final Unit unit;
   private final Numeral numeral;

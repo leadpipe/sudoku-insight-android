@@ -15,10 +15,16 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
+
+import java.util.Collection;
+import java.util.Collections;
+
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Describes a situation where there is only one possible location within a unit
@@ -26,6 +32,7 @@ import us.blanshard.sudoku.core.Unit;
  *
  * @author Luke Blanshard
  */
+@ThreadSafe
 public class ForcedLoc extends Insight.Atom {
   private final Unit unit;
   private final Numeral numeral;
@@ -44,6 +51,10 @@ public class ForcedLoc extends Insight.Atom {
       if (loc != location && !grid.containsKey(loc))
         return Pattern.forcedLocation(grid, unit, numeral);
     return Pattern.lastLocation(unit);
+  }
+
+  @Override public Collection<Assignment> getAssignments() {
+    return Collections.singleton(Assignment.of(location, numeral));
   }
 
   public Unit getUnit() {

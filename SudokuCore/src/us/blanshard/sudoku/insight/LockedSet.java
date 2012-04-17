@@ -15,9 +15,18 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
+import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.UnitSubset;
+
+import com.google.common.collect.ImmutableList;
+
+import java.util.Collection;
+
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Describes a locked set: a set of numerals and a set of locations such that
@@ -25,14 +34,36 @@ import us.blanshard.sudoku.core.UnitSubset;
  *
  * @author Luke Blanshard
  */
+@ThreadSafe
 public class LockedSet extends Insight.Atom {
   private final NumSet nums;
   private final UnitSubset locs;
+  private volatile Collection<Assignment> eliminations;
 
   public LockedSet(Grid grid, NumSet nums, UnitSubset locs, boolean isNaked) {
     super(grid, isNaked ? Pattern.nakedSet(grid, nums, locs) : Pattern.hiddenSet(grid, nums, locs));
     this.nums = nums;
     this.locs = locs;
+  }
+
+  @Override public Collection<Assignment> getEliminations() {
+    Collection<Assignment> answer = eliminations;
+    if (answer == null) {
+      synchronized (this) {
+        if ((answer = eliminations) == null) {
+          ImmutableList.Builder<Assignment> builder = ImmutableList.builder();
+          NumSet nums = getPattern().getType() == Pattern.Type.NAKED_SET
+            ? this.nums : this.nums.not();
+          UnitSubset locs = getPattern().getType() == Pattern.Type.NAKED_SET
+            ? this.locs.not() : this.locs;
+          for (Numeral num : nums)
+            for (Location loc : locs)
+              builder.add(Assignment.of(loc, num));
+          eliminations = answer = builder.build();
+        }
+      }
+    }
+    return answer;
   }
 
   public NumSet getNumerals() {

@@ -15,9 +15,15 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
+
+import java.util.Collection;
+import java.util.Collections;
+
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Describes a situation where there is only one possible numeral for a given
@@ -25,6 +31,7 @@ import us.blanshard.sudoku.core.Numeral;
  *
  * @author Luke Blanshard
  */
+@ThreadSafe
 public class ForcedNum extends Insight.Atom {
   private final Location location;
   private final Numeral numeral;
@@ -33,6 +40,10 @@ public class ForcedNum extends Insight.Atom {
     super(grid, Pattern.forcedNumeral(grid, location));
     this.location = location;
     this.numeral = numeral;
+  }
+
+  @Override public Collection<Assignment> getAssignments() {
+    return Collections.singleton(Assignment.of(location, numeral));
   }
 
   public Location getLocation() {

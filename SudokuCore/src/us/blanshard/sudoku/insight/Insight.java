@@ -25,8 +25,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 
-import javax.annotation.Nullable;
-
 /**
  * A fact about a Sudoku board.  This may be a move implied by the current state
  * of the board, an impossible or illegal state, or one of several other
@@ -50,13 +48,13 @@ public abstract class Insight {
     LOCKED_SET,
     IMPLICATION,
     DISPROVED_ASSIGNMENT,
-    ALL_TRAILS_ASSIGNMENT;
+    ALL_TRAILS_ASSIGNMENTS;
 
     private static final EnumSet<Type> ERRORS =
         EnumSet.of(CONFLICT, BARRED_LOCATION, BARRED_NUMERAL);
 
     private static final EnumSet<Type> MOLECULES =
-        EnumSet.of(IMPLICATION, DISPROVED_ASSIGNMENT, ALL_TRAILS_ASSIGNMENT);
+        EnumSet.of(IMPLICATION, DISPROVED_ASSIGNMENT, ALL_TRAILS_ASSIGNMENTS);
 
     public boolean isError() {
       return ERRORS.contains(this);
@@ -92,9 +90,9 @@ public abstract class Insight {
     return type.isError();
   }
 
-  /** The assignment this insight implies, or null. */
-  @Nullable public Assignment getAssignment() {
-    return null;
+  /** The assignments this insight implies. */
+  public Collection<Assignment> getAssignments() {
+    return Collections.<Assignment>emptySet();
   }
 
   /** The assignments this insight disproves. */

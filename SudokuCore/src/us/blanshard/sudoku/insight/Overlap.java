@@ -15,9 +15,18 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.core.UnitSubset;
+
+import com.google.common.collect.ImmutableList;
+
+import java.util.Collection;
+
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Describes an overlap, where the only locations within one unit that a numeral
@@ -25,16 +34,35 @@ import us.blanshard.sudoku.core.Unit;
  *
  * @author Luke Blanshard
  */
+@ThreadSafe
 public class Overlap extends Insight.Atom {
   private final Unit unit;
   private final Numeral numeral;
   private final Unit overlappingUnit;
+  private final UnitSubset overlap;
+  private volatile Collection<Assignment> eliminations;
 
-  public Overlap(Grid grid, Unit unit, Numeral numeral, Unit overlappingUnit) {
+  public Overlap(Grid grid, Unit unit, Numeral numeral, Unit overlappingUnit, UnitSubset overlap) {
     super(grid, Pattern.overlap(grid, unit, overlappingUnit, numeral));
     this.unit = unit;
     this.numeral = numeral;
     this.overlappingUnit = overlappingUnit;
+    this.overlap = overlap;
+  }
+
+  @Override public Collection<Assignment> getEliminations() {
+    Collection<Assignment> answer = eliminations;
+    if (answer == null) {
+      synchronized (this) {
+        if ((answer = eliminations) == null) {
+          ImmutableList.Builder<Assignment> builder = ImmutableList.builder();
+          for (Location loc : overlap)
+            builder.add(Assignment.of(loc, numeral));
+          eliminations = answer = builder.build();
+        }
+      }
+    }
+    return answer;
   }
 
   public Unit getUnit() {
@@ -47,5 +75,9 @@ public class Overlap extends Insight.Atom {
 
   public Unit getOverlappingUnit() {
     return overlappingUnit;
+  }
+
+  public UnitSubset getOverlap() {
+    return overlap;
   }
 }

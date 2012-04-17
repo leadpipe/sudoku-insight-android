@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * A set of classes that categorize insights by the pattern that must be
@@ -50,6 +51,7 @@ import javax.annotation.Nullable;
  *
  * @author Luke Blanshard
  */
+@ThreadSafe
 public abstract class Pattern {
 
   private static final Joiner COMMA_JOINER = Joiner.on(',');
