@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultiset;
@@ -40,7 +41,7 @@ public class Implication extends Insight.Molecule {
   private final Insight.Atom consequent;
 
   Implication(Grid grid, Collection<? extends Insight> antecedents, Insight.Atom consequent) {
-    super(grid, Insight.Type.IMPLICATION);
+    super(Insight.Type.IMPLICATION);
     this.antecedents = ImmutableList.copyOf(antecedents);
     this.consequent = checkNotNull(consequent);
   }
@@ -79,5 +80,17 @@ public class Implication extends Insight.Molecule {
       builder.addAll(i.getPatterns());
     builder.add(consequent.getPattern());
     return builder.build();
+  }
+
+  @Override public boolean equals(Object o) {
+    if (o == this) return true;
+    if (o == null || o.getClass() != getClass()) return false;
+    Implication that = (Implication) o;
+    return this.antecedents.equals(that.antecedents)
+        && this.consequent.equals(that.consequent);
+  }
+
+  @Override public int hashCode() {
+    return Objects.hashCode(antecedents, consequent);
   }
 }

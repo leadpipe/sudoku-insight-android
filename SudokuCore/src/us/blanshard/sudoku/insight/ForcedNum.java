@@ -20,6 +20,8 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 
+import com.google.common.base.Objects;
+
 import java.util.Collection;
 import java.util.Collections;
 
@@ -37,7 +39,7 @@ public class ForcedNum extends Insight.Atom {
   private final Numeral numeral;
 
   public ForcedNum(Grid grid, Location location, Numeral numeral) {
-    super(grid, Pattern.forcedNumeral(grid, location));
+    super(Pattern.forcedNumeral(grid, location));
     this.location = location;
     this.numeral = numeral;
   }
@@ -52,5 +54,18 @@ public class ForcedNum extends Insight.Atom {
 
   public Numeral getNumeral() {
     return numeral;
+  }
+
+  @Override public boolean equals(Object o) {
+    if (o == this) return true;
+    if (o == null || o.getClass() != getClass()) return false;
+    ForcedNum that = (ForcedNum) o;
+    return this.pattern.equals(that.pattern)
+        && this.location.equals(that.location)
+        && this.numeral.equals(that.numeral);
+  }
+
+  @Override public int hashCode() {
+    return Objects.hashCode(pattern, location, numeral);
   }
 }

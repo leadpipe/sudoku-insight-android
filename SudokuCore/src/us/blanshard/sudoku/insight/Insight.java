@@ -69,16 +69,10 @@ public abstract class Insight {
     }
   }
 
-  private final Grid grid;
-  private final Type type;
+  protected final Type type;
 
-  protected Insight(Grid grid, Type type) {
-    this.grid = grid;
+  protected Insight(Type type) {
     this.type = type;
-  }
-
-  public Grid getGrid() {
-    return grid;
   }
 
   public Type getType() {
@@ -113,10 +107,10 @@ public abstract class Insight {
    * An indivisible insight.
    */
   public abstract static class Atom extends Insight {
-    private final Pattern pattern;
+    protected final Pattern pattern;
 
-    protected Atom(Grid grid, Pattern pattern) {
-      super(grid, pattern.getInsightType());
+    protected Atom(Pattern pattern) {
+      super(pattern.getInsightType());
       this.pattern = pattern;
     }
 
@@ -141,8 +135,8 @@ public abstract class Insight {
    * An insight with multiple parts.
    */
   public abstract static class Molecule extends Insight {
-    protected Molecule(Grid grid, Type type) {
-      super(grid, type);
+    protected Molecule(Type type) {
+      super(type);
     }
   }
 }

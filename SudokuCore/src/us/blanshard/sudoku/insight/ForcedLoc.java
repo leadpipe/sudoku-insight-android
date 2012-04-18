@@ -21,6 +21,8 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 
+import com.google.common.base.Objects;
+
 import java.util.Collection;
 import java.util.Collections;
 
@@ -39,7 +41,7 @@ public class ForcedLoc extends Insight.Atom {
   private final Location location;
 
   public ForcedLoc(Grid grid, Unit unit, Numeral numeral, Location location) {
-    super(grid, getPattern(grid, unit, numeral, location));
+    super(getPattern(grid, unit, numeral, location));
     this.unit = unit;
     this.numeral = numeral;
     this.location = location;
@@ -67,5 +69,19 @@ public class ForcedLoc extends Insight.Atom {
 
   public Location getLocation() {
     return location;
+  }
+
+  @Override public boolean equals(Object o) {
+    if (o == this) return true;
+    if (o == null || o.getClass() != getClass()) return false;
+    ForcedLoc that = (ForcedLoc) o;
+    return this.pattern.equals(that.pattern)
+        && this.unit.equals(that.unit)
+        && this.numeral.equals(that.numeral)
+        && this.location.equals(that.location);
+  }
+
+  @Override public int hashCode() {
+    return Objects.hashCode(pattern, unit, numeral, location);
   }
 }

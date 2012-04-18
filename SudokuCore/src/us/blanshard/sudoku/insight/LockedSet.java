@@ -22,6 +22,7 @@ import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
@@ -41,7 +42,7 @@ public class LockedSet extends Insight.Atom {
   private volatile Collection<Assignment> eliminations;
 
   public LockedSet(Grid grid, NumSet nums, UnitSubset locs, boolean isNaked) {
-    super(grid, isNaked ? Pattern.nakedSet(grid, nums, locs) : Pattern.hiddenSet(grid, nums, locs));
+    super(isNaked ? Pattern.nakedSet(grid, nums, locs) : Pattern.hiddenSet(grid, nums, locs));
     this.nums = nums;
     this.locs = locs;
   }
@@ -72,6 +73,19 @@ public class LockedSet extends Insight.Atom {
 
   public UnitSubset getLocations() {
     return locs;
+  }
+
+  @Override public boolean equals(Object o) {
+    if (o == this) return true;
+    if (o == null || o.getClass() != getClass()) return false;
+    LockedSet that = (LockedSet) o;
+    return this.pattern.equals(that.pattern)
+        && this.nums.equals(that.nums)
+        && this.locs.equals(that.locs);
+  }
+
+  @Override public int hashCode() {
+    return Objects.hashCode(pattern, nums, locs);
   }
 
   @Override public String toString() {

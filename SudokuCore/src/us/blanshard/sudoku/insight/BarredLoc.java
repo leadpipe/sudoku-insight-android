@@ -18,6 +18,8 @@ package us.blanshard.sudoku.insight;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 
+import com.google.common.base.Objects;
+
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -31,11 +33,23 @@ public class BarredLoc extends Insight.Atom {
   private final Location location;
 
   BarredLoc(Grid grid, Location location) {
-    super(grid, Pattern.barredLocation(grid, location));
+    super(Pattern.barredLocation(grid, location));
     this.location = location;
   }
 
   public Location getLocation() {
     return location;
+  }
+
+  @Override public boolean equals(Object o) {
+    if (o == this) return true;
+    if (o == null || o.getClass() != getClass()) return false;
+    BarredLoc that = (BarredLoc) o;
+    return this.pattern.equals(that.pattern)
+        && this.location.equals(that.location);
+  }
+
+  @Override public int hashCode() {
+    return Objects.hashCode(pattern, location);
   }
 }

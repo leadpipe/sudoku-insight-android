@@ -19,6 +19,8 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 
+import com.google.common.base.Objects;
+
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -33,7 +35,7 @@ public class BarredNum extends Insight.Atom {
   private final Numeral numeral;
 
   public BarredNum(Grid grid, Unit unit, Numeral numeral) {
-    super(grid, Pattern.barredNumeral(grid, unit, numeral));
+    super(Pattern.barredNumeral(grid, unit, numeral));
     this.unit = unit;
     this.numeral = numeral;
   }
@@ -44,5 +46,18 @@ public class BarredNum extends Insight.Atom {
 
   public Numeral getNumeral() {
     return numeral;
+  }
+
+  @Override public boolean equals(Object o) {
+    if (o == this) return true;
+    if (o == null || o.getClass() != getClass()) return false;
+    BarredNum that = (BarredNum) o;
+    return this.pattern.equals(that.pattern)
+        && this.unit.equals(that.unit)
+        && this.numeral.equals(that.numeral);
+  }
+
+  @Override public int hashCode() {
+    return Objects.hashCode(pattern, unit, numeral);
   }
 }

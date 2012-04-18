@@ -19,6 +19,8 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
+import com.google.common.base.Objects;
+
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -33,7 +35,7 @@ public class Conflict extends Insight.Atom {
   private final UnitSubset locations;
 
   Conflict(Grid grid, Numeral numeral, UnitSubset locations) {
-    super(grid, Pattern.conflict(locations.unit));
+    super(Pattern.conflict(locations.unit));
     this.numeral = numeral;
     this.locations = locations;
   }
@@ -44,5 +46,18 @@ public class Conflict extends Insight.Atom {
 
   public UnitSubset getLocations() {
     return locations;
+  }
+
+  @Override public boolean equals(Object o) {
+    if (o == this) return true;
+    if (o == null || o.getClass() != getClass()) return false;
+    Conflict that = (Conflict) o;
+    return this.pattern.equals(that.pattern)
+        && this.numeral.equals(that.numeral)
+        && this.locations.equals(that.locations);
+  }
+
+  @Override public int hashCode() {
+    return Objects.hashCode(pattern, numeral, locations);
   }
 }

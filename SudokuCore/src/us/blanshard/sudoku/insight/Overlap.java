@@ -22,6 +22,7 @@ import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
@@ -43,7 +44,7 @@ public class Overlap extends Insight.Atom {
   private volatile Collection<Assignment> eliminations;
 
   public Overlap(Grid grid, Unit unit, Numeral numeral, Unit overlappingUnit, UnitSubset overlap) {
-    super(grid, Pattern.overlap(grid, unit, overlappingUnit, numeral));
+    super(Pattern.overlap(grid, unit, overlappingUnit, numeral));
     this.unit = unit;
     this.numeral = numeral;
     this.overlappingUnit = overlappingUnit;
@@ -79,5 +80,20 @@ public class Overlap extends Insight.Atom {
 
   public UnitSubset getOverlap() {
     return overlap;
+  }
+
+  @Override public boolean equals(Object o) {
+    if (o == this) return true;
+    if (o == null || o.getClass() != getClass()) return false;
+    Overlap that = (Overlap) o;
+    return this.pattern.equals(that.pattern)
+        && this.unit.equals(that.unit)
+        && this.numeral.equals(that.numeral)
+        && this.overlappingUnit.equals(that.overlappingUnit);
+    // Note that the overlap ivar doesn't identify the insight.
+  }
+
+  @Override public int hashCode() {
+    return Objects.hashCode(pattern, unit, numeral, overlappingUnit);
   }
 }
