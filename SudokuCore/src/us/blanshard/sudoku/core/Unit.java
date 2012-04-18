@@ -147,9 +147,9 @@ public abstract class Unit extends AbstractCollection<Location> implements Colle
     private final List<Unit> list;
     private AllUnits() {
       this.list = ImmutableList.<Unit>builder()
-          .addAll(Row.ALL)  // This order is relied on by unitIndex impls.
+          .addAll(Block.ALL)  // This order is relied on by unitIndex impls.
+          .addAll(Row.ALL)
           .addAll(Column.ALL)
-          .addAll(Block.ALL)
           .build();
     }
   }

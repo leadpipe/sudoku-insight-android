@@ -60,7 +60,7 @@ public final class Block extends Unit {
   public static final List<Block> ALL;
 
   @Override public int unitIndex() {
-    return 18 + index;
+    return 0 + index;
   }
 
   @Override public Type getType() {

@@ -47,7 +47,7 @@ public final class Column extends Unit {
   public static final List<Column> ALL;
 
   @Override public int unitIndex() {
-    return 9 + index;
+    return 18 + index;
   }
 
   @Override public Type getType() {
