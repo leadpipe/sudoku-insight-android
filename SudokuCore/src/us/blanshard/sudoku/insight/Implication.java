@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import us.blanshard.sudoku.core.Assignment;
@@ -42,6 +43,7 @@ public class Implication extends Insight.Molecule {
 
   Implication(Grid grid, Collection<? extends Insight> antecedents, Insight.Atom consequent) {
     super(Insight.Type.IMPLICATION);
+    checkArgument(!antecedents.isEmpty());
     this.antecedents = ImmutableList.copyOf(antecedents);
     this.consequent = checkNotNull(consequent);
   }
@@ -64,6 +66,10 @@ public class Implication extends Insight.Molecule {
 
   public Insight.Atom getConsequent() {
     return consequent;
+  }
+
+  @Override public int appraise(Pattern.Appraiser appraiser) {
+    return addAppraisals(sumAppraisals(appraiser, antecedents), consequent.appraise(appraiser));
   }
 
   @Override public Collection<Insight.Atom> getAtoms() {

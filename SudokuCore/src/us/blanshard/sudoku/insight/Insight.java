@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 
@@ -94,6 +96,33 @@ public abstract class Insight {
     return Collections.<Assignment>emptySet();
   }
 
+  /**
+   * Returns a cumulative appraisal of this insight by summing the appraisals of
+   * its constituent patterns.
+   */
+  public abstract int appraise(Pattern.Appraiser appraiser);
+
+  /**
+   * A helper method that checks its inputs are positive and pins its output to
+   * Integer.MAX_VALUE if need be.
+   */
+  public static int addAppraisals(int a1, int a2) {
+    checkArgument(a1 > 0);
+    checkArgument(a2 > 0);
+    int sum = a1 + a2;
+    return sum < 0 ? Integer.MAX_VALUE : sum;
+  }
+
+  /** Returns the sum of the appraisals of the given insights. */
+  public static int sumAppraisals(Pattern.Appraiser appraiser, Collection<? extends Insight> insights) {
+    int answer = 0;
+    for (Insight i : insights) {
+      int appraisal = i.appraise(appraiser);
+      answer = (answer == 0) ? appraisal : addAppraisals(answer, appraisal);
+    }
+    return answer;
+  }
+
   /** The constituent parts of this insight. */
   public abstract Collection<Atom> getAtoms();
 
@@ -120,6 +149,10 @@ public abstract class Insight {
      */
     public Pattern getPattern() {
       return pattern;
+    }
+
+    @Override public int appraise(Pattern.Appraiser appraiser) {
+      return appraiser.appraise(pattern);
     }
 
     @Override public Collection<Atom> getAtoms() {
