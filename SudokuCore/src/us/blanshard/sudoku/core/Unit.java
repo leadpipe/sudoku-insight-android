@@ -31,7 +31,8 @@ import javax.annotation.concurrent.Immutable;
  * @author Luke Blanshard
  */
 @Immutable
-public abstract class Unit extends AbstractCollection<Location> implements Collection<Location> {
+public abstract class Unit extends AbstractCollection<Location>
+    implements Collection<Location>, Comparable<Unit> {
 
   public static final int COUNT = 3 * 9;  // 9 each of rows, columns, and blocks.
 
@@ -138,6 +139,10 @@ public abstract class Unit extends AbstractCollection<Location> implements Colle
 
   @Override public final Iterator<Location> iterator() {
     return Location.iterator(locations);
+  }
+
+  @Override public int compareTo(Unit that) {
+    return this.unitIndex() - that.unitIndex();
   }
 
   protected final byte[] locations = new byte[9];
