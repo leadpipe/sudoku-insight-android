@@ -259,6 +259,15 @@ public abstract class Pattern {
   }
 
   /**
+   * An object that assigns positive integer values to patterns.  These
+   * generally signify some sort of weight: for example, the average number of
+   * milliseconds people take to recognize the pattern in a puzzle.
+   */
+  public interface Appraiser {
+    int appraise(Pattern pattern);
+  }
+
+  /**
    * Many patterns refer to {@linkplain Unit units} on the Sudoku board; a given
    * pattern is generally easier to see for a block than for a row or column, so
    * we differentiate them with this enumeration.
