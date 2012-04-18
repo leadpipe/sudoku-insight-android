@@ -19,11 +19,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * A number from one to nine: the contents of a Sudoku square.
  *
  * @author Luke Blanshard
  */
+@Immutable
 public final class Numeral implements Comparable<Numeral> {
 
   /** The number, in the range 1..9. */

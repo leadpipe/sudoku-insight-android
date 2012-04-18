@@ -27,6 +27,8 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
+import javax.annotation.concurrent.NotThreadSafe;
 
 /**
  * An immutable Sudoku grid: each location may have a numeral set, the class is
@@ -36,6 +38,7 @@ import javax.annotation.Nullable;
  *
  * @author Luke Blanshard
  */
+@Immutable
 public final class Grid extends AbstractMap<Location, Numeral> implements Map<Location, Numeral> {
 
   private final byte[] squares;
@@ -98,6 +101,7 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
     return answer;
   }
 
+  @NotThreadSafe
   public static final class Builder {
     private Grid grid;
     private boolean built;

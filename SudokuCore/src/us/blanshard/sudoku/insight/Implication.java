@@ -27,14 +27,14 @@ import com.google.common.collect.Multiset;
 
 import java.util.Collection;
 
-import javax.annotation.concurrent.ThreadSafe;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Describes an atomic insight implied by one or more other insights.
  *
  * @author Luke Blanshard
  */
-@ThreadSafe
+@Immutable
 public class Implication extends Insight.Molecule {
   private final ImmutableCollection<Insight> antecedents;
   private final Insight.Atom consequent;

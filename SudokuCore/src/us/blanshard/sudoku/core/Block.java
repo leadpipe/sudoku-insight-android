@@ -19,12 +19,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * One block of a Sudoku grid, numbered from 1 to 9 left to right, top to
  * bottom.
  *
  * @author Luke Blanshard
  */
+@Immutable
 public final class Block extends Unit {
 
   /** The block number, in the range 1..9. */

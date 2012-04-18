@@ -19,7 +19,7 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
-import javax.annotation.concurrent.ThreadSafe;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Describes an actual conflict on a Sudoku board: a set of locations within a
@@ -27,7 +27,7 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @author Luke Blanshard
  */
-@ThreadSafe
+@Immutable
 public class Conflict extends Insight.Atom {
   private final Numeral numeral;
   private final UnitSubset locations;

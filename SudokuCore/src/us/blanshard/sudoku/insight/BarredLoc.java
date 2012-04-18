@@ -18,7 +18,7 @@ package us.blanshard.sudoku.insight;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 
-import javax.annotation.concurrent.ThreadSafe;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Holds a location that is prevented by the rules of the game from being
@@ -26,7 +26,7 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @author Luke Blanshard
  */
-@ThreadSafe
+@Immutable
 public class BarredLoc extends Insight.Atom {
   private final Location location;
 

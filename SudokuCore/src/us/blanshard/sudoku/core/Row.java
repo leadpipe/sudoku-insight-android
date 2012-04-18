@@ -19,11 +19,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * One row of a Sudoku grid, numbered from 1 to 9 left to right.
  *
  * @author Luke Blanshard
  */
+@Immutable
 public final class Row extends Unit {
 
   /** The row number, in the range 1..9. */

@@ -21,12 +21,15 @@ import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * An immutable set of Locations, always a subset of the locations in a
  * particular unit.
  *
  * @author Luke Blanshard
  */
+@Immutable
 public final class UnitSubset extends AbstractSet<Location> implements Set<Location> {
 
   /** The unit this is a subset of. */

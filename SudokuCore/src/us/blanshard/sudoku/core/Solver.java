@@ -26,6 +26,7 @@ import java.util.NoSuchElementException;
 import java.util.Random;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * A depth-first, randomized, worklist-based Sudoku solver.  This is an
@@ -37,6 +38,7 @@ import javax.annotation.Nullable;
  *
  * @author Luke Blanshard
  */
+@Immutable
 public final class Solver implements Iterable<Grid> {
 
   /**
@@ -57,6 +59,7 @@ public final class Solver implements Iterable<Grid> {
   /**
    * A summary of a solver's work.
    */
+  @Immutable
   public final class Result {
     public final Grid start;
     public final int numSolutions;  // 0, 1, or 2 to mean >1

@@ -24,7 +24,7 @@ import us.blanshard.sudoku.core.Unit;
 import java.util.Collection;
 import java.util.Collections;
 
-import javax.annotation.concurrent.ThreadSafe;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Describes a situation where there is only one possible location within a unit
@@ -32,7 +32,7 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @author Luke Blanshard
  */
-@ThreadSafe
+@Immutable
 public class ForcedLoc extends Insight.Atom {
   private final Unit unit;
   private final Numeral numeral;

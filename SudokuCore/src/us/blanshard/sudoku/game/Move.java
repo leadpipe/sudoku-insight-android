@@ -24,11 +24,14 @@ import us.blanshard.sudoku.core.Numeral;
 
 import java.util.Iterator;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * A single move in a Sudoku game.  Has nested classes for all defined moves.
  *
  * @author Luke Blanshard
  */
+@Immutable
 public abstract class Move {
 
   /** When the move took place, in elapsed millis. */
@@ -59,6 +62,7 @@ public abstract class Move {
 
   public abstract Location getLocation();
 
+  @Immutable
   public static class Set extends Move {
     public final Location loc;
     public final Numeral num;
@@ -86,6 +90,7 @@ public abstract class Move {
     }
   }
 
+  @Immutable
   public static class Clear extends Move {
     public final Location loc;
 

@@ -22,12 +22,15 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * A row, column, or block of a Sudoku grid: a set of 9 locations that must all
  * contain different numerals in a valid Sudoku.
  *
  * @author Luke Blanshard
  */
+@Immutable
 public abstract class Unit extends AbstractCollection<Location> implements Collection<Location> {
 
   public static final int COUNT = 3 * 9;  // 9 each of rows, columns, and blocks.

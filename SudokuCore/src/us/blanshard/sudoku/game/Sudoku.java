@@ -30,11 +30,14 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 /**
  * The Sudoku game state.  Not thread safe.
  *
  * @author Luke Blanshard
  */
+@NotThreadSafe
 public final class Sudoku {
 
   /** The initial clues. */

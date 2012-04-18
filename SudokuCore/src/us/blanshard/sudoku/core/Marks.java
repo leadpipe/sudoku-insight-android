@@ -18,6 +18,9 @@ package us.blanshard.sudoku.core;
 import java.util.Arrays;
 import java.util.Map;
 
+import javax.annotation.concurrent.Immutable;
+import javax.annotation.concurrent.NotThreadSafe;
+
 /**
  * Keeps track of the possible numerals that could go in each location, like the
  * marks some people fill in to Sudoku grids.  Also keeps track of the possible
@@ -30,6 +33,7 @@ import java.util.Map;
  *
  * @author Luke Blanshard
  */
+@Immutable
 public final class Marks {
 
   private final short[] bits;
@@ -92,6 +96,7 @@ public final class Marks {
     return unitBits[unit.unitIndex() * 9 + num.index];
   }
 
+  @NotThreadSafe
   public static final class Builder {
     private Marks marks;
     private boolean built;

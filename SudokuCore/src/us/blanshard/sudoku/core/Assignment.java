@@ -17,11 +17,14 @@ package us.blanshard.sudoku.core;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * Combines a {@link Location} and a {@link Numeral}.
  *
  * @author Luke Blanshard
  */
+@Immutable
 public final class Assignment {
 
   /** The location. */

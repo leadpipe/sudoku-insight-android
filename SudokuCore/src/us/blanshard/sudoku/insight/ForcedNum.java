@@ -23,7 +23,7 @@ import us.blanshard.sudoku.core.Numeral;
 import java.util.Collection;
 import java.util.Collections;
 
-import javax.annotation.concurrent.ThreadSafe;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Describes a situation where there is only one possible numeral for a given
@@ -31,7 +31,7 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @author Luke Blanshard
  */
-@ThreadSafe
+@Immutable
 public class ForcedNum extends Insight.Atom {
   private final Location location;
   private final Numeral numeral;

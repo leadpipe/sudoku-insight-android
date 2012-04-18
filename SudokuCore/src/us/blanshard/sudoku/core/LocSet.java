@@ -20,11 +20,14 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 /**
  * A mutable set of Locations.
  *
  * @author Luke Blanshard
  */
+@NotThreadSafe
 public final class LocSet extends AbstractSet<Location> implements Cloneable {
 
   private long bits0, bits1;

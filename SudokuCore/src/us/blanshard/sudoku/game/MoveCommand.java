@@ -26,6 +26,7 @@ import us.blanshard.sudoku.core.Numeral;
 import java.util.Iterator;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.NotThreadSafe;
 
 /**
  * An undoable {@link Command} that tracks a single move in a {@link Sudoku}
@@ -34,6 +35,7 @@ import javax.annotation.Nullable;
  *
  * @author Luke Blanshard
  */
+@NotThreadSafe
 public class MoveCommand implements Command {
   final Sudoku.State state;
   final Location loc;

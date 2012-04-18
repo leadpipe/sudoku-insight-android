@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
 
-import javax.annotation.concurrent.ThreadSafe;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Describes a locked set: a set of numerals and a set of locations such that
@@ -34,7 +34,7 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @author Luke Blanshard
  */
-@ThreadSafe
+@Immutable
 public class LockedSet extends Insight.Atom {
   private final NumSet nums;
   private final UnitSubset locs;

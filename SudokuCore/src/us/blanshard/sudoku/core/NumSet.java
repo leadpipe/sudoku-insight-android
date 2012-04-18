@@ -19,12 +19,15 @@ import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * An immutable set of Numerals, usually used to keep track of the possible
  * values for a given Sudoku square.
  *
  * @author Luke Blanshard
  */
+@Immutable
 public final class NumSet extends AbstractSet<Numeral> implements Set<Numeral> {
 
   /** The numerals in this set expressed as a bit set. */

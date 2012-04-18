@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
 
-import javax.annotation.concurrent.ThreadSafe;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Describes an overlap, where the only locations within one unit that a numeral
@@ -34,7 +34,7 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @author Luke Blanshard
  */
-@ThreadSafe
+@Immutable
 public class Overlap extends Insight.Atom {
   private final Unit unit;
   private final Numeral numeral;

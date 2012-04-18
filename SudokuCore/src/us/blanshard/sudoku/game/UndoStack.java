@@ -23,11 +23,14 @@ import com.google.common.collect.Lists;
 
 import java.util.List;
 
+import javax.annotation.concurrent.NotThreadSafe;
+
 /**
  * A stack of {@linkplain Command commands} that can be undone or redone.
  *
  * @author Luke Blanshard
  */
+@NotThreadSafe
 public class UndoStack {
 
   final List<Command> commands;

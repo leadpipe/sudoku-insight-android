@@ -19,11 +19,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * One column of a Sudoku grid, numbered from 1 to 9 top to bottom.
  *
  * @author Luke Blanshard
  */
+@Immutable
 public final class Column extends Unit {
 
   /** The column number, in the range 1..9. */

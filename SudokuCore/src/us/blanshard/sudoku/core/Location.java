@@ -25,11 +25,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * A location on a Sudoku grid.
  *
  * @author Luke Blanshard
  */
+@Immutable
 public final class Location implements Comparable<Location> {
 
   /** The number of distinct locations. */
