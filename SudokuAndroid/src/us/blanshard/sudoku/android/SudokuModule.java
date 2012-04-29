@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 import roboguice.inject.ContextSingleton;
+import roboguice.inject.SharedPreferencesName;
 
 import us.blanshard.sudoku.game.Sudoku;
 
@@ -32,6 +33,7 @@ import com.google.inject.Provides;
 public class SudokuModule extends AbstractModule {
 
   @Override protected void configure() {
+    bindConstant().annotatedWith(SharedPreferencesName.class).to("prefs");
   }
 
   @Provides @ContextSingleton Sudoku.Registry provideRegistry() {

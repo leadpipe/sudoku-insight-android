@@ -17,43 +17,34 @@ package us.blanshard.sudoku.android;
 
 import roboguice.inject.InjectFragment;
 
-import us.blanshard.sudoku.core.Generator;
-import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.core.Symmetry;
 import us.blanshard.sudoku.game.Sudoku;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
-
-import java.util.Random;
+import android.os.StrictMode;
 
 import javax.inject.Inject;
 
 public class SudokuActivity extends ActionBarActivity {
+  private static final boolean STRICT = true;
+
   @InjectFragment(R.id.board_fragment) SudokuFragment mFragment;
   @Inject Sudoku.Registry mRegistry;
-
-  public void setPuzzle(Grid puzzle) {
-    mFragment.setGame(new Sudoku(puzzle, mRegistry));
-  }
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);  // Can't use @ContentView, it does things too early.
 
-    new MakePuzzle().execute(new Random());
-  }
-
-  private class MakePuzzle extends AsyncTask<Random, Void, Grid> {
-
-    @Override protected Grid doInBackground(Random... params) {
-      return Generator.SUBTRACTIVE_RANDOM.generate(params[0], Symmetry.choosePleasing(params[0]));
-    }
-
-    @Override protected void onPostExecute(Grid result) {
-      if (mFragment.getGame() == null) {
-        setPuzzle(result);
-      }
+    if (STRICT) {
+      StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+          .detectAll()
+          .penaltyLog()
+          .penaltyDialog()
+          .build());
+      StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+          .detectAll()
+          .penaltyLog()
+          .penaltyDeath()
+          .build());
     }
   }
 }

@@ -22,9 +22,11 @@ import roboguice.fragment.RoboFragment;
 import roboguice.inject.ContextSingleton;
 import roboguice.inject.InjectView;
 
+import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.Symmetry;
 import us.blanshard.sudoku.game.Command;
 import us.blanshard.sudoku.game.CommandException;
 import us.blanshard.sudoku.game.GameJson;
@@ -36,8 +38,12 @@ import us.blanshard.sudoku.game.UndoStack;
 import us.blanshard.sudoku.insight.Analyzer;
 import us.blanshard.sudoku.insight.InsightSum;
 
+import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.StrictMode;
+import android.os.StrictMode.ThreadPolicy;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -65,6 +71,7 @@ import org.json.JSONObject;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import javax.inject.Inject;
 
@@ -81,11 +88,13 @@ public class SudokuFragment
   private static final int MAX_VISIBLE_TRAILS = 4;
 
   private UndoStack mUndoStack = new UndoStack();
+  private Database.Game mDbGame;
   private Sudoku mGame;
   private final InsightWell mInsightWell = new InsightWell(this);
   Analyzer mAnalyzer;
   private InsightSum mInsightSum;
   private boolean mShowInsights = true;
+  private HintLevel mHintLevel = HintLevel.NONE;
   private Grid.State mState;
   @Inject Sudoku.Registry mRegistry;
   @Inject ActionBarHelper mActionBarHelper;
@@ -95,6 +104,20 @@ public class SudokuFragment
   @InjectView(R.id.trails) ListView mTrailsList;
   @InjectView(R.id.timer) TextView mTimer;
   @InjectView(R.id.insights) TextView mInsights;
+  @Inject Database mDb;
+  @Inject SharedPreferences mPrefs;
+
+  enum HintLevel {
+    NONE(Database.GameState.FINISHED),
+    SUMMARY(Database.GameState.FINISHED_WITH_HINT),
+    DETAILS(Database.GameState.FINISHED_WITH_EXPLICIT_HINT);
+
+    final Database.GameState finishedGameState;
+
+    private HintLevel(Database.GameState finishedGameState) {
+      this.finishedGameState = finishedGameState;
+    }
+  }
 
   private final Runnable timerUpdater = new Runnable() {
     @Override public void run() {
@@ -132,9 +155,35 @@ public class SudokuFragment
     return mGame;
   }
 
-  public void setGame(Sudoku game) {
+  private void setDbGame(Database.Game dbGame) {
+    mDbGame = dbGame;
+    try {
+      Sudoku game = new Sudoku(
+          dbGame.puzzle, mRegistry, GameJson.toHistory(dbGame.history), dbGame.elapsedMillis);
+      setGame(game);
+      if (dbGame.uiState != null) {
+        JSONObject uiState = new JSONObject(dbGame.uiState);
+        mUndoStack = GameJson.toUndoStack(uiState.getJSONObject("undo"), mGame);
+        mSudokuView.setDefaultChoice(numeral(uiState.getInt("defaultChoice")));
+        restoreTrails(uiState.getJSONArray("trailOrder"), uiState.getInt("numVisibleTrails"));
+        mEditTrailToggle.setChecked(uiState.getBoolean("trailActive"));
+        mHintLevel = HintLevel.values()[uiState.optInt("hint")];
+      }
+      if (dbGame.gameState.isInPlay()) {
+        SharedPreferences.Editor prefs = mPrefs.edit();
+        prefs.putLong("gameId", dbGame._id);
+        prefs.apply();
+      }
+    } catch (JSONException e) {
+      Log.e("SudokuFragment", "Unable to restore state from puzzle #" + dbGame.puzzleId, e);
+      setGame(null);
+    }
+  }
+
+  private void setGame(Sudoku game) {
     mGame = game;
     mAnalyzer = game == null ? null : new Analyzer(game, mInsightWell);
+    mHintLevel = HintLevel.NONE;
     mState = Grid.State.INCOMPLETE;
     mUndoStack = new UndoStack();
     mSudokuView.setGame(game);
@@ -206,6 +255,7 @@ public class SudokuFragment
 
   @Override public void onClick(View v) {
     if (v == mInsights && mInsightSum != null) {
+      mHintLevel = HintLevel.DETAILS;
       InsightsFragment.newInstance(mInsightSum.toString()).show(getFragmentManager(), "insights");
     }
   }
@@ -225,47 +275,102 @@ public class SudokuFragment
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    try {
-      if (savedInstanceState != null && savedInstanceState.containsKey("puzzle")) {
-        Grid puzzle = Grid.fromString(savedInstanceState.getString("puzzle"));
-        List<Move> history = GameJson.toHistory(new JSONArray(savedInstanceState.getString("history")));
-        long elapsedMillis = savedInstanceState.getLong("elapsedMillis");
-        setGame(new Sudoku(puzzle, mRegistry, history, elapsedMillis));
-        if (savedInstanceState.containsKey("uiState")) {
-          JSONObject uiState = new JSONObject(savedInstanceState.getString("uiState"));
-          mUndoStack = GameJson.toUndoStack(uiState.getJSONObject("undo"), mGame);
-          mSudokuView.setDefaultChoice(numeral(uiState.getInt("defaultChoice")));
-          restoreTrails(uiState.getJSONArray("trailOrder"), uiState.getInt("numVisibleTrails"));
-          mEditTrailToggle.setChecked(uiState.getBoolean("trailActive"));
-        }
-      }
-    } catch (JSONException e) {
-      Log.e("SudokuFragment", "Unable to restore state from " + savedInstanceState, e);
+    Long gameId = null;
+    if (savedInstanceState != null && savedInstanceState.containsKey("gameId")) {
+      gameId = savedInstanceState.getLong("gameId");
+    } else {
+      if (mPrefs.contains("gameId")) gameId = mPrefs.getLong("gameId", -1);
     }
+    if (gameId == null || gameId == -1) new FindOrMakePuzzle().execute();
+    else new FetchGame().execute(gameId);
   }
 
   @Override public void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
-    if (mGame != null) {
-      outState.putString("puzzle", mGame.getPuzzle().toFlatString());
-      outState.putString("history", GameJson.fromHistory(mGame.getHistory()).toString());
-      outState.putLong("elapsedMillis", mGame.elapsedMillis());
+    saveGameFromUiThread();
+    if (mDbGame != null) outState.putLong("gameId", mDbGame._id);
+  }
+
+  private boolean updateDbGame() {
+    if (mGame == null) return false;
+    mGame.suspend();
+    mDbGame.history = GameJson.fromHistory(mGame.getHistory()).toString();
+    mDbGame.elapsedMillis = mGame.elapsedMillis();
+    if (mDbGame.gameState.isInPlay()) {
       try {
-        outState.putString("uiState", makeUiState().toString());
+        mDbGame.uiState = makeUiState().toString();
       } catch (JSONException e) {
         Log.e("SudokuFragment", "Unable to save UI state", e);
       }
+    } else {
+      mDbGame.uiState = null;
+    }
+    return true;
+  }
+
+  private void saveGameFromUiThread() {
+    if (updateDbGame()) {
+      ThreadPolicy policy = StrictMode.allowThreadDiskWrites();
+      try {
+        mDb.updateGame(mDbGame);
+      } finally {
+        StrictMode.setThreadPolicy(policy);
+      }
+    }
+  }
+
+  private class FetchGame extends AsyncTask<Long, Void, Database.Game> {
+    @Override protected Database.Game doInBackground(Long... params) {
+      return mDb.getGame(params[0]);
+    }
+
+    @Override protected void onPostExecute(Database.Game dbGame) {
+      setDbGame(dbGame);
+    }
+  }
+
+  private class FindOrMakePuzzle extends AsyncTask<Void, Void, Database.Game> {
+    @Override protected Database.Game doInBackground(Void... params) {
+      Database.Game answer = mDb.getFirstOpenGame();
+      if (answer == null) {
+        Random random = new Random();
+        Generator gen = Generator.SUBTRACTIVE_RANDOM;
+        Symmetry sym = Symmetry.choosePleasing(random);
+        long seed = random.nextLong();
+        random = new Random(seed);
+        Grid puzzle = gen.generate(random, sym);
+        String genParams = String.format("%s:%s:%s", gen, sym, seed);
+        long id = mDb.addGeneratedPuzzle(puzzle, genParams);
+        answer = mDb.getCurrentGame(id);
+      }
+      return answer;
+    }
+
+    @Override protected void onPostExecute(Database.Game dbGame) {
+      setDbGame(dbGame);
+    }
+  }
+
+  private class SaveGame extends AsyncTask<Database.Game, Void, Void> {
+    @Override protected Void doInBackground(Database.Game... params) {
+      mDb.updateGame(params[0]);
+      return null;
     }
   }
 
   @Override public void onPause() {
     super.onPause();
-    if (mGame != null) mGame.suspend();
+    saveGameFromUiThread();
   }
 
   @Override public void onResume() {
     super.onResume();
-    if (mGame != null) mGame.resume();
+    if (mGame != null && mState != Grid.State.SOLVED) mGame.resume();
+  }
+
+  @Override public void onDestroy() {
+    super.onDestroy();
+    mDb.close();
   }
 
   @Override public void onPrepareOptionsMenu(Menu menu) {
@@ -429,6 +534,7 @@ public class SudokuFragment
     mActionBarHelper.invalidateOptionsMenu();
     setInsights(null);
     if (mShowInsights && mState != Grid.State.SOLVED) {
+      if (mHintLevel == HintLevel.NONE) mHintLevel = HintLevel.SUMMARY;
       mInsightWell.refill();
       mInsights.setTextColor(mSudokuView.getInputColor());
     }
@@ -441,6 +547,7 @@ public class SudokuFragment
     object.put("trailOrder", makeTrailOrder());
     object.put("numVisibleTrails", countVisibleTrails());
     object.put("trailActive", mEditTrailToggle.isChecked());
+    object.put("hint", mHintLevel.ordinal());
     return object;
   }
 
@@ -477,6 +584,12 @@ public class SudokuFragment
         mState = Grid.State.SOLVED;
         mSudokuView.setEditable(false);
         mGame.suspend();
+        mDbGame.gameState = mHintLevel.finishedGameState;
+        updateDbGame();
+        new SaveGame().execute(mDbGame);
+        SharedPreferences.Editor prefs = mPrefs.edit();
+        prefs.remove("gameId");
+        prefs.apply();
         stateChanged();
       } else {
         mState = Grid.State.BROKEN;
