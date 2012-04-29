@@ -18,7 +18,6 @@ package us.blanshard.sudoku.insight;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Grid;
 
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.Multiset;

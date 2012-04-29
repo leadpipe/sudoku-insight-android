@@ -23,6 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -43,6 +44,11 @@ public class GameJson {
     return array;
   }
 
+  public static List<Move> toHistory(String json) throws JSONException {
+    if (json == null) return Collections.<Move>emptyList();
+    return toHistory(new JSONArray(json));
+  }
+
   public static List<Move> toHistory(JSONArray array) throws JSONException {
     List<Move> moves = Lists.newArrayList();
     for (int i = 0; i < array.length(); ++i) {
@@ -60,6 +66,11 @@ public class GameJson {
     }
     object.put("commands", array);
     return object;
+  }
+
+  public static UndoStack toUndoStack(String json, Sudoku game) throws JSONException {
+    if (json == null) return new UndoStack();
+    return toUndoStack(new JSONObject(json), game);
   }
 
   public static UndoStack toUndoStack(JSONObject object, Sudoku game) throws JSONException {
