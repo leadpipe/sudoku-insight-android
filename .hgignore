@@ -28,5 +28,8 @@ bin
 # Maven dependencies
 SharedLibs/*.jar
 
+# Android copies of those jars
+SudokuAndroid/libs/*.jar
+
 # Data files in the stats directory
 stats/*.tsv
