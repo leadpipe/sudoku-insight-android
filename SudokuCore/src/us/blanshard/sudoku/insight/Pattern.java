@@ -453,7 +453,7 @@ public abstract class Pattern {
     static {
       ImmutableList.Builder<BarredNum> builder = ImmutableList.builder();
       for (int cat = 0; cat < 2; ++cat)
-        for (int numOpenLocs = 1; numOpenLocs <= 9; ++numOpenLocs) {
+        for (int numOpenLocs = 0; numOpenLocs <= 9; ++numOpenLocs) {
           int maxImplicit = min(2, numOpenLocs);
           ARRAY[cat][numOpenLocs] = new BarredNum[maxImplicit + 1];
           for (int numImplicit = 0; numImplicit <= maxImplicit; ++numImplicit) {

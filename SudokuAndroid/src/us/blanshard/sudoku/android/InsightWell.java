@@ -21,6 +21,7 @@ import us.blanshard.sudoku.insight.Insight;
 import us.blanshard.sudoku.insight.InsightSum;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 /**
  * Maintains the insights available for the current game, managing background
@@ -70,7 +71,12 @@ public class InsightWell implements Analyzer.Callback {
 
     @Override protected Void doInBackground(Void... params) {
       mCurrentTaskBackground = this;
-      mAnalyzer.analyze();
+      try {
+        mAnalyzer.analyze();
+      } catch (Exception e) {
+        Log.e("SudokuInsight", "Analyzer failed", e);
+        this.phase(Phase.INTERRUPTED);
+      }
       return null;
     }
 

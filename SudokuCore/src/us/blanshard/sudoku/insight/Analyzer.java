@@ -345,7 +345,7 @@ public class Analyzer {
 
         // Then look for numerals that have no possible assignments left in this
         // unit.
-        for (Numeral num : Numeral.ALL) {
+        for (Numeral num : conflicting.not()) {
           UnitSubset set = marks.get(unit, num);
           if (set.isEmpty())
             callback.take(new BarredNum(work, unit, num));
