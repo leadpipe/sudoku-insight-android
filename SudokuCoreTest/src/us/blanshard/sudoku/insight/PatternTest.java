@@ -45,7 +45,7 @@ public class PatternTest {
 
   @Test public void barredLoc() {
     Grid grid = puzzle.toBuilder().put(Location.of(5, 5), Numeral.of(4)).build();
-    Pattern.BarredLoc pattern = Pattern.barredLocation(grid, Location.of(5, 9));
+    Pattern.BarredLoc pattern = Pattern.barredLocationOrNull(grid, Location.of(5, 9));
     assertEquals(1, pattern.getNumImplicit());
     assertEquals(4, pattern.getNumInLinesOnly());
     assertEquals(1, pattern.getNumInMinorLineOnly());

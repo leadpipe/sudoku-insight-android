@@ -347,16 +347,22 @@ public class Analyzer {
         // unit.
         for (Numeral num : conflicting.not()) {
           UnitSubset set = marks.get(unit, num);
-          if (set.isEmpty())
-            callback.take(new BarredNum(work, unit, num));
+          if (set.isEmpty()) {
+            Pattern.BarredNum pattern = Pattern.barredNumeralOrNull(work, unit, num);
+            if (pattern != null)
+              callback.take(new BarredNum(pattern, unit, num));
+          }
         }
       }
 
       // Finally, look for locations that have no possible assignments left.
       for (Location loc : Location.ALL) {
         NumSet set = marks.get(loc);
-        if (set.isEmpty())
-          callback.take(new BarredLoc(work, loc));
+        if (set.isEmpty()) {
+          Pattern.BarredLoc pattern = Pattern.barredLocationOrNull(work, loc);
+          if (pattern != null)
+            callback.take(new BarredLoc(pattern, loc));
+        }
       }
     }
   }

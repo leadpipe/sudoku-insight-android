@@ -157,12 +157,12 @@ public abstract class Pattern {
     },
     BARRED_LOCATION(Insight.Type.BARRED_LOCATION, BarredLoc.class, false, 3) {
       @Override protected Pattern pattern(UnitCategory category, int[] ints) {
-        return barredLocation(ints[0], ints[1], ints[2]);
+        return barredLocationOrNull(ints[0], ints[1], ints[2]);
       }
     },
     BARRED_NUMERAL(Insight.Type.BARRED_NUMERAL, BarredNum.class, true, 2) {
       @Override protected Pattern pattern(UnitCategory category, int[] ints) {
-        return barredNumeral(category, ints[0], ints[1]);
+        return barredNumeralOrNull(category, ints[0], ints[1]);
       }
     },
     LAST_LOCATION(Insight.Type.FORCED_LOCATION, LastLoc.class, true, 0) {
@@ -378,18 +378,16 @@ public abstract class Pattern {
     }
   }
 
-  public static BarredLoc barredLocation(
+  public static @Nullable BarredLoc barredLocationOrNull(
       int numImplicit, int numInLinesOnly, int numInMinorLineOnly) {
-    BarredLoc answer = null;
     try {
-      answer = BarredLoc.ARRAY[numImplicit][numInLinesOnly][numInMinorLineOnly];
-    } catch (RuntimeException ignored) {}
-    if (answer == null)
-      throw outOfRange(BarredLoc.class, numImplicit, numInLinesOnly, numInMinorLineOnly);
-    return answer;
+      return BarredLoc.ARRAY[numImplicit][numInLinesOnly][numInMinorLineOnly];
+    } catch (RuntimeException ignored) {
+      return null;
+    }
   }
 
-  public static BarredLoc barredLocation(Grid grid, Location loc) {
+  public static @Nullable BarredLoc barredLocationOrNull(Grid grid, Location loc) {
     NumSet inBlock = NumSet.of();
     for (Location blockLoc : loc.block) {
       Numeral num = grid.get(blockLoc);
@@ -410,7 +408,7 @@ public abstract class Pattern {
       : inColButNotBlock.minus(inRowButNotBlock);
     NumSet inLinesOnly = inRowButNotBlock.or(inColButNotBlock);
     NumSet all = inBlock.or(inLinesOnly);
-    return barredLocation(min(2, 9 - all.size()), inLinesOnly.size(), inMinorLineOnly.size());
+    return barredLocationOrNull(min(2, 9 - all.size()), inLinesOnly.size(), inMinorLineOnly.size());
   }
 
   /**
@@ -453,7 +451,7 @@ public abstract class Pattern {
     static {
       ImmutableList.Builder<BarredNum> builder = ImmutableList.builder();
       for (int cat = 0; cat < 2; ++cat)
-        for (int numOpenLocs = 0; numOpenLocs <= 9; ++numOpenLocs) {
+        for (int numOpenLocs = 1; numOpenLocs <= 9; ++numOpenLocs) {
           int maxImplicit = min(2, numOpenLocs);
           ARRAY[cat][numOpenLocs] = new BarredNum[maxImplicit + 1];
           for (int numImplicit = 0; numImplicit <= maxImplicit; ++numImplicit) {
@@ -466,17 +464,16 @@ public abstract class Pattern {
     }
   }
 
-  public static BarredNum barredNumeral(UnitCategory category, int numOpenLocs, int numImplicit) {
-    BarredNum answer = null;
+  public static @Nullable BarredNum barredNumeralOrNull(
+      UnitCategory category, int numOpenLocs, int numImplicit) {
     try {
-      answer = BarredNum.ARRAY[category.ordinal()][numOpenLocs][numImplicit];
-    } catch (RuntimeException ignored) {}
-    if (answer == null)
-      throw outOfRange(BarredNum.class, category, numOpenLocs, numImplicit);
-    return answer;
+      return BarredNum.ARRAY[category.ordinal()][numOpenLocs][numImplicit];
+    } catch (RuntimeException ignored) {
+      return null;
+    }
   }
 
-  public static BarredNum barredNumeral(Grid grid, Unit unit, Numeral num) {
+  public static @Nullable BarredNum barredNumeralOrNull(Grid grid, Unit unit, Numeral num) {
     int numOpenLocs = 0;
     int numImplicit = 0;
     for (Location loc : unit) {
@@ -486,7 +483,7 @@ public abstract class Pattern {
           ++numImplicit;
       }
     }
-    return barredNumeral(UnitCategory.forUnit(unit), numOpenLocs, numImplicit);
+    return barredNumeralOrNull(UnitCategory.forUnit(unit), numOpenLocs, numImplicit);
   }
 
   /**

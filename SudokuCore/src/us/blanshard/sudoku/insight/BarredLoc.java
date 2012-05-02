@@ -15,7 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
-import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 
 import com.google.common.base.Objects;
@@ -32,8 +31,8 @@ import javax.annotation.concurrent.Immutable;
 public class BarredLoc extends Insight.Atom {
   private final Location location;
 
-  BarredLoc(Grid grid, Location location) {
-    super(Pattern.barredLocation(grid, location));
+  BarredLoc(Pattern.BarredLoc pattern, Location location) {
+    super(pattern);
     this.location = location;
   }
 

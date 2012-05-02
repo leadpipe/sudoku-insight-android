@@ -15,7 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
-import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 
@@ -34,8 +33,8 @@ public class BarredNum extends Insight.Atom {
   private final Unit unit;
   private final Numeral numeral;
 
-  public BarredNum(Grid grid, Unit unit, Numeral numeral) {
-    super(Pattern.barredNumeral(grid, unit, numeral));
+  public BarredNum(Pattern.BarredNum pattern, Unit unit, Numeral numeral) {
+    super(pattern);
     this.unit = unit;
     this.numeral = numeral;
   }
