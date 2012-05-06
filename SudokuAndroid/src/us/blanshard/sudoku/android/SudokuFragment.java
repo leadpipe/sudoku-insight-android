@@ -22,6 +22,7 @@ import roboguice.fragment.RoboFragment;
 import roboguice.inject.ContextSingleton;
 import roboguice.inject.InjectView;
 
+import us.blanshard.sudoku.android.Database.GameState;
 import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
@@ -155,8 +156,16 @@ public class SudokuFragment
     return mGame;
   }
 
+  public long getGameId() {
+    if (mDbGame == null) return 0;
+    return mDbGame._id;
+  }
+
   private void setDbGame(Database.Game dbGame) {
     mDbGame = dbGame;
+    if (dbGame.gameState == GameState.UNSTARTED) {
+      Database.startUnstartedGame(dbGame);
+    }
     try {
       Sudoku game = new Sudoku(
           dbGame.puzzle, mRegistry, GameJson.toHistory(dbGame.history), dbGame.elapsedMillis);
@@ -195,8 +204,9 @@ public class SudokuFragment
     mSudokuView.setDefaultChoice(Numeral.of(1));
     stateChanged();
     if (game != null) {
-      game.resume();
       updateState();
+      if (mState != Grid.State.SOLVED)
+        game.resume();
     }
   }
 

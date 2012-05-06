@@ -18,6 +18,7 @@ package us.blanshard.sudoku.android;
 import static us.blanshard.sudoku.core.Numeral.number;
 import static us.blanshard.sudoku.core.Numeral.numeral;
 
+import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.game.Sudoku;
@@ -122,6 +123,11 @@ public class SudokuView extends View {
     mPointerId = INVALID_POINTER_ID;
     mLocation = null;
     invalidate();
+  }
+
+  public void setPuzzle(Grid puzzle) {
+    setGame(new Sudoku(puzzle));
+    setEditable(false);
   }
 
   public boolean isEditable() {

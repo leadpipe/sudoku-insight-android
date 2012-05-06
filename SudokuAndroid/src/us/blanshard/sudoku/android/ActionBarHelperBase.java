@@ -103,7 +103,7 @@ public class ActionBarHelperBase extends ActionBarHelper {
         // Add Home button
         SimpleMenu tempMenu = new SimpleMenu(mActivity);
         SimpleMenuItem homeItem = new SimpleMenuItem(
-                tempMenu, android.R.id.home, 0, mActivity.getString(R.string.app_name));
+                tempMenu, android.R.id.home, 0, mActivity.getString(R.string.app_full_name));
         homeItem.setIcon(R.drawable.ic_home);
         addActionItemCompatFromMenuItem(homeItem);
 

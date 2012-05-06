@@ -68,34 +68,45 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int actionbar_compat_item_refresh_progress=0x7f060002;
         public static final int actionbar_compat_title=0x7f060001;
         public static final int boardLayout=0x7f06000b;
-        public static final int board_fragment=0x7f06000c;
+        public static final int board_fragment=0x7f06000f;
         public static final int board_layout=0x7f060005;
         public static final int edit_trail_toggle=0x7f060008;
         public static final int insights=0x7f06000a;
-        public static final int menu_new_trail=0x7f060011;
-        public static final int menu_redo=0x7f060010;
+        public static final int list_fragment=0x7f06000e;
+        public static final int menu_list_puzzles=0x7f060017;
+        public static final int menu_new_trail=0x7f060016;
+        public static final int menu_redo=0x7f060015;
         public static final int menu_refresh=0x7f060004;
-        public static final int menu_undo=0x7f06000f;
+        public static final int menu_undo=0x7f060014;
+        public static final int puzzle_item_grid=0x7f060010;
+        public static final int puzzle_item_label=0x7f060011;
+        public static final int puzzle_list_layout=0x7f06000c;
+        public static final int puzzles=0x7f06000d;
         public static final int sudoku_view=0x7f060006;
         public static final int timer=0x7f060009;
-        public static final int trail_item_checkbox=0x7f06000e;
-        public static final int trail_item_label=0x7f06000d;
+        public static final int trail_item_checkbox=0x7f060013;
+        public static final int trail_item_label=0x7f060012;
         public static final int trails=0x7f060007;
     }
     public static final class layout {
         public static final int actionbar_compat=0x7f030000;
         public static final int board=0x7f030001;
-        public static final int main=0x7f030002;
-        public static final int trail_item=0x7f030003;
+        public static final int list=0x7f030002;
+        public static final int list_activity=0x7f030003;
+        public static final int main=0x7f030004;
+        public static final int puzzle_item=0x7f030005;
+        public static final int trail_item=0x7f030006;
     }
     public static final class menu {
         public static final int board=0x7f0a0000;
+        public static final int main=0x7f0a0001;
     }
     public static final class string {
-        public static final int app_name=0x7f080000;
-        public static final int app_title=0x7f080001;
-        public static final int button_done=0x7f080006;
-        public static final int dialog_insights_title=0x7f080005;
+        public static final int app_full_name=0x7f080000;
+        public static final int app_short_name=0x7f080001;
+        public static final int button_done=0x7f080007;
+        public static final int dialog_insights_title=0x7f080006;
+        public static final int menu_list_puzzles=0x7f080005;
         public static final int menu_new_trail=0x7f080004;
         public static final int menu_redo=0x7f080003;
         public static final int menu_undo=0x7f080002;
