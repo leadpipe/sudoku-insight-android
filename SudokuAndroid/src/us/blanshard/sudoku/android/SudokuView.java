@@ -55,6 +55,8 @@ public class SudokuView extends View {
   private static final int NORMAL_THICK_LINE_WIDTH = 3;
   private static final int SMALL_THICK_LINE_WIDTH = 2;
   private static final int SMALL_SIZE_CUTOFF = 200;
+  private static final int TINY_THICK_LINE_WIDTH = 1;
+  private static final int TINY_SIZE_CUTOFF = 100;
 
   private static final int INVALID_POINTER_ID = -1;  // MotionEvent.INVALID_POINTER_ID;
   private static final long DEBOUNCE_MS = 50;  // A borderline choice won't flip as you lift your finger
@@ -90,16 +92,10 @@ public class SudokuView extends View {
 
   public SudokuView(Context context, AttributeSet attrs) {
     super(context, attrs);
-    initWidget();
   }
 
   public SudokuView(Context context, AttributeSet attrs, int defStyle) {
     super(context, attrs, defStyle);
-    initWidget();
-  }
-
-  private void initWidget() {
-    setBackgroundColor(Color.WHITE);
   }
 
   public void setOnMoveListener(OnMoveListener onMoveListener) {
@@ -191,7 +187,9 @@ public class SudokuView extends View {
 
     setMeasuredDimension(width, height);
 
-    mThickLineWidth = size < SMALL_SIZE_CUTOFF ? SMALL_THICK_LINE_WIDTH : NORMAL_THICK_LINE_WIDTH;
+    mThickLineWidth = size < TINY_SIZE_CUTOFF ? TINY_THICK_LINE_WIDTH
+        : size < SMALL_SIZE_CUTOFF ? SMALL_THICK_LINE_WIDTH
+        : NORMAL_THICK_LINE_WIDTH;
     mSquareSize = (size - 4 * mThickLineWidth - 6 * THIN_LINE_WIDTH) / 9;
     mClockRadius = (float) Math.max(mSquareSize * CLOCK_RADIUS_FACTOR,
                                     getResources().getDisplayMetrics().density * CLOCK_RADIUS_DP);
@@ -221,7 +219,7 @@ public class SudokuView extends View {
     int halfThin = (THIN_LINE_WIDTH + 1) / 2;
 
     Paint paint = new Paint();
-    paint.setColor(Color.BLACK);
+    paint.setColor(mThickLineWidth > THIN_LINE_WIDTH ? Color.BLACK : Color.LTGRAY);
     paint.setStyle(Paint.Style.STROKE);
     paint.setStrokeWidth(THIN_LINE_WIDTH);
 
@@ -234,6 +232,7 @@ public class SudokuView extends View {
             mOffsetsY[9], paint);
       }
 
+    paint.setColor(Color.BLACK);
     paint.setStrokeWidth(mThickLineWidth);
 
     canvas.drawRect(mOffsetsX[0] - halfThick, mOffsetsY[0] - halfThick, mOffsetsX[9] - halfThick,
@@ -340,10 +339,11 @@ public class SudokuView extends View {
   }
 
   @Override public boolean onTouchEvent(MotionEvent event) {
+    if (!mEditable) return super.onTouchEvent(event);
     switch (event.getActionMasked()) {
       case MotionEvent.ACTION_DOWN:
       case MotionEvent.ACTION_POINTER_DOWN:
-        if (mPointerId == INVALID_POINTER_ID && mEditable) {
+        if (mPointerId == INVALID_POINTER_ID) {
           int index = event.getActionIndex();
           float x = event.getX(index), y = event.getY(index);
           Location loc = getLocation(x, y);
