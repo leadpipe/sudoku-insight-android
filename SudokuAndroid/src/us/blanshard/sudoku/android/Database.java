@@ -207,6 +207,29 @@ public class Database {
   }
 
   /**
+   * Adds the given puzzle to the database, and also to the captured-puzzles
+   * collection.  Returns the puzzle's ID.
+   */
+  public long addCapturedPuzzle(Grid puzzle, String source) throws SQLException {
+    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+    db.beginTransaction();
+    try {
+      long puzzleId = addPuzzle(puzzle);
+
+      ContentValues values = new ContentValues();
+      values.put("puzzleId", puzzleId);
+      values.put("collectionId", CAPTURED_COLLECTION_ID);
+      values.put("source", source);
+      db.insertOrThrow("Element", null, values);
+
+      db.setTransactionSuccessful();
+      return puzzleId;
+    } finally {
+      db.endTransaction();
+    }
+  }
+
+  /**
    * Returns the game given its ID.
    */
   public Game getGame(long gameId) throws SQLException {
@@ -378,6 +401,20 @@ public class Database {
       }
     } finally {
       db.endTransaction();
+    }
+    return answer;
+  }
+
+  /** Returns the set of source strings present in the Element table. */
+  public List<String> getElementSources() {
+    SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+    Cursor cursor = db.rawQuery("SELECT DISTINCT [source] FROM [Element] WHERE [source] IS NOT NULL ORDER BY [source]", null);
+    List<String> answer = Lists.newArrayList();
+    try {
+      while (cursor.moveToNext())
+        answer.add(cursor.getString(0));
+    } finally {
+      cursor.close();
     }
     return answer;
   }

@@ -286,10 +286,12 @@ public class SudokuFragment
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
     Long gameId = null;
-    if (savedInstanceState != null && savedInstanceState.containsKey("gameId")) {
+    if (getActivity().getIntent().hasExtra("gameId")) {
+      gameId = getActivity().getIntent().getExtras().getLong("gameId");
+    } else if (savedInstanceState != null && savedInstanceState.containsKey("gameId")) {
       gameId = savedInstanceState.getLong("gameId");
-    } else {
-      if (mPrefs.contains("gameId")) gameId = mPrefs.getLong("gameId", -1);
+    } else if (mPrefs.contains("gameId")) {
+      gameId = mPrefs.getLong("gameId", -1);
     }
     if (gameId == null || gameId == -1) new FindOrMakePuzzle().execute();
     else new FetchGame().execute(gameId);

@@ -44,6 +44,19 @@ limitations under the License.
             android:name=".PuzzleListActivity"
             android:label="@string/app_short_name"
             />
+        <activity 
+            android:name=".CapturePuzzleActivity"
+            android:label="@string/app_short_name"
+            >
+            <intent-filter 
+                android:label="@string/app_full_name"
+                >
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" android:host="*" android:path="/goggles/a/sudoku" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
