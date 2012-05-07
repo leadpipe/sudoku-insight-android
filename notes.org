@@ -5,111 +5,31 @@
 ** TODO What about non-unique puzzles?
 
 * Hints
-** TODO Add LocSet?
-** TODO Start work on basic visual strategies
-
-** Kinds of insight
-   - illegal move/impossible state
-     - direct conflict (paint conflicting numbers in red?)
-     - empty set for possible assignments (highlight location or unit & numeral?)
-   - single possible numeral for location or location for unit & numeral
-     - block & numeral: easiest to see
-       - pointing numeral elimination is also easy to see
-     - row/column & numeral: next
-       - degree of difficulty depends on number of unset locations
-     - location: hardest
-   - locked sets: naked/hidden sets (draw each set in its own color, show the
-     numerals in each location with missing numerals crossed out)
-   - unit overlap as a lead-in to an implied assignment: outline unit where the
-     numeral is limited, highlighting squares where the numeral could be, ...
-   - contradictions, assignments that eventually lead to an impossible state
-
-** Data needed for kinds of insight
-   - illegal move
-     - set of locations with conflicting assignments
-   - impossible state
-     - 1: location with all numerals blocked
-     - 2: unit & numeral: all locations blocked for the numeral
-   - forced location: unit, numeral, location
-   - forced numeral: location, numeral
-   - locked sets: unit subset, num set for each set
-   - unit overlap: unit subset, overlapping unit, numeral
-   - series (actually trees) of insights (stop at assignments)
-   - what about forcing chains?  these will be series of insights including
-     assignments as interior nodes, leading to contradictions
-
-** Patterns for kinds of insight
-   - illegal move
-     - (conflicting numerals are in the same) block or line
-   - blocked location
-     - 2 or 3 of the location's units have all 9 numerals, so same patterns as
-       for forced numeral: block(n)&line(m); lines(m,p); all(n,m,p)
-   - blocked unit/numeral
-     - block or line (that's blocked)
-   - forced location
-     - block or line (in which it's forced)
-   - forced numeral
-     - as above, but also with block or line (that have all but 1 location
-       filled)
-   - overlap
-     - block overlapping line
-     - line overlapping block
-   - locked set
-     - block vs line
-     - hidden vs naked
+** TODO Figure out how to turn game histories into pattern times
+** TODO Fix analyzer to not apply sets & overlaps until they're the cheapest insight available
 
 * Game
-** DONE Add gson serialization for game and undo stack
 ** TODO Rename getState to... what?
 
 * App
-** TODO Have a mode that shows a summary of current insights
-   - updated on every move
-   - and on switch between input states (shown in color when a trail is on)
-   - have a way to open a dialog with a full list of the insights
-** DONE Deal with game states
-   - playing
-   - solved -- suspend timer, disallow further moves
-     - stop undo as well?
-     - show a congrats message (for now)
-   - full but wrong -- highlight broken locations
-     - revert to playing state (and redraw everything) on any move
+** TODO Prefs page
+   - Show hints by default?
+   - What kind of puzzles to generate
+** TODO Spinner when generating a puzzle
+** TODO Decent list view
+   - When played, elapsed time, collections belong to (clickable)
+   - Collection info in header (or all)
+   - Sorting options in action bar
+   - Highlight current puzzle
+** TODO Tablet layouts with game and list both showing
 ** TODO Have grid vary display based on solution/trail input state (?)
-** DONE Change yellow dot to bold numeral for trailhead
 ** TODO Improve new-trail icon
 ** TODO Give visual indication when try to set an unsettable location
-** TODO Design the whole app, with fragments
 ** TODO Make icons for launcher, home
-** DONE Manage game suspension/resumption from activity
-** DONE Add timer display
-** TODO Have an input clock-face widget separate from the grid, which tracks the current input numeral
-** TODO Have separate view to show while generating puzzles, button to start playing
-** DONE Tweak the trail colors so they're excellent with a white background
-** TODO Make database for game state
-   - keyed by flat string of givens
-   - need entire move history, at least of games in progress
-   - plus undo stack
-   - plus order of trails and how many are visible
-   - for historical games, we want:
-     - elapsed time
-     - when completed (or abandoned?)
-** TODO Deal with the app lifecycle
-   - onPause: save to db
-   - need to save undo state as well
+
+* Site
 ** TODO Look into data backup
-
-** Fragments
-   - The board: solve a puzzle
-     - show hints
-   - Review your solution
-   - Choose a puzzle to solve
-     - from a curated set
-     - from a generator
-     - from puzzles I solved in the past
-     - from puzzles I'm partway through
-   - Enter a puzzle
-   - Rate a puzzle?
-
+** TODO Figure out how and what to share
 
 * Math
 ** Pathological grids
