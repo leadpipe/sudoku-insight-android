@@ -23,12 +23,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 public class SudokuActivity extends ActionBarActivity {
   private static final boolean STRICT = true;
 
   @InjectFragment(R.id.board_fragment) SudokuFragment mBoardFragment;
   @InjectFragment(R.id.list_fragment) @Nullable PuzzleListFragment mListFragment;
+  @Inject Database mDb;
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -65,5 +67,10 @@ public class SudokuActivity extends ActionBarActivity {
       return true;
     }
     return super.onOptionsItemSelected(item);
+  }
+
+  @Override public void onDestroy() {
+    super.onDestroy();
+    mDb.close();
   }
 }

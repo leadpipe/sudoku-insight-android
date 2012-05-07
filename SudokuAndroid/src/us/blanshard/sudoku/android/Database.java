@@ -193,12 +193,13 @@ public class Database {
     try {
       long puzzleId = addPuzzle(puzzle);
 
-      ContentValues values = new ContentValues();
-      values.put("puzzleId", puzzleId);
-      values.put("collectionId", GENERATED_COLLECTION_ID);
-      values.put("generatorParams", generatorParams);
-      db.insertOrThrow("Element", null, values);
-
+      if (getElementId(db, puzzleId, GENERATED_COLLECTION_ID) == null) {
+        ContentValues values = new ContentValues();
+        values.put("puzzleId", puzzleId);
+        values.put("collectionId", GENERATED_COLLECTION_ID);
+        values.put("generatorParams", generatorParams);
+        db.insertOrThrow("Element", null, values);
+      }
       db.setTransactionSuccessful();
       return puzzleId;
     } finally {
@@ -216,12 +217,13 @@ public class Database {
     try {
       long puzzleId = addPuzzle(puzzle);
 
-      ContentValues values = new ContentValues();
-      values.put("puzzleId", puzzleId);
-      values.put("collectionId", CAPTURED_COLLECTION_ID);
-      values.put("source", source);
-      db.insertOrThrow("Element", null, values);
-
+      if (getElementId(db, puzzleId, CAPTURED_COLLECTION_ID) == null) {
+        ContentValues values = new ContentValues();
+        values.put("puzzleId", puzzleId);
+        values.put("collectionId", CAPTURED_COLLECTION_ID);
+        values.put("source", source);
+        db.insertOrThrow("Element", null, values);
+      }
       db.setTransactionSuccessful();
       return puzzleId;
     } finally {
@@ -431,6 +433,20 @@ public class Database {
     }
   }
 
+  /** Returns null if the element isn't found. */
+  private static Long getElementId(SQLiteDatabase db, long puzzleId, long collectionId)
+      throws SQLException {
+    Cursor cursor = db.rawQuery(
+        "SELECT [_id] FROM [Element] WHERE [puzzleId] = ? AND [collectionId] = ?",
+        new String[]{ String.valueOf(puzzleId), String.valueOf(collectionId) });
+    try {
+      if (cursor.moveToFirst()) return cursor.getLong(0);
+      return null;
+    } finally {
+      cursor.close();
+    }
+  }
+
   private static long getLong(Cursor cursor, String columnName, long defaultValue) throws SQLException {
     int index = cursor.getColumnIndexOrThrow(columnName);
     if (cursor.isNull(index)) return defaultValue;
@@ -440,7 +456,7 @@ public class Database {
   private static class OpenHelper extends SQLiteOpenHelper {
 
     OpenHelper(Context context) {
-      super(context, "db", null, 2);
+      super(context, "db", null, 3);
     }
 
     @Override public void onCreate(SQLiteDatabase db) {
@@ -465,7 +481,11 @@ public class Database {
           + "CREATE INDEX [ElementByPuzzleId] ON [Element] ("
           + "  [puzzleId])");
       db.execSQL(""
-          + "CREATE INDEX [ElementByCollectionId] on [Element] ("
+          + "CREATE INDEX [ElementByCollectionId] ON [Element] ("
+          + "  [collectionId])");
+      db.execSQL(""
+          + "CREATE UNIQUE INDEX [ElementByIds] ON [Element] ("
+          + "  [puzzleId],"
           + "  [collectionId])");
       db.execSQL(""
           + "CREATE TABLE [Game] ("
@@ -478,11 +498,11 @@ public class Database {
           + "  [lastTime] INTEGER  NOT NULL,"
           + "  [gameState] INTEGER  NOT NULL)");
       db.execSQL(""
-          + "CREATE INDEX [GameByPuzzleIdAndLastTime] on [Game] ("
+          + "CREATE INDEX [GameByPuzzleIdAndLastTime] ON [Game] ("
           + "  [puzzleId],"
           + "  [lastTime] DESC)");
       db.execSQL(""
-          + "CREATE INDEX [GameByStateAndLastTime] on [Game] ("
+          + "CREATE INDEX [GameByStateAndLastTime] ON [Game] ("
           + "  [gameState],"
           + "  [lastTime])");
 
@@ -497,10 +517,7 @@ public class Database {
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-      if (oldVersion != 1 || newVersion != 2)
-        throw new AssertionError();
-      db.execSQL("ALTER TABLE [Element] ADD COLUMN [source] TEXT");
+      throw new AssertionError();
     }
   }
-
 }

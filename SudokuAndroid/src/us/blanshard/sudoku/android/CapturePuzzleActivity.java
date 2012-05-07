@@ -54,6 +54,11 @@ public class CapturePuzzleActivity extends ActionBarActivity {
     }
   }
 
+  @Override public void onDestroy() {
+    super.onDestroy();
+    mDb.close();
+  }
+
   public void play(View playButton) {
     new Save(true).execute();
   }

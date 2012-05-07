@@ -47,6 +47,7 @@ limitations under the License.
         <activity 
             android:name=".CapturePuzzleActivity"
             android:label="@string/app_short_name"
+            android:windowSoftInputMode="stateVisible|adjustPan"
             >
             <intent-filter 
                 android:label="@string/app_full_name"

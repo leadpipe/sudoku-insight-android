@@ -380,11 +380,6 @@ public class SudokuFragment
     if (mGame != null && mState != Grid.State.SOLVED) mGame.resume();
   }
 
-  @Override public void onDestroy() {
-    super.onDestroy();
-    mDb.close();
-  }
-
   @Override public void onPrepareOptionsMenu(Menu menu) {
     boolean going = mState != Grid.State.SOLVED;
     for (int i = 0; i < menu.size(); ++i) {

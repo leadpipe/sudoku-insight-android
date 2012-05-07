@@ -18,14 +18,22 @@ package us.blanshard.sudoku.android;
 import roboguice.inject.InjectFragment;
 import android.os.Bundle;
 
+import javax.inject.Inject;
+
 /**
  * @author Luke Blanshard
  */
 public class PuzzleListActivity extends ActionBarActivity {
   @InjectFragment(R.id.list_fragment) PuzzleListFragment mListFragment;
+  @Inject Database mDb;
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.list_activity);
+  }
+
+  @Override public void onDestroy() {
+    super.onDestroy();
+    mDb.close();
   }
 }
