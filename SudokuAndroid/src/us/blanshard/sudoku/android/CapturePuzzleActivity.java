@@ -25,7 +25,6 @@ import us.blanshard.sudoku.game.Sudoku.State;
 
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -67,10 +66,10 @@ public class CapturePuzzleActivity extends ActionBarActivity implements SudokuVi
         return;
       }
     }
-    new FetchAutocompletes().execute();
     mSudokuView.setPuzzleEditor(grid);
     mSudokuView.setDefaultChoice(Numeral.of(1));
     updateState();
+    new FetchAutocompletes().execute();
   }
 
   @Override public void onDestroy() {
@@ -117,10 +116,8 @@ public class CapturePuzzleActivity extends ActionBarActivity implements SudokuVi
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(CapturePuzzleActivity.this,
             android.R.layout.simple_dropdown_item_1line, sources);
         mCaptureSource.setAdapter(adapter);
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
-          // TODO(leadpipe): make the dropdown work on Gingerbread
-          mCaptureSource.showDropDown();
-        }
+        // TODO(leadpipe): make the dropdown text not white on white in gingerbread
+        mCaptureSource.showDropDown();
       }
     }
   }
