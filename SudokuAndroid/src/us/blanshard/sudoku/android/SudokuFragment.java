@@ -62,6 +62,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -125,10 +127,9 @@ public class SudokuFragment
       String time = "";
       if (mGame != null) {
         long millis = mGame.elapsedMillis();
-        long secs = millis / 1000;
-        time = String.format("%d:%02d", secs / 60, secs % 60);
+        time = ToText.elapsedTime(millis);
         if (mGame.isRunning()) {
-          mTimer.postDelayed(timerUpdater, (secs + 1) * 1000 - millis);
+          mTimer.postDelayed(timerUpdater, (millis / 1000 + 1) * 1000 - millis);
         }
       }
       if (mTimer != null) {
@@ -186,6 +187,17 @@ public class SudokuFragment
     } catch (JSONException e) {
       Log.e("SudokuFragment", "Unable to restore state from puzzle #" + dbGame.puzzleId, e);
       setGame(null);
+    }
+    if (dbGame.elements != null && !dbGame.elements.isEmpty()) {
+      showStatus(Joiner.on(getActivity().getString(R.string.text_collection_separator)).join(
+          Iterables.transform(dbGame.elements, new Function<Database.Element, String>() {
+              @Override public String apply(Database.Element element) {
+                String coll = ToText.collectionName(getActivity(), element);
+                if (element.createTime == 0) return coll;
+                CharSequence date = ToText.relativeDateTime(getActivity(), element.createTime);
+                return getActivity().getString(R.string.text_collection_date, coll, date);
+              }
+          })));
     }
   }
 

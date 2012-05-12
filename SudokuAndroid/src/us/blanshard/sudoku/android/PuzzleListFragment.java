@@ -63,7 +63,7 @@ public class PuzzleListFragment extends RoboFragment implements OnItemClickListe
 
   @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
     Database.Puzzle puzzle = mPuzzleAdapter.getItem(position);
-    Toast.makeText(getActivity(), String.valueOf(puzzle._id), Toast.LENGTH_LONG).show();
+    Toast.makeText(getActivity(), puzzle.puzzle.toString(), Toast.LENGTH_LONG).show();
   }
 
   private class FetchPuzzles extends AsyncTask<Void, Void, List<Database.Puzzle>> {

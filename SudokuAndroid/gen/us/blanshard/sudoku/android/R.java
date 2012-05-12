@@ -117,6 +117,19 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int menu_new_trail=0x7f080009;
         public static final int menu_redo=0x7f080008;
         public static final int menu_undo=0x7f080007;
+        public static final int text_captured_puzzles=0x7f08000b;
+        public static final int text_collection_date=0x7f08000c;
+        public static final int text_collection_in_end=0x7f08000d;
+        public static final int text_collection_in_start=0x7f08000e;
+        public static final int text_collection_separator=0x7f08000f;
+        public static final int text_collection_with_source=0x7f080010;
+        public static final int text_game_gave_up=0x7f080011;
+        public static final int text_game_playing=0x7f080012;
+        public static final int text_game_queued=0x7f080013;
+        public static final int text_game_solved=0x7f080014;
+        public static final int text_game_solved_explicit_hints=0x7f080016;
+        public static final int text_game_solved_insights=0x7f080015;
+        public static final int text_generated_puzzles=0x7f080017;
     }
     public static final class style {
         public static final int ActionBar=0x7f090008;

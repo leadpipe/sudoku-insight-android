@@ -21,6 +21,7 @@
    - Collection info in header (or all)
    - Sorting options in action bar
    - Highlight current puzzle
+** TODO Add editable grid to capture action; use it for entering from blank
 ** TODO Tablet layouts with game and list both showing
 ** TODO Have grid vary display based on solution/trail input state (?)
 ** TODO Improve new-trail icon

@@ -250,7 +250,7 @@ public class SudokuView extends View {
     paint.setStyle(Paint.Style.FILL);
     paint.setTextAlign(Align.CENTER);
 
-    float textSize = mSquareSize * 0.75f;
+    float textSize = mSquareSize * (mThickLineWidth > THIN_LINE_WIDTH ? 0.75f : 0.85f);
     paint.setTextSize(textSize);
     float toBaseline = (mSquareSize - paint.getTextSize()) / 2 - paint.ascent() - 1;
     float half = mSquareSize * 0.5f;

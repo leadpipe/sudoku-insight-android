@@ -12,5 +12,18 @@
     <string name="menu_redo">Redo</string>
     <string name="menu_new_trail">New Trail</string>
     <string name="menu_list_puzzles">List Puzzles</string>
+    <string name="text_captured_puzzles">Captured puzzles</string>
+    <string name="text_collection_date">%1$s, %2$s</string>
+    <string name="text_collection_in_end">.</string>
+    <string name="text_collection_in_start">"In: "</string>
+    <string name="text_collection_separator">"; "</string>
+    <string name="text_collection_with_source">%1$s (%2$s)</string>
+    <string name="text_game_gave_up">Gave up after %1$s; last played %2$s.</string>
+    <string name="text_game_playing">In progress for %1$s; last played %2$s.</string>
+    <string name="text_game_queued">Queued to play %2$s.</string>
+    <string name="text_game_solved">Solved in %1$s %2$s.</string>
+    <string name="text_game_solved_insights">Solved in %1$s (with insight summaries) %2$s.</string>
+    <string name="text_game_solved_explicit_hints">Solved in %1$s (with explicit hints) %2$s.</string>
+    <string name="text_generated_puzzles">Generated puzzles</string>
     
 </resources>

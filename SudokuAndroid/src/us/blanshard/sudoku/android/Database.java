@@ -101,7 +101,9 @@ public class Database {
     public long lastTime;
     public GameState gameState;
 
+    // Optional other stuff
     public Grid puzzle;
+    public List<Element> elements;
   }
 
   public static class CollectionInfo {
@@ -113,6 +115,7 @@ public class Database {
 
   public static class Element {
     public long _id;
+    public long createTime;
     public String generatorParams;
     public String source;
     public CollectionInfo collection;
@@ -197,6 +200,7 @@ public class Database {
         ContentValues values = new ContentValues();
         values.put("puzzleId", puzzleId);
         values.put("collectionId", GENERATED_COLLECTION_ID);
+        values.put("createTime", System.currentTimeMillis());
         values.put("generatorParams", generatorParams);
         db.insertOrThrow("Element", null, values);
       }
@@ -221,6 +225,7 @@ public class Database {
         ContentValues values = new ContentValues();
         values.put("puzzleId", puzzleId);
         values.put("collectionId", CAPTURED_COLLECTION_ID);
+        values.put("createTime", System.currentTimeMillis());
         values.put("source", source);
         db.insertOrThrow("Element", null, values);
       }
@@ -256,6 +261,7 @@ public class Database {
       if (cursor.moveToFirst()) {
         Game answer = gameFromCursor(cursor);
         answer.puzzle = Grid.fromString(cursor.getString(cursor.getColumnIndexOrThrow("puzzle")));
+        answer.elements = getPuzzleElements(db, answer.puzzleId);
         return answer;
       }
       return null;
@@ -275,6 +281,47 @@ public class Database {
     answer.lastTime = cursor.getLong(cursor.getColumnIndexOrThrow("lastTime"));
     answer.gameState = GameState.fromNumber(cursor.getInt(cursor.getColumnIndexOrThrow("gameState")));
     return answer;
+  }
+
+  private static List<Element> getPuzzleElements(SQLiteDatabase db, long puzzleId) throws SQLException {
+    List<Element> answer = Lists.newArrayList();
+    Cursor cursor = db.rawQuery("SELECT * FROM [Element] WHERE [puzzleId] = ?",
+        new String[] { Long.toString(puzzleId) });
+    try {
+      while (cursor.moveToNext()) {
+        Element element = elementFromCursor(cursor);
+        Cursor c2 = db.rawQuery("SELECT * FROM [Collection] WHERE [_id] = ?",
+            new String[] { Long.toString(cursor.getLong(cursor.getColumnIndexOrThrow("collectionId"))) });
+        try {
+          c2.moveToFirst();
+          element.collection = collectionFromCursor(c2);
+        } finally {
+          c2.close();
+        }
+        answer.add(element);
+      }
+    } finally {
+      cursor.close();
+    }
+    return answer;
+  }
+
+  private static Element elementFromCursor(Cursor cursor) {
+    Element element = new Element();
+    element._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
+    element.createTime = getLong(cursor, "createTime", 0);
+    element.generatorParams = cursor.getString(cursor.getColumnIndexOrThrow("generatorParams"));
+    element.source = cursor.getString(cursor.getColumnIndexOrThrow("source"));
+    return element;
+  }
+
+  private static CollectionInfo collectionFromCursor(Cursor cursor) {
+    CollectionInfo collection = new CollectionInfo();
+    collection._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
+    collection.name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+    collection.source = cursor.getString(cursor.getColumnIndexOrThrow("source"));
+    collection.createTime = cursor.getLong(cursor.getColumnIndexOrThrow("createTime"));
+    return collection;
   }
 
   /**
@@ -377,11 +424,7 @@ public class Database {
       cursor = db.rawQuery("SELECT * FROM [Collection]", null);
       try {
         while (cursor.moveToNext()) {
-          CollectionInfo collection = new CollectionInfo();
-          collection._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
-          collection.name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
-          collection.source = cursor.getString(cursor.getColumnIndexOrThrow("source"));
-          collection.createTime = cursor.getLong(cursor.getColumnIndexOrThrow("createTime"));
+          CollectionInfo collection = collectionFromCursor(cursor);
           collections.put(collection._id, collection);
         }
       } finally {
@@ -390,10 +433,7 @@ public class Database {
       cursor = db.rawQuery("SELECT * FROM [Element] ORDER BY [_id]", null);
       try {
         while (cursor.moveToNext()) {
-          Element element = new Element();
-          element._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
-          element.generatorParams = cursor.getString(cursor.getColumnIndexOrThrow("generatorParams"));
-          element.source = cursor.getString(cursor.getColumnIndexOrThrow("source"));
+          Element element = elementFromCursor(cursor);
           element.collection = collections.get(cursor.getLong(cursor.getColumnIndexOrThrow("collectionId")));
           Puzzle puzzle = puzzles.get(cursor.getLong(cursor.getColumnIndexOrThrow("puzzleId")));
           puzzle.elements.add(element);
@@ -455,8 +495,11 @@ public class Database {
 
   private static class OpenHelper extends SQLiteOpenHelper {
 
+    private final Context mContext;
+
     OpenHelper(Context context) {
-      super(context, "db", null, 3);
+      super(context, "db", null, 4);
+      mContext = context;
     }
 
     @Override public void onCreate(SQLiteDatabase db) {
@@ -475,6 +518,7 @@ public class Database {
           + "  [_id] INTEGER PRIMARY KEY,"
           + "  [puzzleId] INTEGER  REFERENCES [Puzzle] ON DELETE CASCADE,"
           + "  [collectionId] INTEGER  REFERENCES [Collection] ON DELETE CASCADE,"
+          + "  [createTime] INTEGER  NOT NULL,"
           + "  [source] TEXT,"
           + "  [generatorParams] TEXT)");
       db.execSQL(""
@@ -508,16 +552,24 @@ public class Database {
 
       ContentValues values = new ContentValues();
       values.put("_id", GENERATED_COLLECTION_ID);
-      values.put("name", "Generated puzzles");
+      values.put("name", mContext.getString(R.string.text_generated_puzzles));
       values.put("createTime", System.currentTimeMillis());
       db.insertOrThrow("Collection", null, values);
       values.put("_id", CAPTURED_COLLECTION_ID);
-      values.put("name", "Captured puzzles");
+      values.put("name", mContext.getString(R.string.text_captured_puzzles));
       db.insertOrThrow("Collection", null, values);
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-      throw new AssertionError();
+      if (oldVersion < 2 || newVersion != 4)
+        throw new AssertionError();
+      if (oldVersion == 2)
+        db.execSQL(""
+            + "CREATE UNIQUE INDEX [ElementByIds] ON [Element] ("
+            + "  [puzzleId],"
+            + "  [collectionId])");
+
+      db.execSQL("ALTER TABLE [Element] ADD COLUMN [createTime] INTEGER");
     }
   }
 }
