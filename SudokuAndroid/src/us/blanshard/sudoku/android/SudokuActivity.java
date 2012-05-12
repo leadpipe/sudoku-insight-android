@@ -60,11 +60,18 @@ public class SudokuActivity extends ActionBarActivity {
   }
 
   @Override public boolean onOptionsItemSelected(MenuItem item) {
-    if (item.getItemId() == R.id.menu_list_puzzles) {
-      Intent intent = new Intent(this, PuzzleListActivity.class);
-      intent.putExtra("gameId", mBoardFragment.getGameId());
-      startActivity(intent);
-      return true;
+    switch (item.getItemId()) {
+      case R.id.menu_list_puzzles: {
+        Intent intent = new Intent(this, PuzzleListActivity.class);
+        intent.putExtra("gameId", mBoardFragment.getGameId());
+        startActivity(intent);
+        return true;
+      }
+      case R.id.menu_capture_puzzle: {
+        Intent intent = new Intent(this, CapturePuzzleActivity.class);
+        startActivity(intent);
+        return true;
+      }
     }
     return super.onOptionsItemSelected(item);
   }

@@ -5,4 +5,9 @@
         android:showAsAction="withText"
         />
 
+    <item android:id="@+id/menu_capture_puzzle"
+        android:title="@string/menu_capture_puzzle"
+        android:showAsAction="withText"
+        />
+
 </menu>

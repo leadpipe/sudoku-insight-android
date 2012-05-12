@@ -17,7 +17,7 @@
         android:id="@+id/capture_source"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/sudoku_view"
+        android:layout_toRightOf="@+id/sudoku_view"
         android:lines="1"
         android:hint="@string/hint_capture_source"
         android:completionThreshold="1"

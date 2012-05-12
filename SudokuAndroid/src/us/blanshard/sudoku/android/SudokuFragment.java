@@ -93,6 +93,7 @@ public class SudokuFragment
   private UndoStack mUndoStack = new UndoStack();
   private Database.Game mDbGame;
   private Sudoku mGame;
+  private boolean mResumed;
   private final InsightWell mInsightWell = new InsightWell(this);
   Analyzer mAnalyzer;
   private InsightSum mInsightSum;
@@ -217,7 +218,7 @@ public class SudokuFragment
     stateChanged();
     if (game != null) {
       updateState();
-      if (mState != Grid.State.SOLVED)
+      if (mState != Grid.State.SOLVED && mResumed)
         game.resume();
     }
   }
@@ -384,11 +385,13 @@ public class SudokuFragment
 
   @Override public void onPause() {
     super.onPause();
+    mResumed = false;
     saveGameFromUiThread();
   }
 
   @Override public void onResume() {
     super.onResume();
+    mResumed = true;
     if (mGame != null && mState != Grid.State.SOLVED) mGame.resume();
   }
 
@@ -477,8 +480,8 @@ public class SudokuFragment
             makeActiveTrail(game.getTrail(move.id));
           }
           updateState();
-          if (mState == Grid.State.SOLVED) showStatus("Congratulations!");
-          else if (mState == Grid.State.BROKEN) showStatus("Oops!");
+          if (mState == Grid.State.SOLVED) showStatus(getActivity().getString(R.string.text_congrats));
+          else if (mState == Grid.State.BROKEN) showStatus(getActivity().getString(R.string.text_oops));
         }
       }
 

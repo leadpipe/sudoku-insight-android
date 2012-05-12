@@ -44,6 +44,13 @@ public final class Solver implements Iterable<Grid> {
   /**
    * Solves the given starting grid, returns a summary of the result.
    */
+  public static Result solve(Grid start) {
+    return solve(start, new Random());
+  }
+
+  /**
+   * Solves the given starting grid, returns a summary of the result.
+   */
   public static Result solve(Grid start, Random random) {
     return solve(start, random, Strategy.FAST);
   }

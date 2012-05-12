@@ -18,14 +18,20 @@ package us.blanshard.sudoku.android;
 import roboguice.inject.InjectView;
 
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.Solver;
+import us.blanshard.sudoku.game.Sudoku.State;
 
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 
 import java.util.List;
 
@@ -36,22 +42,35 @@ import javax.inject.Inject;
  *
  * @author Luke Blanshard
  */
-public class CapturePuzzleActivity extends ActionBarActivity {
+public class CapturePuzzleActivity extends ActionBarActivity implements SudokuView.OnMoveListener {
+  @InjectView(R.id.sudoku_view) SudokuView mSudokuView;
   @InjectView(R.id.capture_source) AutoCompleteTextView mCaptureSource;
+  @InjectView(R.id.capture_play) Button mPlay;
+  @InjectView(R.id.capture_save) Button mSave;
   @Inject Database mDb;
-  private Grid mGrid;
+  private boolean mIsPuzzle;
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.capture);
+    mSudokuView.setOnMoveListener(this);
+    Grid grid;
 
-    try {
-      mGrid = Grid.fromString(getIntent().getData().getQueryParameter("original"));
-      new FetchAutocompletes().execute();
-    } catch (Exception e) {
-      Log.e("SudokuInsight", "Bad goggles uri", e);
-      finish();
+    if (getIntent().getData() == null) {
+      grid = Grid.BLANK;
+    } else {
+      try {
+        grid = Grid.fromString(getIntent().getData().getQueryParameter("original"));
+      } catch (Exception e) {
+        Log.e("SudokuInsight", "Bad goggles uri", e);
+        finish();
+        return;
+      }
     }
+    new FetchAutocompletes().execute();
+    mSudokuView.setPuzzleEditor(grid);
+    mSudokuView.setDefaultChoice(Numeral.of(1));
+    updateState();
   }
 
   @Override public void onDestroy() {
@@ -60,11 +79,32 @@ public class CapturePuzzleActivity extends ActionBarActivity {
   }
 
   public void play(View playButton) {
-    new Save(true).execute();
+    if (mIsPuzzle) {
+      new Save(true).execute();
+    }
   }
 
   public void save(View saveButton) {
-    new Save(false).execute();
+    if (mIsPuzzle) {
+      new Save(false).execute();
+    }
+  }
+
+  @Override public void onMove(State state, Location loc, Numeral num) {
+    state.set(loc, num);
+    mSudokuView.invalidateLocation(loc);
+    updateState();
+  }
+
+  private Grid getPuzzle() {
+    return mSudokuView.getGame().getState().getGrid();
+  }
+
+  private void updateState() {
+    Solver.Result result = Solver.solve(getPuzzle());
+    mIsPuzzle = result.solution != null;
+    mPlay.setEnabled(mIsPuzzle);
+    mSave.setEnabled(mIsPuzzle);
   }
 
   private class FetchAutocompletes extends AsyncTask<Void, Void, List<String>> {
@@ -77,7 +117,10 @@ public class CapturePuzzleActivity extends ActionBarActivity {
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(CapturePuzzleActivity.this,
             android.R.layout.simple_dropdown_item_1line, sources);
         mCaptureSource.setAdapter(adapter);
-        mCaptureSource.showDropDown();
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+          // TODO(leadpipe): make the dropdown work on Gingerbread
+          mCaptureSource.showDropDown();
+        }
       }
     }
   }
@@ -93,7 +136,7 @@ public class CapturePuzzleActivity extends ActionBarActivity {
     }
 
     @Override protected Long doInBackground(Void... params) {
-      long puzzleId = mDb.addCapturedPuzzle(mGrid, mSource);
+      long puzzleId = mDb.addCapturedPuzzle(getPuzzle(), mSource);
       return mDb.getCurrentGame(puzzleId)._id;
     }
 

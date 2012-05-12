@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -64,6 +65,7 @@ public class SudokuView extends View {
   private OnMoveListener mOnMoveListener;
   private Sudoku mGame;
   private boolean mEditable;
+  private boolean mPuzzleEditor;
   private Collection<Location> mBroken;
   private List<TrailItem> mTrails = ImmutableList.<TrailItem> of();
   private boolean mTrailActive;
@@ -124,6 +126,16 @@ public class SudokuView extends View {
   public void setPuzzle(Grid puzzle) {
     setGame(new Sudoku(puzzle));
     setEditable(false);
+  }
+
+  public void setPuzzleEditor(Grid start) {
+    Sudoku game = new Sudoku(Grid.BLANK);
+    for (Map.Entry<Location, Numeral> entry : start.entrySet()) {
+      game.getState().set(entry.getKey(), entry.getValue());
+    }
+    game.resume();
+    setGame(game);
+    mPuzzleEditor = true;
   }
 
   public boolean isEditable() {
@@ -258,7 +270,7 @@ public class SudokuView extends View {
 
     if (mGame != null) {
       for (Location loc : Location.ALL) {
-        Numeral num = mGame.getPuzzle().get(loc);
+        Numeral num = mPuzzleEditor ? mGame.getState().get(loc) : mGame.getPuzzle().get(loc);
         boolean given = num != null;
         if (given) {
           paint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -309,7 +321,7 @@ public class SudokuView extends View {
       canvas.drawRect(x, y, x + mSquareSize, y + mSquareSize, paint);
 
       paint.setTypeface(Typeface.DEFAULT);
-      paint.setFakeBoldText(false);
+      paint.setFakeBoldText(mPuzzleEditor);
       int color = getInputColor();
       paint.setColor(color);
 
