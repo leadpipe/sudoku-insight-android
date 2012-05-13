@@ -15,18 +15,24 @@
 ** TODO Prefs page
    - Show hints by default?
    - What kind of puzzles to generate
-** TODO Spinner when generating a puzzle
+** DONE Indeterminate progress bar (circle) when generating a puzzle
 ** TODO Decent list view
    - When played, elapsed time, collections belong to (clickable)
    - Collection info in header (or all)
    - Sorting options in action bar
    - Highlight current puzzle
-** TODO Add editable grid to capture action; use it for entering from blank
+** TODO Single puzzle info view
+** TODO More menu items
+   - Next Puzzle
+   - Generate a Puzzle
+   - for these, if still working on one give the option of giving up on it
+** DONE Add editable grid to capture action; use it for entering from blank
 ** TODO Tablet layouts with game and list both showing
-** TODO Have grid vary display based on solution/trail input state (?)
 ** TODO Improve new-trail icon
-** TODO Give visual indication when try to set an unsettable location
 ** TODO Make icons for launcher, home
+
+** TODO Have grid vary display based on solution/trail input state (?)
+** TODO Give visual indication when try to set an unsettable location
 
 * Site
 ** TODO Look into data backup

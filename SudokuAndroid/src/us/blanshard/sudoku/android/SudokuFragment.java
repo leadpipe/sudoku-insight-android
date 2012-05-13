@@ -58,6 +58,7 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -104,6 +105,7 @@ public class SudokuFragment
   @Inject ActionBarHelper mActionBarHelper;
   private TrailAdapter mTrailAdapter;
   @InjectView(R.id.sudoku_view) SudokuView mSudokuView;
+  @InjectView(R.id.progress) ProgressBar mProgress;
   @InjectView(R.id.edit_trail_toggle) ToggleButton mEditTrailToggle;
   @InjectView(R.id.trails) ListView mTrailsList;
   @InjectView(R.id.timer) TextView mTimer;
@@ -221,6 +223,7 @@ public class SudokuFragment
       if (mState != Grid.State.SOLVED && mResumed)
         game.resume();
     }
+    mProgress.setVisibility(View.GONE);
   }
 
   public void setInsights(InsightSum insights) {
@@ -308,6 +311,7 @@ public class SudokuFragment
     }
     if (gameId == null || gameId == -1) new FindOrMakePuzzle().execute();
     else new FetchGame().execute(gameId);
+    mProgress.setVisibility(View.VISIBLE);
   }
 
   @Override public void onSaveInstanceState(Bundle outState) {
