@@ -129,13 +129,12 @@ public class SudokuView extends View {
   }
 
   public void setPuzzleEditor(Grid start) {
-    Sudoku game = new Sudoku(Grid.BLANK);
+    Sudoku game = new Sudoku(Grid.BLANK).resume();
     for (Map.Entry<Location, Numeral> entry : start.entrySet()) {
       game.getState().set(entry.getKey(), entry.getValue());
     }
-    game.resume();
-    setGame(game);
     mPuzzleEditor = true;
+    setGame(game);
   }
 
   public boolean isEditable() {
