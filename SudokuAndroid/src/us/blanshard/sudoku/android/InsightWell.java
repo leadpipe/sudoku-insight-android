@@ -51,12 +51,12 @@ public class InsightWell implements Analyzer.Callback {
   }
 
   // Analyzer.Callback method, called from background thread
-  @Override public void phase(Phase phase) {
+  @Override public synchronized void phase(Phase phase) {
     mCurrentTaskBackground.phase(phase);
   }
 
   // Analyzer.Callback method, called from background thread
-  @Override public void take(Insight insight) {
+  @Override public synchronized void take(Insight insight) {
     mCurrentTaskBackground.take(insight);
   }
 
