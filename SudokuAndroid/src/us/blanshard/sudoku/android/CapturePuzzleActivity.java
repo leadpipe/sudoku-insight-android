@@ -41,7 +41,7 @@ import javax.inject.Inject;
  *
  * @author Luke Blanshard
  */
-public class CapturePuzzleActivity extends ActionBarActivity implements SudokuView.OnMoveListener {
+public class CapturePuzzleActivity extends ActionBarActivity implements SudokuView.OnMoveListener, View.OnClickListener {
   @InjectView(R.id.sudoku_view) SudokuView mSudokuView;
   @InjectView(R.id.capture_source) AutoCompleteTextView mCaptureSource;
   @InjectView(R.id.capture_play) Button mPlay;
@@ -77,15 +77,9 @@ public class CapturePuzzleActivity extends ActionBarActivity implements SudokuVi
     mDb.close();
   }
 
-  public void play(View playButton) {
-    if (mIsPuzzle) {
-      new Save(true).execute();
-    }
-  }
-
-  public void save(View saveButton) {
-    if (mIsPuzzle) {
-      new Save(false).execute();
+  @Override public void onClick(View v) {
+    if (mIsPuzzle && (v == mPlay || v == mSave)) {
+      new Save(v == mPlay).execute();
     }
   }
 

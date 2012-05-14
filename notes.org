@@ -22,10 +22,10 @@
    - Sorting options in action bar
    - Highlight current puzzle
 ** TODO Single puzzle info view
-** TODO More menu items
+** DONE More menu items
    - Next Puzzle
    - Generate a Puzzle
-   - for these, if still working on one give the option of giving up on it
+     - for these, if still working on one give the option of giving up on it
 ** DONE Add editable grid to capture action; use it for entering from blank
 ** TODO Tablet layouts with game and list both showing
 ** TODO Improve new-trail icon

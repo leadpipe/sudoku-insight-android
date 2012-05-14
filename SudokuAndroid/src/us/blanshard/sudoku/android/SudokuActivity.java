@@ -51,12 +51,12 @@ public class SudokuActivity extends ActionBarActivity {
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {
-    boolean answer = mListFragment == null;
-    if (answer) {
-      getMenuInflater().inflate(R.menu.main, menu);
+    super.onCreateOptionsMenu(menu);
+    getMenuInflater().inflate(R.menu.main, menu);
+    if (mListFragment != null) {
+      menu.findItem(R.id.menu_list_puzzles).setVisible(false);
     }
-    answer |= super.onCreateOptionsMenu(menu);
-    return answer;
+    return true;
   }
 
   @Override public boolean onOptionsItemSelected(MenuItem item) {
@@ -70,6 +70,14 @@ public class SudokuActivity extends ActionBarActivity {
       case R.id.menu_capture_puzzle: {
         Intent intent = new Intent(this, CapturePuzzleActivity.class);
         startActivity(intent);
+        return true;
+      }
+      case R.id.menu_next_puzzle: {
+        mBoardFragment.nextPuzzle();
+        return true;
+      }
+      case R.id.menu_generate_puzzle: {
+        mBoardFragment.generatePuzzle();
         return true;
       }
     }

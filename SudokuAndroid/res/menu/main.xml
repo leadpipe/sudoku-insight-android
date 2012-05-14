@@ -2,12 +2,26 @@
 
     <item android:id="@+id/menu_list_puzzles"
         android:title="@string/menu_list_puzzles"
-        android:showAsAction="withText"
+        android:titleCondensed="@string/menu_list_puzzles_condensed"
+        android:showAsAction="never|withText"
+        />
+
+    <item android:id="@+id/menu_next_puzzle"
+        android:title="@string/menu_next_puzzle"
+        android:titleCondensed="@string/menu_next_puzzle_condensed"
+        android:showAsAction="never|withText"
+        />
+
+    <item android:id="@+id/menu_generate_puzzle"
+        android:title="@string/menu_generate_puzzle"
+        android:titleCondensed="@string/menu_generate_puzzle_condensed"
+        android:showAsAction="never|withText"
         />
 
     <item android:id="@+id/menu_capture_puzzle"
         android:title="@string/menu_capture_puzzle"
-        android:showAsAction="withText"
+        android:titleCondensed="@string/menu_capture_puzzle_condensed"
+        android:showAsAction="never|withText"
         />
 
 </menu>

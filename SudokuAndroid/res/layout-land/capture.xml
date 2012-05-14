@@ -33,7 +33,6 @@
         android:layout_below="@+id/capture_source"
         android:layout_toLeftOf="@+id/capture_save"
         android:layout_margin="5dp"
-        android:onClick="play"
         />
     
     <Button
@@ -44,7 +43,6 @@
         android:layout_below="@+id/capture_source"
         android:layout_alignParentRight="true"
         android:layout_margin="5dp"
-        android:onClick="save"
         />
     
 </RelativeLayout>

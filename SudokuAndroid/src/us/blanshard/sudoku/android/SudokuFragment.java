@@ -39,12 +39,17 @@ import us.blanshard.sudoku.game.UndoStack;
 import us.blanshard.sudoku.insight.Analyzer;
 import us.blanshard.sudoku.insight.InsightSum;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
+import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -239,6 +244,49 @@ public class SudokuFragment
     Toast.makeText(getActivity(), s, Toast.LENGTH_LONG).show();
   }
 
+  public void generatePuzzle() {
+    cancelCurrentPuzzle(new FindOrMakePuzzle(false));
+  }
+
+  public void nextPuzzle() {
+    cancelCurrentPuzzle(new FindOrMakePuzzle(true));
+  }
+
+  private void cancelCurrentPuzzle(final FindOrMakePuzzle replacementAction) {
+    if (mGame == null || mState == Grid.State.SOLVED) {
+      doReplacePuzzle(replacementAction);
+      return;
+    }
+    DialogFragment dialog = new DialogFragment() {
+      @Override public Dialog onCreateDialog(Bundle savedInstanceState) {
+        return new AlertDialog.Builder(getActivity())
+            .setMessage(R.string.dialog_cancel_message)
+            .setPositiveButton(R.string.button_give_up, new OnClickListener() {
+                @Override public void onClick(DialogInterface dialog, int which) {
+                  dialog.dismiss();
+                  mDbGame.gameState = GameState.GAVE_UP;
+                  doReplacePuzzle(replacementAction);
+                }
+            })
+            .setNegativeButton(R.string.button_save, new OnClickListener() {
+                @Override public void onClick(DialogInterface dialog, int which) {
+                  dialog.dismiss();
+                  doReplacePuzzle(replacementAction);
+                }
+            })
+            .create();
+      }
+    };
+    dialog.show(getFragmentManager(), "cancelPuzzle");
+  }
+
+  private void doReplacePuzzle(FindOrMakePuzzle replacementAction) {
+    saveGameFromUiThread();
+    mSudokuView.setGame(null);
+    mProgress.setVisibility(View.VISIBLE);
+    replacementAction.execute();
+  }
+
   public void trailCheckChanged(TrailItem item, boolean isChecked) {
     if (isChecked) {
       int count = 0;
@@ -359,8 +407,18 @@ public class SudokuFragment
   }
 
   private class FindOrMakePuzzle extends AsyncTask<Void, Void, Database.Game> {
+    private final boolean mFindBeforeMaking;
+
+    FindOrMakePuzzle() {
+      this(true);
+    }
+
+    FindOrMakePuzzle(boolean findBeforeMaking) {
+      mFindBeforeMaking = findBeforeMaking;
+    }
+
     @Override protected Database.Game doInBackground(Void... params) {
-      Database.Game answer = mDb.getFirstOpenGame();
+      Database.Game answer = mFindBeforeMaking ? mDb.getFirstOpenGame() : null;
       if (answer == null) {
         Random random = new Random();
         Generator gen = Generator.SUBTRACTIVE_RANDOM;
