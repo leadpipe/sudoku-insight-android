@@ -1,21 +1,50 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <item android:id="@+id/menu_show_insights"
+        android:title="@string/menu_show_insights"
+        android:showAsAction="never|withText"
+        android:orderInCategory="10"
+        />
+
+    <item android:id="@+id/menu_hide_insights"
+        android:title="@string/menu_hide_insights"
+        android:showAsAction="never|withText"
+        android:orderInCategory="11"
+        />
+
+    <item android:id="@+id/menu_next_puzzle"
+        android:title="@string/menu_next_puzzle"
+        android:titleCondensed="@string/menu_next_puzzle_condensed"
+        android:showAsAction="never|withText"
+        android:orderInCategory="12"
+        />
+
+    <item android:id="@+id/menu_generate_puzzle"
+        android:title="@string/menu_generate_puzzle"
+        android:titleCondensed="@string/menu_generate_puzzle_condensed"
+        android:showAsAction="never|withText"
+        android:orderInCategory="13"
+        />
+
     <item android:id="@+id/menu_undo"
         android:title="@string/menu_undo"
         android:icon="@drawable/action_undo"
         android:showAsAction="always"
+        android:orderInCategory="30"
         />
 
     <item android:id="@+id/menu_redo"
         android:title="@string/menu_redo"
         android:icon="@drawable/action_redo"
         android:showAsAction="always"
+        android:orderInCategory="31"
         />
 
     <item android:id="@+id/menu_new_trail"
         android:title="@string/menu_new_trail"
         android:icon="@drawable/action_new_trail"
         android:showAsAction="always"
+        android:orderInCategory="32"
         />
 
 </menu>

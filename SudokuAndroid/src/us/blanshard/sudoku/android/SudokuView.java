@@ -57,7 +57,7 @@ public class SudokuView extends View {
   private static final int SMALL_THICK_LINE_WIDTH = 2;
   private static final int SMALL_SIZE_CUTOFF = 200;
   private static final int TINY_THICK_LINE_WIDTH = 1;
-  private static final int TINY_SIZE_CUTOFF = 100;
+  private static final int TINY_SIZE_CUTOFF = 150;
 
   private static final int INVALID_POINTER_ID = -1;  // MotionEvent.INVALID_POINTER_ID;
   private static final long DEBOUNCE_MS = 50;  // A borderline choice won't flip as you lift your finger

@@ -103,7 +103,8 @@ public class SudokuFragment
   private final InsightWell mInsightWell = new InsightWell(this);
   Analyzer mAnalyzer;
   private InsightSum mInsightSum;
-  private boolean mShowInsights = true;
+  private boolean mShowInsights = false;
+  private boolean mHasNext = false;
   private HintLevel mHintLevel = HintLevel.NONE;
   private Grid.State mState;
   @Inject Sudoku.Registry mRegistry;
@@ -175,6 +176,8 @@ public class SudokuFragment
     if (dbGame.gameState == GameState.UNSTARTED) {
       Database.startUnstartedGame(dbGame);
     }
+    new CheckNextGame().execute();
+    mShowInsights = mPrefs.getBoolean("showInsights", true);
     try {
       Sudoku game = new Sudoku(
           dbGame.puzzle, mRegistry, GameJson.toHistory(dbGame.history), dbGame.elapsedMillis);
@@ -186,6 +189,8 @@ public class SudokuFragment
         restoreTrails(uiState.getJSONArray("trailOrder"), uiState.getInt("numVisibleTrails"));
         mEditTrailToggle.setChecked(uiState.getBoolean("trailActive"));
         mHintLevel = HintLevel.values()[uiState.optInt("hint")];
+        if (mShowInsights != (mHintLevel != HintLevel.NONE))
+          mShowInsights = !mShowInsights;
       }
       if (dbGame.gameState.isInPlay()) {
         SharedPreferences.Editor prefs = mPrefs.edit();
@@ -438,6 +443,17 @@ public class SudokuFragment
     }
   }
 
+  private class CheckNextGame extends AsyncTask<Void, Void, Database.Game> {
+    @Override protected Database.Game doInBackground(Void... params) {
+      return mDb.getFirstOpenGame();
+    }
+
+    @Override protected void onPostExecute(Database.Game next) {
+      mHasNext = next != null && (mDbGame == null || next._id != mDbGame._id);
+      mActionBarHelper.invalidateOptionsMenu();
+    }
+  }
+
   private class SaveGame extends AsyncTask<Database.Game, Void, Void> {
     @Override protected Void doInBackground(Database.Game... params) {
       mDb.updateGame(params[0]);
@@ -455,6 +471,7 @@ public class SudokuFragment
     super.onResume();
     mResumed = true;
     if (mGame != null && mState != Grid.State.SOLVED) mGame.resume();
+    mHasNext = false;
   }
 
   @Override public void onPrepareOptionsMenu(Menu menu) {
@@ -462,6 +479,15 @@ public class SudokuFragment
     for (int i = 0; i < menu.size(); ++i) {
       MenuItem item = menu.getItem(i);
       switch (item.getItemId()) {
+        case R.id.menu_show_insights:
+        case R.id.menu_hide_insights:
+          item.setVisible(mShowInsights != (item.getItemId() == R.id.menu_show_insights));
+          break;
+
+        case R.id.menu_next_puzzle:
+          item.setEnabled(mHasNext);
+          break;
+
         case R.id.menu_undo:
           item.setEnabled(going && mUndoStack.canUndo());
           break;
@@ -479,6 +505,27 @@ public class SudokuFragment
 
   @Override public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
+      case R.id.menu_show_insights:
+      case R.id.menu_hide_insights: {
+        mShowInsights = item.getItemId() == R.id.menu_show_insights;
+        if (!mShowInsights && mHintLevel != HintLevel.DETAILS
+            && (mGame == null || mGame.getHistory().isEmpty())) {
+          mHintLevel = HintLevel.NONE;
+        }
+        SharedPreferences.Editor prefs = mPrefs.edit();
+        prefs.putBoolean("showInsights", mShowInsights);
+        prefs.apply();
+        stateChanged();
+        return true;
+      }
+      case R.id.menu_next_puzzle:
+        nextPuzzle();
+        return true;
+
+      case R.id.menu_generate_puzzle:
+        generatePuzzle();
+        return true;
+
       case R.id.menu_undo:
         try {
           mUndoStack.undo();

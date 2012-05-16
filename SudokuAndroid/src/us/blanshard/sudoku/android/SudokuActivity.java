@@ -72,14 +72,6 @@ public class SudokuActivity extends ActionBarActivity {
         startActivity(intent);
         return true;
       }
-      case R.id.menu_next_puzzle: {
-        mBoardFragment.nextPuzzle();
-        return true;
-      }
-      case R.id.menu_generate_puzzle: {
-        mBoardFragment.generatePuzzle();
-        return true;
-      }
     }
     return super.onOptionsItemSelected(item);
   }

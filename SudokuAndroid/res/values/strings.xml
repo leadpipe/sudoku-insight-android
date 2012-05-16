@@ -15,12 +15,14 @@
     <string name="menu_capture_puzzle_condensed">Enter</string>
     <string name="menu_generate_puzzle">Generate a Puzzle</string>
     <string name="menu_generate_puzzle_condensed">Generate</string>
+    <string name="menu_hide_insights">Hide Insights</string>
     <string name="menu_list_puzzles">List Puzzles</string>
     <string name="menu_list_puzzles_condensed">List</string>
     <string name="menu_new_trail">New Trail</string>
     <string name="menu_next_puzzle">Next Puzzle</string>
     <string name="menu_next_puzzle_condensed">Next</string>
     <string name="menu_redo">Redo</string>
+    <string name="menu_show_insights">Show Insights</string>
     <string name="menu_undo">Undo</string>
     <string name="text_captured_puzzles">Captured puzzles</string>
     <string name="text_collection_date">%1$s, %2$s</string>
