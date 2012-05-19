@@ -159,6 +159,14 @@ public class Database {
   }
 
   /**
+   * Looks up the given puzzle, returns its ID or null if it isn't already in
+   * the database.
+   */
+  public Long lookUpPuzzleId(Grid puzzle) throws SQLException {
+    return getPuzzleId(mOpenHelper.getReadableDatabase(), puzzle.toFlatString());
+  }
+
+  /**
    * Returns the starting grid with the given ID, or null.
    */
   public Grid getPuzzle(long puzzleId) throws SQLException {
@@ -249,7 +257,7 @@ public class Database {
    * Returns the most recently modified game row for the given puzzle, or null
    * if there is no such puzzle or it has no game rows.
    */
-  public Game getCurrentGame(long puzzleId) throws SQLException {
+  public Game getCurrentGameForPuzzle(long puzzleId) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
     String sql = GAME_SELECT_AND_FROM_CLAUSE + "WHERE [puzzleId] = ? ORDER BY [lastTime] DESC";
     return fetchGame(db, sql, Long.toString(puzzleId));
@@ -330,8 +338,8 @@ public class Database {
    * longer in play. If the game is unstarted, modifies the returned object (but
    * not the corresponding row) to started.
    */
-  public Game getOpenGame(long puzzleId) throws SQLException {
-    Game answer = getCurrentGame(puzzleId);
+  public Game getOpenGameForPuzzle(long puzzleId) throws SQLException {
+    Game answer = getCurrentGameForPuzzle(puzzleId);
     if (answer == null || !answer.gameState.isInPlay()) {
       SQLiteDatabase db = mOpenHelper.getWritableDatabase();
       long gameId = putUnstartedGame(db, puzzleId);

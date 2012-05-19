@@ -433,7 +433,7 @@ public class SudokuFragment
         Grid puzzle = gen.generate(random, sym);
         String genParams = String.format("%s:%s:%s", gen, sym, seed);
         long id = mDb.addGeneratedPuzzle(puzzle, genParams);
-        answer = mDb.getCurrentGame(id);
+        answer = mDb.getCurrentGameForPuzzle(id);
       }
       return answer;
     }

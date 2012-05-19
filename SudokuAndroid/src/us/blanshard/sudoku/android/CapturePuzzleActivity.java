@@ -31,6 +31,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.TextView;
 
 import java.util.List;
 
@@ -46,13 +47,17 @@ public class CapturePuzzleActivity extends ActionBarActivity implements SudokuVi
   @InjectView(R.id.capture_source) AutoCompleteTextView mCaptureSource;
   @InjectView(R.id.capture_play) Button mPlay;
   @InjectView(R.id.capture_save) Button mSave;
+  @InjectView(R.id.already_have_notice) TextView mNotice;
   @Inject Database mDb;
   private boolean mIsPuzzle;
+  private Long mPuzzleId;
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.capture);
     mSudokuView.setOnMoveListener(this);
+    mPlay.setOnClickListener(this);
+    mSave.setOnClickListener(this);
     Grid grid;
 
     if (getIntent().getData() == null) {
@@ -98,6 +103,8 @@ public class CapturePuzzleActivity extends ActionBarActivity implements SudokuVi
     mIsPuzzle = result.solution != null;
     mPlay.setEnabled(mIsPuzzle);
     mSave.setEnabled(mIsPuzzle);
+    if (mIsPuzzle)
+      new CheckExisting().execute();
   }
 
   private class FetchAutocompletes extends AsyncTask<Void, Void, List<String>> {
@@ -111,7 +118,24 @@ public class CapturePuzzleActivity extends ActionBarActivity implements SudokuVi
             android.R.layout.simple_dropdown_item_1line, sources);
         mCaptureSource.setAdapter(adapter);
         // TODO(leadpipe): make the dropdown text not white on white in gingerbread
-        mCaptureSource.showDropDown();
+        if (mPuzzleId == null) {
+          mCaptureSource.showDropDown();
+        }
+      }
+    }
+  }
+
+  private class CheckExisting extends AsyncTask<Void, Void, Long> {
+    @Override protected Long doInBackground(Void... params) {
+      return mDb.lookUpPuzzleId(getPuzzle());
+    }
+
+    @Override protected void onPostExecute(Long puzzleId) {
+      if (puzzleId != null) {
+        mNotice.setVisibility(View.VISIBLE);
+        mCaptureSource.dismissDropDown();
+        mCaptureSource.setVisibility(View.GONE);
+        mPuzzleId = puzzleId;
       }
     }
   }
@@ -127,8 +151,12 @@ public class CapturePuzzleActivity extends ActionBarActivity implements SudokuVi
     }
 
     @Override protected Long doInBackground(Void... params) {
-      long puzzleId = mDb.addCapturedPuzzle(getPuzzle(), mSource);
-      return mDb.getCurrentGame(puzzleId)._id;
+      if (mPuzzleId == null) {
+        long puzzleId = mDb.addCapturedPuzzle(getPuzzle(), mSource);
+        return mDb.getCurrentGameForPuzzle(puzzleId)._id;
+      } else {
+        return mDb.getOpenGameForPuzzle(mPuzzleId)._id;
+      }
     }
 
     @Override protected void onPostExecute(Long gameId) {

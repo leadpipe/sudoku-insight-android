@@ -4,11 +4,23 @@
     android:layout_height="match_parent"
     >
     
+    <TextView 
+        android:id="@+id/already_have_notice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:hint="@string/text_already_have_puzzle"
+        android:visibility="visible"
+        android:textSize="20sp"
+        android:padding="20dp"
+        />
+    
     <AutoCompleteTextView 
         android:id="@+id/capture_source"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_below="@+id/already_have_notice"
         android:lines="1"
         android:hint="@string/hint_capture_source"
         android:completionThreshold="1"
@@ -31,7 +43,6 @@
         android:layout_below="@+id/sudoku_view"
         android:layout_toLeftOf="@+id/capture_save"
         android:layout_margin="5dp"
-        android:onClick="play"
         />
     
     <Button
@@ -42,7 +53,6 @@
         android:layout_below="@+id/sudoku_view"
         android:layout_alignParentRight="true"
         android:layout_margin="5dp"
-        android:onClick="save"
         />
     
 </RelativeLayout>
