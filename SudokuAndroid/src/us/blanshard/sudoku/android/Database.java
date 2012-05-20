@@ -375,6 +375,22 @@ public class Database {
   }
 
   /**
+   * Returns the number of games that are unstarted or in progress.
+   */
+  public int getNumOpenGames() throws SQLException {
+    SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+    String sql = "SELECT COUNT(*) FROM [Game] WHERE [gameState] IN (?, ?)";
+    Cursor cursor = db.rawQuery(sql, new String[] {Integer.toString(GameState.UNSTARTED.getNumber()),
+        Integer.toString(GameState.STARTED.getNumber())});
+    try {
+      cursor.moveToFirst();
+      return cursor.getInt(0);
+    } finally {
+      cursor.close();
+    }
+  }
+
+  /**
    * Saves the given game, modifying its last update time to now.
    */
   public void updateGame(Game game) throws SQLException {

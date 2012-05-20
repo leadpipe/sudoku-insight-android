@@ -58,13 +58,13 @@ public class CapturePuzzleActivity extends ActionBarActivity implements SudokuVi
     mSudokuView.setOnMoveListener(this);
     mPlay.setOnClickListener(this);
     mSave.setOnClickListener(this);
-    Grid grid;
+    Grid grid = Grid.BLANK;
+    boolean editable = true;
 
-    if (getIntent().getData() == null) {
-      grid = Grid.BLANK;
-    } else {
+    if (getIntent().getData() != null) {
       try {
         grid = Grid.fromString(getIntent().getData().getQueryParameter("original"));
+        editable = false;
       } catch (Exception e) {
         Log.e("SudokuInsight", "Bad goggles uri", e);
         finish();
@@ -73,6 +73,7 @@ public class CapturePuzzleActivity extends ActionBarActivity implements SudokuVi
     }
     mSudokuView.setPuzzleEditor(grid);
     mSudokuView.setDefaultChoice(Numeral.of(1));
+    mSudokuView.setEditable(editable);
     updateState();
     new FetchAutocompletes().execute();
   }
@@ -131,11 +132,11 @@ public class CapturePuzzleActivity extends ActionBarActivity implements SudokuVi
     }
 
     @Override protected void onPostExecute(Long puzzleId) {
+      mPuzzleId = puzzleId;
+      mNotice.setVisibility(puzzleId == null ? View.GONE : View.VISIBLE);
+      mCaptureSource.setVisibility(puzzleId == null ? View.VISIBLE : View.GONE);
       if (puzzleId != null) {
-        mNotice.setVisibility(View.VISIBLE);
         mCaptureSource.dismissDropDown();
-        mCaptureSource.setVisibility(View.GONE);
-        mPuzzleId = puzzleId;
       }
     }
   }

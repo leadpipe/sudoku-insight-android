@@ -443,13 +443,13 @@ public class SudokuFragment
     }
   }
 
-  private class CheckNextGame extends AsyncTask<Void, Void, Database.Game> {
-    @Override protected Database.Game doInBackground(Void... params) {
-      return mDb.getFirstOpenGame();
+  private class CheckNextGame extends AsyncTask<Void, Void, Boolean> {
+    @Override protected Boolean doInBackground(Void... params) {
+      return mDb.getNumOpenGames() > 1;
     }
 
-    @Override protected void onPostExecute(Database.Game next) {
-      mHasNext = next != null && (mDbGame == null || next._id != mDbGame._id);
+    @Override protected void onPostExecute(Boolean hasNext) {
+      mHasNext = hasNext;
       mActionBarHelper.invalidateOptionsMenu();
     }
   }
