@@ -529,7 +529,7 @@ public class Database {
     @Override public void onCreate(SQLiteDatabase db) {
       db.execSQL(""
           + "CREATE TABLE [Puzzle] ("
-          + "  [_id] INTEGER PRIMARY KEY,"
+          + "  [_id] INTEGER PRIMARY KEY AUTOINCREMENT,"
           + "  [puzzle] TEXT  NOT NULL  UNIQUE)");
       db.execSQL(""
           + "CREATE TABLE [Collection] ("
