@@ -202,15 +202,19 @@ public class SudokuFragment
       setGame(null);
     }
     if (dbGame.elements != null && !dbGame.elements.isEmpty()) {
-      showStatus(Joiner.on(getActivity().getString(R.string.text_collection_separator)).join(
+      String colls = Joiner.on(getActivity().getString(R.string.text_collection_separator)).join(
           Iterables.transform(dbGame.elements, new Function<Database.Element, String>() {
               @Override public String apply(Database.Element element) {
                 String coll = ToText.collectionName(getActivity(), element);
-                if (element.createTime == 0) return coll;
-                CharSequence date = ToText.relativeDateTime(getActivity(), element.createTime);
-                return getActivity().getString(R.string.text_collection_date, coll, date);
+                if (element.createTime > 0) {
+                  CharSequence date = ToText.relativeDateTime(getActivity(), element.createTime);
+                  coll = getActivity().getString(R.string.text_collection_date, coll, date);
+                }
+                return coll;
               }
-          })));
+          }));
+      showStatus(getActivity().getString(
+          R.string.text_puzzle_number_plus, String.valueOf(dbGame.puzzleId), colls));
     }
   }
 

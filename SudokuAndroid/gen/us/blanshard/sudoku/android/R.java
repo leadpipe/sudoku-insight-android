@@ -162,7 +162,8 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int text_generated_puzzles=0x7f08002d;
         public static final int text_generation_options=0x7f08002e;
         public static final int text_oops=0x7f08002f;
-        public static final int text_symmetries=0x7f080030;
+        public static final int text_puzzle_number_plus=0x7f080030;
+        public static final int text_symmetries=0x7f080031;
     }
     public static final class style {
         public static final int ActionBar=0x7f090008;

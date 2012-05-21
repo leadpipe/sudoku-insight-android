@@ -49,6 +49,7 @@
     <string name="text_generated_puzzles">Generated puzzles</string>
     <string name="text_generation_options">Puzzle generation options</string>
     <string name="text_oops">Oops!</string>
+    <string name="text_puzzle_number_plus">Puzzle #%1$s, %2$s</string>
     <string name="text_symmetries">Symmetry of clues</string>
 
 </resources>
