@@ -8,14 +8,23 @@
     <string name="button_capture_save">@string/button_save</string>
     <string name="button_give_up">Give Up</string>
     <string name="button_save">Save for Later</string>
-    <string name="check_blockwise_symmetry">Blockwise symmetry</string>
-    <string name="check_classic_symmetry">Classic 180° rotational symmetry</string>
-    <string name="check_diagonal_symmetry">Diagonal mirror symmetry</string>
-    <string name="check_double_mirror_symmetry">Left-right &amp; up-down mirror symmetry</string>
-    <string name="check_mirror_symmetry">Left-right mirror symmetry</string>
-    <string name="check_random_symmetry">Random—no symmetry</string>
-    <string name="check_random_variation">Allow random deviations from symmetry—produces harder puzzles</string>
-    <string name="check_rotational_symmetry">90° rotational symmetry</string>
+    <string name="check_blockwise_symmetry">Blockwise</string>
+    <string name="check_blockwise_symmetry_summary">Block families share pattern</string>
+    <string name="check_classic_symmetry">Classic</string>
+    <string name="check_classic_symmetry_summary">180° rotational symmetry</string>
+    <string name="check_diagonal_symmetry">Diagonal</string>
+    <string name="check_diagonal_symmetry_summary">Diagonal mirror symmetry</string>
+    <string name="check_double_mirror_symmetry">Double Mirror</string>
+    <string name="check_double_mirror_symmetry_summary">Left-right &amp; up-down mirror symmetry</string>
+    <string name="check_mirror_symmetry">Mirror</string>
+    <string name="check_mirror_symmetry_summary">Left-right mirror symmetry</string>
+    <string name="check_random_symmetry">Random</string>
+    <string name="check_random_symmetry_summary">No symmetry</string>
+    <string name="check_random_variation">Broken symmetry ok?</string>
+    <string name="check_random_variation_summary_on">Yes, make harder puzzles</string>
+    <string name="check_random_variation_summary_off">No, make symmetrical puzzles</string>
+    <string name="check_rotational_symmetry">Rotational</string>
+    <string name="check_rotational_symmetry_summary">90° rotational symmetry</string>
     <string name="dialog_cancel_message">Give up on this puzzle?</string>
     <string name="dialog_insights_title">Insights</string>
     <string name="hint_capture_source">Where does this puzzle come from?</string>
@@ -29,6 +38,7 @@
     <string name="menu_new_trail">New Trail</string>
     <string name="menu_next_puzzle">Next Puzzle</string>
     <string name="menu_next_puzzle_condensed">Next</string>
+    <string name="menu_prefs">Preferences</string>
     <string name="menu_redo">Redo</string>
     <string name="menu_show_insights">Show Insights</string>
     <string name="menu_undo">Undo</string>
@@ -47,9 +57,9 @@
     <string name="text_game_solved_insights">Solved in %1$s (with insight summaries) %2$s.</string>
     <string name="text_game_solved_explicit_hints">Solved in %1$s (with explicit hints) %2$s.</string>
     <string name="text_generated_puzzles">Generated puzzles</string>
-    <string name="text_generation_options">Puzzle generation options</string>
+    <string name="text_generation_options">Puzzle Generator</string>
     <string name="text_oops">Oops!</string>
     <string name="text_puzzle_number_plus">Puzzle #%1$s, %2$s</string>
-    <string name="text_symmetries">Symmetry of clues</string>
+    <string name="text_symmetries">Symmetries of Generated Puzzles</string>
 
 </resources>

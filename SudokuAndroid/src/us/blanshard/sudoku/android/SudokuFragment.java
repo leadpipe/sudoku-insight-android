@@ -43,7 +43,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -117,7 +116,7 @@ public class SudokuFragment
   @InjectView(R.id.timer) TextView mTimer;
   @InjectView(R.id.insights) TextView mInsights;
   @Inject Database mDb;
-  @Inject SharedPreferences mPrefs;
+  @Inject Prefs mPrefs;
 
   enum HintLevel {
     NONE(Database.GameState.FINISHED),
@@ -177,7 +176,7 @@ public class SudokuFragment
       Database.startUnstartedGame(dbGame);
     }
     new CheckNextGame().execute();
-    mShowInsights = mPrefs.getBoolean("showInsights", true);
+    mShowInsights = mPrefs.getShowInsights();
     try {
       Sudoku game = new Sudoku(
           dbGame.puzzle, mRegistry, GameJson.toHistory(dbGame.history), dbGame.elapsedMillis);
@@ -193,9 +192,7 @@ public class SudokuFragment
           mShowInsights = !mShowInsights;
       }
       if (dbGame.gameState.isInPlay()) {
-        SharedPreferences.Editor prefs = mPrefs.edit();
-        prefs.putLong("gameId", dbGame._id);
-        prefs.apply();
+        mPrefs.setCurrentGameIdAsync(dbGame._id);
       }
     } catch (JSONException e) {
       Log.e("SudokuFragment", "Unable to restore state from puzzle #" + dbGame.puzzleId, e);
@@ -363,8 +360,8 @@ public class SudokuFragment
       gameId = getActivity().getIntent().getExtras().getLong("gameId");
     } else if (savedInstanceState != null && savedInstanceState.containsKey("gameId")) {
       gameId = savedInstanceState.getLong("gameId");
-    } else if (mPrefs.contains("gameId")) {
-      gameId = mPrefs.getLong("gameId", -1);
+    } else if (mPrefs.hasCurrentGameId()) {
+      gameId = mPrefs.getCurrentGameId();
     }
     if (gameId == null || gameId == -1) new FindOrMakePuzzle().execute();
     else new FetchGame().execute(gameId);
@@ -430,8 +427,8 @@ public class SudokuFragment
       Database.Game answer = mFindBeforeMaking ? mDb.getFirstOpenGame() : null;
       if (answer == null) {
         Random random = new Random();
-        Generator gen = Generator.SUBTRACTIVE_RANDOM;
-        Symmetry sym = Symmetry.choosePleasing(random);
+        Generator gen = mPrefs.getGenerator();
+        Symmetry sym = mPrefs.chooseSymmetry(random);
         long seed = random.nextLong();
         random = new Random(seed);
         Grid puzzle = gen.generate(random, sym);
@@ -516,9 +513,7 @@ public class SudokuFragment
             && (mGame == null || mGame.getHistory().isEmpty())) {
           mHintLevel = HintLevel.NONE;
         }
-        SharedPreferences.Editor prefs = mPrefs.edit();
-        prefs.putBoolean("showInsights", mShowInsights);
-        prefs.apply();
+        mPrefs.setShowInsightsAsync(mShowInsights);
         stateChanged();
         return true;
       }
@@ -722,9 +717,7 @@ public class SudokuFragment
         mDbGame.gameState = mHintLevel.finishedGameState;
         updateDbGame();
         new SaveGame().execute(mDbGame);
-        SharedPreferences.Editor prefs = mPrefs.edit();
-        prefs.remove("gameId");
-        prefs.apply();
+        mPrefs.removeCurrentGameIdAsync();
         stateChanged();
       } else {
         mState = Grid.State.BROKEN;

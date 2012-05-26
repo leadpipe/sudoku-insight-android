@@ -14,4 +14,10 @@
         android:orderInCategory="21"
         />
 
+    <item android:id="@+id/menu_prefs"
+        android:title="@string/menu_prefs"
+        android:showAsAction="never|withText"
+        android:orderInCategory="22"
+        />
+    
 </menu>

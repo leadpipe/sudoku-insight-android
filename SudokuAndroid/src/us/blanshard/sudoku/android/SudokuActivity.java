@@ -72,6 +72,11 @@ public class SudokuActivity extends ActionBarActivity {
         startActivity(intent);
         return true;
       }
+      case R.id.menu_prefs: {
+        Intent intent = new Intent(this, PrefsActivity.class);
+        startActivity(intent);
+        return true;
+      }
     }
     return super.onOptionsItemSelected(item);
   }

@@ -44,6 +44,10 @@ limitations under the License.
             android:name=".PuzzleListActivity"
             android:label="@string/app_short_name"
             />
+        <activity
+            android:name=".PrefsActivity"
+            android:label="@string/app_short_name"
+            />
         <activity 
             android:name=".CapturePuzzleActivity"
             android:label="@string/app_short_name"
