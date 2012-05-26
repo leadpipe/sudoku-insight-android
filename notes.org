@@ -12,7 +12,7 @@
 ** TODO Rename getState to... what?
 
 * App
-** TODO Prefs page
+** DONE Prefs page
    - Show hints by default?
    - What kind of puzzles to generate
 ** DONE Indeterminate progress bar (circle) when generating a puzzle
