@@ -17,7 +17,6 @@ package us.blanshard.sudoku.android;
 
 import roboguice.fragment.RoboFragment;
 import roboguice.inject.InjectView;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -58,21 +57,28 @@ public class PuzzleListFragment extends RoboFragment implements OnItemClickListe
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    new FetchPuzzles().execute();
+    new FetchPuzzles(this).execute();
   }
 
   @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
     Database.Puzzle puzzle = mPuzzleAdapter.getItem(position);
-    Toast.makeText(getActivity(), puzzle.puzzle.toString(), Toast.LENGTH_LONG).show();
+    Toast.makeText(getActivity().getApplicationContext(), puzzle.puzzle.toString(), Toast.LENGTH_LONG).show();
   }
 
-  private class FetchPuzzles extends AsyncTask<Void, Void, List<Database.Puzzle>> {
+  private static class FetchPuzzles extends WorkerFragment.Task<PuzzleListFragment, Void, Void, List<Database.Puzzle>> {
+    private final Database mDb;
+
+    FetchPuzzles(PuzzleListFragment fragment) {
+      super(fragment);
+      this.mDb = fragment.mDb;
+    }
+
     @Override protected List<Database.Puzzle> doInBackground(Void... params) {
       return mDb.getAllPuzzles();
     }
 
-    @Override protected void onPostExecute(List<Database.Puzzle> puzzles) {
-      setPuzzles(puzzles);
+    @Override protected void onPostExecute(PuzzleListFragment fragment, List<Database.Puzzle> puzzles) {
+      fragment.setPuzzles(puzzles);
     }
   }
 

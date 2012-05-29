@@ -31,9 +31,4 @@ public class PuzzleListActivity extends ActionBarActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.list_activity);
   }
-
-  @Override public void onDestroy() {
-    super.onDestroy();
-    mDb.close();
-  }
 }

@@ -77,6 +77,10 @@ public class Analyzer {
     setAnalysisTargetId(-1);
   }
 
+  public Sudoku getGame() {
+    return game;
+  }
+
   /**
    * Takes a snapshot of the game's current progress in the given state for use
    * by {@link #analyze} the next time it's called.

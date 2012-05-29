@@ -23,6 +23,8 @@ import roboguice.inject.ContextSingleton;
 import roboguice.inject.InjectView;
 
 import us.blanshard.sudoku.android.Database.GameState;
+import us.blanshard.sudoku.android.WorkerFragment.Independence;
+import us.blanshard.sudoku.android.WorkerFragment.Priority;
 import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
@@ -36,7 +38,6 @@ import us.blanshard.sudoku.game.MoveCommand;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.Sudoku.State;
 import us.blanshard.sudoku.game.UndoStack;
-import us.blanshard.sudoku.insight.Analyzer;
 import us.blanshard.sudoku.insight.InsightSum;
 
 import android.app.AlertDialog;
@@ -44,7 +45,6 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
@@ -95,12 +95,12 @@ public class SudokuFragment
                OnItemLongClickListener, View.OnClickListener {
   private static final int MAX_VISIBLE_TRAILS = 4;
 
+  private static final InsightWell sInsightWell = new InsightWell();
+
   private UndoStack mUndoStack = new UndoStack();
   private Database.Game mDbGame;
   private Sudoku mGame;
   private boolean mResumed;
-  private final InsightWell mInsightWell = new InsightWell(this);
-  Analyzer mAnalyzer;
   private InsightSum mInsightSum;
   private boolean mShowInsights = false;
   private boolean mHasNext = false;
@@ -117,6 +117,7 @@ public class SudokuFragment
   @InjectView(R.id.insights) TextView mInsights;
   @Inject Database mDb;
   @Inject Prefs mPrefs;
+  private Toast mToast;
 
   enum HintLevel {
     NONE(Database.GameState.FINISHED),
@@ -175,7 +176,7 @@ public class SudokuFragment
     if (dbGame.gameState == GameState.UNSTARTED) {
       Database.startUnstartedGame(dbGame);
     }
-    new CheckNextGame().execute();
+    new CheckNextGame(this).execute(dbGame._id);
     mShowInsights = mPrefs.getShowInsights();
     try {
       Sudoku game = new Sudoku(
@@ -217,7 +218,6 @@ public class SudokuFragment
 
   private void setGame(Sudoku game) {
     mGame = game;
-    mAnalyzer = game == null ? null : new Analyzer(game, mInsightWell);
     mHintLevel = HintLevel.NONE;
     mState = Grid.State.INCOMPLETE;
     mUndoStack = new UndoStack();
@@ -228,12 +228,12 @@ public class SudokuFragment
         invis.add(makeTrailItem(i, false));
     updateTrails(vis, invis);
     mSudokuView.setDefaultChoice(Numeral.of(1));
-    stateChanged();
     if (game != null) {
       updateState();
       if (mState != Grid.State.SOLVED && mResumed)
         game.resume();
     }
+    stateChanged();
     mProgress.setVisibility(View.GONE);
   }
 
@@ -247,15 +247,17 @@ public class SudokuFragment
   }
 
   public void showStatus(String s) {
-    Toast.makeText(getActivity(), s, Toast.LENGTH_LONG).show();
+    if (mToast != null) mToast.cancel();
+    mToast = Toast.makeText(getActivity().getApplicationContext(), s, Toast.LENGTH_LONG);
+    mToast.show();
   }
 
   public void generatePuzzle() {
-    cancelCurrentPuzzle(new FindOrMakePuzzle(false));
+    cancelCurrentPuzzle(new FindOrMakePuzzle(this, false));
   }
 
   public void nextPuzzle() {
-    cancelCurrentPuzzle(new FindOrMakePuzzle(true));
+    cancelCurrentPuzzle(new FindOrMakePuzzle(this, true));
   }
 
   private void cancelCurrentPuzzle(final FindOrMakePuzzle replacementAction) {
@@ -363,8 +365,8 @@ public class SudokuFragment
     } else if (mPrefs.hasCurrentGameId()) {
       gameId = mPrefs.getCurrentGameId();
     }
-    if (gameId == null || gameId == -1) new FindOrMakePuzzle().execute();
-    else new FetchGame().execute(gameId);
+    if (gameId == null || gameId == -1) new FindOrMakePuzzle(this).execute();
+    else new FetchGame(this).execute(gameId);
     mProgress.setVisibility(View.VISIBLE);
   }
 
@@ -402,60 +404,117 @@ public class SudokuFragment
     }
   }
 
-  private class FetchGame extends AsyncTask<Long, Void, Database.Game> {
+  private static Database.Game generateAndStorePuzzle(Database db, Prefs prefs) {
+    Database.Game answer;
+    Random random = new Random();
+    Generator gen = prefs.getGenerator();
+    Symmetry sym = prefs.chooseSymmetry(random);
+    long seed = random.nextLong();
+    random = new Random(seed);
+    Grid puzzle = gen.generate(random, sym);
+    String genParams = String.format("%s:%s:%s", gen, sym, seed);
+    long id = db.addGeneratedPuzzle(puzzle, genParams);
+    answer = db.getCurrentGameForPuzzle(id);
+    return answer;
+  }
+
+  private static class FetchGame extends WorkerFragment.Task<SudokuFragment, Long, Void, Database.Game> {
+    private final Database mDb;
+
+    FetchGame(SudokuFragment fragment) {
+      super(fragment);
+      mDb = fragment.mDb;
+    }
+
     @Override protected Database.Game doInBackground(Long... params) {
       return mDb.getGame(params[0]);
     }
 
-    @Override protected void onPostExecute(Database.Game dbGame) {
-      setDbGame(dbGame);
+    @Override protected void onPostExecute(SudokuFragment fragment, Database.Game dbGame) {
+      if (dbGame != null)
+        fragment.setDbGame(dbGame);
     }
   }
 
-  private class FindOrMakePuzzle extends AsyncTask<Void, Void, Database.Game> {
+  private static class FindOrMakePuzzle extends WorkerFragment.Task<SudokuFragment, Void, Void, Database.Game> {
     private final boolean mFindBeforeMaking;
+    private final Database mDb;
+    private final Prefs mPrefs;
 
-    FindOrMakePuzzle() {
-      this(true);
+    FindOrMakePuzzle(SudokuFragment fragment) {
+      this(fragment, true);
     }
 
-    FindOrMakePuzzle(boolean findBeforeMaking) {
+    FindOrMakePuzzle(SudokuFragment fragment, boolean findBeforeMaking) {
+      super(fragment, Priority.FOREGROUND, Independence.DEPENDENT);
       mFindBeforeMaking = findBeforeMaking;
+      mDb = fragment.mDb;
+      mPrefs = fragment.mPrefs;
     }
 
     @Override protected Database.Game doInBackground(Void... params) {
       Database.Game answer = mFindBeforeMaking ? mDb.getFirstOpenGame() : null;
-      if (answer == null) {
-        Random random = new Random();
-        Generator gen = mPrefs.getGenerator();
-        Symmetry sym = mPrefs.chooseSymmetry(random);
-        long seed = random.nextLong();
-        random = new Random(seed);
-        Grid puzzle = gen.generate(random, sym);
-        String genParams = String.format("%s:%s:%s", gen, sym, seed);
-        long id = mDb.addGeneratedPuzzle(puzzle, genParams);
-        answer = mDb.getCurrentGameForPuzzle(id);
-      }
+      if (answer == null)
+        answer = generateAndStorePuzzle(mDb, mPrefs);
       return answer;
     }
 
-    @Override protected void onPostExecute(Database.Game dbGame) {
-      setDbGame(dbGame);
+    @Override protected void onPostExecute(SudokuFragment fragment, Database.Game dbGame) {
+      fragment.setDbGame(dbGame);
     }
   }
 
-  private class CheckNextGame extends AsyncTask<Void, Void, Boolean> {
-    @Override protected Boolean doInBackground(Void... params) {
-      return mDb.getNumOpenGames() > 1;
+  private static class MakeSparePuzzle extends WorkerFragment.Task<SudokuFragment, Void, Void, Database.Game> {
+    private final Database mDb;
+    private final Prefs mPrefs;
+
+    MakeSparePuzzle(SudokuFragment fragment) {
+      super(fragment, Priority.BACKGROUND, Independence.FREE);
+      mDb = fragment.mDb;
+      mPrefs = fragment.mPrefs;
     }
 
-    @Override protected void onPostExecute(Boolean hasNext) {
-      mHasNext = hasNext;
-      mActionBarHelper.invalidateOptionsMenu();
+    @Override protected Database.Game doInBackground(Void... params) {
+      return generateAndStorePuzzle(mDb, mPrefs);
+    }
+
+    @Override protected void onPostExecute(SudokuFragment fragment, Database.Game dbGame) {
+      fragment.mHasNext = true;
+      fragment.mActionBarHelper.invalidateOptionsMenu();
     }
   }
 
-  private class SaveGame extends AsyncTask<Database.Game, Void, Void> {
+  private static class CheckNextGame extends WorkerFragment.Task<SudokuFragment, Long, Void, Boolean> {
+    private final Database mDb;
+
+    CheckNextGame(SudokuFragment fragment) {
+      super(fragment);
+      mDb = fragment.mDb;
+    }
+
+    @Override protected Boolean doInBackground(Long... params) {
+      int numOpenGames = mDb.getNumOpenGames();
+      return numOpenGames > 1
+          || numOpenGames == 1 && (params[0] == null || mDb.getFirstOpenGame()._id != params[0]);
+    }
+
+    @Override protected void onPostExecute(SudokuFragment fragment, Boolean hasNext) {
+      fragment.mHasNext = hasNext;
+      fragment.mActionBarHelper.invalidateOptionsMenu();
+
+      if (!hasNext)
+        new MakeSparePuzzle(fragment).execute();
+    }
+  }
+
+  private static class SaveGame extends WorkerFragment.Task<SudokuFragment, Database.Game, Void, Void> {
+    private final Database mDb;
+
+    SaveGame(SudokuFragment fragment) {
+      super(fragment, Priority.BACKGROUND, Independence.FREE);
+      mDb = fragment.mDb;
+    }
+
     @Override protected Void doInBackground(Database.Game... params) {
       mDb.updateGame(params[0]);
       return null;
@@ -466,6 +525,10 @@ public class SudokuFragment
     super.onPause();
     mResumed = false;
     saveGameFromUiThread();
+    if (mToast != null) {
+      mToast.cancel();
+      mToast = null;
+    }
   }
 
   @Override public void onResume() {
@@ -473,6 +536,7 @@ public class SudokuFragment
     mResumed = true;
     if (mGame != null && mState != Grid.State.SOLVED) mGame.resume();
     mHasNext = false;
+    new CheckNextGame(this).execute(mDbGame == null ? null : mDbGame._id);
   }
 
   @Override public void onPrepareOptionsMenu(Menu menu) {
@@ -665,7 +729,7 @@ public class SudokuFragment
     setInsights(null);
     if (mShowInsights && mState != Grid.State.SOLVED) {
       if (mHintLevel == HintLevel.NONE) mHintLevel = HintLevel.SUMMARY;
-      mInsightWell.refill();
+      sInsightWell.refill(this);
       mInsights.setTextColor(mSudokuView.getInputColor());
     }
   }
@@ -716,7 +780,7 @@ public class SudokuFragment
         mGame.suspend();
         mDbGame.gameState = mHintLevel.finishedGameState;
         updateDbGame();
-        new SaveGame().execute(mDbGame);
+        new SaveGame(this).execute(mDbGame);
         mPrefs.removeCurrentGameIdAsync();
         stateChanged();
       } else {

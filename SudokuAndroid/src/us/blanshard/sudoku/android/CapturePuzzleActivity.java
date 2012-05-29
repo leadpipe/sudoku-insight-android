@@ -17,6 +17,8 @@ package us.blanshard.sudoku.android;
 
 import roboguice.inject.InjectView;
 
+import us.blanshard.sudoku.android.WorkerFragment.Independence;
+import us.blanshard.sudoku.android.WorkerFragment.Priority;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
@@ -24,7 +26,6 @@ import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.game.Sudoku.State;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -75,17 +76,12 @@ public class CapturePuzzleActivity extends ActionBarActivity implements SudokuVi
     mSudokuView.setDefaultChoice(Numeral.of(1));
     mSudokuView.setEditable(editable);
     updateState();
-    new FetchAutocompletes().execute();
-  }
-
-  @Override public void onDestroy() {
-    super.onDestroy();
-    mDb.close();
+    new FetchAutocompletes(this).execute();
   }
 
   @Override public void onClick(View v) {
     if (mIsPuzzle && (v == mPlay || v == mSave)) {
-      new Save(v == mPlay).execute();
+      new Save(this, v == mPlay).execute();
     }
   }
 
@@ -105,67 +101,90 @@ public class CapturePuzzleActivity extends ActionBarActivity implements SudokuVi
     mPlay.setEnabled(mIsPuzzle);
     mSave.setEnabled(mIsPuzzle);
     if (mIsPuzzle)
-      new CheckExisting().execute();
+      new CheckExisting(this).execute();
   }
 
-  private class FetchAutocompletes extends AsyncTask<Void, Void, List<String>> {
+  private static class FetchAutocompletes extends WorkerFragment.ActivityTask<CapturePuzzleActivity, Void, Void, List<String>> {
+    private final Database mDb;
+
+    FetchAutocompletes(CapturePuzzleActivity activity) {
+      super(activity);
+      mDb = activity.mDb;
+    }
+
     @Override protected List<String> doInBackground(Void... params) {
       return mDb.getElementSources();
     }
 
-    @Override protected void onPostExecute(List<String> sources) {
+    @Override protected void onPostExecute(CapturePuzzleActivity activity, List<String> sources) {
       if (!sources.isEmpty()) {
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(CapturePuzzleActivity.this,
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(activity,
             android.R.layout.simple_dropdown_item_1line, sources);
-        mCaptureSource.setAdapter(adapter);
+        activity.mCaptureSource.setAdapter(adapter);
         // TODO(leadpipe): make the dropdown text not white on white in gingerbread
-        if (mPuzzleId == null) {
-          mCaptureSource.showDropDown();
+        if (activity.mPuzzleId == null) {
+          activity.mCaptureSource.showDropDown();
         }
       }
     }
   }
 
-  private class CheckExisting extends AsyncTask<Void, Void, Long> {
-    @Override protected Long doInBackground(Void... params) {
-      return mDb.lookUpPuzzleId(getPuzzle());
+  private static class CheckExisting extends WorkerFragment.ActivityTask<CapturePuzzleActivity, Void, Void, Long> {
+    private final Database mDb;
+    private final Grid mPuzzle;
+
+    CheckExisting(CapturePuzzleActivity activity) {
+      super(activity);
+      mDb = activity.mDb;
+      mPuzzle = activity.getPuzzle();
     }
 
-    @Override protected void onPostExecute(Long puzzleId) {
-      mPuzzleId = puzzleId;
-      mNotice.setVisibility(puzzleId == null ? View.GONE : View.VISIBLE);
-      mCaptureSource.setVisibility(puzzleId == null ? View.VISIBLE : View.GONE);
+    @Override protected Long doInBackground(Void... params) {
+      return mDb.lookUpPuzzleId(mPuzzle);
+    }
+
+    @Override protected void onPostExecute(CapturePuzzleActivity activity, Long puzzleId) {
+      activity.mPuzzleId = puzzleId;
+      activity.mNotice.setVisibility(puzzleId == null ? View.GONE : View.VISIBLE);
+      activity.mCaptureSource.setVisibility(puzzleId == null ? View.VISIBLE : View.GONE);
       if (puzzleId != null) {
-        mCaptureSource.dismissDropDown();
+        activity.mCaptureSource.dismissDropDown();
       }
     }
   }
 
-  private class Save extends AsyncTask<Void, Void, Long> {
+  private static class Save extends WorkerFragment.ActivityTask<CapturePuzzleActivity, Void, Void, Long> {
+    private final Database mDb;
+    private final Long mPuzzleId;
+    private final Grid mPuzzle;
     private final String mSource;
     private final boolean mPlay;
 
-    Save(boolean play) {
-      String source = mCaptureSource.getText().toString();
+    Save(CapturePuzzleActivity activity, boolean play) {
+      super(activity, Priority.FOREGROUND, Independence.DEPENDENT);
+      this.mDb = activity.mDb;
+      this.mPuzzleId = activity.mPuzzleId;
+      this.mPuzzle = activity.getPuzzle();
+      String source = activity.mCaptureSource.getText().toString();
       this.mSource = source.isEmpty() ? null : source;
       this.mPlay = play;
     }
 
     @Override protected Long doInBackground(Void... params) {
       if (mPuzzleId == null) {
-        long puzzleId = mDb.addCapturedPuzzle(getPuzzle(), mSource);
+        long puzzleId = mDb.addCapturedPuzzle(mPuzzle, mSource);
         return mDb.getCurrentGameForPuzzle(puzzleId)._id;
       } else {
         return mDb.getOpenGameForPuzzle(mPuzzleId)._id;
       }
     }
 
-    @Override protected void onPostExecute(Long gameId) {
-      finish();
+    @Override protected void onPostExecute(CapturePuzzleActivity activity, Long gameId) {
+      activity.finish();
       if (mPlay) {
-        Intent intent = new Intent(CapturePuzzleActivity.this, SudokuActivity.class);
+        Intent intent = new Intent(activity, SudokuActivity.class);
         intent.putExtra("gameId", gameId);
-        startActivity(intent);
+        activity.startActivity(intent);
       }
     }
   }

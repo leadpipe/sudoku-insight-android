@@ -32,7 +32,7 @@ import android.view.View;
  * <code>com.android.internal.view.menu.MenuItemImpl</code> in AOSP for a more complete
  * implementation.
  */
-@SuppressLint({ "NewApi" })
+@SuppressLint({ "NewApi", "NewApi", "NewApi", "NewApi" })
 public class SimpleMenuItem implements MenuItem {
 
     private SimpleMenu mMenu;

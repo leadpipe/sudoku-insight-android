@@ -20,7 +20,6 @@ import us.blanshard.sudoku.insight.Analyzer.Phase;
 import us.blanshard.sudoku.insight.Insight;
 import us.blanshard.sudoku.insight.InsightSum;
 
-import android.os.AsyncTask;
 import android.util.Log;
 
 /**
@@ -31,58 +30,53 @@ import android.util.Log;
  */
 public class InsightWell implements Analyzer.Callback {
 
-  private final SudokuFragment mFragment;
-  private Analyze mCurrentTaskUi;
-  private Analyze mCurrentTaskBackground;
-
-  public InsightWell(SudokuFragment fragment) {
-    mFragment = fragment;
-  }
+  private Analyzer mAnalyzer;
+  private Analyze mCurrentTask;
 
   /**
    * Refills the well based on the current game state.
    */
-  public void refill() {
-    if (mCurrentTaskUi != null) mCurrentTaskUi.cancel(true);
-    if (mFragment.mAnalyzer != null) {
-      mCurrentTaskUi = new Analyze(mFragment.mAnalyzer);
-      mCurrentTaskUi.execute();
+  public void refill(SudokuFragment fragment) {
+    if (mCurrentTask != null) mCurrentTask.cancel();
+    if (mAnalyzer == null || mAnalyzer.getGame() != fragment.getGame()) {
+      mAnalyzer = new Analyzer(fragment.getGame(), this);
     }
+    mCurrentTask = new Analyze(fragment);
+    mCurrentTask.execute();
   }
 
   // Analyzer.Callback method, called from background thread
   @Override public synchronized void phase(Phase phase) {
-    mCurrentTaskBackground.phase(phase);
+    mCurrentTask.phase(phase);
   }
 
   // Analyzer.Callback method, called from background thread
   @Override public synchronized void take(Insight insight) {
-    mCurrentTaskBackground.take(insight);
+    mCurrentTask.take(insight);
   }
 
-  private class Analyze extends AsyncTask<Void, InsightSum, Void> {
+  private class Analyze extends WorkerFragment.Task<SudokuFragment, Void, InsightSum, Void> {
     private final Analyzer mAnalyzer;
     private final InsightSum mInsightSum = new InsightSum();
 
-    Analyze(Analyzer analyzer) {
-      mAnalyzer = analyzer;
-      analyzer.setAnalysisTargetId(mFragment.mSudokuView.getInputState().getId());
+    Analyze(SudokuFragment fragment) {
+      super(fragment);
+      mAnalyzer = InsightWell.this.mAnalyzer;
+      mAnalyzer.setAnalysisTargetId(fragment.mSudokuView.getInputState().getId());
     }
 
     @Override protected Void doInBackground(Void... params) {
-      mCurrentTaskBackground = this;
       try {
         mAnalyzer.analyze();
       } catch (Exception e) {
-        Log.e("SudokuInsight", "Analyzer failed", e);
+        Log.e("InsightWell", "Analyzer failed", e);
         this.phase(Phase.INTERRUPTED);
       }
       return null;
     }
 
-    @Override protected void onProgressUpdate(InsightSum... values) {
-      if (mCurrentTaskUi == this)
-        mFragment.setInsights(values[0]);
+    @Override protected void onProgressUpdate(SudokuFragment fragment, InsightSum... values) {
+      fragment.setInsights(values[0]);
     }
 
     void phase(Phase phase) {

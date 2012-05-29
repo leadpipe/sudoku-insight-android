@@ -15,10 +15,9 @@ limitations under the License.
  */
 package us.blanshard.sudoku.android;
 
-import roboguice.inject.ContextSingleton;
-
 import us.blanshard.sudoku.core.Grid;
 
+import android.app.Application;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -28,6 +27,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.inject.Singleton;
 
 import java.util.List;
 import java.util.Map;
@@ -40,7 +40,7 @@ import javax.inject.Inject;
  *
  * @author Luke Blanshard
  */
-@ContextSingleton
+@Singleton
 public class Database {
 
   private static final String GAME_SELECT_AND_FROM_CLAUSE =
@@ -51,8 +51,8 @@ public class Database {
 
   private final OpenHelper mOpenHelper;
 
-  @Inject public Database(Context context) {
-    this.mOpenHelper = new OpenHelper(context);
+  @Inject public Database(Application app) {
+    this.mOpenHelper = new OpenHelper(app);
   }
 
   public enum GameState {
@@ -126,11 +126,6 @@ public class Database {
     public Grid puzzle;
     public List<Game> games;
     public List<Element> elements;
-  }
-
-  /** Closes the database. */
-  public void close() {
-    mOpenHelper.close();
   }
 
   /**

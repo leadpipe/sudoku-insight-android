@@ -45,7 +45,7 @@ public class SudokuActivity extends ActionBarActivity {
       StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
           .detectAll()
           .penaltyLog()
-          .penaltyDeath()
+          //.penaltyDeath()
           .build());
     }
   }
@@ -79,10 +79,5 @@ public class SudokuActivity extends ActionBarActivity {
       }
     }
     return super.onOptionsItemSelected(item);
-  }
-
-  @Override public void onDestroy() {
-    super.onDestroy();
-    mDb.close();
   }
 }
