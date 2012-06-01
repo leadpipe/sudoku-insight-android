@@ -30,6 +30,7 @@ import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
+import android.util.FloatMath;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -75,6 +76,7 @@ public class SudokuView extends View {
   private float mClockRadius;
   private int[] mOffsetsX;
   private int[] mOffsetsY;
+  private final Paint mPaint = new Paint();
 
   private Sudoku.State mState;
   private int mPointerId = INVALID_POINTER_ID;
@@ -229,41 +231,41 @@ public class SudokuView extends View {
     int halfThick = (mThickLineWidth + 1) / 2;
     int halfThin = (THIN_LINE_WIDTH + 1) / 2;
 
-    Paint paint = new Paint();
-    paint.setColor(mThickLineWidth > THIN_LINE_WIDTH ? Color.BLACK : Color.LTGRAY);
-    paint.setStyle(Paint.Style.STROKE);
-    paint.setStrokeWidth(THIN_LINE_WIDTH);
+    mPaint.reset();
+    mPaint.setColor(mThickLineWidth > THIN_LINE_WIDTH ? Color.BLACK : Color.LTGRAY);
+    mPaint.setStyle(Paint.Style.STROKE);
+    mPaint.setStrokeWidth(THIN_LINE_WIDTH);
 
     for (int i = 0; i < 3; ++i)
       for (int j = 1; j < 3; ++j) {
         int index = 3 * i + j;
         canvas.drawLine(mOffsetsX[0], mOffsetsY[index] - halfThin, mOffsetsX[9], mOffsetsY[index]
-            - halfThin, paint);
+            - halfThin, mPaint);
         canvas.drawLine(mOffsetsX[index] - halfThin, mOffsetsY[0], mOffsetsX[index] - halfThin,
-            mOffsetsY[9], paint);
+            mOffsetsY[9], mPaint);
       }
 
-    paint.setColor(Color.BLACK);
-    paint.setStrokeWidth(mThickLineWidth);
+    mPaint.setColor(Color.BLACK);
+    mPaint.setStrokeWidth(mThickLineWidth);
 
     canvas.drawRect(mOffsetsX[0] - halfThick, mOffsetsY[0] - halfThick, mOffsetsX[9] - halfThick,
-        mOffsetsY[9] - halfThick, paint);
+        mOffsetsY[9] - halfThick, mPaint);
 
     for (int i = 1; i < 3; ++i) {
       int index = 3 * i;
       canvas.drawLine(mOffsetsX[0], mOffsetsY[index] - halfThick, mOffsetsX[9], mOffsetsY[index]
-          - halfThick, paint);
+          - halfThick, mPaint);
       canvas.drawLine(mOffsetsX[index] - halfThick, mOffsetsY[0], mOffsetsX[index] - halfThick,
-          mOffsetsY[9], paint);
+          mOffsetsY[9], mPaint);
     }
 
-    paint.setAntiAlias(true);
-    paint.setStyle(Paint.Style.FILL);
-    paint.setTextAlign(Align.CENTER);
+    mPaint.setAntiAlias(true);
+    mPaint.setStyle(Paint.Style.FILL);
+    mPaint.setTextAlign(Align.CENTER);
 
     float textSize = mSquareSize * (mThickLineWidth > THIN_LINE_WIDTH ? 0.75f : 0.85f);
-    paint.setTextSize(textSize);
-    float toBaseline = (mSquareSize - paint.getTextSize()) / 2 - paint.ascent() - 1;
+    mPaint.setTextSize(textSize);
+    float toBaseline = (mSquareSize - mPaint.getTextSize()) / 2 - mPaint.ascent() - 1;
     float half = mSquareSize * 0.5f;
     float toCenter = half;
 
@@ -272,35 +274,35 @@ public class SudokuView extends View {
         Numeral num = mPuzzleEditor ? mGame.getState().get(loc) : mGame.getPuzzle().get(loc);
         boolean given = num != null;
         if (given) {
-          paint.setTypeface(Typeface.DEFAULT_BOLD);
-          paint.setFakeBoldText(true);
+          mPaint.setTypeface(Typeface.DEFAULT_BOLD);
+          mPaint.setFakeBoldText(true);
         } else if ((num = mGame.getState().get(loc)) != null) {
-          paint.setTypeface(Typeface.DEFAULT);
-          paint.setFakeBoldText(false);
+          mPaint.setTypeface(Typeface.DEFAULT);
+          mPaint.setFakeBoldText(false);
         }
-        paint.setColor(mBroken.contains(loc) ? Color.RED : Color.BLACK);
+        mPaint.setColor(mBroken.contains(loc) ? Color.RED : given || !mTrailActive ? Color.BLACK : Color.GRAY);
         float left = mOffsetsX[loc.column.index];
         float top = mOffsetsY[loc.row.index];
         if (num != null) {
-          canvas.drawText(num.toString(), left + toCenter, top + toBaseline, paint);
+          canvas.drawText(num.toString(), left + toCenter, top + toBaseline, mPaint);
         }
         if (!given && !mTrails.isEmpty()) {
-          paint.setFakeBoldText(false);
+          mPaint.setFakeBoldText(false);
           for (int i = 0; i < mTrails.size(); ++i) {
             TrailItem item = mTrails.get(i);
             if ((num = item.trail.get(loc)) != null) {
-              paint.setTextSize(mSquareSize * (i == 0 ? 0.5f : 0.35f));
-              paint.setColor(item.color);
+              mPaint.setTextSize(mSquareSize * (i == 0 ? 0.5f : 0.35f));
+              mPaint.setColor(item.color);
               boolean isTrailhead = loc == item.trail.getTrailhead();
-              paint.setTypeface(isTrailhead ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
-              paint.setTextSkewX(isTrailhead ? -0.125f : 0);
+              mPaint.setTypeface(isTrailhead ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+              mPaint.setTextSkewX(isTrailhead ? -0.125f : 0);
               canvas.drawText(num.toString(), left + mSquareSize * TRAIL_X_CENTER[i], top
-                  + mSquareSize * TRAIL_Y_TOP[i] - paint.ascent(), paint);
+                  + mSquareSize * TRAIL_Y_TOP[i] - mPaint.ascent(), mPaint);
             }
           }
-          paint.setTextSkewX(0);
-          paint.setTextSize(textSize);
-          paint.setColor(Color.BLACK);
+          mPaint.setTextSkewX(0);
+          mPaint.setTextSize(textSize);
+          mPaint.setColor(Color.BLACK);
         }
       }
     }
@@ -311,35 +313,35 @@ public class SudokuView extends View {
       float cx = mPointerX;
       float cy = mPointerY;
       float r = mClockRadius;
-      paint.setColor(Color.argb(0xe0, 0xf0, 0xf0, 0xf0));
-      canvas.drawCircle(cx, cy, r, paint);
-      canvas.drawCircle(mPreviewX, mPreviewY, half, paint);
+      mPaint.setColor(Color.argb(0xe0, 0xf0, 0xf0, 0xf0));
+      canvas.drawCircle(cx, cy, r, mPaint);
+      canvas.drawCircle(mPreviewX, mPreviewY, half, mPaint);
       if (mPreviewX2 > mPreviewX)
-        canvas.drawCircle(mPreviewX2, mPreviewY, half, paint);
-      paint.setColor(Color.argb(0xe0, 0xe0, 0xe0, 0xe0));
-      canvas.drawRect(x, y, x + mSquareSize, y + mSquareSize, paint);
+        canvas.drawCircle(mPreviewX2, mPreviewY, half, mPaint);
+      mPaint.setColor(Color.argb(0xe0, 0xe0, 0xe0, 0xe0));
+      canvas.drawRect(x, y, x + mSquareSize, y + mSquareSize, mPaint);
 
-      paint.setTypeface(Typeface.DEFAULT);
-      paint.setFakeBoldText(mPuzzleEditor);
+      mPaint.setTypeface(Typeface.DEFAULT);
+      mPaint.setFakeBoldText(mPuzzleEditor);
       int color = getInputColor();
-      paint.setColor(color);
+      mPaint.setColor(color);
 
       if (mChoice >= 0) {
-        drawChoice(mChoice, canvas, x + toCenter, y + toBaseline, paint);
-        drawChoice(mChoice, canvas, mPreviewX, mPreviewY - half + toBaseline, paint);
+        drawChoice(mChoice, canvas, x + toCenter, y + toBaseline, mPaint);
+        drawChoice(mChoice, canvas, mPreviewX, mPreviewY - half + toBaseline, mPaint);
         if (mPreviewX2 > mPreviewX)
-          drawChoice(mChoice, canvas, mPreviewX2, mPreviewY - half + toBaseline, paint);
+          drawChoice(mChoice, canvas, mPreviewX2, mPreviewY - half + toBaseline, mPaint);
       }
 
-      paint.setTextSize(Math.max(7, mSquareSize * 0.33f));
+      mPaint.setTextSize(Math.max(7, mSquareSize * 0.33f));
 
-      toBaseline = -paint.ascent() / 2.0f;
+      toBaseline = -mPaint.ascent() / 2.0f;
       float r2 = r - toBaseline;
       for (int i = 0; i <= 9; ++i) {
-        double radians = i * Math.PI / 6 - Math.PI / 2;
-        x = r2 * (float) Math.cos(radians);
-        y = r2 * (float) Math.sin(radians);
-        drawChoice(i, canvas, x + cx, y + cy + toBaseline, paint);
+        float radians = (float) (i * Math.PI / 6 - Math.PI / 2);
+        x = r2 * FloatMath.cos(radians);
+        y = r2 * FloatMath.sin(radians);
+        drawChoice(i, canvas, x + cx, y + cy + toBaseline, mPaint);
       }
     }
   }
@@ -375,10 +377,10 @@ public class SudokuView extends View {
               mPreviewY = half;
               float h = mClockRadius + half;
               y = cy - half;
-              x = (float) Math.sqrt(h*h - y*y);
+              x = FloatMath.sqrt(h*h - y*y);
               if (x < half) {
                 x = half;
-                y = (float) Math.sqrt(h*h - x*x);
+                y = FloatMath.sqrt(h*h - x*x);
                 mPreviewY = cy - y;
               }
               mPreviewX = cx - x;
