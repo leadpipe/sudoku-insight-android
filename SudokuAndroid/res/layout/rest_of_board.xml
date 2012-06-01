@@ -1,0 +1,54 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <ListView
+        android:id="@+id/trails"
+        android:layout_weight="3"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:choiceMode="singleChoice"
+        />
+
+    <RelativeLayout
+        android:layout_weight="2"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        >
+
+      <ToggleButton
+          android:id="@+id/edit_trail_toggle"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_alignParentLeft="true"
+          android:layout_alignParentTop="true"
+          android:layout_marginTop="4dp"
+          />
+
+      <TextView
+          android:id="@+id/timer"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_alignParentBottom="true"
+          android:layout_marginRight="4dp"
+          android:inputType="none"
+          android:gravity="right"
+          />
+
+      <TextView
+          android:id="@+id/insights"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:layout_below="@+id/edit_trail_toggle"
+          android:layout_above="@+id/timer"
+          android:inputType="none"
+          android:gravity="center"
+          />
+
+    </RelativeLayout>
+
+</LinearLayout>
