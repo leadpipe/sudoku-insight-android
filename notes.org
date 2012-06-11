@@ -1,21 +1,32 @@
 * Solver
 
 * Generator
-** TODO Add method for choosing symmetry based on an enum set
-** TODO What about non-unique puzzles?
+** TODO Non-unique puzzles
 
 * Hints
 ** TODO Figure out how to turn game histories into pattern times
 ** TODO Fix analyzer to not apply sets & overlaps until they're the cheapest insight available
 
+** Getting games with history from a sqlite db into a tsv file:
+sqlite3 db <<END
+.mode tabs
+.output games.tsv
+select p.puzzle, g.history from puzzle p, game g where g.puzzleId = p._id and g.gameState >= 3;
+END
+
 * Game
 ** TODO Rename getState to... what?
 
 * App
-** DONE Prefs page
-   - Show hints by default?
-   - What kind of puzzles to generate
-** DONE Indeterminate progress bar (circle) when generating a puzzle
+** TODO Use today's date as the seed for generating puzzles
+   - Date as a number + a counter that resets every day
+   - eg 20120615001
+   - Use same seed for picking symmetry, and do it by shuffling all symmetries
+     and walking the list to find the first one enabled.  This should maximize
+     the amount of sharing of puzzles.
+   - Ensure that everyone will get the same solution grid?
+   - Or maybe not: ensure that everyone with different
+     symmetry/generator/uniqueness gets different solution grid.
 ** TODO Decent list view
    - When played, elapsed time, collections belong to (clickable)
    - Collection info in header (or all)
@@ -23,17 +34,16 @@
    - Highlight current puzzle
    - Keep list current in tablet view
 ** TODO Single puzzle info view
-** DONE More menu items
-   - Next Puzzle
-   - Generate a Puzzle
-     - for these, if still working on one give the option of giving up on it
-** DONE Add editable grid to capture action; use it for entering from blank
-** DONE Tablet layouts with game and list both showing
+** TODO Don't have short names on the menu
+** TODO Change the tablet layouts to do game and single-puzzle info view
 ** TODO Improve new-trail icon
 ** TODO Make icons for launcher, home
 
-** DONE Have grid vary display based on solution/trail input state
-** TODO Give visual indication when try to set an unsettable location
+** TODO Preference for non-unique puzzles
+** TODO Handle completion of potentially non-unique puzzles
+   - by asking whether it was unique
+
+** TODO Give visual indication when try to set an unsettable location (?)
 
 * Site
 ** TODO Look into data backup
