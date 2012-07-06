@@ -39,7 +39,6 @@ import com.google.common.base.Objects;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
-import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -145,36 +144,55 @@ public class PatternMeasurer implements Runnable {
   }
 
   /**
-   * Returns the non-empty subsets of the given list, starting with the
-   * singletons.
+   * A list that is a view into another list, and that provides {@linkplain
+   * #step a way to step} itself through all subsets of the underlying list.
+   * This stepping has the following properties: <ul>
+   *
+   * <li> It does all combinations of each size before moving on to the next
+   * size.  That is, it starts out empty, then it does all the
+   * singletons, then all the pairs, and so on.
+   *
+   * <li> It preserves the order of the underlying list.
+   *
+   * <li> While doing a particular size, it does all combinations of all prior
+   * elements before starting to include each element in the mix.  Another way
+   * to think about this is as lexicographical order of the reversed indices.
+   * The assumption underlying this is that the insights being combined are in
+   * order from easier to harder, and we want to exhaust the combinations of the
+   * easier ones before including a harder one.  </ul>
+   *
+   * <p> It is possible to use this class as a subset view of another list
+   * without stepping through combinations: the {@link #add(int)} method adds
+   * the given index to the current view.
+   *
+   * <p> This class assumes that its underlying list does not change.
    */
-  static class AllCombinations extends AbstractIterator<List<Insight>> {
+  static class CombinationView extends AbstractList<Insight> {
     private final List<Insight> universe;
-    private int[] indices;
+    private final int[] indices;
     private int k;  // as in, n choose k
 
-    public AllCombinations(List<Insight> universe) {
+    public CombinationView(List<Insight> universe) {
       this.universe = universe;
       this.indices = new int[universe.size()];
     }
 
-    @Override protected List<Insight> computeNext() {
+    /**
+     * Attempts to step to the next combination of elements from the universe,
+     * returns true if it was possible.  To iterate all non-empty combinations,
+     * call this at the top of the loop; to iterate all combinations including
+     * empty, call this at the bottom of the loop.
+     */
+    public boolean step() {
       if (!increment()) {
         if (k == indices.length)
-          return endOfData();
+          return false;
         ++k;
         for (int i = 0; i < k; ++i)
           indices[i] = i;
       }
-      return new AbstractList<Insight>() {
-        @Override public int size() {
-          return k;
-        }
-
-        @Override public Insight get(int i) {
-          return universe.get(indices[i]);
-        }
-      };
+      ++modCount;
+      return true;
     }
 
     private boolean increment() {
@@ -188,6 +206,29 @@ public class PatternMeasurer implements Runnable {
         }
       }
       return false;
+    }
+
+    /**
+     * Adds the given index to the current view of the underlying list.  The
+     * given index must be larger than the current largest index included in the
+     * view.
+     */
+    public void add(int index) {
+      if (index < 0 || index >= indices.length)
+        throw new IndexOutOfBoundsException();
+      checkArgument(k < indices.length && (k == 0 || index > indices[k - 1]));
+      indices[k++] = index;
+      ++modCount;
+    }
+
+    @Override public Insight get(int index) {
+      if (index < 0 || index >= k)
+        throw new IndexOutOfBoundsException();
+      return universe.get(indices[index]);
+    }
+
+    @Override public int size() {
+      return k;
     }
   }
 
@@ -336,8 +377,8 @@ public class PatternMeasurer implements Runnable {
         System.err.printf("Elimination-only insights: %d", elims.size());
       }
 
-      for (Iterator<List<Insight>> it = new AllCombinations(elims); it.hasNext(); ) {
-        eliminateAndAddInsights(work, marks, it.next(), collector, elimsCollector.makeChild());
+      for (CombinationView view = new CombinationView(elims); view.step(); ) {
+        eliminateAndAddInsights(work, marks, view, collector, elimsCollector.makeChild());
       }
 
       if (elims.size() > 10) {
