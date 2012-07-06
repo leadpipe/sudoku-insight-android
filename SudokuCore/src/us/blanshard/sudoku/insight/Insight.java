@@ -18,6 +18,8 @@ package us.blanshard.sudoku.insight;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import us.blanshard.sudoku.core.Assignment;
+import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Marks;
 
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.Multiset;
@@ -94,6 +96,15 @@ public abstract class Insight {
   public Collection<Assignment> getEliminations() {
     return Collections.<Assignment>emptySet();
   }
+
+  /**
+   * Applies the assignments and eliminations of this insight to the given
+   * builders, returns true if it doesn't uncover any errors.
+   */
+  public abstract boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder);
+
+  /** Tells whether this insight is implied by the given grid and marks. */
+  public abstract boolean isImpliedBy(Grid grid, Marks marks);
 
   /**
    * Returns a cumulative appraisal of this insight by summing the appraisals of

@@ -18,6 +18,7 @@ package us.blanshard.sudoku.insight;
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
@@ -82,6 +83,19 @@ public class Overlap extends Insight.Atom {
 
   public String toBasicString() {
     return unit + ":" + numeral + ":" + extra.unit;
+  }
+
+  @Override public boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder) {
+    boolean ok = true;
+    for (Location loc : extra)
+      ok &= marksBuilder.eliminate(loc, numeral);
+    return ok;
+  }
+
+  @Override public boolean isImpliedBy(Grid grid, Marks marks) {
+    // Ensures that all possible locations for the numeral in the unit lie in
+    // the overlapping unit.
+    return marks.get(unit, numeral).minus(extra.unit).isEmpty();
   }
 
   @Override public String toString() {

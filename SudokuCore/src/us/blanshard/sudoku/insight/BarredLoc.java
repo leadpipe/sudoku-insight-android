@@ -15,7 +15,9 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.Marks;
 
 import com.google.common.base.Objects;
 
@@ -38,6 +40,14 @@ public class BarredLoc extends Insight.Atom {
 
   public Location getLocation() {
     return location;
+  }
+
+  @Override public boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder) {
+    return false;  // it's an error already
+  }
+
+  @Override public boolean isImpliedBy(Grid grid, Marks marks) {
+    return marks.get(location).isEmpty();
   }
 
   @Override public boolean equals(Object o) {

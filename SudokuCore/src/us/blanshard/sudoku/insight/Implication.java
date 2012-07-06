@@ -19,6 +19,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import us.blanshard.sudoku.core.Assignment;
+import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Marks;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableCollection;
@@ -65,6 +67,27 @@ public class Implication extends Insight.Molecule {
 
   public Insight getConsequent() {
     return consequent;
+  }
+
+  @Override public boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder) {
+    boolean ok = true;
+    for (Insight insight : antecedents)
+      ok &= insight.apply(gridBuilder, marksBuilder);
+    ok &= consequent.apply(gridBuilder, marksBuilder);
+    return ok;
+  }
+
+  @Override public boolean isImpliedBy(Grid grid, Marks marks) {
+    // Checks that all antecedents are implied by the given grid and marks; if
+    // so, applies the antecedents to new builders and checks that the
+    // consequent is implied by the resulting grid and marks.
+    for (Insight insight : antecedents)
+      if (!insight.isImpliedBy(grid, marks)) return false;
+    Grid.Builder gridBuilder = grid.toBuilder();
+    Marks.Builder marksBuilder = marks.toBuilder();
+    for (Insight insight : antecedents)
+      insight.apply(gridBuilder, marksBuilder);
+    return consequent.isImpliedBy(gridBuilder.build(), marksBuilder.build());
   }
 
   @Override public int appraise(Pattern.Appraiser appraiser) {

@@ -18,6 +18,7 @@ package us.blanshard.sudoku.insight;
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.UnitSubset;
@@ -53,10 +54,8 @@ public class LockedSet extends Insight.Atom {
       synchronized (this) {
         if ((answer = eliminations) == null) {
           ImmutableList.Builder<Assignment> builder = ImmutableList.builder();
-          NumSet nums = getPattern().getType() == Pattern.Type.NAKED_SET
-            ? this.nums : this.nums.not();
-          UnitSubset locs = getPattern().getType() == Pattern.Type.NAKED_SET
-            ? this.locs.not() : this.locs;
+          NumSet nums = isNakedSet() ? this.nums : this.nums.not();
+          UnitSubset locs = isNakedSet() ? this.locs.not() : this.locs;
           for (Numeral num : nums)
             for (Location loc : locs)
               builder.add(Assignment.of(loc, num));
@@ -67,12 +66,38 @@ public class LockedSet extends Insight.Atom {
     return answer;
   }
 
+  public boolean isNakedSet() {
+    return getPattern().getType() == Pattern.Type.NAKED_SET;
+  }
+
+  public boolean isHiddenSet() {
+    return !isNakedSet();
+  }
+
   public NumSet getNumerals() {
     return nums;
   }
 
   public UnitSubset getLocations() {
     return locs;
+  }
+
+  @Override public boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder) {
+    boolean ok = true;
+    for (Assignment assignment : getEliminations())
+      ok &= marksBuilder.eliminate(assignment);
+    return ok;
+  }
+
+  @Override public boolean isImpliedBy(Grid grid, Marks marks) {
+    if (isNakedSet()) {
+      for (Location loc : locs)
+        if (!marks.get(loc).isSubsetOf(nums)) return false;
+    } else {
+      for (Numeral num : nums)
+        if (!marks.get(locs.unit, num).isSubsetOf(locs)) return false;
+    }
+    return true;
   }
 
   @Override public boolean equals(Object o) {

@@ -16,6 +16,8 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
@@ -46,6 +48,18 @@ public class Conflict extends Insight.Atom {
 
   public UnitSubset getLocations() {
     return locations;
+  }
+
+  @Override public boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder) {
+    return false;  // it's an error already
+  }
+
+  @Override public boolean isImpliedBy(Grid grid, Marks marks) {
+    for (Location loc : locations) {
+      if (grid.get(loc) != numeral)
+        return false;
+    }
+    return true;
   }
 
   @Override public boolean equals(Object o) {
