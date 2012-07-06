@@ -35,6 +35,8 @@ END
    - Keep list current in tablet view
 ** TODO Single puzzle info view
 ** TODO Don't have short names on the menu
+** TODO Improve the trail colors--there's too much repetition and the yellows are too hard to read
+** TODO Make it possible to disable a trail: gray it out and move it to the bottom of the list
 ** TODO Change the tablet layouts to do game and single-puzzle info view
 ** TODO Improve new-trail icon
 ** TODO Make icons for launcher, home
