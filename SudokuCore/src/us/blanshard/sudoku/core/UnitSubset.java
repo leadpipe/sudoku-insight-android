@@ -83,26 +83,48 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
 
   /** Returns the intersection of this set and another one. */
   public UnitSubset and(UnitSubset that) {
-    checkArgument(that.unit == this.unit);
-    return ofBits(unit, this.bits & that.bits);
+    if (that.unit == this.unit) return ofBits(unit, this.bits & that.bits);
+    short bits = 0;
+    for (Location loc : that) {
+      UnitSubset singleton = loc.unitSubsets.get(unit.getType());
+      if (singleton.unit == this.unit) bits |= singleton.bits;
+    }
+    return ofBits(unit, this.bits & bits);
   }
 
   /** Returns the union of this set and another one. */
   public UnitSubset or(UnitSubset that) {
-    checkArgument(that.unit == this.unit);
-    return ofBits(unit, this.bits | that.bits);
+    if (that.unit == this.unit) return ofBits(unit, this.bits | that.bits);
+    short bits = this.bits;
+    for (Location loc : that) {
+      UnitSubset singleton = loc.unitSubsets.get(unit.getType());
+      checkArgument(singleton.unit == unit);
+      bits |= singleton.bits;
+    }
+    return ofBits(unit, bits);
   }
 
   /** Returns the symmetric difference of this set and another one. */
   public UnitSubset xor(UnitSubset that) {
-    checkArgument(that.unit == this.unit);
-    return ofBits(unit, this.bits ^ that.bits);
+    if (that.unit == this.unit) return ofBits(unit, this.bits ^ that.bits);
+    short bits = this.bits;
+    for (Location loc : that) {
+      UnitSubset singleton = loc.unitSubsets.get(unit.getType());
+      checkArgument(singleton.unit == unit);
+      bits ^= singleton.bits;
+    }
+    return ofBits(unit, bits);
   }
 
   /** Returns the asymmetric difference of this set and another one. */
   public UnitSubset minus(UnitSubset that) {
-    checkArgument(that.unit == this.unit);
-    return ofBits(unit, this.bits & (~that.bits));
+    if (that.unit == this.unit) return ofBits(unit, this.bits & (~that.bits));
+    short bits = 0;
+    for (Location loc : that) {
+      UnitSubset singleton = loc.unitSubsets.get(unit.getType());
+      if (singleton.unit == this.unit) bits |= singleton.bits;
+    }
+    return ofBits(unit, this.bits & (~bits));
   }
 
   public boolean contains(Location loc) {

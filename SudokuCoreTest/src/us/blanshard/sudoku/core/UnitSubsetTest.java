@@ -32,6 +32,10 @@ public class UnitSubsetTest {
   private static Unit unit = Block.of(5);
 
   private static UnitSubset set(int... nums) {
+    return set(unit, nums);
+  }
+
+  private static UnitSubset set(Unit unit, int... nums) {
     return UnitSubset.ofBits(unit, NumSetTest.set(nums).bits);
   }
 
@@ -50,18 +54,34 @@ public class UnitSubsetTest {
   @Test public void and() {
     assertEquals(set(4,5), set(3,4,5).and(set(4,5,6)));
     assertEquals(set(), set(3,4,5).and(set(6,7,8)));
+
+    assertEquals(set(4,5,6), set().not().and(set(Row.of(5)).not()));
   }
 
   @Test public void or() {
     assertEquals(set(1,2,3), set(1,2).or(set(1,3)));
+
+    assertEquals(set(1,2,3,4), set(1,4).or(set(Row.of(4), 4,5,6)));
+  }
+
+  @Test(expected = IllegalArgumentException.class) public void or_boom() {
+    set(1,2,3).or(set(Block.of(1), 1));
   }
 
   @Test public void xor() {
     assertEquals(set(2,3), set(1,2).xor(set(1,3)));
+
+    assertEquals(set(2,3,4), set(1,4).xor(set(Row.of(4), 4,5,6)));
+  }
+
+  @Test(expected = IllegalArgumentException.class) public void xor_boom() {
+    set(1,2,3).xor(set(Row.of(4), 1,2,3));
   }
 
   @Test public void minus() {
     assertEquals(set(2,3), set(1,2,3,8).minus(set(1,8)));
+
+    assertEquals(set(1,7), set(1,4,5,7).minus(set(Row.of(5)).not()));
   }
 
   @Test public void contains() {
