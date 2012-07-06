@@ -39,16 +39,14 @@ import javax.annotation.concurrent.Immutable;
 public class Overlap extends Insight.Atom {
   private final Unit unit;
   private final Numeral numeral;
-  private final Unit overlappingUnit;
-  private final UnitSubset overlap;
+  private final UnitSubset extra;
   private volatile Collection<Assignment> eliminations;
 
-  public Overlap(Grid grid, Unit unit, Numeral numeral, Unit overlappingUnit, UnitSubset overlap) {
-    super(Pattern.overlap(grid, unit, overlappingUnit, numeral));
+  public Overlap(Grid grid, Unit unit, Numeral numeral, UnitSubset extra) {
+    super(Pattern.overlap(grid, unit, extra.unit, numeral));
     this.unit = unit;
     this.numeral = numeral;
-    this.overlappingUnit = overlappingUnit;
-    this.overlap = overlap;
+    this.extra = extra;
   }
 
   @Override public Collection<Assignment> getEliminations() {
@@ -57,7 +55,7 @@ public class Overlap extends Insight.Atom {
       synchronized (this) {
         if ((answer = eliminations) == null) {
           ImmutableList.Builder<Assignment> builder = ImmutableList.builder();
-          for (Location loc : overlap)
+          for (Location loc : extra)
             builder.add(Assignment.of(loc, numeral));
           eliminations = answer = builder.build();
         }
@@ -75,11 +73,19 @@ public class Overlap extends Insight.Atom {
   }
 
   public Unit getOverlappingUnit() {
-    return overlappingUnit;
+    return extra.unit;
   }
 
-  public UnitSubset getOverlap() {
-    return overlap;
+  public UnitSubset getExtra() {
+    return extra;
+  }
+
+  public String toBasicString() {
+    return unit + ":" + numeral + ":" + extra.unit;
+  }
+
+  @Override public String toString() {
+    return "Overlap(" + toBasicString() + ")";
   }
 
   @Override public boolean equals(Object o) {
@@ -89,11 +95,11 @@ public class Overlap extends Insight.Atom {
     return this.pattern.equals(that.pattern)
         && this.unit.equals(that.unit)
         && this.numeral.equals(that.numeral)
-        && this.overlappingUnit.equals(that.overlappingUnit);
-    // Note that the overlap ivar doesn't identify the insight.
+        && this.extra.unit.equals(that.extra.unit);
+    // Note that the "extra" ivar doesn't identify the insight.
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(pattern, unit, numeral, overlappingUnit);
+    return Objects.hashCode(pattern, unit, numeral, extra.unit);
   }
 }

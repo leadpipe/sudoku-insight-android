@@ -91,7 +91,7 @@ public class InsightSum implements Cloneable {
     }
     case OVERLAP: {
       Overlap o = (Overlap) insight;
-      overlaps.add(o.getUnit() + ":" + o.getNumeral() + ":" + o.getOverlappingUnit());
+      overlaps.add(o.toBasicString());
       break;
     }
     case LOCKED_SET: {

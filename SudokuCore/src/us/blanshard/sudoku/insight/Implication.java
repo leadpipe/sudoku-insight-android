@@ -19,7 +19,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Grid;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableCollection;
@@ -32,16 +31,16 @@ import java.util.Collection;
 import javax.annotation.concurrent.Immutable;
 
 /**
- * Describes an atomic insight implied by one or more other insights.
+ * Describes an insight implied by one or more other insights.
  *
  * @author Luke Blanshard
  */
 @Immutable
 public class Implication extends Insight.Molecule {
   private final ImmutableCollection<Insight> antecedents;
-  private final Insight.Atom consequent;
+  private final Insight consequent;
 
-  Implication(Grid grid, Collection<? extends Insight> antecedents, Insight.Atom consequent) {
+  public Implication(Collection<? extends Insight> antecedents, Insight consequent) {
     super(Insight.Type.IMPLICATION);
     checkArgument(!antecedents.isEmpty());
     this.antecedents = ImmutableList.copyOf(antecedents);
@@ -64,7 +63,7 @@ public class Implication extends Insight.Molecule {
     return antecedents;
   }
 
-  public Insight.Atom getConsequent() {
+  public Insight getConsequent() {
     return consequent;
   }
 
@@ -76,7 +75,7 @@ public class Implication extends Insight.Molecule {
     ImmutableList.Builder<Insight.Atom> builder = ImmutableList.builder();
     for (Insight i : antecedents)
       builder.addAll(i.getAtoms());
-    builder.add(consequent);
+    builder.addAll(consequent.getAtoms());
     return builder.build();
   }
 
@@ -84,13 +83,13 @@ public class Implication extends Insight.Molecule {
     ImmutableMultiset.Builder<Pattern> builder = ImmutableMultiset.builder();
     for (Insight i : antecedents)
       builder.addAll(i.getPatterns());
-    builder.add(consequent.getPattern());
+    builder.addAll(consequent.getPatterns());
     return builder.build();
   }
 
   @Override public boolean equals(Object o) {
     if (o == this) return true;
-    if (o == null || o.getClass() != getClass()) return false;
+    if (!(o instanceof Implication)) return false;
     Implication that = (Implication) o;
     return this.antecedents.equals(that.antecedents)
         && this.consequent.equals(that.consequent);
