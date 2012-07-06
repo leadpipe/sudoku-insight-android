@@ -110,14 +110,13 @@ public class PatternMeasurer implements Runnable {
   private final Sudoku game;
   private final List<Move> history;
   private final PrintWriter out;
-  private final Grid solution;
   private final Cache<Integer, StateState> stateStates;
 
   private PatternMeasurer(Grid puzzle, List<Move> history, PrintWriter out) {
+    checkNotNull(Solver.solve(puzzle, new Random()).solution);
     this.game = new Sudoku(puzzle, Sudoku.nullRegistry()).resume();
     this.history = history;
     this.out = out;
-    this.solution = checkNotNull(Solver.solve(puzzle, new Random()).solution);
     this.stateStates = CacheBuilder.newBuilder().concurrencyLevel(1).build(
         new CacheLoader<Integer, StateState>() {
           @Override public StateState load(Integer id) {
