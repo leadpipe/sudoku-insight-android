@@ -91,6 +91,14 @@ public final class NumSet extends AbstractSet<Numeral> implements Set<Numeral> {
     return instances[this.bits & (~that.bits)];
   }
 
+  public boolean isSubsetOf(NumSet that) {
+    return (this.bits & that.bits) == this.bits;
+  }
+
+  public boolean isSupersetOf(NumSet that) {
+    return (this.bits & that.bits) == that.bits;
+  }
+
   public boolean contains(Numeral num) {
     return (bits & num.bit) != 0;
   }

@@ -82,10 +82,11 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
   }
 
   /** Returns the intersection of this set and another one. */
-  public UnitSubset and(UnitSubset that) {
-    if (that.unit == this.unit) return ofBits(unit, this.bits & that.bits);
+  public UnitSubset and(Iterable<Location> it) {
+    UnitSubset that = sameUnit(it);
+    if (that != null) return ofBits(unit, this.bits & that.bits);
     short bits = 0;
-    for (Location loc : that) {
+    for (Location loc : it) {
       UnitSubset singleton = loc.unitSubsets.get(unit.getType());
       if (singleton.unit == this.unit) bits |= singleton.bits;
     }
@@ -93,10 +94,11 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
   }
 
   /** Returns the union of this set and another one. */
-  public UnitSubset or(UnitSubset that) {
-    if (that.unit == this.unit) return ofBits(unit, this.bits | that.bits);
+  public UnitSubset or(Iterable<Location> it) {
+    UnitSubset that = sameUnit(it);
+    if (that != null) return ofBits(unit, this.bits | that.bits);
     short bits = this.bits;
-    for (Location loc : that) {
+    for (Location loc : it) {
       UnitSubset singleton = loc.unitSubsets.get(unit.getType());
       checkArgument(singleton.unit == unit);
       bits |= singleton.bits;
@@ -105,10 +107,11 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
   }
 
   /** Returns the symmetric difference of this set and another one. */
-  public UnitSubset xor(UnitSubset that) {
-    if (that.unit == this.unit) return ofBits(unit, this.bits ^ that.bits);
+  public UnitSubset xor(Iterable<Location> it) {
+    UnitSubset that = sameUnit(it);
+    if (that != null) return ofBits(unit, this.bits ^ that.bits);
     short bits = this.bits;
-    for (Location loc : that) {
+    for (Location loc : it) {
       UnitSubset singleton = loc.unitSubsets.get(unit.getType());
       checkArgument(singleton.unit == unit);
       bits ^= singleton.bits;
@@ -117,14 +120,27 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
   }
 
   /** Returns the asymmetric difference of this set and another one. */
-  public UnitSubset minus(UnitSubset that) {
-    if (that.unit == this.unit) return ofBits(unit, this.bits & (~that.bits));
+  public UnitSubset minus(Iterable<Location> it) {
+    UnitSubset that = sameUnit(it);
+    if (that != null) return ofBits(unit, this.bits & (~that.bits));
     short bits = 0;
-    for (Location loc : that) {
+    for (Location loc : it) {
       UnitSubset singleton = loc.unitSubsets.get(unit.getType());
       if (singleton.unit == this.unit) bits |= singleton.bits;
     }
     return ofBits(unit, this.bits & (~bits));
+  }
+
+  public boolean isSubsetOf(Iterable<Location> it) {
+    return this.minus(it).isEmpty();
+  }
+
+  public boolean isSupersetOf(Iterable<Location> it) {
+    UnitSubset that = sameUnit(it);
+    if (that != null) return (this.bits & that.bits) == that.bits;
+    for (Location loc : it)
+      if (!this.contains(loc)) return false;
+    return true;
   }
 
   public boolean contains(Location loc) {
@@ -168,6 +184,15 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
   @Override public int hashCode() {
     // Must match Set's contract, no shortcut to iterating and adding.
     return super.hashCode();
+  }
+
+  private UnitSubset sameUnit(Iterable<Location> it) {
+    if (it instanceof UnitSubset) {
+      UnitSubset that = (UnitSubset) it;
+      if (that.unit == this.unit)
+        return that;
+    }
+    return null;
   }
 
   private class Iter implements Iterator<Location> {
