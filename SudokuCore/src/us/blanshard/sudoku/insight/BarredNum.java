@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Numeral;
@@ -55,6 +56,10 @@ public class BarredNum extends Insight.Atom {
 
   @Override public boolean isImpliedBy(Grid grid, Marks marks) {
     return marks.get(unit, numeral).isEmpty();
+  }
+
+  @Override public boolean mightBeRevealedByElimination(Assignment elimination) {
+    return elimination.numeral == this.numeral && this.unit.contains(elimination.location);
   }
 
   @Override public boolean equals(Object o) {

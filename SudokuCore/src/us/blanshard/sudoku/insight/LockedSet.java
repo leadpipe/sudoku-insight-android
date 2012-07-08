@@ -100,6 +100,14 @@ public class LockedSet extends Insight.Atom {
     return true;
   }
 
+  @Override public boolean mightBeRevealedByElimination(Assignment elimination) {
+    if (isNakedSet()) {
+      return locs.contains(elimination.location) && !nums.contains(elimination.numeral);
+    } else {
+      return !locs.contains(elimination.location) && nums.contains(elimination.numeral);
+    }
+  }
+
   @Override public boolean equals(Object o) {
     if (o == this) return true;
     if (o == null || o.getClass() != getClass()) return false;

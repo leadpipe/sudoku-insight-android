@@ -106,6 +106,9 @@ public abstract class Insight {
   /** Tells whether this insight is implied by the given grid and marks. */
   public abstract boolean isImpliedBy(Grid grid, Marks marks);
 
+  /** Tells whether this insight is related to the given elimination. */
+  public abstract boolean mightBeRevealedByElimination(Assignment elimination);
+
   /**
    * Returns a cumulative appraisal of this insight by summing the appraisals of
    * its constituent patterns.

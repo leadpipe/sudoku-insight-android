@@ -90,6 +90,12 @@ public class Implication extends Insight.Molecule {
     return consequent.isImpliedBy(gridBuilder.build(), marksBuilder.build());
   }
 
+  @Override public boolean mightBeRevealedByElimination(Assignment elimination) {
+    for (Insight insight : antecedents)
+      if (insight.mightBeRevealedByElimination(elimination)) return true;
+    return consequent.mightBeRevealedByElimination(elimination);
+  }
+
   @Override public int appraise(Pattern.Appraiser appraiser) {
     return addAppraisals(sumAppraisals(appraiser, antecedents), consequent.appraise(appraiser));
   }

@@ -98,6 +98,12 @@ public class Overlap extends Insight.Atom {
     return marks.get(unit, numeral).minus(extra.unit).isEmpty();
   }
 
+  @Override public boolean mightBeRevealedByElimination(Assignment elimination) {
+    return elimination.numeral == this.numeral
+        && this.unit.contains(elimination.location)
+        && !this.extra.unit.contains(elimination.location);
+  }
+
   @Override public String toString() {
     return "Overlap(" + toBasicString() + ")";
   }

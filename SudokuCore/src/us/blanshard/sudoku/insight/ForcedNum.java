@@ -68,6 +68,10 @@ public class ForcedNum extends Insight.Atom {
     return set.size() == 1 && set.get(0) == numeral && !grid.containsKey(location);
   }
 
+  @Override public boolean mightBeRevealedByElimination(Assignment elimination) {
+    return elimination.location == this.location;
+  }
+
   @Override public boolean equals(Object o) {
     if (o == this) return true;
     if (o == null || o.getClass() != getClass()) return false;

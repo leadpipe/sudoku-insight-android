@@ -35,7 +35,6 @@ import us.blanshard.sudoku.insight.Insight;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -53,7 +52,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.AbstractList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -161,7 +159,7 @@ public class PatternMeasurer implements Runnable {
    * easier ones before including a harder one.  </ul>
    *
    * <p> It is possible to use this class as a subset view of another list
-   * without stepping through combinations: the {@link #add(int)} method adds
+   * without stepping through combinations: the {@link #addIndex} method adds
    * the given index to the current view.
    *
    * <p> This class assumes that its underlying list does not change.
@@ -212,7 +210,7 @@ public class PatternMeasurer implements Runnable {
      * given index must be larger than the current largest index included in the
      * view.
      */
-    public void add(int index) {
+    public void addIndex(int index) {
       if (index < 0 || index >= indices.length)
         throw new IndexOutOfBoundsException();
       checkArgument(k < indices.length && (k == 0 || index > indices[k - 1]));
@@ -245,15 +243,14 @@ public class PatternMeasurer implements Runnable {
     }
 
     void findInsights(Long timestamp) {
-      Grid work = state.getGrid();
+      Grid grid = state.getGrid();
       Marks.Builder builder = Marks.builder();
-      boolean hasErrors = !builder.assignAll(work);
+      boolean hasErrors = !builder.assignAll(grid);
 
       foundErrors.clear();
       List<Insight> newInsights = Lists.newArrayList();
-      Collector collector = new Collector(insightArrivals.keySet(), newInsights);
       addNewConsequentialInsights(
-          work, builder.build(), hasErrors, ImmutableList.<Insight>of(), collector, collector.makeChild());
+          grid, builder.build(), hasErrors, new Collector(insightArrivals.keySet(), newInsights));
 
       // Handle errors cleared by this move.
       if (!errors.isEmpty()) {
@@ -269,6 +266,8 @@ public class PatternMeasurer implements Runnable {
 
       // Record new insights.
       for (Insight insight : newInsights) {
+        if (insightArrivals.containsKey(insight))
+          continue;  // It must be an implication
         insightArrivals.put(insight, timestamp);
         if (insight.isError()) {
           Insight nub = insight;
@@ -330,71 +329,88 @@ public class PatternMeasurer implements Runnable {
         }
       }
 
-      public Set<Insight> getAllInsights() {
-        return Objects.firstNonNull(all, existing);
-      }
-
       public List<Insight> getNewInsights() {
         return seen;
-      }
-
-      public Collector makeChild() {
-        return new Collector(getAllInsights(), Lists.<Insight>newArrayList());
       }
     }
 
     private void addNewConsequentialInsights(
-        Grid work, Marks marks, boolean hasErrors, Collection<Insight> antecedents,
-        Collector collector, Collector elimsCollector) {
+        Grid grid, Marks marks, boolean hasErrors, Collector collector) {
+
+      if (hasErrors)
+        findErrors(grid, marks, collector);
+
+      findSingletonLocations(grid, marks, collector);
+      findSingletonNumerals(grid, marks, collector);
+
+      List<Insight> newInsights = collector.getNewInsights();
+      int elimsStart = newInsights.size();
+      findOverlapsAndSets(grid, marks, collector);
+
+      if (newInsights.size() > elimsStart) {
+        List<Insight> elimsSublist = newInsights.subList(elimsStart, newInsights.size());
+        List<Insight> elims = ImmutableList.copyOf(elimsSublist);
+        elimsSublist.clear();
+        addPostEliminationInsights(grid, marks, elims, collector);
+      }
+    }
+
+    private void addPostEliminationInsights (
+        Grid grid, Marks marks, List<Insight> elims, Collector collector) {
+
+      Grid.Builder gridBuilder = grid.toBuilder();
+      Marks.Builder marksBuilder = marks.toBuilder();
+      boolean ok = true;
+      for (Insight elim : elims)
+        ok &= elim.apply(gridBuilder, marksBuilder);
 
       List<Insight> newInsights = collector.getNewInsights();
       int start = newInsights.size();
 
-      if (hasErrors)
-        findErrors(work, marks, collector);
+      addNewConsequentialInsights(gridBuilder.build(), marksBuilder.build(), !ok, collector);
 
-      findSingletonLocations(work, marks, collector);
-      findSingletonNumerals(work, marks, collector);
-
-      checkArgument(elimsCollector.getNewInsights().isEmpty());
-      findOverlapsAndSets(work, marks, elimsCollector);
-
-      if (!elimsCollector.getNewInsights().isEmpty()) {
-        addPostEliminationInsights(work, marks, collector, elimsCollector);
-      }
-
-      if (!antecedents.isEmpty() && newInsights.size() > start)
-        for (ListIterator<Insight> it = newInsights.listIterator(start); it.hasNext(); )
-          it.set(new Implication(antecedents, it.next()));
-    }
-
-    private void addPostEliminationInsights (
-        Grid work, Marks marks, Collector collector, Collector elimsCollector) {
-
-      List<Insight> elims = elimsCollector.getNewInsights();
-      if (elims.size() > 10) {
-        System.err.printf("Elimination-only insights: %d", elims.size());
-      }
-
-      for (CombinationView view = new CombinationView(elims); view.step(); ) {
-        eliminateAndAddInsights(work, marks, view, collector, elimsCollector.makeChild());
-      }
-
-      if (elims.size() > 10) {
-        System.err.printf("(done %d)%n", elims.size());
+      for (ListIterator<Insight> it = newInsights.listIterator(start); it.hasNext(); ) {
+        it.set(makeImplication(grid, marks, elims, it.next()));
       }
     }
 
-    private void eliminateAndAddInsights (
-        Grid work, Marks marks, List<Insight> elims, Collector collector, Collector elimsCollector) {
+    private Implication makeImplication(
+        Grid grid, Marks marks, List<Insight> elims, Insight consequent) {
 
-      Marks.Builder builder = marks.toBuilder();
-      boolean hasErrors = false;
-      for (Insight elim : elims)
-        for (Assignment assignment : elim.getEliminations())
-          hasErrors |= !builder.eliminate(assignment);
+      // Whittle the universe of elimination insights down to those that might
+      // be antecedents to the given consequent.
+      CombinationView universe = new CombinationView(elims);
+      for (ListIterator<Insight> it = elims.listIterator(); it.hasNext(); ) {
+        if (mayBeAntecedentTo(it.next(), consequent))
+          universe.addIndex(it.previousIndex());
+      }
 
-      addNewConsequentialInsights(work, builder.build(), hasErrors, elims, collector, elimsCollector);
+      if (universe.size() > 10) {
+        System.err.printf("Checking all combinations of %d elims for %s (%s)%n",
+                          universe.size(), consequent, consequent.getPatterns());
+      }
+
+      // Then find the first combination of eliminations from that universe that
+      // imply the consequent and return it.
+      for (CombinationView view = new CombinationView(universe); view.step(); ) {
+        Grid.Builder gridBuilder = grid.toBuilder();
+        Marks.Builder marksBuilder = marks.toBuilder();
+        for (Insight elim : view)
+          elim.apply(gridBuilder, marksBuilder);
+
+        if (consequent.isImpliedBy(gridBuilder.build(), marksBuilder.build()))
+          return new Implication(view, consequent);
+      }
+
+      // It should not be possible to reach here.
+      throw new AssertionError("There's a logic error somewhere");
+    }
+
+    private boolean mayBeAntecedentTo(Insight elim, Insight consequent) {
+      for (Assignment assignment : elim.getEliminations())
+        if (consequent.mightBeRevealedByElimination(assignment))
+          return true;
+      return false;
     }
 
     private void insightSeen(Insight insight, long at) {

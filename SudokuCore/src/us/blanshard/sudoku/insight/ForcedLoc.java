@@ -83,6 +83,10 @@ public class ForcedLoc extends Insight.Atom {
     return set.size() == 1 && set.get(0) == location && !grid.containsKey(location);
   }
 
+  @Override public boolean mightBeRevealedByElimination(Assignment elimination) {
+    return elimination.numeral == this.numeral && this.unit.contains(elimination.location);
+  }
+
   @Override public boolean equals(Object o) {
     if (o == this) return true;
     if (o == null || o.getClass() != getClass()) return false;

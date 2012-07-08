@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Marks;
@@ -60,6 +61,10 @@ public class Conflict extends Insight.Atom {
         return false;
     }
     return true;
+  }
+
+  @Override public boolean mightBeRevealedByElimination(Assignment elimination) {
+    return false;
   }
 
   @Override public boolean equals(Object o) {
