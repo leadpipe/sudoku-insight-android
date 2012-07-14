@@ -19,14 +19,16 @@ END
 
 * App
 ** TODO Use today's date as the seed for generating puzzles
-   - Date as a number + a counter that resets every day
-   - eg 20120615001
-   - Use same seed for picking symmetry, and do it by shuffling all symmetries
-     and walking the list to find the first one enabled.  This should maximize
-     the amount of sharing of puzzles.
-   - Ensure that everyone will get the same solution grid?
-   - Or maybe not: ensure that everyone with different
-     symmetry/generator/uniqueness gets different solution grid.
+   - Hash the following things together for basic seed:
+     - Today's date
+     - A daily counter
+     - The generator (symmetry preserving or not)
+     - "Properness" flag (allows >1 solution or not)
+     - An installation number (pref to get different puzzles on different devices)
+   - Use this to shuffle all the symmetries
+   - Choose the first symmetry in the shuffled list that's enabled
+   - Add the symmetry to the hash
+   - Use this as the seed for generating the puzzle
 ** TODO Decent list view
    - When played, elapsed time, collections belong to (clickable)
    - Collection info in header (or all)
