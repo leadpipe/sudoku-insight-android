@@ -8,9 +8,9 @@
 ** TODO Fix analyzer to not apply sets & overlaps until they're the cheapest insight available
 
 ** Getting games with history from a sqlite db into a tsv file:
-sqlite3 db <<END
+sqlite3 phone-2012-07-08.db <<END
 .mode tabs
-.output games.tsv
+.output games-phone-2012-07-08.tsv
 select p.puzzle, g.history from puzzle p, game g where g.puzzleId = p._id and g.gameState >= 3;
 END
 
