@@ -15,7 +15,11 @@ limitations under the License.
 */
 package us.blanshard.sudoku.core;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Arrays.asList;
+
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.concurrent.Immutable;
@@ -356,5 +360,30 @@ public final class Marks {
     while (count-- > 0)
       sb.append(c);
     return sb;
+  }
+
+  /**
+   * Treats all characters besides numerals and question marks as word
+   * separators.  Requires there to be 81 words.  A word consisting of a
+   * question mark is treated as a location with no possible assignments.  A
+   * word consisting of numerals (1 through 9) is treated as a location with
+   * those numerals as the possible assignments.
+   */
+  public static Marks fromString(String s) {
+    Builder builder = builder();
+    List<String> words = asList(s.split("[^1-9?]+"));
+    if (!words.isEmpty() && words.get(0).isEmpty())
+      words = words.subList(1, words.size());
+    checkArgument(words.size() == 81, "expected 81 words, got %s", words);
+    for (Location loc : Location.ALL) {
+      NumSet nums = NumSet.of();
+      for (char c : words.get(loc.index).toCharArray()) {
+        if (c >= '1' && c <= '9')
+          nums = nums.with(Numeral.of(c - '0'));
+      }
+      for (Numeral not : nums.not())
+        builder.eliminate(loc, not);
+    }
+    return builder.build();
   }
 }

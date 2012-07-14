@@ -97,4 +97,23 @@ public class MarksTest {
     assertEquals(marks, builder2.build());
     assertEquals(grid, builder2.asGrid());
   }
+
+  @Test public void fromString() {
+    Marks marks = Marks.fromString(
+        "  6    37   1   |  2    3    9   |  78   4    5   " +
+        "  2   379   8   |  15   1    4   |  7    39   6   " +
+        "  34  3459 345  |  7    6    8   |  19  139   2   " +
+        "----------------+----------------+----------------" +
+        "  5    6    4   |  9    47   1   |  3    2    8   " +
+        "  8    12   9   |  6    57   23  |  4    15   7   " +
+        "  34   12   7   |  8    45   23  | 159   6    19  " +
+        "----------------+----------------+----------------" +
+        "  9    3    6   |  1    2    7   |  58   8    4   " +
+        "  7    45   45  |  3    8    6   |  2    19   19  " +
+        "  1    8    2   |  4    9    5   |  6    7    3   ");
+
+    assertEquals(set(4,5), marks.get(Location.of(8,2)));
+    assertEquals(set(3,8).bits, marks.getBits(Column.of(2), Numeral.of(4)));
+    assertEquals(set(3,8).bits, marks.getBits(Column.of(2), Numeral.of(5)));
+  }
 }
