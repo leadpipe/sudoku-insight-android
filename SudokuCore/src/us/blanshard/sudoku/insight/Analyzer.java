@@ -403,8 +403,13 @@ public class Analyzer {
       firstSubset(size, indices);
       do {
         int bits = 0;
-        for (int i = 0; i < size; ++i)
-          bits |= marks.get(toCheck.get(indices[i])).bits;
+        boolean alreadyUsed = false;
+        for (int i = 0; i < size; ++i) {
+          Location loc = toCheck.get(indices[i]);
+          bits |= marks.getBits(loc);
+          alreadyUsed |= inSets.contains(loc);
+        }
+        if (alreadyUsed) continue;
         NumSet nums = NumSet.ofBits(bits);
         if (nums.size() == size) {
           UnitSubset locs = UnitSubset.of(unit);
@@ -412,7 +417,7 @@ public class Analyzer {
             locs = locs.with(toCheck.get(indices[i]));
           setState.add(nums, locs);
           callback.take(new LockedSet(work, nums, locs, true));
-          break;
+          inSets = inSets.or(locs);
         }
       } while (nextSubset(size, indices, toCheck.size()));
     }
@@ -436,8 +441,13 @@ public class Analyzer {
       firstSubset(size, indices);
       do {
         int bits = 0;
-        for (int i = 0; i < size; ++i)
-          bits |= marks.get(unit, toCheck.get(indices[i])).bits;
+        boolean alreadyUsed = false;
+        for (int i = 0; i < size; ++i) {
+          Numeral num = toCheck.get(indices[i]);
+          bits |= marks.getBits(unit, num);
+          alreadyUsed |= inSets.contains(num);
+        }
+        if (alreadyUsed) continue;
         UnitSubset locs = UnitSubset.ofBits(unit, bits);
         if (locs.size() == size) {
           NumSet nums = NumSet.of();
@@ -445,7 +455,7 @@ public class Analyzer {
             nums = nums.with(toCheck.get(indices[i]));
           setState.add(nums, locs);
           callback.take(new LockedSet(work, nums, locs, false));
-          break;
+          inSets = inSets.or(nums);
         }
       } while (nextSubset(size, indices, toCheck.size()));
     }
