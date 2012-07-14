@@ -47,6 +47,10 @@ END
 ** TODO Handle completion of potentially non-unique puzzles
    - by asking whether it was unique
 
+** TODO Add thumbs up/down optional vote on the puzzle at the end
+
+** TODO Add walkthrough fragment/activity
+
 ** TODO Give visual indication when try to set an unsettable location (?)
 
 * Site
