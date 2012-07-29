@@ -97,6 +97,7 @@ public class PatternMeasurer implements Runnable {
         out.flush();
       }
       out.close();
+      System.err.printf("Done with %s%n", filename);
     }
   }
 
@@ -385,7 +386,7 @@ public class PatternMeasurer implements Runnable {
           universe.addIndex(it.previousIndex());
       }
 
-      if (universe.size() > 10) {
+      if (universe.size() > 20) {
         System.err.printf("Checking all combinations of %d elims for %s (%s)%n",
                           universe.size(), consequent, consequent.getPatterns());
       }
