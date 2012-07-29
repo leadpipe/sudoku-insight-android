@@ -25,11 +25,13 @@ import us.blanshard.sudoku.game.Sudoku.Trail;
 public class TrailItem {
   public final Trail trail;
   public final int color;
+  public final int dimColor;
   public boolean shown;
 
-  public TrailItem(Trail trail, int color, boolean shown) {
+  public TrailItem(Trail trail, int color, int dimColor, boolean shown) {
     this.trail = trail;
     this.color = color;
+    this.dimColor = dimColor;
     this.shown = shown;
   }
 

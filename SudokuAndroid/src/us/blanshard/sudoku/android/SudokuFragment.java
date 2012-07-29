@@ -678,10 +678,12 @@ public class SudokuFragment
   }
 
   private TrailItem makeTrailItem(int trailId, boolean shown) {
-    double hue = (trailId + 1) * 5.0 / 17;
-    hue = hue - Math.floor(hue);
-    int color = Color.HSVToColor(new float[] { (float) hue * 360, 1f, 0.625f });
-    TrailItem trailItem = new TrailItem(mGame.getTrail(trailId), color, shown);
+    double hueBase = 0.7 + trailId * 0.1573;
+    hueBase = hueBase - Math.floor(hueBase);
+    float hue = (float) (hueBase * 360);
+    int color = Color.HSVToColor(new float[] { hue, 0.8f, 0.6f });
+    int dimColor = Color.HSVToColor(new float[] { hue, 0.3f, 0.6f });
+    TrailItem trailItem = new TrailItem(mGame.getTrail(trailId), color, dimColor, shown);
     return trailItem;
   }
 

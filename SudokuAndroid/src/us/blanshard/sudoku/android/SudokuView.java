@@ -292,7 +292,7 @@ public class SudokuView extends View {
             TrailItem item = mTrails.get(i);
             if ((num = item.trail.get(loc)) != null) {
               mPaint.setTextSize(mSquareSize * (i == 0 ? 0.5f : 0.35f));
-              mPaint.setColor(item.color);
+              mPaint.setColor(i == 0 && mTrailActive ? item.color : item.dimColor);
               boolean isTrailhead = loc == item.trail.getTrailhead();
               mPaint.setTypeface(isTrailhead ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
               mPaint.setTextSkewX(isTrailhead ? -0.125f : 0);
