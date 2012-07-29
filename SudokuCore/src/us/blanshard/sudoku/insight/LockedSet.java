@@ -40,12 +40,14 @@ import javax.annotation.concurrent.Immutable;
 public class LockedSet extends Insight.Atom {
   private final NumSet nums;
   private final UnitSubset locs;
+  private final boolean isNaked;
   private volatile Collection<Assignment> eliminations;
 
-  public LockedSet(Grid grid, NumSet nums, UnitSubset locs, boolean isNaked) {
-    super(isNaked ? Pattern.nakedSet(grid, nums, locs) : Pattern.hiddenSet(grid, nums, locs));
+  public LockedSet(NumSet nums, UnitSubset locs, boolean isNaked) {
+    super(Type.LOCKED_SET);
     this.nums = nums;
     this.locs = locs;
+    this.isNaked = isNaked;
   }
 
   @Override public Collection<Assignment> getEliminations() {
@@ -54,8 +56,8 @@ public class LockedSet extends Insight.Atom {
       synchronized (this) {
         if ((answer = eliminations) == null) {
           ImmutableList.Builder<Assignment> builder = ImmutableList.builder();
-          NumSet nums = isNakedSet() ? this.nums : this.nums.not();
-          UnitSubset locs = isNakedSet() ? this.locs.not() : this.locs;
+          NumSet nums = isNaked ? this.nums : this.nums.not();
+          UnitSubset locs = isNaked ? this.locs.not() : this.locs;
           for (Numeral num : nums)
             for (Location loc : locs)
               builder.add(Assignment.of(loc, num));
@@ -67,7 +69,7 @@ public class LockedSet extends Insight.Atom {
   }
 
   public boolean isNakedSet() {
-    return getPattern().getType() == Pattern.Type.NAKED_SET;
+    return isNaked;
   }
 
   public boolean isHiddenSet() {
@@ -112,13 +114,12 @@ public class LockedSet extends Insight.Atom {
     if (o == this) return true;
     if (o == null || o.getClass() != getClass()) return false;
     LockedSet that = (LockedSet) o;
-    return this.pattern.equals(that.pattern)
-        && this.nums.equals(that.nums)
+    return this.nums.equals(that.nums)
         && this.locs.equals(that.locs);
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(pattern, nums, locs);
+    return Objects.hashCode(nums, locs);
   }
 
   @Override public String toString() {

@@ -63,11 +63,15 @@ import javax.annotation.Nullable;
 
 /**
  * Analyzes sudoku game histories to measure the time taken to make use of
- * different patterns and combinations of patterns.
+ * different insights.
+ *
+ * <p> As of 2012-07-29, this doesn't really do anything.  I'm leaving it here
+ * as a possible template for future efforts to come up with a better universe
+ * of patterns for evaluating puzzles.
  *
  * @author Luke Blanshard
  */
-public class PatternMeasurer implements Runnable {
+public class InsightMeasurer implements Runnable {
 
   public static void main(String[] args) throws Exception {
     if (args.length == 0) exitWithUsage();
@@ -93,7 +97,7 @@ public class PatternMeasurer implements Runnable {
         String[] fields = line.split("\\t");
         Grid puzzle = Grid.fromString(fields[0]);
         List<Move> history = GameJson.toHistory(fields[1]);
-        new PatternMeasurer(puzzle, history, out).run();
+        new InsightMeasurer(puzzle, history, out).run();
         out.flush();
       }
       out.close();
@@ -102,7 +106,7 @@ public class PatternMeasurer implements Runnable {
   }
 
   private static void exitWithUsage() {
-    System.err.println("Usage: PatternMeasurer <filenames...>");
+    System.err.println("Usage: InsightMeasurer <filenames...>");
     System.exit(1);
   }
 
@@ -111,7 +115,7 @@ public class PatternMeasurer implements Runnable {
   private final PrintWriter out;
   private final Cache<Integer, StateState> stateStates;
 
-  private PatternMeasurer(Grid puzzle, List<Move> history, PrintWriter out) {
+  private InsightMeasurer(Grid puzzle, List<Move> history, PrintWriter out) {
     checkNotNull(Solver.solve(puzzle, new Random()).solution);
     this.game = new Sudoku(puzzle, Sudoku.nullRegistry()).resume();
     this.history = history;
@@ -388,7 +392,7 @@ public class PatternMeasurer implements Runnable {
 
       if (universe.size() > 20) {
         System.err.printf("Checking all combinations of %d elims for %s (%s)%n",
-                          universe.size(), consequent, consequent.getPatterns());
+                          universe.size(), consequent, consequent.getAtoms());
       }
 
       // Then find the first combination of eliminations from that universe that
@@ -416,9 +420,9 @@ public class PatternMeasurer implements Runnable {
 
     private void insightSeen(Insight insight, long at) {
       long arrival = insightArrivals.remove(insight);
-      String patterns = Joiner.on('|').join(Ordering.natural().sortedCopy(
-          Iterables.transform(insight.getPatterns(), Functions.toStringFunction())));
-      out.printf("%s\t%d%n", patterns, at - arrival);
+      String atoms = Joiner.on('|').join(Ordering.natural().sortedCopy(
+          Iterables.transform(insight.getAtoms(), Functions.toStringFunction())));
+      out.printf("%s\t%d%n", atoms, at - arrival);
       out.flush();
     }
   }

@@ -206,7 +206,7 @@ public class Analyzer {
         if (overlappingSet.size() > set.size()) {
           // There's something to eliminate.
           UnitSubset extra = overlappingSet.minus(set);
-          callback.take(new Overlap(work, unit, num, extra));
+          callback.take(new Overlap(unit, num, extra));
           for (Location loc : extra)
             if (!builder.eliminate(loc, num))
               ok = false;
@@ -259,7 +259,7 @@ public class Analyzer {
           for (int i = 0; i < size; ++i)
             locs = locs.with(toCheck.get(indices[i]));
           setState.add(nums, locs);
-          callback.take(new LockedSet(work, nums, locs, true));
+          callback.take(new LockedSet(nums, locs, true));
           for (Location loc : locs.not())
             for (Numeral num : nums)
               if (!builder.eliminate(loc, num))
@@ -298,7 +298,7 @@ public class Analyzer {
           for (int i = 0; i < size; ++i)
             nums = nums.with(toCheck.get(indices[i]));
           setState.add(nums, locs);
-          callback.take(new LockedSet(work, nums, locs, false));
+          callback.take(new LockedSet(nums, locs, false));
           for (Location loc : locs)
             for (Numeral num : nums.not())
               if (!builder.eliminate(loc, num))
@@ -367,7 +367,7 @@ public class Analyzer {
         UnitSubset overlappingSet = marks.get(overlappingUnit, num);
         if (overlappingSet.size() > set.size()) {
           // There's something to eliminate.
-          callback.take(new Overlap(work, unit, num, overlappingSet.minus(set)));
+          callback.take(new Overlap(unit, num, overlappingSet.minus(set)));
         }
       }
     }
@@ -416,7 +416,7 @@ public class Analyzer {
           for (int i = 0; i < size; ++i)
             locs = locs.with(toCheck.get(indices[i]));
           setState.add(nums, locs);
-          callback.take(new LockedSet(work, nums, locs, true));
+          callback.take(new LockedSet(nums, locs, true));
           inSets = inSets.or(locs);
         }
       } while (nextSubset(size, indices, toCheck.size()));
@@ -454,7 +454,7 @@ public class Analyzer {
           for (int i = 0; i < size; ++i)
             nums = nums.with(toCheck.get(indices[i]));
           setState.add(nums, locs);
-          callback.take(new LockedSet(work, nums, locs, false));
+          callback.take(new LockedSet(nums, locs, false));
           inSets = inSets.or(nums);
         }
       } while (nextSubset(size, indices, toCheck.size()));
@@ -486,9 +486,7 @@ public class Analyzer {
       for (Numeral num : conflicting.not()) {
         UnitSubset set = marks.get(unit, num);
         if (set.isEmpty()) {
-          Pattern.BarredNum pattern = Pattern.barredNumeralOrNull(work, unit, num);
-          if (pattern != null)
-            callback.take(new BarredNum(pattern, unit, num));
+          callback.take(new BarredNum(unit, num));
         }
       }
     }
@@ -497,9 +495,7 @@ public class Analyzer {
     for (Location loc : Location.ALL) {
       NumSet set = marks.get(loc);
       if (set.isEmpty()) {
-        Pattern.BarredLoc pattern = Pattern.barredLocationOrNull(work, loc);
-        if (pattern != null)
-          callback.take(new BarredLoc(pattern, loc));
+        callback.take(new BarredLoc(loc));
       }
     }
   }
@@ -511,7 +507,7 @@ public class Analyzer {
         if (set.size() == 1) {
           Location loc = set.get(0);
           if (!work.containsKey(loc))
-            callback.take(new ForcedLoc(work, unit, num, loc));
+            callback.take(new ForcedLoc(unit, num, loc));
         }
       }
   }
@@ -521,7 +517,7 @@ public class Analyzer {
       if (!work.containsKey(loc)) {
         NumSet set = marks.get(loc);
         if (set.size() == 1)
-          callback.take(new ForcedNum(work, loc, set.get(0)));
+          callback.take(new ForcedNum(loc, set.get(0)));
       }
   }
 }

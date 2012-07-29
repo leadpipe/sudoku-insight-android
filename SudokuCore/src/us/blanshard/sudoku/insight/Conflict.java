@@ -38,7 +38,7 @@ public class Conflict extends Insight.Atom {
   private final UnitSubset locations;
 
   Conflict(Grid grid, Numeral numeral, UnitSubset locations) {
-    super(Pattern.conflict(locations.unit));
+    super(Type.CONFLICT);
     this.numeral = numeral;
     this.locations = locations;
   }
@@ -71,12 +71,11 @@ public class Conflict extends Insight.Atom {
     if (o == this) return true;
     if (o == null || o.getClass() != getClass()) return false;
     Conflict that = (Conflict) o;
-    return this.pattern.equals(that.pattern)
-        && this.numeral.equals(that.numeral)
+    return this.numeral.equals(that.numeral)
         && this.locations.equals(that.locations);
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(pattern, numeral, locations);
+    return Objects.hashCode(numeral, locations);
   }
 }

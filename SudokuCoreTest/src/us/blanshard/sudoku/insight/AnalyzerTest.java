@@ -180,8 +180,8 @@ public class AnalyzerTest {
     Analyzer.findOverlapsAndSets(grid, marks, collector);
 
     Unit c2 = Column.of(2);
-    assertTrue(collector.taken.contains(new LockedSet(grid, set(1,2), locs(c2, 5, 6), false)));
-    assertTrue(collector.taken.contains(new LockedSet(grid, set(4,5), locs(c2, 3, 8), false)));
+    assertTrue(collector.taken.contains(new LockedSet(set(1,2), locs(c2, 5, 6), false)));
+    assertTrue(collector.taken.contains(new LockedSet(set(4,5), locs(c2, 3, 8), false)));
   }
 
   private void setAll(Sudoku.State state, Grid grid) {

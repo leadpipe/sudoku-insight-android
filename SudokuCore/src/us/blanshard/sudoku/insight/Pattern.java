@@ -49,9 +49,18 @@ import javax.annotation.concurrent.Immutable;
  * on the number of distinct Pattern instances that can be created.  The
  * different instances of each type of pattern also form a lattice.
  *
+ * @deprecated This is a good idea, but pursuing measurement of patterns
+ * convinced me of a couple of things: This particular set of patterns isn't
+ * very good; and rating puzzles is not very interesting.  So while patterns
+ * used to be integral to insights, now insights will be independent of
+ * patterns; if we really want patterns we will construct them from the insights
+ * found, and they will probably be quite different from the ones presently in
+ * this file.
+ *
  * @author Luke Blanshard
  */
 @Immutable
+@Deprecated
 public abstract class Pattern {
 
   private static final Joiner COMMA_JOINER = Joiner.on(',');

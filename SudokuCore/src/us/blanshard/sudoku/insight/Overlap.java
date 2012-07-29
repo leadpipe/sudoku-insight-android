@@ -43,8 +43,8 @@ public class Overlap extends Insight.Atom {
   private final UnitSubset extra;
   private volatile Collection<Assignment> eliminations;
 
-  public Overlap(Grid grid, Unit unit, Numeral numeral, UnitSubset extra) {
-    super(Pattern.overlap(grid, unit, extra.unit, numeral));
+  public Overlap(Unit unit, Numeral numeral, UnitSubset extra) {
+    super(Type.OVERLAP);
     this.unit = unit;
     this.numeral = numeral;
     this.extra = extra;
@@ -112,14 +112,13 @@ public class Overlap extends Insight.Atom {
     if (o == this) return true;
     if (o == null || o.getClass() != getClass()) return false;
     Overlap that = (Overlap) o;
-    return this.pattern.equals(that.pattern)
-        && this.unit.equals(that.unit)
+    return this.unit.equals(that.unit)
         && this.numeral.equals(that.numeral)
         && this.extra.unit.equals(that.extra.unit);
     // Note that the "extra" ivar doesn't identify the insight.
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(pattern, unit, numeral, extra.unit);
+    return Objects.hashCode(unit, numeral, extra.unit);
   }
 }

@@ -36,8 +36,8 @@ public class BarredNum extends Insight.Atom {
   private final Unit unit;
   private final Numeral numeral;
 
-  public BarredNum(Pattern.BarredNum pattern, Unit unit, Numeral numeral) {
-    super(pattern);
+  public BarredNum(Unit unit, Numeral numeral) {
+    super(Type.BARRED_NUMERAL);
     this.unit = unit;
     this.numeral = numeral;
   }
@@ -66,12 +66,11 @@ public class BarredNum extends Insight.Atom {
     if (o == this) return true;
     if (o == null || o.getClass() != getClass()) return false;
     BarredNum that = (BarredNum) o;
-    return this.pattern.equals(that.pattern)
-        && this.unit.equals(that.unit)
+    return this.unit.equals(that.unit)
         && this.numeral.equals(that.numeral);
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(pattern, unit, numeral);
+    return Objects.hashCode(unit, numeral);
   }
 }

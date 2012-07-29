@@ -25,8 +25,6 @@ import us.blanshard.sudoku.core.Marks;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultiset;
-import com.google.common.collect.Multiset;
 
 import java.util.Collection;
 
@@ -43,7 +41,7 @@ public class Implication extends Insight.Molecule {
   private final Insight consequent;
 
   public Implication(Collection<? extends Insight> antecedents, Insight consequent) {
-    super(Insight.Type.IMPLICATION);
+    super(Type.IMPLICATION);
     checkArgument(!antecedents.isEmpty());
     this.antecedents = ImmutableList.copyOf(antecedents);
     this.consequent = checkNotNull(consequent);
@@ -96,23 +94,11 @@ public class Implication extends Insight.Molecule {
     return consequent.mightBeRevealedByElimination(elimination);
   }
 
-  @Override public int appraise(Pattern.Appraiser appraiser) {
-    return addAppraisals(sumAppraisals(appraiser, antecedents), consequent.appraise(appraiser));
-  }
-
   @Override public Collection<Insight.Atom> getAtoms() {
     ImmutableList.Builder<Insight.Atom> builder = ImmutableList.builder();
     for (Insight i : antecedents)
       builder.addAll(i.getAtoms());
     builder.addAll(consequent.getAtoms());
-    return builder.build();
-  }
-
-  @Override public Multiset<Pattern> getPatterns() {
-    ImmutableMultiset.Builder<Pattern> builder = ImmutableMultiset.builder();
-    for (Insight i : antecedents)
-      builder.addAll(i.getPatterns());
-    builder.addAll(consequent.getPatterns());
     return builder.build();
   }
 

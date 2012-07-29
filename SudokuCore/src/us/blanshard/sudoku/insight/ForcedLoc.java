@@ -42,19 +42,11 @@ public class ForcedLoc extends Insight.Atom {
   private final Numeral numeral;
   private final Location location;
 
-  public ForcedLoc(Grid grid, Unit unit, Numeral numeral, Location location) {
-    super(getPattern(grid, unit, numeral, location));
+  public ForcedLoc(Unit unit, Numeral numeral, Location location) {
+    super(Type.FORCED_LOCATION);
     this.unit = unit;
     this.numeral = numeral;
     this.location = location;
-  }
-
-  /** Chooses the appropriate pattern, LastLoc or ForcedLoc. */
-  private static Pattern getPattern(Grid grid, Unit unit, Numeral numeral, Location location) {
-    for (Location loc : unit)
-      if (loc != location && !grid.containsKey(loc))
-        return Pattern.forcedLocation(grid, unit, numeral);
-    return Pattern.lastLocation(unit);
   }
 
   public Unit getUnit() {
@@ -91,13 +83,12 @@ public class ForcedLoc extends Insight.Atom {
     if (o == this) return true;
     if (o == null || o.getClass() != getClass()) return false;
     ForcedLoc that = (ForcedLoc) o;
-    return this.pattern.equals(that.pattern)
-        && this.unit.equals(that.unit)
+    return this.unit.equals(that.unit)
         && this.numeral.equals(that.numeral)
         && this.location.equals(that.location);
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(pattern, unit, numeral, location);
+    return Objects.hashCode(unit, numeral, location);
   }
 }

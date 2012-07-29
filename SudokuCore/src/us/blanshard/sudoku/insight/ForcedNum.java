@@ -40,8 +40,8 @@ public class ForcedNum extends Insight.Atom {
   private final Location location;
   private final Numeral numeral;
 
-  public ForcedNum(Grid grid, Location location, Numeral numeral) {
-    super(Pattern.forcedNumeral(grid, location));
+  public ForcedNum(Location location, Numeral numeral) {
+    super(Type.FORCED_NUMERAL);
     this.location = location;
     this.numeral = numeral;
   }
@@ -76,12 +76,11 @@ public class ForcedNum extends Insight.Atom {
     if (o == this) return true;
     if (o == null || o.getClass() != getClass()) return false;
     ForcedNum that = (ForcedNum) o;
-    return this.pattern.equals(that.pattern)
-        && this.location.equals(that.location)
+    return this.location.equals(that.location)
         && this.numeral.equals(that.numeral);
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(pattern, location, numeral);
+    return Objects.hashCode(location, numeral);
   }
 }

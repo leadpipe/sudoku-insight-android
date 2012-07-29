@@ -20,8 +20,6 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Marks;
 
-import com.google.common.base.Objects;
-
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -34,8 +32,8 @@ import javax.annotation.concurrent.Immutable;
 public class BarredLoc extends Insight.Atom {
   private final Location location;
 
-  BarredLoc(Pattern.BarredLoc pattern, Location location) {
-    super(pattern);
+  BarredLoc(Location location) {
+    super(Type.BARRED_LOCATION);
     this.location = location;
   }
 
@@ -59,11 +57,10 @@ public class BarredLoc extends Insight.Atom {
     if (o == this) return true;
     if (o == null || o.getClass() != getClass()) return false;
     BarredLoc that = (BarredLoc) o;
-    return this.pattern.equals(that.pattern)
-        && this.location.equals(that.location);
+    return this.location.equals(that.location);
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(pattern, location);
+    return location.hashCode();
   }
 }
