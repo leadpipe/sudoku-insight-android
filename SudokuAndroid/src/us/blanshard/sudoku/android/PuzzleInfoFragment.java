@@ -31,7 +31,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
-import android.widget.TextView;
 
 import com.google.inject.Inject;
 
@@ -39,7 +38,6 @@ import com.google.inject.Inject;
  * @author Luke Blanshard
  */
 public class PuzzleInfoFragment extends RoboFragment {
-  @InjectView(R.id.info_title) TextView mTitle;
   @InjectView(R.id.info_grid) SudokuView mGrid;
   @InjectView(R.id.info_content) WebView mContent;
   @Inject Database mDb;
@@ -63,7 +61,7 @@ public class PuzzleInfoFragment extends RoboFragment {
   }
 
   private void setPuzzle(Database.Puzzle puzzle) {
-    mTitle.setText(getString(R.string.text_info_title, puzzle._id));
+    getActivity().setTitle(getString(R.string.text_info_title, puzzle._id));
     mGrid.setPuzzle(puzzle.puzzle);
     mContent.loadData(makeContentHtml(puzzle), "text/html; charset=UTF-8", null);
   }
@@ -81,26 +79,26 @@ public class PuzzleInfoFragment extends RoboFragment {
 
   private void appendGameHtml(Game game, StringBuilder sb) {
     sb.append(ToText.gameSummaryHtml(getActivity(), game))
-        .append(getActivity().getString(R.string.text_sentence_end));
+        .append(getString(R.string.text_sentence_end));
     if (game.gameState != GameState.UNSTARTED) {
       sb.append("<br>")
-          .append(TextUtils.htmlEncode(getActivity().getString(
+          .append(TextUtils.htmlEncode(getString(
               R.string.text_game_start_time, ToText.relativeDateTime(getActivity(), game.startTime))))
-          .append(getActivity().getString(R.string.text_sentence_end));
+          .append(getString(R.string.text_sentence_end));
     }
     sb.append("<br><a href='us.blanshard.sudoku://replay/").append(game._id).append("'>")
-        .append(TextUtils.htmlEncode(getActivity().getString(R.string.text_game_replay)))
+        .append(TextUtils.htmlEncode(getString(R.string.text_game_replay)))
         .append("</a>");
   }
 
   private void appendElementHtml(Element element, StringBuilder sb) {
     sb.append(ToText.collectionNameAndTimeHtml(getActivity(), element))
-        .append(getActivity().getString(R.string.text_sentence_end));
+        .append(getString(R.string.text_sentence_end));
     if (element.generatorParams != null) {
       sb.append("<br>")
           .append(TextUtils.htmlEncode(
-              getActivity().getString(R.string.text_generator_params, element.generatorParams)))
-          .append(getActivity().getString(R.string.text_sentence_end));
+              getString(R.string.text_generator_params, element.generatorParams)))
+          .append(getString(R.string.text_sentence_end));
     }
   }
 
