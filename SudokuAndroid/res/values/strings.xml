@@ -55,9 +55,10 @@
     <string name="text_generated_puzzles">Generated puzzles</string>
     <string name="text_generation_options">Puzzle Generator</string>
     <string name="text_generator_params">Generator parameters: %1$s</string>
-    <string name="text_info_title">Puzzle #%1$d</string>
+    <string name="text_info_title">Sudoku #%1$d Details</string>
     <string name="text_oops">Oops!</string>
-    <string name="text_puzzle_number_start">""Puzzle #%1$d: "</string>
+    <string name="text_puzzle_number">Sudoku #%1$d</string>
+    <string name="text_puzzle_number_start">""Sudoku #%1$d: "</string>
     <string name="text_sentence_end">.</string>
     <string name="text_symmetries">Symmetries of Generated Puzzles</string>
 

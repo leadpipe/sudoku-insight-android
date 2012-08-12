@@ -16,7 +16,9 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 import roboguice.inject.InjectFragment;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 
 import javax.inject.Inject;
 
@@ -30,5 +32,18 @@ public class PuzzleListActivity extends ActionBarActivity {
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.list_activity);
+    getActionBarHelper().setDisplayHomeAsUpEnabled(true);
+  }
+
+  @Override public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case android.R.id.home:
+        Intent upIntent = new Intent(this, SudokuActivity.class);
+        upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(upIntent);
+        finish();
+        return true;
+    }
+    return super.onOptionsItemSelected(item);
   }
 }

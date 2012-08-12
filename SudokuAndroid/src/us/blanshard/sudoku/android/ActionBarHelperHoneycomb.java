@@ -45,6 +45,10 @@ public class ActionBarHelperHoneycomb extends ActionBarHelper {
         // Just override to ignore the fragment -- not needed in honeycomb and later
     }
 
+    @Override public void setDisplayHomeAsUpEnabled(boolean displayHomeAsUp) {
+        mActivity.getActionBar().setDisplayHomeAsUpEnabled(displayHomeAsUp);
+    }
+
     /**{@inheritDoc}*/
     @Override
     public void invalidateOptionsMenu() {

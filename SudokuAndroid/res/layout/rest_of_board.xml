@@ -15,7 +15,7 @@
         />
 
     <RelativeLayout
-        android:layout_weight="2"
+        android:layout_weight="1"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         >
@@ -37,16 +37,6 @@
           android:layout_marginRight="4dp"
           android:inputType="none"
           android:gravity="right"
-          />
-
-      <TextView
-          android:id="@+id/insights"
-          android:layout_width="match_parent"
-          android:layout_height="match_parent"
-          android:layout_below="@+id/edit_trail_toggle"
-          android:layout_above="@+id/timer"
-          android:inputType="none"
-          android:gravity="center"
           />
 
     </RelativeLayout>

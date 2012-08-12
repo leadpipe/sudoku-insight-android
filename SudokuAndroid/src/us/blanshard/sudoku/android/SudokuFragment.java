@@ -108,7 +108,6 @@ public class SudokuFragment
   @InjectView(R.id.edit_trail_toggle) ToggleButton mEditTrailToggle;
   @InjectView(R.id.trails) ListView mTrailsList;
   @InjectView(R.id.timer) TextView mTimer;
-  @InjectView(R.id.insights) TextView mInsights;
   @Inject Database mDb;
   @Inject Prefs mPrefs;
   private Toast mToast;
@@ -162,6 +161,7 @@ public class SudokuFragment
     try {
       Sudoku game = new Sudoku(
           dbGame.puzzle, mRegistry, GameJson.toHistory(dbGame.history), dbGame.elapsedMillis);
+      getActivity().setTitle(getString(R.string.text_puzzle_number, dbGame.puzzleId));
       setGame(game);
       if (dbGame.uiState != null) {
         JSONObject uiState = new JSONObject(dbGame.uiState);
@@ -178,14 +178,13 @@ public class SudokuFragment
       setGame(null);
     }
     if (dbGame.elements != null && !dbGame.elements.isEmpty()) {
-      String colls = Joiner.on(getActivity().getString(R.string.text_collection_separator)).join(
+      String colls = Joiner.on(getString(R.string.text_collection_separator)).join(
           Iterables.transform(dbGame.elements, new Function<Database.Element, String>() {
               @Override public String apply(Database.Element element) {
                 return ToText.collectionNameAndTimeText(getActivity(), element);
               }
           }));
-      showStatus(getActivity().getString(
-          R.string.text_puzzle_number_start, dbGame.puzzleId) + colls);
+      showStatus(colls);
     }
   }
 
@@ -594,8 +593,8 @@ public class SudokuFragment
             makeActiveTrail(game.getTrail(move.id));
           }
           updateState();
-          if (mState == Grid.State.SOLVED) showStatus(getActivity().getString(R.string.text_congrats));
-          else if (mState == Grid.State.BROKEN) showStatus(getActivity().getString(R.string.text_oops));
+          if (mState == Grid.State.SOLVED) showStatus(getString(R.string.text_congrats));
+          else if (mState == Grid.State.BROKEN) showStatus(getString(R.string.text_oops));
         }
       }
 

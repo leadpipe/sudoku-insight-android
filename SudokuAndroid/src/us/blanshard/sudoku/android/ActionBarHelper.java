@@ -58,6 +58,12 @@ public abstract class ActionBarHelper {
     /**
      * Action bar helper code to be run in {@link Activity#onCreate(android.os.Bundle)}.
      */
+    public void setDisplayHomeAsUpEnabled(boolean displayHomeAsUp) {
+    }
+
+    /**
+     * Action bar helper code to be run in {@link Activity#onCreate(android.os.Bundle)}.
+     */
     public void onCreate(Bundle savedInstanceState) {
     }
 
