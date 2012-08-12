@@ -20,7 +20,12 @@ import static android.text.format.DateUtils.MINUTE_IN_MILLIS;
 import static android.text.format.DateUtils.WEEK_IN_MILLIS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import us.blanshard.sudoku.android.Database.Game;
+import us.blanshard.sudoku.android.Database.GameState;
+
 import android.content.Context;
+import android.text.Html;
+import android.text.TextUtils;
 import android.text.format.DateUtils;
 
 import com.google.common.base.Strings;
@@ -43,17 +48,6 @@ public class ToText {
   }
 
   /**
-   * Returns the given element's collection name, combined with the element's
-   * source if it has one.
-   */
-  public static String collectionName(Context context, Database.Element element) {
-    String coll = element.collection.name;
-    if (!Strings.isNullOrEmpty(element.source))
-      coll = context.getString(R.string.text_collection_with_source, coll, element.source);
-    return coll;
-  }
-
-  /**
    * Formats the given timestamp as a relative date-time string.
    */
   public static CharSequence relativeDateTime(Context context, long timestamp) {
@@ -67,5 +61,53 @@ public class ToText {
    */
   public static CharSequence dateTimeWithPreposition(Context context, long timestamp) {
     return DateUtils.getRelativeTimeSpanString(context, timestamp, true);
+  }
+
+  /**
+   * Returns the given element's collection name, combined with the element's
+   * source if it has one, with an embedded link to the list activity.
+   */
+  public static String collectionNameHtml(Context context, Database.Element element) {
+    String html = "<a href='us.blanshard.sudoku://list/" + element.collection._id + "'>"
+        + TextUtils.htmlEncode(element.collection.name) + "</a>";
+    if (!Strings.isNullOrEmpty(element.source))
+      html = context.getString(
+          R.string.text_collection_with_source, html, TextUtils.htmlEncode(element.source));
+    return html;
+  }
+
+  /**
+   * Combines the element's collection name with the date/time the element was created.
+   */
+  public static String collectionNameAndTimeHtml(Context context, Database.Element element) {
+    String coll = collectionNameHtml(context, element);
+    CharSequence date = relativeDateTime(context, element.createTime);
+    return context.getString(R.string.text_collection_date, coll, date);
+  }
+
+  /**
+   * Returns the given element's collection name, combined with the element's
+   * source if it has one, with an embedded link to the list activity.
+   */
+  public static String collectionNameAndTimeText(Context context, Database.Element element) {
+    String html = collectionNameAndTimeHtml(context, element);
+    return Html.fromHtml(html).toString();
+  }
+
+  public static String gameSummaryHtml(Context context, Game game) {
+    int resourceId;
+    switch (game.gameState) {
+      case UNSTARTED: resourceId = R.string.text_game_queued; break;
+      case STARTED:   resourceId = R.string.text_game_playing; break;
+      case GAVE_UP:   resourceId = R.string.text_game_gave_up; break;
+      case FINISHED:  resourceId = R.string.text_game_solved; break;
+      default:
+        throw new AssertionError();
+    }
+    String elapsedTime = elapsedTime(game.elapsedMillis);
+    if (game.gameState == GameState.FINISHED)
+      elapsedTime = "<b>" + elapsedTime + "</b>";
+    return context.getString(resourceId, elapsedTime,
+        dateTimeWithPreposition(context, game.lastTime));
   }
 }

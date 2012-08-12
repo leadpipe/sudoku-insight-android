@@ -17,6 +17,7 @@ package us.blanshard.sudoku.android;
 
 import roboguice.fragment.RoboFragment;
 import roboguice.inject.InjectView;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +25,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.util.List;
 
@@ -62,7 +62,9 @@ public class PuzzleListFragment extends RoboFragment implements OnItemClickListe
 
   @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
     Database.Puzzle puzzle = mPuzzleAdapter.getItem(position);
-    Toast.makeText(getActivity().getApplicationContext(), puzzle.puzzle.toString(), Toast.LENGTH_LONG).show();
+    Intent intent = new Intent(getActivity(), PuzzleInfoActivity.class);
+    intent.putExtra("puzzleId", puzzle._id);
+    getActivity().startActivity(intent);
   }
 
   private static class FetchPuzzles extends WorkerFragment.Task<PuzzleListFragment, Void, Void, List<Database.Puzzle>> {

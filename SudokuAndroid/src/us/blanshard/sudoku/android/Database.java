@@ -60,8 +60,6 @@ public class Database {
     STARTED(1),
     GAVE_UP(2),
     FINISHED(3),
-    FINISHED_WITH_HINT(4),
-    FINISHED_WITH_EXPLICIT_HINT(5),
     ;
 
     private final int number;
@@ -466,6 +464,30 @@ public class Database {
     return answer;
   }
 
+  public Puzzle getFullPuzzle(long puzzleId) throws SQLException {
+    Puzzle answer = new Puzzle();
+    answer._id = puzzleId;
+    SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+    db.beginTransaction();
+    try {
+      answer.puzzle = getPuzzle(db, puzzleId);
+      answer.elements = getPuzzleElements(db, puzzleId);
+      answer.games = Lists.newArrayList();
+      String sql = "SELECT * FROM [Game] WHERE [puzzleId] = ? ORDER BY [_id]";
+      Cursor cursor = db.rawQuery(sql, new String[] {Long.toString(puzzleId)});
+      try {
+        while (cursor.moveToNext()) {
+          answer.games.add(gameFromCursor(cursor));
+        }
+      } finally {
+        cursor.close();
+      }
+    } finally {
+      db.endTransaction();
+    }
+    return answer;
+  }
+
   /** Returns the set of source strings present in the Element table. */
   public List<String> getElementSources() {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
@@ -517,7 +539,7 @@ public class Database {
     private final Context mContext;
 
     OpenHelper(Context context) {
-      super(context, "db", null, 4);
+      super(context, "db", null, 5);
       mContext = context;
     }
 
@@ -580,15 +602,21 @@ public class Database {
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-      if (oldVersion < 2 || newVersion != 4)
+      if (oldVersion < 2 || newVersion != 5)
         throw new AssertionError();
       if (oldVersion == 2)
         db.execSQL(""
             + "CREATE UNIQUE INDEX [ElementByIds] ON [Element] ("
             + "  [puzzleId],"
             + "  [collectionId])");
-
-      db.execSQL("ALTER TABLE [Element] ADD COLUMN [createTime] INTEGER");
+      if (oldVersion <= 3)
+        db.execSQL("ALTER TABLE [Element] ADD COLUMN [createTime] INTEGER");
+      if (oldVersion <= 4) {
+        ContentValues values = new ContentValues();
+        values.put("gameState", GameState.FINISHED.getNumber());
+        db.update("Game", values, "[gameState] > ?",
+            new String[]{ Integer.toString(GameState.FINISHED.getNumber()) });
+      }
     }
   }
 }

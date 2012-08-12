@@ -35,9 +35,9 @@ import us.blanshard.sudoku.insight.Insight;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -113,7 +113,7 @@ public class InsightMeasurer implements Runnable {
   private final Sudoku game;
   private final List<Move> history;
   private final PrintWriter out;
-  private final Cache<Integer, StateState> stateStates;
+  private final LoadingCache<Integer, StateState> stateStates;
 
   private InsightMeasurer(Grid puzzle, List<Move> history, PrintWriter out) {
     checkNotNull(Solver.solve(puzzle, new Random()).solution);

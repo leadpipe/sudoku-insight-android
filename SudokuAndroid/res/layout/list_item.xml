@@ -1,24 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     >
 
     <us.blanshard.sudoku.android.SudokuView
-        android:id="@+id/puzzle_item_grid"
+        android:id="@+id/list_item_grid"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
         android:padding="0dp"
         />
 
     <TextView
-        android:id="@+id/puzzle_item_label"
+        android:id="@+id/list_item_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="12sp"
-        android:layout_toRightOf="@+id/puzzle_item_grid"
+        android:padding="4dp"
         />
 
-</RelativeLayout>
+</LinearLayout>

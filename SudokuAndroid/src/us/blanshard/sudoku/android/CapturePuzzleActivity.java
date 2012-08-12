@@ -43,7 +43,7 @@ import javax.inject.Inject;
  *
  * @author Luke Blanshard
  */
-public class CapturePuzzleActivity extends ActionBarActivity implements SudokuView.OnMoveListener, View.OnClickListener {
+public class CapturePuzzleActivity extends ActionBarActivity implements OnMoveListener, View.OnClickListener {
   @InjectView(R.id.sudoku_view) SudokuView mSudokuView;
   @InjectView(R.id.capture_source) AutoCompleteTextView mCaptureSource;
   @InjectView(R.id.capture_play) Button mPlay;

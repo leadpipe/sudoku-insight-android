@@ -42,7 +42,6 @@ public class Prefs {
   private static final char SEP = ':';
   private static final String GAME_ID = "gameId";
   private static final String GENERATOR = "generator";
-  private static final String SHOW_INSIGHTS = "showInsights";
   private static final String SYMMETRIES = "symmetries";
 
   @Inject SharedPreferences mPrefs;
@@ -81,16 +80,6 @@ public class Prefs {
     } finally {
       StrictMode.setThreadPolicy(policy);
     }
-  }
-
-  public boolean getShowInsights() {
-    return mPrefs.getBoolean(SHOW_INSIGHTS, true);
-  }
-
-  public void setShowInsightsAsync(boolean showInsights) {
-    SharedPreferences.Editor prefs = mPrefs.edit();
-    prefs.putBoolean(SHOW_INSIGHTS, showInsights);
-    prefs.apply();
   }
 
   public Set<Symmetry> getSymmetries() {

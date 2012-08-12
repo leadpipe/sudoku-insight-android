@@ -46,11 +46,6 @@ import javax.annotation.Nullable;
 
 public class SudokuView extends View {
 
-  public interface OnMoveListener {
-    /** Called when the user has indicated a desire to make the given move. */
-    void onMove(Sudoku.State state, Location loc, Numeral num);
-  }
-
   private static final double CLOCK_RADIUS_FACTOR = 0.85;
   private static final int CLOCK_RADIUS_DP = 60;  // 3/8"
   private static final int THIN_LINE_WIDTH = 1;

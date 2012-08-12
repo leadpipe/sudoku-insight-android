@@ -17,6 +17,7 @@ package us.blanshard.sudoku.android;
 
 import us.blanshard.sudoku.android.Database.Game;
 
+import android.text.Html;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -33,19 +34,19 @@ public class PuzzleAdapter extends ArrayAdapter<Database.Puzzle> {
   private final PuzzleListFragment mFragment;
 
   public PuzzleAdapter(PuzzleListFragment fragment) {
-    super(fragment.getActivity(), R.layout.puzzle_item);
+    super(fragment.getActivity(), R.layout.list_item);
     this.mFragment = fragment;
   }
 
   private class ViewHolder {
-    View rowView;
-    SudokuView grid;
-    TextView label;
+    final View rowView;
+    final SudokuView grid;
+    final TextView label;
 
     public ViewHolder() {
-      rowView = mFragment.getActivity().getLayoutInflater().inflate(R.layout.puzzle_item, null);
-      grid = (SudokuView) rowView.findViewById(R.id.puzzle_item_grid);
-      label = (TextView) rowView.findViewById(R.id.puzzle_item_label);
+      rowView = mFragment.getActivity().getLayoutInflater().inflate(R.layout.list_item, null);
+      grid = (SudokuView) rowView.findViewById(R.id.list_item_grid);
+      label = (TextView) rowView.findViewById(R.id.list_item_label);
     }
   }
 
@@ -62,46 +63,33 @@ public class PuzzleAdapter extends ArrayAdapter<Database.Puzzle> {
       holder = (ViewHolder) convertView.getTag();
     }
     Database.Puzzle puzzle = getItem(position);
-    holder.grid.setTag(puzzle);
     holder.grid.setPuzzle(puzzle.puzzle);
-    holder.label.setTag(puzzle);
-    holder.label.setText(puzzleDescription(puzzle));
+    holder.label.setText(Html.fromHtml(puzzleDescriptionHtml(puzzle)));
     return holder.rowView;
   }
 
-  private String puzzleDescription(Database.Puzzle puzzle) {
+  private String puzzleDescriptionHtml(Database.Puzzle puzzle) {
     StringBuilder sb = new StringBuilder();
+    sb.append(getContext().getString(R.string.text_puzzle_number_start, puzzle._id));
     if (!puzzle.games.isEmpty()) {
       appendGameSummary(sb, puzzle.games.get(puzzle.games.size() - 1));
-      if (!puzzle.elements.isEmpty()) sb.append('\n');
+      if (!puzzle.elements.isEmpty()) sb.append("<br>");
     }
     if (!puzzle.elements.isEmpty()) {
       sb.append(getContext().getString(R.string.text_collection_in_start));
       Joiner.on(getContext().getString(R.string.text_collection_separator))
           .appendTo(sb, Iterables.transform(puzzle.elements, new Function<Database.Element, String>() {
               @Override public String apply(Database.Element element) {
-                return ToText.collectionName(getContext(), element);
+                return ToText.collectionNameHtml(getContext(), element);
               }
             }));
-      sb.append(getContext().getString(R.string.text_collection_in_end));
+      sb.append(getContext().getString(R.string.text_sentence_end));
     }
     return sb.toString();
   }
 
   private void appendGameSummary(StringBuilder sb, Game game) {
-    int resourceId;
-    switch (game.gameState) {
-      case UNSTARTED: resourceId = R.string.text_game_queued; break;
-      case STARTED:   resourceId = R.string.text_game_playing; break;
-      case GAVE_UP:   resourceId = R.string.text_game_gave_up; break;
-      case FINISHED:  resourceId = R.string.text_game_solved; break;
-      case FINISHED_WITH_HINT: resourceId = R.string.text_game_solved_insights; break;
-      case FINISHED_WITH_EXPLICIT_HINT: resourceId = R.string.text_game_solved_explicit_hints; break;
-      default:
-        throw new AssertionError();
-    }
-    sb.append(getContext().getString(resourceId,
-        ToText.elapsedTime(game.elapsedMillis),
-        ToText.dateTimeWithPreposition(getContext(), game.lastTime)));
+    sb.append(ToText.gameSummaryHtml(getContext(), game));
+    sb.append(getContext().getString(R.string.text_sentence_end));
   }
 }

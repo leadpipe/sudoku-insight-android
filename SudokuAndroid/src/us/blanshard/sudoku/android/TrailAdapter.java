@@ -34,9 +34,9 @@ public class TrailAdapter extends ArrayAdapter<TrailItem> implements OnCheckedCh
   }
 
   private class ViewHolder {
-    View rowView;
-    TextView label;
-    CheckBox checkbox;
+    final View rowView;
+    final TextView label;
+    final CheckBox checkbox;
 
     public ViewHolder() {
       rowView = mFragment.getActivity().getLayoutInflater().inflate(R.layout.trail_item, null);
@@ -63,7 +63,6 @@ public class TrailAdapter extends ArrayAdapter<TrailItem> implements OnCheckedCh
       TrailItem item = getItem(position);
       holder.checkbox.setTag(item);
       holder.checkbox.setChecked(item.shown);
-      holder.label.setTag(item);
       holder.label.setTextColor(item.color);
       holder.label.setText(item.toString());
       return holder.rowView;

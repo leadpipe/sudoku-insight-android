@@ -38,7 +38,6 @@ import us.blanshard.sudoku.game.MoveCommand;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.Sudoku.State;
 import us.blanshard.sudoku.game.UndoStack;
-import us.blanshard.sudoku.insight.InsightSum;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -91,20 +90,15 @@ import javax.inject.Inject;
 @ContextSingleton
 public class SudokuFragment
     extends RoboFragment
-    implements SudokuView.OnMoveListener, OnCheckedChangeListener, OnItemClickListener,
-               OnItemLongClickListener, View.OnClickListener {
+    implements OnMoveListener, OnCheckedChangeListener, OnItemClickListener,
+               OnItemLongClickListener {
   private static final int MAX_VISIBLE_TRAILS = 4;
-
-  private static final InsightWell sInsightWell = new InsightWell();
 
   private UndoStack mUndoStack = new UndoStack();
   private Database.Game mDbGame;
   private Sudoku mGame;
   private boolean mResumed;
-  private InsightSum mInsightSum;
-  private boolean mShowInsights = false;
   private boolean mHasNext = false;
-  private HintLevel mHintLevel = HintLevel.NONE;
   private Grid.State mState;
   @Inject Sudoku.Registry mRegistry;
   @Inject ActionBarHelper mActionBarHelper;
@@ -118,18 +112,6 @@ public class SudokuFragment
   @Inject Database mDb;
   @Inject Prefs mPrefs;
   private Toast mToast;
-
-  enum HintLevel {
-    NONE(Database.GameState.FINISHED),
-    SUMMARY(Database.GameState.FINISHED_WITH_HINT),
-    DETAILS(Database.GameState.FINISHED_WITH_EXPLICIT_HINT);
-
-    final Database.GameState finishedGameState;
-
-    private HintLevel(Database.GameState finishedGameState) {
-      this.finishedGameState = finishedGameState;
-    }
-  }
 
   private final Runnable timerUpdater = new Runnable() {
     @Override public void run() {
@@ -177,7 +159,6 @@ public class SudokuFragment
       Database.startUnstartedGame(dbGame);
     }
     new CheckNextGame(this).execute(dbGame._id);
-    mShowInsights = mPrefs.getShowInsights();
     try {
       Sudoku game = new Sudoku(
           dbGame.puzzle, mRegistry, GameJson.toHistory(dbGame.history), dbGame.elapsedMillis);
@@ -188,9 +169,6 @@ public class SudokuFragment
         mSudokuView.setDefaultChoice(numeral(uiState.getInt("defaultChoice")));
         restoreTrails(uiState.getJSONArray("trailOrder"), uiState.getInt("numVisibleTrails"));
         mEditTrailToggle.setChecked(uiState.getBoolean("trailActive"));
-        mHintLevel = HintLevel.values()[uiState.optInt("hint")];
-        if (mShowInsights != (mHintLevel != HintLevel.NONE))
-          mShowInsights = !mShowInsights;
       }
       if (dbGame.gameState.isInPlay()) {
         mPrefs.setCurrentGameIdAsync(dbGame._id);
@@ -203,22 +181,16 @@ public class SudokuFragment
       String colls = Joiner.on(getActivity().getString(R.string.text_collection_separator)).join(
           Iterables.transform(dbGame.elements, new Function<Database.Element, String>() {
               @Override public String apply(Database.Element element) {
-                String coll = ToText.collectionName(getActivity(), element);
-                if (element.createTime > 0) {
-                  CharSequence date = ToText.relativeDateTime(getActivity(), element.createTime);
-                  coll = getActivity().getString(R.string.text_collection_date, coll, date);
-                }
-                return coll;
+                return ToText.collectionNameAndTimeText(getActivity(), element);
               }
           }));
       showStatus(getActivity().getString(
-          R.string.text_puzzle_number_plus, String.valueOf(dbGame.puzzleId), colls));
+          R.string.text_puzzle_number_start, dbGame.puzzleId) + colls);
     }
   }
 
   private void setGame(Sudoku game) {
     mGame = game;
-    mHintLevel = HintLevel.NONE;
     mState = Grid.State.INCOMPLETE;
     mUndoStack = new UndoStack();
     mSudokuView.setGame(game);
@@ -235,11 +207,6 @@ public class SudokuFragment
     }
     stateChanged();
     mProgress.setVisibility(View.GONE);
-  }
-
-  public void setInsights(InsightSum insights) {
-    mInsightSum = insights;
-    mInsights.setText(insights == null ? "" : insights.getSummary());
   }
 
   public void showError(String s) {
@@ -333,13 +300,6 @@ public class SudokuFragment
     // We don't actually do anything on long click, except swallow it so it
     // doesn't get treated as a regular click.
     return true;
-  }
-
-  @Override public void onClick(View v) {
-    if (v == mInsights && mInsightSum != null) {
-      mHintLevel = HintLevel.DETAILS;
-      InsightsFragment.newInstance(mInsightSum.toString()).show(getFragmentManager(), "insights");
-    }
   }
 
   // Fragment overrides
@@ -544,11 +504,6 @@ public class SudokuFragment
     for (int i = 0; i < menu.size(); ++i) {
       MenuItem item = menu.getItem(i);
       switch (item.getItemId()) {
-        case R.id.menu_show_insights:
-        case R.id.menu_hide_insights:
-          item.setVisible(mShowInsights != (item.getItemId() == R.id.menu_show_insights));
-          break;
-
         case R.id.menu_next_puzzle:
           item.setEnabled(mHasNext);
           break;
@@ -570,17 +525,6 @@ public class SudokuFragment
 
   @Override public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
-      case R.id.menu_show_insights:
-      case R.id.menu_hide_insights: {
-        mShowInsights = item.getItemId() == R.id.menu_show_insights;
-        if (!mShowInsights && mHintLevel != HintLevel.DETAILS
-            && (mGame == null || mGame.getHistory().isEmpty())) {
-          mHintLevel = HintLevel.NONE;
-        }
-        mPrefs.setShowInsightsAsync(mShowInsights);
-        stateChanged();
-        return true;
-      }
       case R.id.menu_next_puzzle:
         nextPuzzle();
         return true;
@@ -640,8 +584,6 @@ public class SudokuFragment
     mTrailsList.setEnabled(true);
     mTrailsList.setOnItemClickListener(this);
     mTrailsList.setOnItemLongClickListener(this);
-
-    mInsights.setOnClickListener(this);
 
     mSudokuView.setOnMoveListener(this);
     mRegistry.addListener(new Sudoku.Adapter() {
@@ -728,12 +670,6 @@ public class SudokuFragment
 
   private void stateChanged() {
     mActionBarHelper.invalidateOptionsMenu();
-    setInsights(null);
-    if (mShowInsights && mState != Grid.State.SOLVED) {
-      if (mHintLevel == HintLevel.NONE) mHintLevel = HintLevel.SUMMARY;
-      sInsightWell.refill(this);
-      mInsights.setTextColor(mSudokuView.getInputColor());
-    }
   }
 
   private JSONObject makeUiState() throws JSONException {
@@ -743,7 +679,6 @@ public class SudokuFragment
     object.put("trailOrder", makeTrailOrder());
     object.put("numVisibleTrails", countVisibleTrails());
     object.put("trailActive", mEditTrailToggle.isChecked());
-    object.put("hint", mHintLevel.ordinal());
     return object;
   }
 
@@ -780,7 +715,7 @@ public class SudokuFragment
         mState = Grid.State.SOLVED;
         mSudokuView.setEditable(false);
         mGame.suspend();
-        mDbGame.gameState = mHintLevel.finishedGameState;
+        mDbGame.gameState = GameState.FINISHED;
         updateDbGame();
         new SaveGame(this).execute(mDbGame);
         mPrefs.removeCurrentGameIdAsync();
