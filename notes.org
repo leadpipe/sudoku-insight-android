@@ -29,17 +29,22 @@ END
    - Choose the first symmetry in the shuffled list that's enabled
    - Add the symmetry to the hash
    - Use this as the seed for generating the puzzle
-** TODO Decent list view
-   - When played, elapsed time, collections belong to (clickable)
+** TODO Improve list view
    - Collection info in header (or all)
    - Sorting options in action bar
    - Highlight current puzzle
-   - Keep list current in tablet view
-** TODO Single puzzle info view
+   - Start with newest puzzles first
+** TODO Change tablet views:
+   - Game board is just itself, centered
+   - List shows info fragment
+** DONE Single puzzle info view
+** TODO "Start playing" in info view
+** TODO "Undo to start", "redo to end" menu items
 ** TODO Don't have short names on the menu
+** TODO Kill the "generate a puzzle" item; have "next puzzle" generate one if needed
+** TODO Finish adding "up" behavior to the activities
 ** TODO Improve the trail colors--there's too much repetition and the yellows are too hard to read
 ** TODO Make it possible to disable a trail: gray it out and move it to the bottom of the list
-** TODO Change the tablet layouts to do game and single-puzzle info view
 ** TODO Improve new-trail icon
 ** TODO Make icons for launcher, home
 
@@ -49,7 +54,8 @@ END
 
 ** TODO Add thumbs up/down optional vote on the puzzle at the end
 
-** TODO Add walkthrough fragment/activity
+** DONE Add walkthrough fragment/activity
+** TODO Add filters for list and replay links
 
 ** TODO Give visual indication when try to set an unsettable location (?)
 
