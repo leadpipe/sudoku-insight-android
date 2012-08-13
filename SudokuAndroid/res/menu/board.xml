@@ -1,15 +1,19 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:id="@+id/menu_next_puzzle"
-        android:title="@string/menu_next_puzzle"
-        android:titleCondensed="@string/menu_next_puzzle_condensed"
+    <item android:id="@+id/menu_undo_to_start"
+        android:title="@string/menu_undo_to_start"
+        android:showAsAction="never|withText"
+        android:orderInCategory="11"
+        />
+
+    <item android:id="@+id/menu_redo_to_end"
+        android:title="@string/menu_redo_to_end"
         android:showAsAction="never|withText"
         android:orderInCategory="12"
         />
 
-    <item android:id="@+id/menu_generate_puzzle"
-        android:title="@string/menu_generate_puzzle"
-        android:titleCondensed="@string/menu_generate_puzzle_condensed"
+    <item android:id="@+id/menu_next_puzzle"
+        android:title="@string/menu_next_puzzle"
         android:showAsAction="never|withText"
         android:orderInCategory="13"
         />

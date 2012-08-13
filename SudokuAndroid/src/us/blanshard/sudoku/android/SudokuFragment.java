@@ -43,6 +43,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -98,7 +99,6 @@ public class SudokuFragment
   private Database.Game mDbGame;
   private Sudoku mGame;
   private boolean mResumed;
-  private boolean mHasNext = false;
   private Grid.State mState;
   @Inject Sudoku.Registry mRegistry;
   @Inject ActionBarHelper mActionBarHelper;
@@ -200,7 +200,7 @@ public class SudokuFragment
     updateTrails(vis, invis);
     mSudokuView.setDefaultChoice(Numeral.of(1));
     if (game != null) {
-      updateState();
+      updateState(false);
       if (mState != Grid.State.SOLVED && mResumed)
         game.resume();
     }
@@ -216,10 +216,6 @@ public class SudokuFragment
     if (mToast != null) mToast.cancel();
     mToast = Toast.makeText(getActivity().getApplicationContext(), s, Toast.LENGTH_LONG);
     mToast.show();
-  }
-
-  public void generatePuzzle() {
-    cancelCurrentPuzzle(new FindOrMakePuzzle(this, false));
   }
 
   public void nextPuzzle() {
@@ -423,46 +419,26 @@ public class SudokuFragment
     }
   }
 
-  private static class MakeSparePuzzle extends WorkerFragment.Task<SudokuFragment, Void, Void, Database.Game> {
+  private static class CheckNextGame extends WorkerFragment.Task<SudokuFragment, Long, Void, Void> {
     private final Database mDb;
     private final Prefs mPrefs;
-
-    MakeSparePuzzle(SudokuFragment fragment) {
-      super(fragment, Priority.BACKGROUND, Independence.FREE);
-      mDb = fragment.mDb;
-      mPrefs = fragment.mPrefs;
-    }
-
-    @Override protected Database.Game doInBackground(Void... params) {
-      return generateAndStorePuzzle(mDb, mPrefs);
-    }
-
-    @Override protected void onPostExecute(SudokuFragment fragment, Database.Game dbGame) {
-      fragment.mHasNext = true;
-      fragment.mActionBarHelper.invalidateOptionsMenu();
-    }
-  }
-
-  private static class CheckNextGame extends WorkerFragment.Task<SudokuFragment, Long, Void, Boolean> {
-    private final Database mDb;
 
     CheckNextGame(SudokuFragment fragment) {
       super(fragment);
       mDb = fragment.mDb;
+      mPrefs = fragment.mPrefs;
     }
 
-    @Override protected Boolean doInBackground(Long... params) {
+    @Override protected Void doInBackground(Long... params) {
       int numOpenGames = mDb.getNumOpenGames();
-      return numOpenGames > 1
+      boolean hasNext = numOpenGames > 1
           || numOpenGames == 1 && (params[0] == null || mDb.getFirstOpenGame()._id != params[0]);
+      if (!hasNext)
+        generateAndStorePuzzle(mDb, mPrefs);
+      return null;
     }
 
-    @Override protected void onPostExecute(SudokuFragment fragment, Boolean hasNext) {
-      fragment.mHasNext = hasNext;
-      fragment.mActionBarHelper.invalidateOptionsMenu();
-
-      if (!hasNext)
-        new MakeSparePuzzle(fragment).execute();
+    @Override protected void onPostExecute(SudokuFragment fragment, Void x) {
     }
   }
 
@@ -494,7 +470,6 @@ public class SudokuFragment
     super.onResume();
     mResumed = true;
     if (mGame != null && mState != Grid.State.SOLVED) mGame.resume();
-    mHasNext = false;
     new CheckNextGame(this).execute(mDbGame == null ? null : mDbGame._id);
   }
 
@@ -503,15 +478,13 @@ public class SudokuFragment
     for (int i = 0; i < menu.size(); ++i) {
       MenuItem item = menu.getItem(i);
       switch (item.getItemId()) {
-        case R.id.menu_next_puzzle:
-          item.setEnabled(mHasNext);
-          break;
-
         case R.id.menu_undo:
+        case R.id.menu_undo_to_start:
           item.setEnabled(going && mUndoStack.canUndo());
           break;
 
         case R.id.menu_redo:
+        case R.id.menu_redo_to_end:
           item.setEnabled(going && mUndoStack.canRedo());
           break;
 
@@ -528,10 +501,6 @@ public class SudokuFragment
         nextPuzzle();
         return true;
 
-      case R.id.menu_generate_puzzle:
-        generatePuzzle();
-        return true;
-
       case R.id.menu_undo:
         try {
           mUndoStack.undo();
@@ -541,9 +510,29 @@ public class SudokuFragment
         }
         return true;
 
+      case R.id.menu_undo_to_start:
+        try {
+          while (mUndoStack.canUndo())
+            mUndoStack.undo();
+          stateChanged();
+        } catch (CommandException e) {
+          showError(e.getMessage());
+        }
+        return true;
+
       case R.id.menu_redo:
         try {
           mUndoStack.redo();
+          stateChanged();
+        } catch (CommandException e) {
+          showError(e.getMessage());
+        }
+        return true;
+
+      case R.id.menu_redo_to_end:
+        try {
+          while (mUndoStack.canRedo())
+            mUndoStack.redo();
           stateChanged();
         } catch (CommandException e) {
           showError(e.getMessage());
@@ -592,9 +581,17 @@ public class SudokuFragment
           if (move.id >= 0) {
             makeActiveTrail(game.getTrail(move.id));
           }
-          updateState();
-          if (mState == Grid.State.SOLVED) showStatus(getString(R.string.text_congrats));
-          else if (mState == Grid.State.BROKEN) showStatus(getString(R.string.text_oops));
+          boolean wasBroken = mState == Grid.State.BROKEN;
+          updateState(true);
+          if (mState == Grid.State.SOLVED) {
+            showStatus(getString(R.string.text_congrats));
+            Intent intent = new Intent(getActivity(), PuzzleInfoActivity.class);
+            intent.putExtra("puzzleId", mDbGame.puzzleId);
+            getActivity().startActivity(intent);
+          }
+          else if (mState == Grid.State.BROKEN && !wasBroken) {
+            showStatus(getString(R.string.text_oops));
+          }
         }
       }
 
@@ -706,7 +703,7 @@ public class SudokuFragment
     updateTrails(vis, invis);
   }
 
-  private void updateState() {
+  private void updateState(boolean save) {
     if (mGame.isFull()) {
       Collection<Location> broken = mGame.getState().getGrid().getBrokenLocations();
       mSudokuView.setBrokenLocations(broken);
@@ -715,8 +712,10 @@ public class SudokuFragment
         mSudokuView.setEditable(false);
         mGame.suspend();
         mDbGame.gameState = GameState.FINISHED;
-        updateDbGame();
-        new SaveGame(this).execute(mDbGame);
+        if (save) {
+          updateDbGame();
+          new SaveGame(this).execute(mDbGame);
+        }
         mPrefs.removeCurrentGameIdAsync();
         stateChanged();
       } else {

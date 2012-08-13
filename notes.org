@@ -38,10 +38,11 @@ END
    - Game board is just itself, centered
    - List shows info fragment
 ** DONE Single puzzle info view
-** TODO "Start playing" in info view
-** TODO "Undo to start", "redo to end" menu items
-** TODO Don't have short names on the menu
-** TODO Kill the "generate a puzzle" item; have "next puzzle" generate one if needed
+** DONE "Start playing" in info view
+** DONE "Undo to start", "redo to end" menu items
+** DONE Don't have short names on the menu
+** DONE Kill the "generate a puzzle" item; have "next puzzle" generate one if needed
+** TODO Periodically save state during the game
 ** TODO Finish adding "up" behavior to the activities
 ** TODO Improve the trail colors--there's too much repetition and the yellows are too hard to read
 ** TODO Make it possible to disable a trail: gray it out and move it to the bottom of the list
