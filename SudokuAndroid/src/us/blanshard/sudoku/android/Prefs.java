@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import static us.blanshard.sudoku.android.Extras.GAME_ID;
+
 import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Symmetry;
 
@@ -40,7 +42,6 @@ import java.util.Set;
  */
 public class Prefs {
   private static final char SEP = ':';
-  private static final String GAME_ID = "gameId";
   private static final String GENERATOR = "generator";
   private static final String SYMMETRIES = "symmetries";
 

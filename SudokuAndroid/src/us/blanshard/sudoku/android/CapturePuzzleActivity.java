@@ -183,7 +183,7 @@ public class CapturePuzzleActivity extends ActionBarActivity implements OnMoveLi
       activity.finish();
       if (mPlay) {
         Intent intent = new Intent(activity, SudokuActivity.class);
-        intent.putExtra("gameId", gameId);
+        intent.putExtra(Extras.GAME_ID, gameId);
         activity.startActivity(intent);
       }
     }

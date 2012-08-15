@@ -63,7 +63,7 @@ public class PuzzleListFragment extends RoboFragment implements OnItemClickListe
   @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
     Database.Puzzle puzzle = mPuzzleAdapter.getItem(position);
     Intent intent = new Intent(getActivity(), PuzzleInfoActivity.class);
-    intent.putExtra("puzzleId", puzzle._id);
+    intent.putExtra(Extras.PUZZLE_ID, puzzle._id);
     getActivity().startActivity(intent);
   }
 

@@ -64,7 +64,7 @@ public class PuzzleInfoFragment extends RoboFragment {
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    long puzzleId = getActivity().getIntent().getExtras().getLong("puzzleId");
+    long puzzleId = getActivity().getIntent().getExtras().getLong(Extras.PUZZLE_ID);
     new FetchPuzzle(this).execute(puzzleId);
   }
 
@@ -172,7 +172,7 @@ public class PuzzleInfoFragment extends RoboFragment {
 
     @Override protected void onPostExecute(PuzzleInfoFragment fragment, Long gameId) {
       Intent intent = new Intent(fragment.getActivity(), SudokuActivity.class);
-      intent.putExtra("gameId", gameId);
+      intent.putExtra(Extras.GAME_ID, gameId);
       intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
       fragment.startActivity(intent);
     }
