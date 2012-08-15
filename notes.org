@@ -30,20 +30,19 @@ END
    - Add the symmetry to the hash
    - Use this as the seed for generating the puzzle
 ** TODO Improve list view
-   - Collection info in header (or all)
+   - Collection info (or all) in header
    - Sorting options in action bar
-   - Highlight current puzzle
+   - Highlight (or just scroll to) current puzzle
    - Start with newest puzzles first
 ** TODO Change tablet views:
    - Game board is just itself, centered
    - List shows info fragment
-** DONE Single puzzle info view
-** DONE "Start playing" in info view
-** DONE "Undo to start", "redo to end" menu items
-** DONE Don't have short names on the menu
-** DONE Kill the "generate a puzzle" item; have "next puzzle" generate one if needed
-** TODO Periodically save state during the game
-** TODO Finish adding "up" behavior to the activities
+** DONE Periodically save state during the game
+** TODO Show most recent game first
+** TODO Add "up" behavior to info -> list
+** TODO Add "up" behavior to list -> board
+** TODO Add "give up" action
+** TODO Figure out how to add "up" behavior to other activities
 ** TODO Improve the trail colors--there's too much repetition and the yellows are too hard to read
 ** TODO Make it possible to disable a trail: gray it out and move it to the bottom of the list
 ** TODO Improve new-trail icon
