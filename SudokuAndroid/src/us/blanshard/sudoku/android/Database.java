@@ -89,7 +89,7 @@ public class Database {
     }
   }
 
-  public static class Game {
+  public static class Game implements Cloneable {
     public long _id;
     public long puzzleId;
     public String history;
@@ -102,6 +102,15 @@ public class Database {
     // Optional other stuff
     public Grid puzzle;
     public List<Element> elements;
+
+    @Override
+    public Game clone() {
+      try {
+        return (Game) super.clone();
+      } catch (CloneNotSupportedException e) {
+        throw new Error(e);
+      }
+    }
   }
 
   public static class CollectionInfo {
