@@ -49,6 +49,7 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -80,6 +81,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -93,7 +95,11 @@ public class SudokuFragment
     extends RoboFragment
     implements OnMoveListener, OnCheckedChangeListener, OnItemClickListener,
                OnItemLongClickListener {
+
+  private static final long DB_UPDATE_MILLIS = TimeUnit.SECONDS.toMillis(10);
   private static final int MAX_VISIBLE_TRAILS = 4;
+
+  private static int sUpdateGameCount;
 
   private UndoStack mUndoStack = new UndoStack();
   private Database.Game mDbGame;
@@ -124,6 +130,15 @@ public class SudokuFragment
       }
       if (mTimer != null) {
         mTimer.setText(time);
+      }
+    }
+  };
+
+  private final Runnable gameSaver = new Runnable() {
+    @Override public void run() {
+      if (updateDbGame(false) && mGame.isRunning()) {
+        new SaveGame(SudokuFragment.this).execute(mDbGame.clone());
+        mSudokuView.postDelayed(this, DB_UPDATE_MILLIS);
       }
     }
   };
@@ -200,12 +215,13 @@ public class SudokuFragment
     updateTrails(vis, invis);
     mSudokuView.setDefaultChoice(Numeral.of(1));
     if (game != null) {
-      updateState(false);
+      updateState();
       if (mState != Grid.State.SOLVED && mResumed)
         game.resume();
     }
     stateChanged();
     mProgress.setVisibility(View.GONE);
+    mSudokuView.postDelayed(gameSaver, DB_UPDATE_MILLIS);
   }
 
   public void showError(String s) {
@@ -213,9 +229,13 @@ public class SudokuFragment
   }
 
   public void showStatus(String s) {
-    if (mToast != null) mToast.cancel();
-    mToast = Toast.makeText(getActivity().getApplicationContext(), s, Toast.LENGTH_LONG);
+    cancelStatus();
+    mToast = makeToast(s);
     mToast.show();
+  }
+
+  private Toast makeToast(String s) {
+    return Toast.makeText(getActivity().getApplicationContext(), s, Toast.LENGTH_LONG);
   }
 
   public void nextPuzzle() {
@@ -313,10 +333,10 @@ public class SudokuFragment
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
     Long gameId = null;
-    if (getActivity().getIntent().hasExtra("gameId")) {
-      gameId = getActivity().getIntent().getExtras().getLong("gameId");
-    } else if (savedInstanceState != null && savedInstanceState.containsKey("gameId")) {
-      gameId = savedInstanceState.getLong("gameId");
+    if (getActivity().getIntent().hasExtra(Extras.GAME_ID)) {
+      gameId = getActivity().getIntent().getExtras().getLong(Extras.GAME_ID);
+    } else if (savedInstanceState != null && savedInstanceState.containsKey(Extras.GAME_ID)) {
+      gameId = savedInstanceState.getLong(Extras.GAME_ID);
     } else if (mPrefs.hasCurrentGameId()) {
       gameId = mPrefs.getCurrentGameId();
     }
@@ -328,12 +348,13 @@ public class SudokuFragment
   @Override public void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
     saveGameFromUiThread();
-    if (mDbGame != null) outState.putLong("gameId", mDbGame._id);
+    if (mDbGame != null) outState.putLong(Extras.GAME_ID, mDbGame._id);
   }
 
-  private boolean updateDbGame() {
+  private boolean updateDbGame(boolean suspend) {
+    ++sUpdateGameCount;
     if (mGame == null) return false;
-    mGame.suspend();
+    if (suspend) mGame.suspend();
     mDbGame.history = GameJson.fromHistory(mGame.getHistory()).toString();
     mDbGame.elapsedMillis = mGame.elapsedMillis();
     if (mDbGame.gameState.isInPlay()) {
@@ -349,14 +370,19 @@ public class SudokuFragment
   }
 
   private void saveGameFromUiThread() {
-    if (updateDbGame()) {
+    if (updateDbGame(true)) {
       ThreadPolicy policy = StrictMode.allowThreadDiskWrites();
       try {
-        mDb.updateGame(mDbGame);
+        saveGame(mDb, mDbGame, sUpdateGameCount);
       } finally {
         StrictMode.setThreadPolicy(policy);
       }
     }
+  }
+
+  private static synchronized void saveGame(Database db, Database.Game game, int count) {
+    if (count == sUpdateGameCount)
+      db.updateGame(game);
   }
 
   private static Database.Game generateAndStorePuzzle(Database db, Prefs prefs) {
@@ -437,21 +463,20 @@ public class SudokuFragment
         generateAndStorePuzzle(mDb, mPrefs);
       return null;
     }
-
-    @Override protected void onPostExecute(SudokuFragment fragment, Void x) {
-    }
   }
 
   private static class SaveGame extends WorkerFragment.Task<SudokuFragment, Database.Game, Void, Void> {
     private final Database mDb;
+    private final int mUpdateGameCount;
 
     SaveGame(SudokuFragment fragment) {
       super(fragment, Priority.BACKGROUND, Independence.FREE);
       mDb = fragment.mDb;
+      mUpdateGameCount = sUpdateGameCount;
     }
 
     @Override protected Void doInBackground(Database.Game... params) {
-      mDb.updateGame(params[0]);
+      saveGame(mDb, params[0], mUpdateGameCount);
       return null;
     }
   }
@@ -460,6 +485,10 @@ public class SudokuFragment
     super.onPause();
     mResumed = false;
     saveGameFromUiThread();
+    cancelStatus();
+  }
+
+  private void cancelStatus() {
     if (mToast != null) {
       mToast.cancel();
       mToast = null;
@@ -582,12 +611,18 @@ public class SudokuFragment
             makeActiveTrail(game.getTrail(move.id));
           }
           boolean wasBroken = mState == Grid.State.BROKEN;
-          updateState(true);
+          updateState();
           if (mState == Grid.State.SOLVED) {
-            showStatus(getString(R.string.text_congrats));
+            mPrefs.removeCurrentGameIdAsync();
+            makeToast(getString(R.string.text_congrats)).show();
+            saveGameFromUiThread();
             Intent intent = new Intent(getActivity(), PuzzleInfoActivity.class);
-            intent.putExtra("puzzleId", mDbGame.puzzleId);
-            getActivity().startActivity(intent);
+            intent.putExtra(Extras.PUZZLE_ID, mDbGame.puzzleId);
+            TaskStackBuilder.create(getActivity())
+                .addNextIntent(new Intent(getActivity(), SudokuActivity.class))
+                .addNextIntent(intent)
+                .startActivities();
+            getActivity().finish();
           }
           else if (mState == Grid.State.BROKEN && !wasBroken) {
             showStatus(getString(R.string.text_oops));
@@ -703,7 +738,7 @@ public class SudokuFragment
     updateTrails(vis, invis);
   }
 
-  private void updateState(boolean save) {
+  private void updateState() {
     if (mGame.isFull()) {
       Collection<Location> broken = mGame.getState().getGrid().getBrokenLocations();
       mSudokuView.setBrokenLocations(broken);
@@ -712,11 +747,6 @@ public class SudokuFragment
         mSudokuView.setEditable(false);
         mGame.suspend();
         mDbGame.gameState = GameState.FINISHED;
-        if (save) {
-          updateDbGame();
-          new SaveGame(this).execute(mDbGame);
-        }
-        mPrefs.removeCurrentGameIdAsync();
         stateChanged();
       } else {
         mState = Grid.State.BROKEN;
