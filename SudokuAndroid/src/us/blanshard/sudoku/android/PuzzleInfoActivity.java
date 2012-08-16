@@ -15,7 +15,9 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 
 /**
  * @author Luke Blanshard
@@ -25,5 +27,18 @@ public class PuzzleInfoActivity extends ActionBarActivity {
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.info_activity);
+    getActionBarHelper().setDisplayHomeAsUpEnabled(true);
+  }
+
+  @Override public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case android.R.id.home:
+        Intent upIntent = new Intent(this, PuzzleListActivity.class);
+        upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(upIntent);
+        finish();
+        return true;
+    }
+    return super.onOptionsItemSelected(item);
   }
 }
