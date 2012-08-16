@@ -38,6 +38,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 /**
@@ -100,12 +101,13 @@ public class PuzzleInfoFragment extends RoboFragment {
     getActivity().setTitle(getString(R.string.text_info_title, puzzle._id));
     mGrid.setPuzzle(puzzle.puzzle);
     mContent.loadData(makeContentHtml(puzzle), "text/html; charset=UTF-8", null);
+    mContent.setBackgroundColor(0);  // Make the background transparent
     mActionBarHelper.invalidateOptionsMenu();
   }
 
   private String makeContentHtml(Puzzle puzzle) {
     StringBuilder sb = new StringBuilder("<ul>");
-    for (Database.Game game : puzzle.games)
+    for (Database.Game game : Lists.reverse(puzzle.games))
       appendGameHtml(game, sb.append("<li>"));
     sb.append("</ul><ul>");
     for (Database.Element element : puzzle.elements)
