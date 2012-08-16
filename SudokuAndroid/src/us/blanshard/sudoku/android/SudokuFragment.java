@@ -49,7 +49,6 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -617,11 +616,9 @@ public class SudokuFragment
             makeToast(getString(R.string.text_congrats)).show();
             saveGameFromUiThread();
             Intent intent = new Intent(getActivity(), PuzzleInfoActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
             intent.putExtra(Extras.PUZZLE_ID, mDbGame.puzzleId);
-            TaskStackBuilder.create(getActivity())
-                .addNextIntent(new Intent(getActivity(), SudokuActivity.class))
-                .addNextIntent(intent)
-                .startActivities();
+            startActivity(intent);
             getActivity().finish();
           }
           else if (mState == Grid.State.BROKEN && !wasBroken) {
