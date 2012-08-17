@@ -167,16 +167,17 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int text_game_queued=0x7f09002d;
         public static final int text_game_replay=0x7f09002e;
         public static final int text_game_solved=0x7f09002f;
-        public static final int text_game_start_time=0x7f090030;
+        public static final int text_game_times=0x7f090030;
         public static final int text_generated_puzzles=0x7f090031;
         public static final int text_generation_options=0x7f090032;
         public static final int text_generator_params=0x7f090033;
         public static final int text_info_title=0x7f090034;
-        public static final int text_oops=0x7f090035;
-        public static final int text_puzzle_number=0x7f090036;
-        public static final int text_puzzle_number_start=0x7f090037;
-        public static final int text_sentence_end=0x7f090038;
-        public static final int text_symmetries=0x7f090039;
+        public static final int text_move_and_trail_counts=0x7f090035;
+        public static final int text_oops=0x7f090036;
+        public static final int text_puzzle_number=0x7f090037;
+        public static final int text_puzzle_number_start=0x7f090038;
+        public static final int text_sentence_end=0x7f090039;
+        public static final int text_symmetries=0x7f09003a;
     }
     public static final class style {
         public static final int ActionBar=0x7f0a0008;

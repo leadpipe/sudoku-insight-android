@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 import roboguice.fragment.RoboFragment;
 import roboguice.inject.InjectView;
 
@@ -24,12 +26,15 @@ import us.blanshard.sudoku.android.Database.GameState;
 import us.blanshard.sudoku.android.Database.Puzzle;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
+import us.blanshard.sudoku.game.GameJson;
+import us.blanshard.sudoku.game.Move;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -40,6 +45,10 @@ import android.webkit.WebView;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+
+import org.json.JSONException;
+
+import java.util.List;
 
 /**
  * @author Luke Blanshard
@@ -120,10 +129,24 @@ public class PuzzleInfoFragment extends RoboFragment {
     sb.append(ToText.gameSummaryHtml(getActivity(), game))
         .append(getString(R.string.text_sentence_end));
     if (game.gameState != GameState.UNSTARTED) {
-      sb.append("<br>")
-          .append(TextUtils.htmlEncode(getString(
-              R.string.text_game_start_time, ToText.relativeDateTime(getActivity(), game.startTime))))
-          .append(getString(R.string.text_sentence_end));
+      try {
+        List<Move> history = GameJson.toHistory(game.history);
+        int maxTrailId = -1;
+        for (Move m : history)
+          if (m.id > maxTrailId)
+            maxTrailId = m.id;
+        sb.append("<br>").append(TextUtils.htmlEncode(
+            getString(R.string.text_move_and_trail_counts, history.size(), maxTrailId + 1)));
+      } catch (JSONException e) {
+        Log.e("PuzzleInfoFragment", "Unexpected json problem", e);
+      }
+      if (game.lastTime - game.startTime > game.elapsedMillis + MINUTES.toMillis(5)) {
+        sb.append("<br>")
+            .append(TextUtils.htmlEncode(getString(
+                R.string.text_game_times,
+                ToText.relativeDateTime(getActivity(), game.startTime),
+                ToText.relativeDateTime(getActivity(), game.lastTime))));
+      }
     }
     sb.append("<br><a href='us.blanshard.sudoku://replay/").append(game._id).append("'>")
         .append(TextUtils.htmlEncode(getString(R.string.text_game_replay)))

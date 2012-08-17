@@ -49,13 +49,14 @@
     <string name="text_game_queued">Queued to play %2$s</string>
     <string name="text_game_replay">Review</string>
     <string name="text_game_solved">Solved in %1$s %2$s</string>
-    <string name="text_game_start_time">Start time: %1$s</string>
+    <string name="text_game_times">Start time: %1$s; end time: %2$s.</string>
     <string name="text_generated_puzzles">Generated puzzles</string>
     <string name="text_generation_options">Puzzle Generator</string>
     <string name="text_generator_params">Generator parameters: %1$s</string>
     <string name="text_info_title">Sudoku #%1$d Details</string>
+    <string name="text_move_and_trail_counts">Moves: %1$d; trails: %2$d.</string>
     <string name="text_oops">Oops!</string>
-    <string name="text_puzzle_number">Sudoku #%1$d</string>
+    <string name="text_puzzle_number">#%1$d</string>
     <string name="text_puzzle_number_start">""Sudoku #%1$d: "</string>
     <string name="text_sentence_end">.</string>
     <string name="text_symmetries">Symmetries of Generated Puzzles</string>
