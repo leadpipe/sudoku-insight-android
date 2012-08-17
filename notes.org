@@ -37,10 +37,8 @@ END
 ** TODO Change tablet views:
    - Game board is just itself, centered
    - List shows info fragment
-** DONE Periodically save state during the game
-** DONE Show most recent game first (in info page)
-** DONE Add "up" behavior to info -> list
-** DONE Add "up" behavior to list -> board
+** TODO Add move and trail count to the info page
+** TODO Show number of set locations next to each trail
 ** TODO Add "give up" action / kill "next puzzle" action
 ** TODO Add voting on (solved) puzzles: +1 or -1 (or 0).  Show dialog on solve, allow update from info page.
 ** TODO Add common menu items (like prefs) to various activities
@@ -54,12 +52,9 @@ END
 ** TODO Handle completion of potentially non-unique puzzles
    - by asking whether it was unique
 
-** TODO Add thumbs up/down optional vote on the puzzle at the end
-
-** DONE Add walkthrough fragment/activity
 ** TODO Add filters for list and replay links
 
-** TODO Give visual indication when try to set an unsettable location (?)
+** TODO Give visual indication when try to set an unsettable location
 
 * Site
 ** TODO Look into data backup
