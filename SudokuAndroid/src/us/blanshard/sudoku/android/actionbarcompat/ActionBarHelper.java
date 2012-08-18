@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package us.blanshard.sudoku.android;
+package us.blanshard.sudoku.android.actionbarcompat;
 
 import android.app.Activity;
 import android.os.Build;
@@ -34,6 +34,21 @@ import android.view.MenuInflater;
  * in Android 3.0 and later.
  */
 public abstract class ActionBarHelper {
+    /**
+     * Listener interface for ActionBar navigation events.
+     */
+    public interface OnNavigationListener {
+        /**
+         * This method is called whenever a navigation item in your action bar
+         * is selected.
+         *
+         * @param itemPosition Position of the item clicked.
+         * @param itemId ID of the item clicked.
+         * @return True if the event was handled, false otherwise.
+         */
+        public boolean onNavigationItemSelected(int itemPosition, long itemId);
+    }
+
     protected final Activity mActivity;
 
     /**

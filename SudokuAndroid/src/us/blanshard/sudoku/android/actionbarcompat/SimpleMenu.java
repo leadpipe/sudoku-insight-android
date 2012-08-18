@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package us.blanshard.sudoku.android;
+package us.blanshard.sudoku.android.actionbarcompat;
 
 import android.content.ComponentName;
 import android.content.Context;

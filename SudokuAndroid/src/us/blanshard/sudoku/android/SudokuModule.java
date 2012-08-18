@@ -18,6 +18,7 @@ package us.blanshard.sudoku.android;
 import roboguice.inject.ContextSingleton;
 import roboguice.inject.SharedPreferencesName;
 
+import us.blanshard.sudoku.android.actionbarcompat.ActionBarHelper;
 import us.blanshard.sudoku.game.Sudoku;
 
 import android.app.Activity;

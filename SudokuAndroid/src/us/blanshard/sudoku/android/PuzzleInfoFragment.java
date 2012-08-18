@@ -26,6 +26,7 @@ import us.blanshard.sudoku.android.Database.GameState;
 import us.blanshard.sudoku.android.Database.Puzzle;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
+import us.blanshard.sudoku.android.actionbarcompat.ActionBarHelper;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 

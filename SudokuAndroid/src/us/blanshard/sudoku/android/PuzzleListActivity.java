@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import us.blanshard.sudoku.android.actionbarcompat.ActionBarActivity;
+
 import roboguice.inject.InjectFragment;
 import android.content.Intent;
 import android.os.Bundle;

@@ -25,6 +25,7 @@ import roboguice.inject.InjectView;
 import us.blanshard.sudoku.android.Database.GameState;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
+import us.blanshard.sudoku.android.actionbarcompat.ActionBarHelper;
 import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;

@@ -19,6 +19,7 @@ import roboguice.inject.InjectView;
 
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
+import us.blanshard.sudoku.android.actionbarcompat.ActionBarActivity;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;

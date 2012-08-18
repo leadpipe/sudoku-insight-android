@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package us.blanshard.sudoku.android;
+package us.blanshard.sudoku.android.actionbarcompat;
 
 import roboguice.activity.RoboFragmentActivity;
 import android.app.Activity;
