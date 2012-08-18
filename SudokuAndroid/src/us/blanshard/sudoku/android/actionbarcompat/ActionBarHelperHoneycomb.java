@@ -17,10 +17,12 @@
 package us.blanshard.sudoku.android.actionbarcompat;
 
 import android.annotation.TargetApi;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
 import android.support.v4.app.Fragment;
+import android.widget.SpinnerAdapter;
 
 /**
  * An extension of {@link ActionBarHelper} that provides Android 3.0-specific functionality for
@@ -40,6 +42,31 @@ public class ActionBarHelperHoneycomb extends ActionBarHelper {
      */
     protected Context getActionBarThemedContext() {
         return mActivity;
+    }
+
+    @Override public void setNavigationMode(int mode) {
+        mActivity.getActionBar().setNavigationMode(mode);
+    }
+
+    @Override public void setListNavigationCallbacks(SpinnerAdapter adapter,
+            final OnNavigationListener callback) {
+        mActivity.getActionBar().setListNavigationCallbacks(adapter, new ActionBar.OnNavigationListener() {
+          @Override public boolean onNavigationItemSelected(int itemPosition, long itemId) {
+              return callback.onNavigationItemSelected(itemPosition, itemId);
+          }
+        });
+    }
+
+    @Override public void setSelectedNavigationItem(int position) {
+        mActivity.getActionBar().setSelectedNavigationItem(position);
+    }
+
+    @Override public int getSelectedNavigationIndex() {
+        return mActivity.getActionBar().getSelectedNavigationIndex();
+    }
+
+    @Override public int getNavigationItemCount() {
+        return mActivity.getActionBar().getNavigationItemCount();
     }
 
     @Override public void onAttachFragment(Fragment fragment) {

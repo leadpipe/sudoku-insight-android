@@ -23,6 +23,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.widget.SpinnerAdapter;
 
 /**
  * An abstract class that handles some common action bar-related functionality in the app. This
@@ -34,21 +35,6 @@ import android.view.MenuInflater;
  * in Android 3.0 and later.
  */
 public abstract class ActionBarHelper {
-    /**
-     * Listener interface for ActionBar navigation events.
-     */
-    public interface OnNavigationListener {
-        /**
-         * This method is called whenever a navigation item in your action bar
-         * is selected.
-         *
-         * @param itemPosition Position of the item clicked.
-         * @param itemId ID of the item clicked.
-         * @return True if the event was handled, false otherwise.
-         */
-        public boolean onNavigationItemSelected(int itemPosition, long itemId);
-    }
-
     protected final Activity mActivity;
 
     /**
@@ -66,9 +52,64 @@ public abstract class ActionBarHelper {
         }
     }
 
-    protected ActionBarHelper(Activity activity) {
-        mActivity = activity;
+    /**
+     * Listener interface for ActionBar navigation events.
+     */
+    public interface OnNavigationListener {
+        /**
+         * This method is called whenever a navigation item in your action bar
+         * is selected.
+         *
+         * @param itemPosition Position of the item clicked.
+         * @param itemId ID of the item clicked.
+         * @return True if the event was handled, false otherwise.
+         */
+        public boolean onNavigationItemSelected(int itemPosition, long itemId);
     }
+
+    /**
+     * Set the current navigation mode, using the navigation mode constants from ActionBar.
+     */
+    public abstract void setNavigationMode(int mode);
+
+    /**
+     * Set the adapter and navigation callback for list navigation mode.
+     *
+     * The supplied adapter will provide views for the expanded list as well as
+     * the currently selected item. (These may be displayed differently.)
+     *
+     * The supplied OnNavigationListener will alert the application when the user
+     * changes the current list selection.
+     *
+     * @param adapter An adapter that will provide views both to display
+     *                the current navigation selection and populate views
+     *                within the dropdown navigation menu.
+     * @param callback An OnNavigationListener that will receive events when the user
+     *                 selects a navigation item.
+     */
+    public abstract void setListNavigationCallbacks(SpinnerAdapter adapter,
+            OnNavigationListener callback);
+
+    /**
+     * Set the selected navigation item in list or tabbed navigation modes.
+     *
+     * @param position Position of the item to select.
+     */
+    public abstract void setSelectedNavigationItem(int position);
+
+    /**
+     * Get the position of the selected navigation item in list or tabbed navigation modes.
+     *
+     * @return Position of the selected item.
+     */
+    public abstract int getSelectedNavigationIndex();
+
+    /**
+     * Get the number of navigation items present in the current navigation mode.
+     *
+     * @return Number of navigation items.
+     */
+    public abstract int getNavigationItemCount();
 
     /**
      * Action bar helper code to be run in {@link Activity#onCreate(android.os.Bundle)}.
@@ -98,12 +139,6 @@ public abstract class ActionBarHelper {
     }
 
     /**
-     * Action bar helper code to be run in {@link Activity#onTitleChanged(CharSequence, int)}.
-     */
-    protected void onTitleChanged(CharSequence title, int color) {
-    }
-
-    /**
      * Returns a {@link MenuInflater} for use when inflating menus. The implementation of this
      * method in {@link ActionBarHelperBase} returns a wrapped menu inflater that can read
      * action bar metadata from a menu resource pre-Honeycomb.
@@ -122,5 +157,16 @@ public abstract class ActionBarHelper {
      * Action bar helper code to be run in {@link FragmentActivity#onAttachFragment}.
      */
     public void onAttachFragment(Fragment fragment) {
+    }
+
+
+    protected ActionBarHelper(Activity activity) {
+      mActivity = activity;
+    }
+
+    /**
+     * Action bar helper code to be run in {@link Activity#onTitleChanged(CharSequence, int)}.
+     */
+    protected void onTitleChanged(CharSequence title, int color) {
     }
 }

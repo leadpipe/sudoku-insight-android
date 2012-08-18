@@ -18,6 +18,7 @@ package us.blanshard.sudoku.android.actionbarcompat;
 
 import us.blanshard.sudoku.android.R;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.XmlResourceParser;
@@ -30,10 +31,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
 import com.google.common.collect.Lists;
@@ -54,12 +59,39 @@ public class ActionBarHelperBase extends ActionBarHelper {
     private static final String MENU_ATTR_ID = "id";
     private static final String MENU_ATTR_SHOW_AS_ACTION = "showAsAction";
 
+    private boolean mIsList;
+    private SpinnerAdapter mAdapter;
+    private OnNavigationListener mCallback;
+    private Spinner mSpinner;
     protected Set<Integer> mActionItemIds = new HashSet<Integer>();
     private Menu mMenu;
     private List<Fragment> mFragments;
 
     protected ActionBarHelperBase(Activity activity) {
         super(activity);
+    }
+
+    @Override public void setNavigationMode(int mode) {
+        // Only handles text and list, and only in onCreate.
+        mIsList = (mode == ActionBar.NAVIGATION_MODE_LIST);
+    }
+
+    @Override public void setListNavigationCallbacks(SpinnerAdapter adapter,
+        OnNavigationListener callback) {
+        mAdapter = adapter;
+        mCallback = callback;
+    }
+
+    @Override public void setSelectedNavigationItem(int position) {
+        mSpinner.setSelection(position, false);
+    }
+
+    @Override public int getSelectedNavigationIndex() {
+        return mSpinner.getSelectedItemPosition();
+    }
+
+    @Override public int getNavigationItemCount() {
+        return mSpinner.getCount();
     }
 
     /**{@inheritDoc}*/
@@ -109,11 +141,26 @@ public class ActionBarHelperBase extends ActionBarHelper {
         homeItem.setIcon(R.drawable.ic_home);
         addActionItemCompatFromMenuItem(homeItem);
 
-        // Add title text
-        TextView titleText = new TextView(mActivity, null, R.attr.actionbarCompatTitleStyle);
-        titleText.setLayoutParams(springLayoutParams);
-        titleText.setText(mActivity.getTitle());
-        actionBarCompat.addView(titleText);
+        // Add spinner or title text
+        if (mIsList) {
+            mSpinner = new Spinner(mActivity);
+            mSpinner.setLayoutParams(springLayoutParams);
+            mSpinner.setAdapter(mAdapter);
+            mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+                @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    mCallback.onNavigationItemSelected(position, id);
+                }
+
+                @Override public void onNothingSelected(AdapterView<?> parent) {
+                }
+            });
+        } else {
+            TextView titleText = new TextView(mActivity, null, R.attr.actionbarCompatTitleStyle);
+            titleText.setId(R.id.actionbar_compat_title);
+            titleText.setLayoutParams(springLayoutParams);
+            titleText.setText(mActivity.getTitle());
+            actionBarCompat.addView(titleText);
+        }
     }
 
     /**
