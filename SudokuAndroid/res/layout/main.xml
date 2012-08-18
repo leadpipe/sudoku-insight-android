@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
 
     <fragment
-        class="us.blanshard.sudoku.android.SudokuFragment"
         android:id="@+id/board_fragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        >
-        <!-- Preview: layout=@layout/board -->
-    </fragment>
+        class="us.blanshard.sudoku.android.SudokuFragment"
+        tools:layout="@layout/board"
+        />
 
 </merge>

@@ -15,23 +15,22 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import roboguice.inject.InjectFragment;
+
 import us.blanshard.sudoku.android.actionbarcompat.ActionBarActivity;
 
-import roboguice.inject.InjectFragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 public class SudokuActivity extends ActionBarActivity {
   private static final boolean STRICT = true;
 
   @InjectFragment(R.id.board_fragment) SudokuFragment mBoardFragment;
-  @InjectFragment(R.id.list_fragment) @Nullable PuzzleListFragment mListFragment;
   @Inject Database mDb;
 
   @Override public void onCreate(Bundle savedInstanceState) {
@@ -55,9 +54,6 @@ public class SudokuActivity extends ActionBarActivity {
   @Override public boolean onCreateOptionsMenu(Menu menu) {
     super.onCreateOptionsMenu(menu);
     getMenuInflater().inflate(R.menu.main, menu);
-    if (mListFragment != null) {
-      menu.findItem(R.id.menu_list_puzzles).setVisible(false);
-    }
     return true;
   }
 

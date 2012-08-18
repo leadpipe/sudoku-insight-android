@@ -75,7 +75,10 @@ public class PuzzleInfoFragment extends RoboFragment {
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    long puzzleId = getActivity().getIntent().getExtras().getLong(Extras.PUZZLE_ID);
+    mContent.setBackgroundColor(0);  // Make the background transparent
+  }
+
+  public void setPuzzleId(long puzzleId) {
     new FetchPuzzle(this).execute(puzzleId);
   }
 

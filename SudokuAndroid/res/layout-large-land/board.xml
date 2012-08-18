@@ -1,11 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="80dp"
+    android:gravity="center"
     >
 
-    <include layout="@layout/sudoku_frame" />
-    <include layout="@layout/rest_of_board" />
+    <include layout="@layout/sudoku_frame"
+	    android:layout_width="400dp"
+	    android:layout_height="400dp"
+	    android:layout_gravity="center"
+        />
+    <include layout="@layout/rest_of_board"
+	    android:layout_width="320dp"
+	    android:layout_height="400dp"
+        />
 
 </LinearLayout>

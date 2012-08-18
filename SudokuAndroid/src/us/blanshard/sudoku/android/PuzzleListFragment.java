@@ -17,12 +17,10 @@ package us.blanshard.sudoku.android;
 
 import roboguice.fragment.RoboFragment;
 import roboguice.inject.InjectView;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
@@ -35,7 +33,7 @@ import javax.inject.Inject;
  *
  * @author Luke Blanshard
  */
-public class PuzzleListFragment extends RoboFragment implements OnItemClickListener {
+public class PuzzleListFragment extends RoboFragment {
   @InjectView(R.id.puzzles) ListView mList;
   @Inject Database mDb;
   private PuzzleAdapter mPuzzleAdapter;
@@ -52,19 +50,12 @@ public class PuzzleListFragment extends RoboFragment implements OnItemClickListe
     mPuzzleAdapter = new PuzzleAdapter(this);
     mList.setAdapter(mPuzzleAdapter);
     mList.setEnabled(true);
-    mList.setOnItemClickListener(this);
   }
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
     new FetchPuzzles(this).execute();
-  }
-
-  @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-    Database.Puzzle puzzle = mPuzzleAdapter.getItem(position);
-    Intent intent = new Intent(getActivity(), PuzzleInfoActivity.class);
-    intent.putExtra(Extras.PUZZLE_ID, puzzle._id);
-    getActivity().startActivity(intent);
+    mList.setOnItemClickListener((OnItemClickListener) getActivity());
   }
 
   private static class FetchPuzzles extends WorkerFragment.Task<PuzzleListFragment, Void, Void, List<Database.Puzzle>> {
