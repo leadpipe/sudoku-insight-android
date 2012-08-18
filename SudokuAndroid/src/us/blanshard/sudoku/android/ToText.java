@@ -15,9 +15,9 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import static android.text.format.DateUtils.DAY_IN_MILLIS;
 import static android.text.format.DateUtils.FORMAT_SHOW_WEEKDAY;
 import static android.text.format.DateUtils.MINUTE_IN_MILLIS;
-import static android.text.format.DateUtils.WEEK_IN_MILLIS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import us.blanshard.sudoku.android.Database.Game;
@@ -52,7 +52,7 @@ public class ToText {
    */
   public static CharSequence relativeDateTime(Context context, long timestamp) {
     return DateUtils.getRelativeDateTimeString(
-        context, timestamp, MINUTE_IN_MILLIS, WEEK_IN_MILLIS, FORMAT_SHOW_WEEKDAY);
+        context, timestamp, MINUTE_IN_MILLIS, 2 * DAY_IN_MILLIS, FORMAT_SHOW_WEEKDAY);
   }
 
   /**
@@ -68,7 +68,8 @@ public class ToText {
    * source if it has one, with an embedded link to the list activity.
    */
   public static String collectionNameHtml(Context context, Database.Element element) {
-    String html = "<a href='us.blanshard.sudoku://list/" + element.collection._id + "'>"
+    String html = "<a href='us.blanshard.sudoku://list/" + element.collection._id
+        + '/' + element.puzzleId + "'>"
         + TextUtils.htmlEncode(element.collection.name) + "</a>";
     if (!Strings.isNullOrEmpty(element.source))
       html = context.getString(
@@ -94,7 +95,18 @@ public class ToText {
     return Html.fromHtml(html).toString();
   }
 
+  /**
+   * Returns a summary of the state of a game: queued, playing, abandoned, or
+   * solved, along with when this happened.
+   */
   public static String gameSummaryHtml(Context context, Game game) {
+    return gameSummaryHtml(context, game, false);
+  }
+    /**
+     * Returns a summary of the state of a game: queued, playing, abandoned, or
+     * solved, along with when this happened.
+     */
+    public static String gameSummaryHtml(Context context, Game game, boolean longTime) {
     int resourceId;
     switch (game.gameState) {
       case UNSTARTED: resourceId = R.string.text_game_queued; break;
@@ -107,7 +119,8 @@ public class ToText {
     String elapsedTime = elapsedTime(game.elapsedMillis);
     if (game.gameState == GameState.FINISHED)
       elapsedTime = "<b>" + elapsedTime + "</b>";
-    return context.getString(resourceId, elapsedTime,
-        dateTimeWithPreposition(context, game.lastTime));
+    CharSequence when = longTime ? relativeDateTime(context, game.lastTime)
+        : dateTimeWithPreposition(context, game.lastTime);
+    return context.getString(resourceId, elapsedTime, when);
   }
 }

@@ -167,7 +167,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int text_game_queued=0x7f09002d;
         public static final int text_game_replay=0x7f09002e;
         public static final int text_game_solved=0x7f09002f;
-        public static final int text_game_times=0x7f090030;
+        public static final int text_game_start_time=0x7f090030;
         public static final int text_generated_puzzles=0x7f090031;
         public static final int text_generation_options=0x7f090032;
         public static final int text_generator_params=0x7f090033;

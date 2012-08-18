@@ -49,7 +49,7 @@
     <string name="text_game_queued">Queued to play %2$s</string>
     <string name="text_game_replay">Review</string>
     <string name="text_game_solved">Solved in %1$s %2$s</string>
-    <string name="text_game_times">Start time: %1$s; end time: %2$s.</string>
+    <string name="text_game_start_time">Started %1$s.</string>
     <string name="text_generated_puzzles">Generated puzzles</string>
     <string name="text_generation_options">Puzzle Generator</string>
     <string name="text_generator_params">Generator parameters: %1$s</string>

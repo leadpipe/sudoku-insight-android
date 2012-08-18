@@ -126,7 +126,7 @@ public class PuzzleInfoFragment extends RoboFragment {
   }
 
   private void appendGameHtml(Game game, StringBuilder sb) {
-    sb.append(ToText.gameSummaryHtml(getActivity(), game))
+    sb.append(ToText.gameSummaryHtml(getActivity(), game, true))
         .append(getString(R.string.text_sentence_end));
     if (game.gameState != GameState.UNSTARTED) {
       try {
@@ -143,9 +143,8 @@ public class PuzzleInfoFragment extends RoboFragment {
       if (game.lastTime - game.startTime > game.elapsedMillis + MINUTES.toMillis(5)) {
         sb.append("<br>")
             .append(TextUtils.htmlEncode(getString(
-                R.string.text_game_times,
-                ToText.relativeDateTime(getActivity(), game.startTime),
-                ToText.relativeDateTime(getActivity(), game.lastTime))));
+                R.string.text_game_start_time,
+                ToText.relativeDateTime(getActivity(), game.startTime))));
       }
     }
     sb.append("<br><a href='us.blanshard.sudoku://replay/").append(game._id).append("'>")
@@ -198,7 +197,7 @@ public class PuzzleInfoFragment extends RoboFragment {
     @Override protected void onPostExecute(PuzzleInfoFragment fragment, Long gameId) {
       Intent intent = new Intent(fragment.getActivity(), SudokuActivity.class);
       intent.putExtra(Extras.GAME_ID, gameId);
-      intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+      intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
       fragment.startActivity(intent);
     }
   }
