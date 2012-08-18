@@ -122,6 +122,7 @@ public class Database {
 
   public static class Element {
     public long _id;
+    public long puzzleId;
     public long createTime;
     public String generatorParams;
     public String source;
@@ -319,6 +320,7 @@ public class Database {
   private static Element elementFromCursor(Cursor cursor) {
     Element element = new Element();
     element._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
+    element.puzzleId = cursor.getLong(cursor.getColumnIndexOrThrow("puzzleId"));
     element.createTime = getLong(cursor, "createTime", 0);
     element.generatorParams = cursor.getString(cursor.getColumnIndexOrThrow("generatorParams"));
     element.source = cursor.getString(cursor.getColumnIndexOrThrow("source"));
