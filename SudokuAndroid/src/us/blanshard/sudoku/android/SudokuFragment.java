@@ -162,9 +162,9 @@ public class SudokuFragment
     return mGame;
   }
 
-  public long getGameId() {
+  public long getPuzzleId() {
     if (mDbGame == null) return 0;
-    return mDbGame._id;
+    return mDbGame.puzzleId;
   }
 
   private void setDbGame(Database.Game dbGame) {

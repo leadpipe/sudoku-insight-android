@@ -30,14 +30,20 @@ END
    - Add the symmetry to the hash
    - Use this as the seed for generating the puzzle
 ** TODO Improve list view
-   - Collection info (or all) in header
-   - Sorting options in action bar
-   - Highlight (or just scroll to) current puzzle
-   - Start with newest puzzles first
-** TODO Change tablet views:
-   - Game board is just itself, centered
-   - List shows info fragment
-** DONE Add move and trail count to the info page
+   - Collection info (or all) in header?
+   - Sorting options in menu
+   - Highlight (or just scroll to) current puzzle -- done
+   - Remember last collection/sort
+   - Filtering?
+** TODO Handle clicking on a link referring to a list
+** TODO Figure out why the progress indicator stops
+** TODO Add a count to the list spinner
+** TODO Handle the importing of collections of puzzles
+   - Add an activity that's triggered by .sdm files
+   - Change the way we set up new games: look for game-less puzzles and queue one
+   - Still want to generate new puzzles: add a pref for how often to do this, as
+     a number between 0 and 1 (probably with 4-5 discrete choices: never,
+     occasionally, etc)
 ** TODO Show number of set locations next to each trail
 ** TODO Add "give up" action / kill "next puzzle" action
 ** TODO Add voting on (solved) puzzles: +1 or -1 (or 0).  Show dialog on solve, allow update from info page.
@@ -47,6 +53,7 @@ END
 ** TODO Make it possible to disable a trail: gray it out and move it to the bottom of the list
 ** TODO Improve new-trail icon
 ** TODO Make icons for launcher, home
+** TODO Consider supporting other selection-based operations on the list: deletion, exporting
 
 ** TODO Preference for non-unique puzzles
 ** TODO Handle completion of potentially non-unique puzzles

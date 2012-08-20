@@ -46,6 +46,7 @@ public class Database {
   private static final String GAME_SELECT_AND_FROM_CLAUSE =
       "SELECT g.*, puzzle FROM [Game] g JOIN [Puzzle] p ON g.puzzleId = p._id ";
 
+  public static final int ALL_PSEUDO_COLLECTION_ID = 0;
   public static final int GENERATED_COLLECTION_ID = 1;
   public static final int CAPTURED_COLLECTION_ID = 2;
 
@@ -465,6 +466,26 @@ public class Database {
           element.collection = collections.get(cursor.getLong(cursor.getColumnIndexOrThrow("collectionId")));
           Puzzle puzzle = puzzles.get(cursor.getLong(cursor.getColumnIndexOrThrow("puzzleId")));
           puzzle.elements.add(element);
+        }
+      } finally {
+        cursor.close();
+      }
+    } finally {
+      db.endTransaction();
+    }
+    return answer;
+  }
+
+  public List<CollectionInfo> getAllCollections() throws SQLException {
+    List<CollectionInfo> answer = Lists.newArrayList();
+    SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+    db.beginTransaction();
+    try {
+      Cursor cursor = db.rawQuery("SELECT * FROM [Collection]", null);
+      try {
+        while (cursor.moveToNext()) {
+          CollectionInfo collection = collectionFromCursor(cursor);
+          answer.add(collection);
         }
       } finally {
         cursor.close();

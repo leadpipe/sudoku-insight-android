@@ -18,10 +18,10 @@ package us.blanshard.sudoku.android;
 import roboguice.fragment.RoboFragment;
 import roboguice.inject.InjectView;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import java.util.List;
@@ -34,9 +34,14 @@ import javax.inject.Inject;
  * @author Luke Blanshard
  */
 public class PuzzleListFragment extends RoboFragment {
+  private static final String TAG = "PuzzleListFragment";
   @InjectView(R.id.puzzles) ListView mList;
   @Inject Database mDb;
+  @Inject PuzzleListActivity mActivity;
   private PuzzleAdapter mPuzzleAdapter;
+  private List<Database.Puzzle> mPuzzles;
+  private long mCollectionId = Database.ALL_PSEUDO_COLLECTION_ID;
+  private long mPuzzleId = 0;
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
       Bundle savedInstanceState) {
@@ -50,12 +55,58 @@ public class PuzzleListFragment extends RoboFragment {
     mPuzzleAdapter = new PuzzleAdapter(this);
     mList.setAdapter(mPuzzleAdapter);
     mList.setEnabled(true);
+    Log.d(TAG, "Choice mode: " + mList.getChoiceMode());
   }
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
     new FetchPuzzles(this).execute();
-    mList.setOnItemClickListener((OnItemClickListener) getActivity());
+  }
+
+  public void setCollectionId(long collectionId) {
+    mCollectionId = collectionId;
+    updateList();
+  }
+
+  public void setPuzzleId(long puzzleId) {
+    mPuzzleId = puzzleId;
+    updateSelectedPuzzle();
+  }
+
+  private void setPuzzles(List<Database.Puzzle> puzzles) {
+    mPuzzles = puzzles;
+    updateList();
+  }
+
+  private void updateList() {
+    mPuzzleAdapter.clear();
+    if (mPuzzles == null) return;
+    for (Database.Puzzle puzzle : mPuzzles)
+      if (isIn(puzzle, mCollectionId))
+        mPuzzleAdapter.add(puzzle);
+    updateSelectedPuzzle();
+  }
+
+  private void updateSelectedPuzzle() {
+    int pos = mList.getCheckedItemPosition();
+    if (pos != ListView.INVALID_POSITION) mList.setItemChecked(pos, false);
+    for (int i = 0, count = mPuzzleAdapter.getCount(); i < count; ++i) {
+      if (mPuzzleAdapter.getItemId(i) == mPuzzleId) {
+        // Too slow:
+        //mList.smoothScrollToPosition(i);
+        mList.setSelection(i);
+        mList.setItemChecked(i, true);
+        return;
+      }
+    }
+  }
+
+  private static boolean isIn(Database.Puzzle puzzle, long collectionId) {
+    if (collectionId == Database.ALL_PSEUDO_COLLECTION_ID) return true;
+    for (Database.Element element : puzzle.elements)
+      if (collectionId == element.collection._id)
+        return true;
+    return false;
   }
 
   private static class FetchPuzzles extends WorkerFragment.Task<PuzzleListFragment, Void, Void, List<Database.Puzzle>> {
@@ -73,10 +124,5 @@ public class PuzzleListFragment extends RoboFragment {
     @Override protected void onPostExecute(PuzzleListFragment fragment, List<Database.Puzzle> puzzles) {
       fragment.setPuzzles(puzzles);
     }
-  }
-
-  private void setPuzzles(List<Database.Puzzle> puzzles) {
-    for (Database.Puzzle puzzle : puzzles)
-      mPuzzleAdapter.add(puzzle);
   }
 }

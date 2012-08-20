@@ -61,7 +61,7 @@ public class SudokuActivity extends ActionBarActivity {
     switch (item.getItemId()) {
       case R.id.menu_list_puzzles: {
         Intent intent = new Intent(this, PuzzleListActivity.class);
-        intent.putExtra(Extras.GAME_ID, mBoardFragment.getGameId());
+        intent.putExtra(Extras.PUZZLE_ID, mBoardFragment.getPuzzleId());
         startActivity(intent);
         return true;
       }

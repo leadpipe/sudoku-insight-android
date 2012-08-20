@@ -46,6 +46,7 @@ public class PuzzleInfoActivity extends ActionBarActivity {
       case android.R.id.home:
         Intent upIntent = new Intent(this, PuzzleListActivity.class);
         upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        upIntent.putExtra(Extras.PUZZLE_ID, getIntent().getExtras().getLong(Extras.PUZZLE_ID));
         startActivity(upIntent);
         finish();
         return true;

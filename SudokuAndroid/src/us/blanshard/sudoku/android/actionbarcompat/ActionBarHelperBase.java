@@ -154,6 +154,7 @@ public class ActionBarHelperBase extends ActionBarHelper {
                 @Override public void onNothingSelected(AdapterView<?> parent) {
                 }
             });
+            actionBarCompat.addView(mSpinner);
         } else {
             TextView titleText = new TextView(mActivity, null, R.attr.actionbarCompatTitleStyle);
             titleText.setId(R.id.actionbar_compat_title);

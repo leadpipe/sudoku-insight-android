@@ -54,6 +54,10 @@ public class PuzzleAdapter extends ArrayAdapter<Database.Puzzle> {
     return getItem(position)._id;
   }
 
+  @Override public boolean hasStableIds() {
+    return true;
+  }
+
   @Override public View getView(int position, View convertView, ViewGroup parent) {
     ViewHolder holder;
     if (convertView == null) {
