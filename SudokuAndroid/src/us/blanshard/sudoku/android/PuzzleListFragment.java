@@ -16,14 +16,24 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 import roboguice.fragment.RoboFragment;
+import roboguice.inject.ContextSingleton;
 import roboguice.inject.InjectView;
+
+import us.blanshard.sudoku.android.actionbarcompat.ActionBarHelper;
+
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.primitives.Longs;
+
+import java.util.Comparator;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -33,20 +43,84 @@ import javax.inject.Inject;
  *
  * @author Luke Blanshard
  */
+@ContextSingleton
 public class PuzzleListFragment extends RoboFragment {
-  private static final String TAG = "PuzzleListFragment";
+  //private static final String TAG = "PuzzleListFragment";
   @InjectView(R.id.puzzles) ListView mList;
   @Inject Database mDb;
   @Inject PuzzleListActivity mActivity;
+  @Inject ActionBarHelper mActionBarHelper;
+  @Inject Prefs mPrefs;
   private PuzzleAdapter mPuzzleAdapter;
   private List<Database.Puzzle> mPuzzles;
   private long mCollectionId = Database.ALL_PSEUDO_COLLECTION_ID;
   private long mPuzzleId = 0;
+  private Sort mSort = Sort.NUMBER;
+
+  enum Sort {
+    NUMBER(R.id.menu_sort_by_number, new Comparator<Database.Puzzle>() {
+      @Override public int compare(Database.Puzzle lhs, Database.Puzzle rhs) {
+        return Longs.compare(lhs._id, rhs._id);
+      }
+    }),
+    ELAPSED(R.id.menu_sort_by_elapsed, new Comparator<Database.Puzzle>() {
+      @Override public int compare(Database.Puzzle lhs, Database.Puzzle rhs) {
+        return ComparisonChain.start()
+            .compare(elapsed(lhs), elapsed(rhs))
+            .compare(lhs._id, rhs._id)
+            .result();
+      }
+    }),
+    TIME(R.id.menu_sort_by_time, new Comparator<Database.Puzzle>() {
+      @Override public int compare(Database.Puzzle lhs, Database.Puzzle rhs) {
+        return ComparisonChain.start()
+            .compare(time(lhs), time(rhs))
+            .compare(lhs._id, rhs._id)
+            .result();
+      }
+    });
+
+    private static final Sort[] values = values();
+    Sort(int itemId, Comparator<Database.Puzzle> comparator) {
+      this.itemId = itemId;
+      this.comparator = comparator;
+    }
+    static long elapsed(Database.Puzzle puzzle) {
+      if (puzzle.games.isEmpty()) return 0;
+      return puzzle.games.get(puzzle.games.size() - 1).elapsedMillis;
+    }
+    static long time(Database.Puzzle puzzle) {
+      if (puzzle.games.isEmpty()) return 0;
+      return puzzle.games.get(puzzle.games.size() - 1).lastTime;
+    }
+
+    public final int itemId;
+    public final Comparator<Database.Puzzle> comparator;
+
+    public static Sort fromOrdinal(int ordinal, Sort def) {
+      for (Sort sort : values)
+        if (sort.ordinal() == ordinal)
+          return sort;
+      return def;
+    }
+
+    public static Sort fromMenuItem(MenuItem item) {
+      for (Sort sort : values)
+        if (sort.itemId == item.getItemId())
+          return sort;
+      return null;
+    }
+  }
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
       Bundle savedInstanceState) {
-    setHasOptionsMenu(false);
+    setHasOptionsMenu(true);
     return inflater.inflate(R.layout.list, container, true);
+  }
+
+  @Override public void onCreateOptionsMenu(Menu menu, MenuInflater menuInflater) {
+    menuInflater.inflate(R.menu.list, menu);
+    super.onCreateOptionsMenu(menu, menuInflater);
   }
 
   @Override public void onViewCreated(View view, Bundle savedInstanceState) {
@@ -55,12 +129,31 @@ public class PuzzleListFragment extends RoboFragment {
     mPuzzleAdapter = new PuzzleAdapter(this);
     mList.setAdapter(mPuzzleAdapter);
     mList.setEnabled(true);
-    Log.d(TAG, "Choice mode: " + mList.getChoiceMode());
   }
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
     new FetchPuzzles(this).execute();
+    mSort = Sort.fromOrdinal(mPrefs.getSort(), Sort.NUMBER);
+    mActionBarHelper.invalidateOptionsMenu();
+  }
+
+  @Override public void onPrepareOptionsMenu(Menu menu) {
+    super.onPrepareOptionsMenu(menu);
+    MenuItem item = menu.findItem(mSort.itemId);
+    if (item != null) item.setChecked(true);
+  }
+
+  @Override public boolean onOptionsItemSelected(MenuItem item) {
+    Sort sort = Sort.fromMenuItem(item);
+    if (sort == null) return false;
+    if (sort != mSort) {
+      mSort = sort;
+      mPrefs.setSortAsync(sort.ordinal());
+      updateSort();
+      mActionBarHelper.invalidateOptionsMenu();
+    }
+    return true;
   }
 
   public void setCollectionId(long collectionId) {
@@ -84,6 +177,14 @@ public class PuzzleListFragment extends RoboFragment {
     for (Database.Puzzle puzzle : mPuzzles)
       if (isIn(puzzle, mCollectionId))
         mPuzzleAdapter.add(puzzle);
+    if (mSort != Sort.NUMBER)
+      updateSort();
+    else
+      updateSelectedPuzzle();
+  }
+
+  private void updateSort() {
+    mPuzzleAdapter.sort(mSort.comparator);
     updateSelectedPuzzle();
   }
 
@@ -92,10 +193,11 @@ public class PuzzleListFragment extends RoboFragment {
     if (pos != ListView.INVALID_POSITION) mList.setItemChecked(pos, false);
     for (int i = 0, count = mPuzzleAdapter.getCount(); i < count; ++i) {
       if (mPuzzleAdapter.getItemId(i) == mPuzzleId) {
+        mList.setItemChecked(i, true);
         // Too slow:
         //mList.smoothScrollToPosition(i);
+        mList.setSelection(0);
         mList.setSelection(i);
-        mList.setItemChecked(i, true);
         return;
       }
     }

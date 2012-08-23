@@ -44,6 +44,7 @@ public class Prefs {
   private static final char SEP = ':';
   private static final String GENERATOR = "generator";
   private static final String SYMMETRIES = "symmetries";
+  private static final String SORT = "sort";
 
   @Inject SharedPreferences mPrefs;
 
@@ -64,6 +65,16 @@ public class Prefs {
   public void removeCurrentGameIdAsync() {
     SharedPreferences.Editor prefs = mPrefs.edit();
     prefs.remove(GAME_ID);
+    prefs.apply();
+  }
+
+  public int getSort() {
+    return mPrefs.getInt(SORT, -1);
+  }
+
+  public void setSortAsync(int sort) {
+    SharedPreferences.Editor prefs = mPrefs.edit();
+    prefs.putInt(SORT, sort);
     prefs.apply();
   }
 

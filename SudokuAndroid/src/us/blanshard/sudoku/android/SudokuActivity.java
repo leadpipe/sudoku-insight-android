@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import javax.inject.Inject;
@@ -53,7 +54,9 @@ public class SudokuActivity extends ActionBarActivity {
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {
     super.onCreateOptionsMenu(menu);
-    getMenuInflater().inflate(R.menu.main, menu);
+    MenuInflater inflater = getMenuInflater();
+    inflater.inflate(R.menu.list_item, menu);
+    inflater.inflate(R.menu.common, menu);
     return true;
   }
 

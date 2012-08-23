@@ -21,6 +21,8 @@ import us.blanshard.sudoku.android.actionbarcompat.ActionBarActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 
 /**
@@ -34,6 +36,13 @@ public class PuzzleInfoActivity extends ActionBarActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.info_activity);
     getActionBarHelper().setDisplayHomeAsUpEnabled(true);
+  }
+
+  @Override public boolean onCreateOptionsMenu(Menu menu) {
+    super.onCreateOptionsMenu(menu);
+    MenuInflater inflater = getMenuInflater();
+    inflater.inflate(R.menu.common, menu);
+    return true;
   }
 
   @Override protected void onPostCreate(Bundle savedInstanceState) {
@@ -50,6 +59,16 @@ public class PuzzleInfoActivity extends ActionBarActivity {
         startActivity(upIntent);
         finish();
         return true;
+      case R.id.menu_capture_puzzle: {
+        Intent intent = new Intent(this, CapturePuzzleActivity.class);
+        startActivity(intent);
+        return true;
+      }
+      case R.id.menu_prefs: {
+        Intent intent = new Intent(this, PrefsActivity.class);
+        startActivity(intent);
+        return true;
+      }
     }
     return super.onOptionsItemSelected(item);
   }

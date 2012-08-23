@@ -35,6 +35,10 @@
     <string name="menu_prefs">Settings</string>
     <string name="menu_redo">Redo</string>
     <string name="menu_redo_to_end">Redo to End</string>
+    <string name="menu_sort_by_elapsed">By Elapsed Time</string>
+    <string name="menu_sort_by_number">By Number</string>
+    <string name="menu_sort_by_time">By Last Played Time</string>
+    <string name="menu_sort_list">Sort</string>
     <string name="menu_undo">Undo</string>
     <string name="menu_undo_to_start">Undo to Start</string>
     <string name="text_all_puzzles">All puzzles</string>
