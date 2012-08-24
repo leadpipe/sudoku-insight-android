@@ -29,11 +29,9 @@ END
    - Choose the first symmetry in the shuffled list that's enabled
    - Add the symmetry to the hash
    - Use this as the seed for generating the puzzle
-** TODO Improve list view
+** Possible list view tweaks
    - Collection info (or all) in header?
-   - Sorting options in menu
-   - Highlight (or just scroll to) current puzzle -- done
-   - Remember last collection/sort
+   - Remember last collection?
    - Filtering?
 ** TODO Handle clicking on a link referring to a list
 ** TODO Figure out why the progress indicator stops
