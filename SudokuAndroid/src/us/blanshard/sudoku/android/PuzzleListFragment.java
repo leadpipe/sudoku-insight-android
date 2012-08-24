@@ -19,18 +19,26 @@ import roboguice.fragment.RoboFragment;
 import roboguice.inject.ContextSingleton;
 import roboguice.inject.InjectView;
 
+import us.blanshard.sudoku.android.Database.Game;
 import us.blanshard.sudoku.android.actionbarcompat.ActionBarHelper;
 
 import android.os.Bundle;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Iterables;
 import com.google.common.primitives.Longs;
 
 import java.util.Comparator;
@@ -51,7 +59,7 @@ public class PuzzleListFragment extends RoboFragment {
   @Inject PuzzleListActivity mActivity;
   @Inject ActionBarHelper mActionBarHelper;
   @Inject Prefs mPrefs;
-  private PuzzleAdapter mPuzzleAdapter;
+  @Inject PuzzleAdapter mPuzzleAdapter;
   private List<Database.Puzzle> mPuzzles;
   private long mCollectionId = Database.ALL_PSEUDO_COLLECTION_ID;
   private long mPuzzleId = 0;
@@ -126,7 +134,6 @@ public class PuzzleListFragment extends RoboFragment {
   @Override public void onViewCreated(View view, Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
 
-    mPuzzleAdapter = new PuzzleAdapter(this);
     mList.setAdapter(mPuzzleAdapter);
     mList.setEnabled(true);
   }
@@ -225,6 +232,73 @@ public class PuzzleListFragment extends RoboFragment {
 
     @Override protected void onPostExecute(PuzzleListFragment fragment, List<Database.Puzzle> puzzles) {
       fragment.setPuzzles(puzzles);
+    }
+  }
+
+  public class PuzzleAdapter extends ArrayAdapter<Database.Puzzle> {
+
+    public PuzzleAdapter() {
+      super(getActivity(), R.layout.list_item);
+    }
+
+    private class ViewHolder {
+      final View rowView;
+      final SudokuView grid;
+      final TextView label;
+
+      public ViewHolder() {
+        rowView = getActivity().getLayoutInflater().inflate(R.layout.list_item, null);
+        grid = (SudokuView) rowView.findViewById(R.id.list_item_grid);
+        label = (TextView) rowView.findViewById(R.id.list_item_label);
+        label.setMovementMethod(LinkMovementMethod.getInstance());
+      }
+    }
+
+    @Override public long getItemId(int position) {
+      return getItem(position)._id;
+    }
+
+    @Override public boolean hasStableIds() {
+      return true;
+    }
+
+    @Override public View getView(int position, View convertView, ViewGroup parent) {
+      ViewHolder holder;
+      if (convertView == null) {
+        holder = new ViewHolder();
+        holder.rowView.setTag(holder);
+      } else {
+        holder = (ViewHolder) convertView.getTag();
+      }
+      Database.Puzzle puzzle = getItem(position);
+      holder.grid.setPuzzle(puzzle.puzzle);
+      holder.label.setText(Html.fromHtml(puzzleDescriptionHtml(puzzle)));
+      return holder.rowView;
+    }
+
+    private String puzzleDescriptionHtml(Database.Puzzle puzzle) {
+      StringBuilder sb = new StringBuilder();
+      sb.append(getContext().getString(R.string.text_puzzle_number_start, puzzle._id));
+      if (!puzzle.games.isEmpty()) {
+        appendGameSummary(sb, puzzle.games.get(puzzle.games.size() - 1));
+        if (!puzzle.elements.isEmpty()) sb.append("<br>");
+      }
+      if (!puzzle.elements.isEmpty()) {
+        sb.append(getContext().getString(R.string.text_collection_in_start));
+        Joiner.on(getContext().getString(R.string.text_collection_separator))
+            .appendTo(sb, Iterables.transform(puzzle.elements, new Function<Database.Element, String>() {
+                @Override public String apply(Database.Element element) {
+                  return ToText.collectionNameHtml(getContext(), element);
+                }
+              }));
+        sb.append(getContext().getString(R.string.text_sentence_end));
+      }
+      return sb.toString();
+    }
+
+    private void appendGameSummary(StringBuilder sb, Game game) {
+      sb.append(ToText.gameSummaryHtml(getContext(), game));
+      sb.append(getContext().getString(R.string.text_sentence_end));
     }
   }
 }
