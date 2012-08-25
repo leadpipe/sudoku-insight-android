@@ -114,6 +114,16 @@ public class PuzzleListActivity extends ActionBarActivity
     }
   }
 
+  public void setCollectionId(long id) {
+    int position = getActionBarHelper().getSelectedNavigationIndex();
+    for (int i = 0, count = mCollectionAdapter.getCount(); i < count; ++i)
+      if (mCollectionAdapter.getItem(i)._id == id) {
+        position = i;
+        break;
+      }
+    getActionBarHelper().setSelectedNavigationItem(position);
+  }
+
   private void setCollections(List<Database.CollectionInfo> collections) {
     Database.CollectionInfo all = new Database.CollectionInfo();
     int position = 0, foundPosition = 0;
@@ -159,8 +169,7 @@ public class PuzzleListActivity extends ActionBarActivity
       if (view == null)
         view = getLayoutInflater().inflate(android.R.layout.simple_list_item_1, null);
       TextView text = (TextView) view.findViewById(android.R.id.text1);
-      Database.CollectionInfo coll = mCollectionAdapter.getItem(position);
-      text.setText(coll.name);
+      text.setText(getItem(position).name);
       return view;
     }
 

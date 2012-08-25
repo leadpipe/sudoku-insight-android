@@ -24,7 +24,10 @@ import us.blanshard.sudoku.android.actionbarcompat.ActionBarHelper;
 
 import android.os.Bundle;
 import android.text.Html;
-import android.text.method.LinkMovementMethod;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ClickableSpan;
+import android.text.style.URLSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -37,11 +40,13 @@ import android.widget.TextView;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Iterables;
 import com.google.common.primitives.Longs;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -59,7 +64,7 @@ public class PuzzleListFragment extends RoboFragment {
   @Inject PuzzleListActivity mActivity;
   @Inject ActionBarHelper mActionBarHelper;
   @Inject Prefs mPrefs;
-  @Inject PuzzleAdapter mPuzzleAdapter;
+  private PuzzleAdapter mPuzzleAdapter;
   private List<Database.Puzzle> mPuzzles;
   private long mCollectionId = Database.ALL_PSEUDO_COLLECTION_ID;
   private long mPuzzleId = 0;
@@ -134,6 +139,7 @@ public class PuzzleListFragment extends RoboFragment {
   @Override public void onViewCreated(View view, Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
 
+    mPuzzleAdapter = new PuzzleAdapter();
     mList.setAdapter(mPuzzleAdapter);
     mList.setEnabled(true);
   }
@@ -235,7 +241,24 @@ public class PuzzleListFragment extends RoboFragment {
     }
   }
 
-  public class PuzzleAdapter extends ArrayAdapter<Database.Puzzle> {
+  private class CallbackSpan extends ClickableSpan {
+
+    private final long mCollectionId;
+    private final long mPuzzleId;
+
+    public CallbackSpan(long collectionId, long puzzleId) {
+      mCollectionId = collectionId;
+      mPuzzleId = puzzleId;
+    }
+
+    @Override public void onClick(View view) {
+      PuzzleListFragment.this.mPuzzleId = mPuzzleId;
+      mActivity.setCollectionId(mCollectionId);
+    }
+
+  }
+
+  private class PuzzleAdapter extends ArrayAdapter<Database.Puzzle> {
 
     public PuzzleAdapter() {
       super(getActivity(), R.layout.list_item);
@@ -250,7 +273,7 @@ public class PuzzleListFragment extends RoboFragment {
         rowView = getActivity().getLayoutInflater().inflate(R.layout.list_item, null);
         grid = (SudokuView) rowView.findViewById(R.id.list_item_grid);
         label = (TextView) rowView.findViewById(R.id.list_item_label);
-        label.setMovementMethod(LinkMovementMethod.getInstance());
+        //label.setMovementMethod(LinkMovementMethod.getInstance());
       }
     }
 
@@ -272,7 +295,7 @@ public class PuzzleListFragment extends RoboFragment {
       }
       Database.Puzzle puzzle = getItem(position);
       holder.grid.setPuzzle(puzzle.puzzle);
-      holder.label.setText(Html.fromHtml(puzzleDescriptionHtml(puzzle)));
+      holder.label.setText(fromHtml(puzzleDescriptionHtml(puzzle)));
       return holder.rowView;
     }
 
@@ -299,6 +322,22 @@ public class PuzzleListFragment extends RoboFragment {
     private void appendGameSummary(StringBuilder sb, Game game) {
       sb.append(ToText.gameSummaryHtml(getContext(), game));
       sb.append(getContext().getString(R.string.text_sentence_end));
+    }
+
+    private Spanned fromHtml(String html) {
+      SpannableStringBuilder builder = (SpannableStringBuilder) Html.fromHtml(html);
+      for (URLSpan url : builder.getSpans(0, builder.length(), URLSpan.class)) {
+        if (url.getURL().startsWith(ToText.LIST_URI_PREFIX)) {
+          Iterator<String> it = Splitter.on('/').split(url.getURL().substring(ToText.LIST_URI_PREFIX.length())).iterator();
+          CallbackSpan span = new CallbackSpan(Long.parseLong(it.next()), Long.parseLong(it.next()));
+          int start = builder.getSpanStart(url);
+          int end = builder.getSpanEnd(url);
+          int flags = builder.getSpanFlags(url);
+          builder.removeSpan(url);
+          builder.setSpan(span, start, end, flags);
+        }
+      }
+      return builder;
     }
   }
 }

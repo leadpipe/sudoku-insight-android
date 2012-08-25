@@ -37,6 +37,8 @@ import com.google.common.base.Strings;
  */
 public class ToText {
 
+  public static final String LIST_URI_PREFIX = "us.blanshard.sudoku://list/";
+
   /**
    * Formats elapsed time as hours:minutes:seconds.
    */
@@ -68,7 +70,7 @@ public class ToText {
    * source if it has one, with an embedded link to the list activity.
    */
   public static String collectionNameHtml(Context context, Database.Element element) {
-    String html = "<a href='us.blanshard.sudoku://list/" + element.collection._id
+    String html = "<a href='" + LIST_URI_PREFIX + element.collection._id
         + '/' + element.puzzleId + "'>"
         + TextUtils.htmlEncode(element.collection.name) + "</a>";
     if (!Strings.isNullOrEmpty(element.source))
