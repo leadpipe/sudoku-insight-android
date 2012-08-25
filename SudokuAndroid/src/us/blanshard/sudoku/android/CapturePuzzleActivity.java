@@ -15,8 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import roboguice.inject.InjectView;
-
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
 import us.blanshard.sudoku.android.actionbarcompat.ActionBarActivity;
@@ -37,26 +35,31 @@ import android.widget.TextView;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 /**
  * Captures a puzzle from Goggles.
  *
  * @author Luke Blanshard
  */
 public class CapturePuzzleActivity extends ActionBarActivity implements OnMoveListener, View.OnClickListener {
-  @InjectView(R.id.sudoku_view) SudokuView mSudokuView;
-  @InjectView(R.id.capture_source) AutoCompleteTextView mCaptureSource;
-  @InjectView(R.id.capture_play) Button mPlay;
-  @InjectView(R.id.capture_save) Button mSave;
-  @InjectView(R.id.already_have_notice) TextView mNotice;
-  @Inject Database mDb;
+  private SudokuView mSudokuView;
+  private AutoCompleteTextView mCaptureSource;
+  private Button mPlay;
+  private Button mSave;
+  private TextView mNotice;
+  private Database mDb;
   private boolean mIsPuzzle;
   private Long mPuzzleId;
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.capture);
+    mSudokuView = (SudokuView) findViewById(R.id.sudoku_view);
+    mCaptureSource = (AutoCompleteTextView) findViewById(R.id.capture_source);
+    mPlay = (Button) findViewById(R.id.capture_play);
+    mSave = (Button) findViewById(R.id.capture_save);
+    mNotice = (TextView) findViewById(R.id.already_have_notice);
+    mDb = new Database(this);
+
     mSudokuView.setOnMoveListener(this);
     mPlay.setOnClickListener(this);
     mSave.setOnClickListener(this);
@@ -78,6 +81,11 @@ public class CapturePuzzleActivity extends ActionBarActivity implements OnMoveLi
     mSudokuView.setEditable(editable);
     updateState();
     new FetchAutocompletes(this).execute();
+  }
+
+  @Override protected void onDestroy() {
+    mDb.close();
+    super.onDestroy();
   }
 
   @Override public void onClick(View v) {

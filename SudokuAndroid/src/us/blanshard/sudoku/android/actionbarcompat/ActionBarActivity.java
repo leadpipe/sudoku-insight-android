@@ -16,14 +16,12 @@
 
 package us.blanshard.sudoku.android.actionbarcompat;
 
-import roboguice.activity.RoboFragmentActivity;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
-
-import javax.inject.Inject;
 
 /**
  * A base activity that defers common functionality across app activities to an {@link
@@ -34,8 +32,8 @@ import javax.inject.Inject;
  * NOTE: this may used with the Android Compatibility Package by extending
  * android.support.v4.app.FragmentActivity instead of {@link Activity}.
  */
-public abstract class ActionBarActivity extends RoboFragmentActivity {
-    @Inject ActionBarHelper mActionBarHelper;
+public abstract class ActionBarActivity extends FragmentActivity {
+    private final ActionBarHelper mActionBarHelper = ActionBarHelper.createInstance(this);
 
     /**
      * Returns the {@link ActionBarHelper} for this activity.

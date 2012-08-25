@@ -15,8 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import roboguice.inject.InjectFragment;
-
 import us.blanshard.sudoku.android.actionbarcompat.ActionBarActivity;
 
 import android.content.Intent;
@@ -26,17 +24,20 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-import javax.inject.Inject;
-
 public class SudokuActivity extends ActionBarActivity {
   private static final boolean STRICT = true;
 
-  @InjectFragment(R.id.board_fragment) SudokuFragment mBoardFragment;
-  @Inject Database mDb;
+  private SudokuFragment mBoardFragment;
+  private Database mDb;
+  private Prefs mPrefs;
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.main);  // Can't use @ContentView, it does things too early.
+    mDb = new Database(this);
+    mPrefs = new Prefs(this);
+    setContentView(R.layout.main);
+    mBoardFragment = (SudokuFragment) getSupportFragmentManager().findFragmentById(R.id.board_fragment);
+    mBoardFragment.initFragment(mDb, getActionBarHelper(), mPrefs);
 
     if (STRICT) {
       StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
@@ -50,6 +51,11 @@ public class SudokuActivity extends ActionBarActivity {
           //.penaltyDeath()
           .build());
     }
+  }
+
+  @Override protected void onDestroy() {
+    mDb.close();
+    super.onDestroy();
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {

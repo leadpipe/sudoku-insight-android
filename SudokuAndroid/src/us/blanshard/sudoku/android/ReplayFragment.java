@@ -15,11 +15,11 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import roboguice.fragment.RoboFragment;
+import android.support.v4.app.Fragment;
 
 /**
  * @author Luke Blanshard
  */
-public class ReplayFragment extends RoboFragment {
+public class ReplayFragment extends Fragment {
 
 }

@@ -15,8 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import roboguice.inject.InjectFragment;
-
 import us.blanshard.sudoku.android.actionbarcompat.ActionBarActivity;
 
 import android.content.Intent;
@@ -30,12 +28,21 @@ import android.view.MenuItem;
  */
 public class PuzzleInfoActivity extends ActionBarActivity {
 
-  @InjectFragment(R.id.info_fragment) PuzzleInfoFragment mFragment;
+  private Database mDb;
+  private PuzzleInfoFragment mFragment;
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    mDb = new Database(this);
     setContentView(R.layout.info_activity);
+    mFragment = (PuzzleInfoFragment) (getSupportFragmentManager().findFragmentById(R.id.info_fragment));
     getActionBarHelper().setDisplayHomeAsUpEnabled(true);
+    mFragment.initFragment(mDb, getActionBarHelper());
+  }
+
+  @Override protected void onDestroy() {
+    mDb.close();
+    super.onDestroy();
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {

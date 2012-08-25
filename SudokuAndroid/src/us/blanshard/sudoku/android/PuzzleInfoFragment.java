@@ -17,9 +17,6 @@ package us.blanshard.sudoku.android;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 
-import roboguice.fragment.RoboFragment;
-import roboguice.inject.InjectView;
-
 import us.blanshard.sudoku.android.Database.Element;
 import us.blanshard.sudoku.android.Database.Game;
 import us.blanshard.sudoku.android.Database.GameState;
@@ -34,6 +31,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
+import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -45,7 +43,6 @@ import android.view.ViewGroup;
 import android.webkit.WebView;
 
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 
 import org.json.JSONException;
 
@@ -54,11 +51,11 @@ import java.util.List;
 /**
  * @author Luke Blanshard
  */
-public class PuzzleInfoFragment extends RoboFragment {
-  @InjectView(R.id.info_grid) SudokuView mGrid;
-  @InjectView(R.id.info_content) WebView mContent;
-  @Inject Database mDb;
-  @Inject ActionBarHelper mActionBarHelper;
+public class PuzzleInfoFragment extends Fragment {
+  private SudokuView mGrid;
+  private WebView mContent;
+  private Database mDb;
+  private ActionBarHelper mActionBarHelper;
   private Database.Puzzle mPuzzle;
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -75,7 +72,14 @@ public class PuzzleInfoFragment extends RoboFragment {
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
+    mGrid = (SudokuView) getActivity().findViewById(R.id.info_grid);
+    mContent = (WebView) getActivity().findViewById(R.id.info_content);
     mContent.setBackgroundColor(0);  // Make the background transparent
+  }
+
+  void initFragment(Database db, ActionBarHelper helper) {
+    mDb = db;
+    mActionBarHelper = helper;
   }
 
   public void setPuzzleId(long puzzleId) {

@@ -18,10 +18,6 @@ package us.blanshard.sudoku.android;
 import static us.blanshard.sudoku.core.Numeral.number;
 import static us.blanshard.sudoku.core.Numeral.numeral;
 
-import roboguice.fragment.RoboFragment;
-import roboguice.inject.ContextSingleton;
-import roboguice.inject.InjectView;
-
 import us.blanshard.sudoku.android.Database.GameState;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
@@ -50,6 +46,7 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -83,16 +80,13 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-
 /**
  * The fragment for playing a sudoku.
  *
  * @author Luke Blanshard
  */
-@ContextSingleton
 public class SudokuFragment
-    extends RoboFragment
+    extends Fragment
     implements OnMoveListener, OnCheckedChangeListener, OnItemClickListener,
                OnItemLongClickListener {
 
@@ -106,16 +100,16 @@ public class SudokuFragment
   private Sudoku mGame;
   private boolean mResumed;
   private Grid.State mState;
-  @Inject Sudoku.Registry mRegistry;
-  @Inject ActionBarHelper mActionBarHelper;
+  private final Sudoku.Registry mRegistry = Sudoku.newRegistry();
+  private ActionBarHelper mActionBarHelper;
   private TrailAdapter mTrailAdapter;
-  @InjectView(R.id.sudoku_view) SudokuView mSudokuView;
-  @InjectView(R.id.progress) ProgressBar mProgress;
-  @InjectView(R.id.edit_trail_toggle) ToggleButton mEditTrailToggle;
-  @InjectView(R.id.trails) ListView mTrailsList;
-  @InjectView(R.id.timer) TextView mTimer;
-  @Inject Database mDb;
-  @Inject Prefs mPrefs;
+  private SudokuView mSudokuView;
+  private ProgressBar mProgress;
+  private ToggleButton mEditTrailToggle;
+  private ListView mTrailsList;
+  private TextView mTimer;
+  private Database mDb;
+  private Prefs mPrefs;
   private Toast mToast;
 
   private final Runnable timerUpdater = new Runnable() {
@@ -593,6 +587,12 @@ public class SudokuFragment
   @Override public void onViewCreated(View view, Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
 
+    mSudokuView = (SudokuView) view.findViewById(R.id.sudoku_view);
+    mProgress = (ProgressBar) view.findViewById(R.id.progress);
+    mEditTrailToggle = (ToggleButton) view.findViewById(R.id.edit_trail_toggle);
+    mTrailsList = (ListView) view.findViewById(R.id.trails);
+    mTimer = (TextView) view.findViewById(R.id.timer);
+
     mEditTrailToggle.setOnCheckedChangeListener(this);
     mEditTrailToggle.setEnabled(false);
 
@@ -634,6 +634,12 @@ public class SudokuFragment
         }
       }
     });
+  }
+
+  void initFragment(Database db, ActionBarHelper helper, Prefs prefs) {
+    mDb = db;
+    mActionBarHelper = helper;
+    mPrefs = prefs;
   }
 
   // Private methods

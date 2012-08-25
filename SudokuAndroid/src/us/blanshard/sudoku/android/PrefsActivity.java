@@ -15,38 +15,36 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import roboguice.activity.RoboPreferenceActivity;
-import roboguice.inject.InjectPreference;
-
 import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Symmetry;
 
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
+import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
 import java.util.Set;
-
-import javax.inject.Inject;
 
 /**
  * Shows the preferences screen.
  *
  * @author Luke Blanshard
  */
-public class PrefsActivity extends RoboPreferenceActivity {
+public class PrefsActivity extends PreferenceActivity {
   private static final String RANDOM_GENERATOR = "randomGenerator";
   private static final String SYMMETRY_PREFIX = "symmetry:";
 
-  @Inject Prefs mPrefs;
-  @InjectPreference(RANDOM_GENERATOR) CheckBoxPreference mRandomGenerator;
+  private Prefs mPrefs;
+  private CheckBoxPreference mRandomGenerator;
   private Set<Symmetry> mSymmetries;
 
   @SuppressWarnings("deprecation")
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     addPreferencesFromResource(R.xml.preferences);
+    mPrefs = new Prefs(this);
+    mRandomGenerator = (CheckBoxPreference) findPreference(RANDOM_GENERATOR);
     mSymmetries = mPrefs.getSymmetries();
     for (Symmetry sym : mSymmetries) {
       CheckBoxPreference check = (CheckBoxPreference) findPreference(SYMMETRY_PREFIX + sym);

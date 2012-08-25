@@ -15,9 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import roboguice.inject.ContextSingleton;
-import roboguice.inject.InjectFragment;
-
 import us.blanshard.sudoku.android.actionbarcompat.ActionBarActivity;
 import us.blanshard.sudoku.android.actionbarcompat.ActionBarHelper.OnNavigationListener;
 
@@ -36,35 +33,45 @@ import android.widget.TextView;
 import java.util.List;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
 
 /**
  * @author Luke Blanshard
  */
-@ContextSingleton
 public class PuzzleListActivity extends ActionBarActivity
     implements OnNavigationListener, AdapterView.OnItemClickListener {
   //private static final String TAG = "PuzzleListActivity";
-  @InjectFragment(R.id.list_fragment) PuzzleListFragment mListFragment;
-  @InjectFragment(R.id.info_fragment) @Nullable PuzzleInfoFragment mInfoFragment;
-  @Inject Database mDb;
+  private Database mDb;
+  private Prefs mPrefs;
+  private PuzzleListFragment mListFragment;
+  private @Nullable PuzzleInfoFragment mInfoFragment;
   private CollectionAdapter mCollectionAdapter;
   private long mCollectionId = Database.ALL_PSEUDO_COLLECTION_ID;
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    mDb = new Database(this);
+    mPrefs = new Prefs(this);
     new FetchCollections(this).execute();
     setContentView(R.layout.list_activity);
+    mListFragment = (PuzzleListFragment) getSupportFragmentManager().findFragmentById(R.id.list_fragment);
+    mListFragment.initFragment(mDb, getActionBarHelper(), mPrefs);
+    mInfoFragment = (PuzzleInfoFragment) getSupportFragmentManager().findFragmentById(R.id.info_fragment);
+    if (mInfoFragment != null) mInfoFragment.initFragment(mDb, getActionBarHelper());
     mCollectionAdapter = new CollectionAdapter();
     getActionBarHelper().setDisplayHomeAsUpEnabled(true);
     getActionBarHelper().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
     getActionBarHelper().setListNavigationCallbacks(mCollectionAdapter, this);
-    mListFragment.mList.setOnItemClickListener(this);
+    mListFragment.setOnItemClickListener(this);
     if (getIntent().hasExtra(Extras.PUZZLE_ID)) {
       long puzzleId = getIntent().getExtras().getLong(Extras.PUZZLE_ID);
       mListFragment.setPuzzleId(puzzleId);
       if (mInfoFragment != null) mInfoFragment.setPuzzleId(puzzleId);
     }
+  }
+
+  @Override protected void onDestroy() {
+    mDb.close();
+    super.onDestroy();
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {

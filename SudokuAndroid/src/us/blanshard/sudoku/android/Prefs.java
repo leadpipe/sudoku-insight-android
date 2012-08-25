@@ -20,6 +20,7 @@ import static us.blanshard.sudoku.android.Extras.GAME_ID;
 import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Symmetry;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
@@ -29,7 +30,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 import java.util.EnumSet;
 import java.util.Random;
@@ -46,7 +46,11 @@ public class Prefs {
   private static final String SYMMETRIES = "symmetries";
   private static final String SORT = "sort";
 
-  @Inject SharedPreferences mPrefs;
+  private final SharedPreferences mPrefs;
+
+  public Prefs(Context context) {
+    mPrefs = context.getSharedPreferences("prefs", 0);
+  }
 
   public boolean hasCurrentGameId() {
     return mPrefs.contains(GAME_ID);

@@ -15,14 +15,11 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import roboguice.fragment.RoboFragment;
-import roboguice.inject.ContextSingleton;
-import roboguice.inject.InjectView;
-
 import us.blanshard.sudoku.android.Database.Game;
 import us.blanshard.sudoku.android.actionbarcompat.ActionBarHelper;
 
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -30,6 +27,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -43,21 +41,17 @@ import com.google.common.primitives.Longs;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.inject.Inject;
-
 /**
  * Shows a list of puzzles from the database.
  *
  * @author Luke Blanshard
  */
-@ContextSingleton
-public class PuzzleListFragment extends RoboFragment {
+public class PuzzleListFragment extends Fragment {
   //private static final String TAG = "PuzzleListFragment";
-  @InjectView(R.id.puzzles) ListView mList;
-  @Inject Database mDb;
-  @Inject PuzzleListActivity mActivity;
-  @Inject ActionBarHelper mActionBarHelper;
-  @Inject Prefs mPrefs;
+  private Database mDb;
+  private ListView mList;
+  private ActionBarHelper mActionBarHelper;
+  private Prefs mPrefs;
   private PuzzleAdapter mPuzzleAdapter;
   private List<Database.Puzzle> mPuzzles;
   private long mCollectionId = Database.ALL_PSEUDO_COLLECTION_ID;
@@ -132,10 +126,20 @@ public class PuzzleListFragment extends RoboFragment {
 
   @Override public void onViewCreated(View view, Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-
+    mList = (ListView) view.findViewById(R.id.puzzles);
     mPuzzleAdapter = new PuzzleAdapter();
     mList.setAdapter(mPuzzleAdapter);
     mList.setEnabled(true);
+  }
+
+  void initFragment(Database db, ActionBarHelper helper, Prefs prefs) {
+    mDb = db;
+    mActionBarHelper = helper;
+    mPrefs = prefs;
+  }
+
+  void setOnItemClickListener(AdapterView.OnItemClickListener listener) {
+    mList.setOnItemClickListener(listener);
   }
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
