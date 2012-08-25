@@ -69,10 +69,11 @@ public class ToText {
    * Returns the given element's collection name, combined with the element's
    * source if it has one, with an embedded link to the list activity.
    */
-  public static String collectionNameHtml(Context context, Database.Element element) {
-    String html = "<a href='" + LIST_URI_PREFIX + element.collection._id
-        + '/' + element.puzzleId + "'>"
-        + TextUtils.htmlEncode(element.collection.name) + "</a>";
+  public static String collectionNameHtml(Context context, Database.Element element, boolean link) {
+    String html = TextUtils.htmlEncode(element.collection.name);
+    if (link)
+      html = "<a href='" + LIST_URI_PREFIX + element.collection._id
+          + '/' + element.puzzleId + "'>" + html + "</a>";
     if (!Strings.isNullOrEmpty(element.source))
       html = context.getString(
           R.string.text_collection_with_source, html, TextUtils.htmlEncode(element.source));
@@ -80,17 +81,17 @@ public class ToText {
   }
 
   /**
-   * Combines the element's collection name with the date/time the element was created.
+   * Returns the given element's collection name, combined with the element's
+   * source if it has one, with an embedded link to the list activity.
    */
   public static String collectionNameAndTimeHtml(Context context, Database.Element element) {
-    String coll = collectionNameHtml(context, element);
+    String coll = collectionNameHtml(context, element, true);
     CharSequence date = relativeDateTime(context, element.createTime);
     return context.getString(R.string.text_collection_date, coll, date);
   }
 
   /**
-   * Returns the given element's collection name, combined with the element's
-   * source if it has one, with an embedded link to the list activity.
+   * Combines the element's collection name with the date/time the element was created.
    */
   public static String collectionNameAndTimeText(Context context, Database.Element element) {
     String html = collectionNameAndTimeHtml(context, element);
