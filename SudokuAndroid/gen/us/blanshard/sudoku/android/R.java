@@ -118,11 +118,11 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int trail_item=0x7f03000b;
     }
     public static final class menu {
-        public static final int board=0x7f0b0000;
-        public static final int common=0x7f0b0001;
-        public static final int info=0x7f0b0002;
-        public static final int list=0x7f0b0003;
-        public static final int list_item=0x7f0b0004;
+        public static final int board=0x7f0a0000;
+        public static final int common=0x7f0a0001;
+        public static final int info=0x7f0a0002;
+        public static final int list=0x7f0a0003;
+        public static final int list_item=0x7f0a0004;
     }
     public static final class string {
         public static final int app_full_name=0x7f090000;
@@ -189,9 +189,6 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int text_puzzle_number_start=0x7f09003d;
         public static final int text_sentence_end=0x7f09003e;
         public static final int text_symmetries=0x7f09003f;
-    }
-    public static final class style {
-        public static final int ActionBarTitle=0x7f0a0000;
     }
     public static final class xml {
         public static final int preferences=0x7f040000;
