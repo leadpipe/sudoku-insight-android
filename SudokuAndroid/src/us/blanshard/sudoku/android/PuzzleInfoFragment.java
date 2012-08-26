@@ -23,7 +23,6 @@ import us.blanshard.sudoku.android.Database.GameState;
 import us.blanshard.sudoku.android.Database.Puzzle;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
-import us.blanshard.sudoku.android.actionbarcompat.ActionBarHelper;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 
@@ -31,7 +30,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
-import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -51,11 +49,9 @@ import java.util.List;
 /**
  * @author Luke Blanshard
  */
-public class PuzzleInfoFragment extends Fragment {
+public class PuzzleInfoFragment extends FragmentBase {
   private SudokuView mGrid;
   private WebView mContent;
-  private Database mDb;
-  private ActionBarHelper mActionBarHelper;
   private Database.Puzzle mPuzzle;
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -75,11 +71,6 @@ public class PuzzleInfoFragment extends Fragment {
     mGrid = (SudokuView) getActivity().findViewById(R.id.info_grid);
     mContent = (WebView) getActivity().findViewById(R.id.info_content);
     mContent.setBackgroundColor(0);  // Make the background transparent
-  }
-
-  void initFragment(Database db, ActionBarHelper helper) {
-    mDb = db;
-    mActionBarHelper = helper;
   }
 
   public void setPuzzleId(long puzzleId) {
@@ -115,11 +106,12 @@ public class PuzzleInfoFragment extends Fragment {
 
   private void setPuzzle(Database.Puzzle puzzle) {
     mPuzzle = puzzle;
+    // TODO(leadpipe): Make the activity be in charge of this
     getActivity().setTitle(getString(R.string.text_info_title, puzzle._id));
     mGrid.setPuzzle(puzzle.puzzle);
     mContent.loadData(makeContentHtml(puzzle), "text/html; charset=UTF-8", null);
     mContent.setBackgroundColor(0);  // Make the background transparent
-    mActionBarHelper.invalidateOptionsMenu();
+    getActivity().invalidateOptionsMenu();
   }
 
   private String makeContentHtml(Puzzle puzzle) {

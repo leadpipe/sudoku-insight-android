@@ -15,10 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import us.blanshard.sudoku.android.actionbarcompat.ActionBarActivity;
-import us.blanshard.sudoku.android.actionbarcompat.ActionBarHelper.OnNavigationListener;
-
 import android.app.ActionBar;
+import android.app.ActionBar.OnNavigationListener;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -37,11 +35,9 @@ import javax.annotation.Nullable;
 /**
  * @author Luke Blanshard
  */
-public class PuzzleListActivity extends ActionBarActivity
+public class PuzzleListActivity extends ActivityBase
     implements OnNavigationListener, AdapterView.OnItemClickListener {
   //private static final String TAG = "PuzzleListActivity";
-  private Database mDb;
-  private Prefs mPrefs;
   private PuzzleListFragment mListFragment;
   private @Nullable PuzzleInfoFragment mInfoFragment;
   private CollectionAdapter mCollectionAdapter;
@@ -49,29 +45,20 @@ public class PuzzleListActivity extends ActionBarActivity
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    mDb = new Database(this);
-    mPrefs = new Prefs(this);
     new FetchCollections(this).execute();
     setContentView(R.layout.list_activity);
-    mListFragment = (PuzzleListFragment) getSupportFragmentManager().findFragmentById(R.id.list_fragment);
-    mListFragment.initFragment(mDb, getActionBarHelper(), mPrefs);
-    mInfoFragment = (PuzzleInfoFragment) getSupportFragmentManager().findFragmentById(R.id.info_fragment);
-    if (mInfoFragment != null) mInfoFragment.initFragment(mDb, getActionBarHelper());
+    mListFragment = (PuzzleListFragment) getFragmentManager().findFragmentById(R.id.list_fragment);
+    mInfoFragment = (PuzzleInfoFragment) getFragmentManager().findFragmentById(R.id.info_fragment);
     mCollectionAdapter = new CollectionAdapter();
-    getActionBarHelper().setDisplayHomeAsUpEnabled(true);
-    getActionBarHelper().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-    getActionBarHelper().setListNavigationCallbacks(mCollectionAdapter, this);
+    getActionBar().setDisplayHomeAsUpEnabled(true);
+    getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+    getActionBar().setListNavigationCallbacks(mCollectionAdapter, this);
     mListFragment.setOnItemClickListener(this);
     if (getIntent().hasExtra(Extras.PUZZLE_ID)) {
       long puzzleId = getIntent().getExtras().getLong(Extras.PUZZLE_ID);
       mListFragment.setPuzzleId(puzzleId);
       if (mInfoFragment != null) mInfoFragment.setPuzzleId(puzzleId);
     }
-  }
-
-  @Override protected void onDestroy() {
-    mDb.close();
-    super.onDestroy();
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {
@@ -122,13 +109,13 @@ public class PuzzleListActivity extends ActionBarActivity
   }
 
   public void setCollectionId(long id) {
-    int position = getActionBarHelper().getSelectedNavigationIndex();
+    int position = getActionBar().getSelectedNavigationIndex();
     for (int i = 0, count = mCollectionAdapter.getCount(); i < count; ++i)
       if (mCollectionAdapter.getItem(i)._id == id) {
         position = i;
         break;
       }
-    getActionBarHelper().setSelectedNavigationItem(position);
+    getActionBar().setSelectedNavigationItem(position);
   }
 
   private void setCollections(List<Database.CollectionInfo> collections) {
@@ -143,7 +130,7 @@ public class PuzzleListActivity extends ActionBarActivity
       if (coll._id == mCollectionId) foundPosition = position;
       mCollectionAdapter.add(coll);
     }
-    getActionBarHelper().setSelectedNavigationItem(foundPosition);
+    getActionBar().setSelectedNavigationItem(foundPosition);
   }
 
   private static class FetchCollections

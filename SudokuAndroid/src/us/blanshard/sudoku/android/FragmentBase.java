@@ -15,10 +15,20 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import android.app.Fragment;
+import android.os.Bundle;
 
 /**
  * @author Luke Blanshard
  */
-public class ReplayFragment extends FragmentBase {
+public abstract class FragmentBase extends Fragment {
+  protected Database mDb;
+  protected Prefs mPrefs;
 
+  @Override public void onActivityCreated(Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+    ActivityBase activity = (ActivityBase) getActivity();
+    mDb = activity.mDb;
+    mPrefs = activity.mPrefs;
+  }
 }

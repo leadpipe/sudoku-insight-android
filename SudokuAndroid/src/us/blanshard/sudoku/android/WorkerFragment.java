@@ -17,14 +17,14 @@ package us.blanshard.sudoku.android;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Process;
 import android.os.StrictMode;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.util.Log;
 
 import com.google.common.collect.Lists;
@@ -250,7 +250,7 @@ public class WorkerFragment extends Fragment {
    * @param <P> the progress type, sent to the UI thread during the background work
    * @param <O> the output type, returned from the background thread
    */
-  public static abstract class ActivityTask<A extends FragmentActivity, I, P, O> extends BaseTask<A, I, P, O> {
+  public static abstract class ActivityTask<A extends Activity, I, P, O> extends BaseTask<A, I, P, O> {
 
     // Public API
 
@@ -319,8 +319,8 @@ public class WorkerFragment extends Fragment {
   }
 
   /** Finds the worker fragment for the given activity, creating it if required. */
-  static WorkerFragment getWorker(FragmentActivity activity) {
-    return getWorker(activity.getSupportFragmentManager());
+  static WorkerFragment getWorker(Activity activity) {
+    return getWorker(activity.getFragmentManager());
   }
 
   private static WorkerFragment getWorker(FragmentManager fm) {

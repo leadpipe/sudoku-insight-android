@@ -17,7 +17,6 @@ package us.blanshard.sudoku.android;
 
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
-import us.blanshard.sudoku.android.actionbarcompat.ActionBarActivity;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
@@ -40,13 +39,12 @@ import java.util.List;
  *
  * @author Luke Blanshard
  */
-public class CapturePuzzleActivity extends ActionBarActivity implements OnMoveListener, View.OnClickListener {
+public class CapturePuzzleActivity extends ActivityBase implements OnMoveListener, View.OnClickListener {
   private SudokuView mSudokuView;
   private AutoCompleteTextView mCaptureSource;
   private Button mPlay;
   private Button mSave;
   private TextView mNotice;
-  private Database mDb;
   private boolean mIsPuzzle;
   private Long mPuzzleId;
 
@@ -58,7 +56,6 @@ public class CapturePuzzleActivity extends ActionBarActivity implements OnMoveLi
     mPlay = (Button) findViewById(R.id.capture_play);
     mSave = (Button) findViewById(R.id.capture_save);
     mNotice = (TextView) findViewById(R.id.already_have_notice);
-    mDb = new Database(this);
 
     mSudokuView.setOnMoveListener(this);
     mPlay.setOnClickListener(this);
@@ -81,11 +78,6 @@ public class CapturePuzzleActivity extends ActionBarActivity implements OnMoveLi
     mSudokuView.setEditable(editable);
     updateState();
     new FetchAutocompletes(this).execute();
-  }
-
-  @Override protected void onDestroy() {
-    mDb.close();
-    super.onDestroy();
   }
 
   @Override public void onClick(View v) {
@@ -130,7 +122,6 @@ public class CapturePuzzleActivity extends ActionBarActivity implements OnMoveLi
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(activity,
             android.R.layout.simple_dropdown_item_1line, sources);
         activity.mCaptureSource.setAdapter(adapter);
-        // TODO(leadpipe): make the dropdown text not white on white in gingerbread
         if (activity.mPuzzleId == null) {
           activity.mCaptureSource.showDropDown();
         }

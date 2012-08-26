@@ -15,8 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import us.blanshard.sudoku.android.actionbarcompat.ActionBarActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -24,20 +22,15 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-public class SudokuActivity extends ActionBarActivity {
+public class SudokuActivity extends ActivityBase {
   private static final boolean STRICT = true;
 
   private SudokuFragment mBoardFragment;
-  private Database mDb;
-  private Prefs mPrefs;
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    mDb = new Database(this);
-    mPrefs = new Prefs(this);
     setContentView(R.layout.main);
-    mBoardFragment = (SudokuFragment) getSupportFragmentManager().findFragmentById(R.id.board_fragment);
-    mBoardFragment.initFragment(mDb, getActionBarHelper(), mPrefs);
+    mBoardFragment = (SudokuFragment) getFragmentManager().findFragmentById(R.id.board_fragment);
 
     if (STRICT) {
       StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
@@ -51,11 +44,6 @@ public class SudokuActivity extends ActionBarActivity {
           //.penaltyDeath()
           .build());
     }
-  }
-
-  @Override protected void onDestroy() {
-    mDb.close();
-    super.onDestroy();
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {

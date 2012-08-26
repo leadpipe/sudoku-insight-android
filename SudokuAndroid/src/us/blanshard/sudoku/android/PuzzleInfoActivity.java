@@ -15,8 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import us.blanshard.sudoku.android.actionbarcompat.ActionBarActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -26,23 +24,16 @@ import android.view.MenuItem;
 /**
  * @author Luke Blanshard
  */
-public class PuzzleInfoActivity extends ActionBarActivity {
+public class PuzzleInfoActivity extends ActivityBase {
 
-  private Database mDb;
   private PuzzleInfoFragment mFragment;
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     mDb = new Database(this);
     setContentView(R.layout.info_activity);
-    mFragment = (PuzzleInfoFragment) (getSupportFragmentManager().findFragmentById(R.id.info_fragment));
-    getActionBarHelper().setDisplayHomeAsUpEnabled(true);
-    mFragment.initFragment(mDb, getActionBarHelper());
-  }
-
-  @Override protected void onDestroy() {
-    mDb.close();
-    super.onDestroy();
+    mFragment = (PuzzleInfoFragment) getFragmentManager().findFragmentById(R.id.info_fragment);
+    getActionBar().setDisplayHomeAsUpEnabled(true);
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {

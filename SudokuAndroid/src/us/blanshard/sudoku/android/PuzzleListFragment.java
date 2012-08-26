@@ -16,10 +16,8 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 import us.blanshard.sudoku.android.Database.Game;
-import us.blanshard.sudoku.android.actionbarcompat.ActionBarHelper;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -46,12 +44,9 @@ import java.util.List;
  *
  * @author Luke Blanshard
  */
-public class PuzzleListFragment extends Fragment {
+public class PuzzleListFragment extends FragmentBase {
   //private static final String TAG = "PuzzleListFragment";
-  private Database mDb;
   private ListView mList;
-  private ActionBarHelper mActionBarHelper;
-  private Prefs mPrefs;
   private PuzzleAdapter mPuzzleAdapter;
   private List<Database.Puzzle> mPuzzles;
   private long mCollectionId = Database.ALL_PSEUDO_COLLECTION_ID;
@@ -132,12 +127,6 @@ public class PuzzleListFragment extends Fragment {
     mList.setEnabled(true);
   }
 
-  void initFragment(Database db, ActionBarHelper helper, Prefs prefs) {
-    mDb = db;
-    mActionBarHelper = helper;
-    mPrefs = prefs;
-  }
-
   void setOnItemClickListener(AdapterView.OnItemClickListener listener) {
     mList.setOnItemClickListener(listener);
   }
@@ -146,7 +135,7 @@ public class PuzzleListFragment extends Fragment {
     super.onActivityCreated(savedInstanceState);
     new FetchPuzzles(this).execute();
     mSort = Sort.fromOrdinal(mPrefs.getSort(), Sort.NUMBER);
-    mActionBarHelper.invalidateOptionsMenu();
+    getActivity().invalidateOptionsMenu();
   }
 
   @Override public void onPrepareOptionsMenu(Menu menu) {
@@ -162,7 +151,7 @@ public class PuzzleListFragment extends Fragment {
       mSort = sort;
       mPrefs.setSortAsync(sort.ordinal());
       updateSort();
-      mActionBarHelper.invalidateOptionsMenu();
+      getActivity().invalidateOptionsMenu();
     }
     return true;
   }

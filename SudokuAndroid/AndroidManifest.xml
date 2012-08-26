@@ -20,7 +20,7 @@ limitations under the License.
     >
 
     <uses-sdk
-        android:minSdkVersion="10"
+        android:minSdkVersion="15"
         android:targetSdkVersion="15"
         />
     
@@ -29,7 +29,7 @@ limitations under the License.
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_full_name"
-        android:theme="@style/AppTheme"
+        android:theme="@android:style/Theme.Holo.Light"
         >
         <activity
             android:name=".SudokuActivity"

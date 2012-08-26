@@ -21,7 +21,6 @@ import static us.blanshard.sudoku.core.Numeral.numeral;
 import us.blanshard.sudoku.android.Database.GameState;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
-import us.blanshard.sudoku.android.actionbarcompat.ActionBarHelper;
 import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
@@ -38,6 +37,7 @@ import us.blanshard.sudoku.game.UndoStack;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
@@ -45,8 +45,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -86,7 +84,7 @@ import java.util.concurrent.TimeUnit;
  * @author Luke Blanshard
  */
 public class SudokuFragment
-    extends Fragment
+    extends FragmentBase
     implements OnMoveListener, OnCheckedChangeListener, OnItemClickListener,
                OnItemLongClickListener {
 
@@ -101,15 +99,12 @@ public class SudokuFragment
   private boolean mResumed;
   private Grid.State mState;
   private final Sudoku.Registry mRegistry = Sudoku.newRegistry();
-  private ActionBarHelper mActionBarHelper;
   private TrailAdapter mTrailAdapter;
   private SudokuView mSudokuView;
   private ProgressBar mProgress;
   private ToggleButton mEditTrailToggle;
   private ListView mTrailsList;
   private TextView mTimer;
-  private Database mDb;
-  private Prefs mPrefs;
   private Toast mToast;
 
   private final Runnable timerUpdater = new Runnable() {
@@ -636,12 +631,6 @@ public class SudokuFragment
     });
   }
 
-  void initFragment(Database db, ActionBarHelper helper, Prefs prefs) {
-    mDb = db;
-    mActionBarHelper = helper;
-    mPrefs = prefs;
-  }
-
   // Private methods
 
   private void makeActiveTrail(Sudoku.Trail trail) {
@@ -704,7 +693,7 @@ public class SudokuFragment
   }
 
   private void stateChanged() {
-    mActionBarHelper.invalidateOptionsMenu();
+    getActivity().invalidateOptionsMenu();
   }
 
   private JSONObject makeUiState() throws JSONException {

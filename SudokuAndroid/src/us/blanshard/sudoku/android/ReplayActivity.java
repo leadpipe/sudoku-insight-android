@@ -15,11 +15,10 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import us.blanshard.sudoku.android.actionbarcompat.ActionBarActivity;
 
 /**
  * @author Luke Blanshard
  */
-public class ReplayActivity extends ActionBarActivity {
+public class ReplayActivity extends ActivityBase {
 
 }

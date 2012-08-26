@@ -88,10 +88,10 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int menu_redo=0x7f07001d;
         public static final int menu_redo_to_end=0x7f07001a;
         public static final int menu_refresh=0x7f070004;
-        public static final int menu_sort_by_elapsed=0x7f070023;
-        public static final int menu_sort_by_number=0x7f070022;
-        public static final int menu_sort_by_time=0x7f070024;
-        public static final int menu_sort_list=0x7f070025;
+        public static final int menu_sort_by_elapsed=0x7f070024;
+        public static final int menu_sort_by_number=0x7f070023;
+        public static final int menu_sort_by_time=0x7f070025;
+        public static final int menu_sort_list=0x7f070022;
         public static final int menu_undo=0x7f07001c;
         public static final int menu_undo_to_start=0x7f070019;
         public static final int progress=0x7f070016;
@@ -191,16 +191,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int text_symmetries=0x7f09003f;
     }
     public static final class style {
-        public static final int ActionBar=0x7f0a0008;
-        public static final int ActionBarCompat=0x7f0a0001;
-        public static final int ActionBarCompatHomeItem=0x7f0a0007;
-        public static final int ActionBarCompatItem=0x7f0a0006;
-        public static final int ActionBarCompatItemBase=0x7f0a0002;
-        public static final int ActionBarCompatProgressIndicator=0x7f0a0003;
-        public static final int ActionBarCompatTitle=0x7f0a0005;
-        public static final int ActionBarCompatTitleBase=0x7f0a0004;
-        public static final int ActionBarTitle=0x7f0a0009;
-        public static final int AppTheme=0x7f0a0000;
+        public static final int ActionBarTitle=0x7f0a0000;
     }
     public static final class xml {
         public static final int preferences=0x7f040000;
