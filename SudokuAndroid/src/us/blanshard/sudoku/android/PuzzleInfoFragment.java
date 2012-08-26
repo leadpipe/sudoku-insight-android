@@ -145,9 +145,10 @@ public class PuzzleInfoFragment extends FragmentBase {
                 ToText.relativeDateTime(getActivity(), game.startTime))));
       }
     }
-    sb.append("<br><a href='us.blanshard.sudoku://replay/").append(game._id).append("'>")
-        .append(TextUtils.htmlEncode(getString(R.string.text_game_replay)))
-        .append("</a>");
+    if (!game.gameState.isInPlay())
+      sb.append("<br><a href='us.blanshard.sudoku://replay/").append(game._id).append("'>")
+          .append(TextUtils.htmlEncode(getString(R.string.text_game_replay)))
+          .append("</a>");
   }
 
   private void appendElementHtml(Element element, StringBuilder sb) {
