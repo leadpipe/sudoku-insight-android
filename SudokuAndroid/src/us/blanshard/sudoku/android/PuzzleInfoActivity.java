@@ -45,7 +45,9 @@ public class PuzzleInfoActivity extends ActivityBase {
 
   @Override protected void onPostCreate(Bundle savedInstanceState) {
     super.onPostCreate(savedInstanceState);
-    mFragment.setPuzzleId(getIntent().getExtras().getLong(Extras.PUZZLE_ID));
+    long puzzleId = getIntent().getExtras().getLong(Extras.PUZZLE_ID);
+    mFragment.setPuzzleId(puzzleId);
+    setTitle(getString(R.string.text_info_title, puzzleId));
   }
 
   @Override public boolean onOptionsItemSelected(MenuItem item) {

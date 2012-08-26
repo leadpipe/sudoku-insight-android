@@ -106,8 +106,6 @@ public class PuzzleInfoFragment extends FragmentBase {
 
   private void setPuzzle(Database.Puzzle puzzle) {
     mPuzzle = puzzle;
-    // TODO(leadpipe): Make the activity be in charge of this
-    getActivity().setTitle(getString(R.string.text_info_title, puzzle._id));
     mGrid.setPuzzle(puzzle.puzzle);
     mContent.loadData(makeContentHtml(puzzle), "text/html; charset=UTF-8", null);
     mContent.setBackgroundColor(0);  // Make the background transparent
