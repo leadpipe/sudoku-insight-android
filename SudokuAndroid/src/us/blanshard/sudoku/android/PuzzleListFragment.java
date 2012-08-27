@@ -162,8 +162,10 @@ public class PuzzleListFragment extends FragmentBase {
   }
 
   public void setPuzzleId(long puzzleId) {
-    mPuzzleId = puzzleId;
-    updateSelectedPuzzle();
+    if (mPuzzleId != puzzleId) {
+      mPuzzleId = puzzleId;
+      updateSelectedPuzzle();
+    }
   }
 
   private void setPuzzles(List<Database.Puzzle> puzzles) {
@@ -194,11 +196,11 @@ public class PuzzleListFragment extends FragmentBase {
     for (int i = 0, count = mPuzzleAdapter.getCount(); i < count; ++i) {
       if (mPuzzleAdapter.getItemId(i) == mPuzzleId) {
         mList.setItemChecked(i, true);
-        // Too slow:
-        //mList.smoothScrollToPosition(i);
-        mList.setSelection(0);
-        mList.setSelection(i);
-        return;
+        if (i < mList.getFirstVisiblePosition() || i >= mList.getLastVisiblePosition()) {
+          int oneInch = (int) (getResources().getDisplayMetrics().density * 160);
+          mList.setSelectionFromTop(i, oneInch);
+          return;
+        }
       }
     }
   }

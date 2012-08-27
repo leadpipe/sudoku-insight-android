@@ -37,8 +37,6 @@ import com.google.common.base.Strings;
  */
 public class ToText {
 
-  public static final String LIST_URI_PREFIX = "us.blanshard.sudoku://list/";
-
   /**
    * Formats elapsed time as hours:minutes:seconds.
    */
@@ -72,7 +70,7 @@ public class ToText {
   public static String collectionNameHtml(Context context, Database.Element element, boolean link) {
     String html = TextUtils.htmlEncode(element.collection.name);
     if (link)
-      html = "<a href='" + LIST_URI_PREFIX + element.collection._id
+      html = "<a href='" + Uris.LIST_URI_PREFIX + element.collection._id
           + '/' + element.puzzleId + "'>" + html + "</a>";
     if (!Strings.isNullOrEmpty(element.source))
       html = context.getString(

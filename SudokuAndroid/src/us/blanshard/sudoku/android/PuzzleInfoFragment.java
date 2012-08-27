@@ -39,6 +39,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import com.google.common.collect.Lists;
 
@@ -50,9 +51,19 @@ import java.util.List;
  * @author Luke Blanshard
  */
 public class PuzzleInfoFragment extends FragmentBase {
+  private static final String TAG = "PuzzleInfoFragment";
+  private ActivityCallback mCallback;
   private SudokuView mGrid;
   private WebView mContent;
   private Database.Puzzle mPuzzle;
+
+  /**
+   * Every activity that hosts this fragment must implement this callback.
+   */
+  public interface ActivityCallback {
+    /** Shows the given collection in the puzzle list. */
+    void showCollection(long collectionId);
+  }
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
       Bundle savedInstanceState) {
@@ -68,9 +79,11 @@ public class PuzzleInfoFragment extends FragmentBase {
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
+    mCallback = (ActivityCallback) getActivity();
     mGrid = (SudokuView) getActivity().findViewById(R.id.info_grid);
     mContent = (WebView) getActivity().findViewById(R.id.info_content);
-    mContent.setBackgroundColor(0);  // Make the background transparent
+    mContent.setBackgroundColor(0);  // Makes the background transparent
+    mContent.setWebViewClient(new LinkHandler());
   }
 
   public void setPuzzleId(long puzzleId) {
@@ -146,7 +159,7 @@ public class PuzzleInfoFragment extends FragmentBase {
       }
     }
     if (!game.gameState.isInPlay())
-      sb.append("<br><a href='us.blanshard.sudoku://replay/").append(game._id).append("'>")
+      sb.append("<br><a href='" + Uris.REPLAY_URI_PREFIX).append(game._id).append("'>")
           .append(TextUtils.htmlEncode(getString(R.string.text_game_replay)))
           .append("</a>");
   }
@@ -198,6 +211,23 @@ public class PuzzleInfoFragment extends FragmentBase {
       intent.putExtra(Extras.GAME_ID, gameId);
       intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
       fragment.startActivity(intent);
+    }
+  }
+
+  private class LinkHandler extends WebViewClient {
+    @Override public boolean shouldOverrideUrlLoading(WebView view, String url) {
+      if (url.startsWith(Uris.LIST_URI_PREFIX)) {
+        String tail = url.substring(Uris.LIST_URI_PREFIX.length());
+        int slash = tail.indexOf('/');
+        long collectionId = Long.parseLong(slash < 0 ? tail : tail.substring(0, slash));
+        mCallback.showCollection(collectionId);
+      } else if (url.startsWith(Uris.REPLAY_URI_PREFIX)) {
+        Intent intent = new Intent(getActivity(), ReplayActivity.class);
+        startActivity(intent);
+      } else {
+        Log.e(TAG, "Unexpected link: " + url);
+      }
+      return true;
     }
   }
 }

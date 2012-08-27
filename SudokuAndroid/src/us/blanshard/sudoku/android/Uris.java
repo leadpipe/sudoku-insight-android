@@ -16,12 +16,13 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 /**
- * Constants for passing extras to activities.
+ * Constants and methods related to URIs we manufacture in the app.
  *
  * @author Luke Blanshard
  */
-public class Extras {
-  public static final String COLLECTION_ID = "collectionId";
-  public static final String GAME_ID = "gameId";
-  public static final String PUZZLE_ID = "puzzleId";
+public class Uris {
+  public static final String SCHEME = "us.blanshard.sudoku";
+  public static final String SCHEME_PREFIX = SCHEME + "://";
+  public static final String LIST_URI_PREFIX = SCHEME_PREFIX + "list/";
+  public static final String REPLAY_URI_PREFIX = SCHEME_PREFIX + "replay/";
 }

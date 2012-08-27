@@ -24,7 +24,7 @@ import android.view.MenuItem;
 /**
  * @author Luke Blanshard
  */
-public class PuzzleInfoActivity extends ActivityBase {
+public class PuzzleInfoActivity extends ActivityBase implements PuzzleInfoFragment.ActivityCallback {
 
   private PuzzleInfoFragment mFragment;
 
@@ -36,6 +36,10 @@ public class PuzzleInfoActivity extends ActivityBase {
     getActionBar().setDisplayHomeAsUpEnabled(true);
   }
 
+  @Override protected void onNewIntent(Intent intent) {
+    setIntent(intent);
+  }
+
   @Override public boolean onCreateOptionsMenu(Menu menu) {
     super.onCreateOptionsMenu(menu);
     MenuInflater inflater = getMenuInflater();
@@ -45,7 +49,7 @@ public class PuzzleInfoActivity extends ActivityBase {
 
   @Override protected void onPostCreate(Bundle savedInstanceState) {
     super.onPostCreate(savedInstanceState);
-    long puzzleId = getIntent().getExtras().getLong(Extras.PUZZLE_ID);
+    long puzzleId = getPuzzleId();
     mFragment.setPuzzleId(puzzleId);
     setTitle(getString(R.string.text_info_title, puzzleId));
   }
@@ -54,8 +58,8 @@ public class PuzzleInfoActivity extends ActivityBase {
     switch (item.getItemId()) {
       case android.R.id.home:
         Intent upIntent = new Intent(this, PuzzleListActivity.class);
-        upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        upIntent.putExtra(Extras.PUZZLE_ID, getIntent().getExtras().getLong(Extras.PUZZLE_ID));
+        upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        upIntent.putExtra(Extras.PUZZLE_ID, getPuzzleId());
         startActivity(upIntent);
         finish();
         return true;
@@ -71,5 +75,17 @@ public class PuzzleInfoActivity extends ActivityBase {
       }
     }
     return super.onOptionsItemSelected(item);
+  }
+
+  @Override public void showCollection(long collectionId) {
+    Intent intent = new Intent(this, PuzzleListActivity.class);
+    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+    intent.putExtra(Extras.COLLECTION_ID, collectionId);
+    intent.putExtra(Extras.PUZZLE_ID, getPuzzleId());
+    startActivity(intent);
+  }
+
+  private long getPuzzleId() {
+    return getIntent().getExtras().getLong(Extras.PUZZLE_ID);
   }
 }

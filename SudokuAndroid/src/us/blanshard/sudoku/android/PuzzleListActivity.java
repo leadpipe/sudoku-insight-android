@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
  * @author Luke Blanshard
  */
 public class PuzzleListActivity extends ActivityBase
-    implements OnNavigationListener, AdapterView.OnItemClickListener {
+    implements OnNavigationListener, AdapterView.OnItemClickListener, PuzzleInfoFragment.ActivityCallback {
   //private static final String TAG = "PuzzleListActivity";
   private PuzzleListFragment mListFragment;
   private @Nullable PuzzleInfoFragment mInfoFragment;
@@ -54,6 +54,18 @@ public class PuzzleListActivity extends ActivityBase
     getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
     getActionBar().setListNavigationCallbacks(mCollectionAdapter, this);
     mListFragment.setOnItemClickListener(this);
+  }
+
+  @Override protected void onNewIntent(Intent intent) {
+    setIntent(intent);
+  }
+
+  @Override protected void onStart() {
+    super.onStart();
+    if (getIntent().hasExtra(Extras.COLLECTION_ID)) {
+      long collectionId = getIntent().getExtras().getLong(Extras.COLLECTION_ID);
+      setCollectionId(collectionId);
+    }
     if (getIntent().hasExtra(Extras.PUZZLE_ID)) {
       long puzzleId = getIntent().getExtras().getLong(Extras.PUZZLE_ID);
       mListFragment.setPuzzleId(puzzleId);
@@ -99,13 +111,19 @@ public class PuzzleListActivity extends ActivityBase
   }
 
   @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    mListFragment.setPuzzleId(id);
     if (mInfoFragment == null) {
       Intent intent = new Intent(this, PuzzleInfoActivity.class);
+      intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
       intent.putExtra(Extras.PUZZLE_ID, id);
       startActivity(intent);
     } else {
       mInfoFragment.setPuzzleId(id);
     }
+  }
+
+  @Override public void showCollection(long collectionId) {
+    setCollectionId(collectionId);
   }
 
   public void setCollectionId(long id) {
