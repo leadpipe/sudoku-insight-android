@@ -97,6 +97,11 @@ public class SudokuView extends View {
     super(context, attrs, defStyle);
   }
 
+  public interface OnMoveListener {
+    /** Called when the user has indicated a desire to make the given move. */
+    void onMove(Sudoku.State state, Location loc, Numeral num);
+  }
+
   public void setOnMoveListener(OnMoveListener onMoveListener) {
     mOnMoveListener = onMoveListener;
   }

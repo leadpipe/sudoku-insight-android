@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import us.blanshard.sudoku.android.SudokuView.OnMoveListener;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
 import us.blanshard.sudoku.core.Grid;

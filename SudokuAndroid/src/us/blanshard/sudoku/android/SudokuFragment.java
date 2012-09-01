@@ -19,6 +19,7 @@ import static us.blanshard.sudoku.core.Numeral.number;
 import static us.blanshard.sudoku.core.Numeral.numeral;
 
 import us.blanshard.sudoku.android.Database.GameState;
+import us.blanshard.sudoku.android.SudokuView.OnMoveListener;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
 import us.blanshard.sudoku.core.Generator;
