@@ -43,13 +43,7 @@ limitations under the License.
         <activity
             android:name=".PuzzleListActivity"
             android:label="@string/app_short_name"
-            >
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="us.blanshard.sudoku" android:host="list" android:pathPrefix="/" />
-            </intent-filter>
-        </activity>
+            />
         <activity
             android:name=".PuzzleInfoActivity"
             android:label="@string/app_short_name"
@@ -57,13 +51,7 @@ limitations under the License.
         <activity
             android:name=".ReplayActivity"
             android:label="@string/app_short_name"
-            >
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="us.blanshard.sudoku" android:host="replay" android:pathPrefix="/" />
-            </intent-filter>
-        </activity>
+            />
         <activity
             android:name=".PrefsActivity"
             android:label="@string/app_short_name"

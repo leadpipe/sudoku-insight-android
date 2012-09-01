@@ -40,6 +40,9 @@ public abstract class Move {
   /** The trail ID this applies to, or -1 for the whole state. */
   public final int id;
 
+  /** Converts this move to a command usable by UndoStack. */
+  public abstract MoveCommand toCommand(Sudoku game);
+
   protected Move(long timestamp, int id) {
     this.timestamp = timestamp;
     this.id = id;
@@ -77,6 +80,10 @@ public abstract class Move {
       this.num = checkNotNull(num);
     }
 
+    @Override public MoveCommand toCommand(Sudoku game) {
+      return new MoveCommand(game.getState(id), loc, num);
+    }
+
     @Override boolean apply(Sudoku game) {
       return game.getState(id).actuallySet(loc, num);
     }
@@ -101,6 +108,10 @@ public abstract class Move {
     public Clear(long timestamp, int id, Location loc) {
       super(timestamp, id);
       this.loc = checkNotNull(loc);
+    }
+
+    @Override public MoveCommand toCommand(Sudoku game) {
+      return new MoveCommand(game.getState(id), loc, null);
     }
 
     @Override boolean apply(Sudoku game) {

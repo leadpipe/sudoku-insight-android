@@ -25,7 +25,7 @@ public abstract class ActivityBase extends Activity {
   protected Database mDb;
   protected Prefs mPrefs;
 
-  @Override public void onCreate(Bundle savedInstanceState) {
+  @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     mDb = new Database(this);
     mPrefs = new Prefs(this);

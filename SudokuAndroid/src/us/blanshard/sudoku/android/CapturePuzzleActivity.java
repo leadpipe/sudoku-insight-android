@@ -48,7 +48,7 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
   private boolean mIsPuzzle;
   private Long mPuzzleId;
 
-  @Override public void onCreate(Bundle savedInstanceState) {
+  @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.capture);
     mSudokuView = (SudokuView) findViewById(R.id.sudoku_view);

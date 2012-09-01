@@ -222,7 +222,9 @@ public class PuzzleInfoFragment extends FragmentBase {
         long collectionId = Long.parseLong(slash < 0 ? tail : tail.substring(0, slash));
         mCallback.showCollection(collectionId);
       } else if (url.startsWith(Uris.REPLAY_URI_PREFIX)) {
+        String tail = url.substring(Uris.REPLAY_URI_PREFIX.length());
         Intent intent = new Intent(getActivity(), ReplayActivity.class);
+        intent.putExtra(Extras.GAME_ID, Long.parseLong(tail));
         startActivity(intent);
       } else {
         Log.e(TAG, "Unexpected link: " + url);

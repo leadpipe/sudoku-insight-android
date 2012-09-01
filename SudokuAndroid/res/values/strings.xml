@@ -3,10 +3,15 @@
 
     <string name="app_full_name">Sudoku Insight</string>
     <string name="app_short_name">Insight</string>
+    <string name="button_back">Back</string>
     <string name="button_done">Done</string>
     <string name="button_capture_play">Play Now</string>
     <string name="button_capture_save">@string/button_save</string>
     <string name="button_give_up">Give Up</string>
+    <string name="button_next">Next</string>
+    <string name="button_pause">Pause</string>
+    <string name="button_play">Play</string>
+    <string name="button_previous">Previous</string>
     <string name="button_save">Save for Later</string>
     <string name="check_blockwise_symmetry">Blockwise</string>
     <string name="check_blockwise_symmetry_summary">Block families share pattern</string>
