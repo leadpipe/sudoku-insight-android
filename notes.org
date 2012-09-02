@@ -33,6 +33,7 @@ END
    - Add the symmetry to the hash
    - Use this as the seed for generating the puzzle
 ** DONE Implement replay activity (rudimentary)
+** TODO Add a title for the replay page
 ** TODO Show insights during replay (rudimentary)
 ** DONE Add "give up" action / kill "next puzzle" action
 ** TODO Show number of set locations next to each trail
