@@ -18,6 +18,9 @@ END
 ** TODO Rename getState to... what?
 
 * App
+** TODO Bug: List goes back to initial selection
+   - Show list.  Select a puzzle different from initial one selected.  Go to info page.
+   - Then go back.  The initial puzzle is selected again.  The new one should be.
 ** TODO Use today's date as the seed for generating puzzles
    - Hash the following things together for basic seed:
      - Today's date
