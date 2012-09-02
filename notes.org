@@ -88,3 +88,8 @@ END
      - rotation (can it be expressed by the others? -- yes)
 *** TODO Re-read the "how many sudokus" paper
     - Canonical grid?
+
+* References
+** J. F. Crook: A Pencil-and-Paper Algorithm for Solving Sudoku Puzzles
+   - http://www.ams.org/notices/200904/tx090400460p.pdf
+   - The trails approach, essentially, including different colors
