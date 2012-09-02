@@ -54,14 +54,15 @@ public class PuzzleListActivity extends ActivityBase
     getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
     getActionBar().setListNavigationCallbacks(mCollectionAdapter, this);
     mListFragment.setOnItemClickListener(this);
+    applyExtras();
   }
 
   @Override protected void onNewIntent(Intent intent) {
     setIntent(intent);
+    applyExtras();
   }
 
-  @Override protected void onStart() {
-    super.onStart();
+  private void applyExtras() {
     if (getIntent().hasExtra(Extras.COLLECTION_ID)) {
       long collectionId = getIntent().getExtras().getLong(Extras.COLLECTION_ID);
       setCollectionId(collectionId);

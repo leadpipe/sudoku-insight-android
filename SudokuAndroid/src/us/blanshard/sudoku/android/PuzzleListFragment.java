@@ -135,7 +135,13 @@ public class PuzzleListFragment extends FragmentBase {
     super.onActivityCreated(savedInstanceState);
     new FetchPuzzles(this).execute();
     mSort = Sort.fromOrdinal(mPrefs.getSort(), Sort.NUMBER);
+    if (savedInstanceState != null && savedInstanceState.containsKey(Extras.PUZZLE_ID))
+      mPuzzleId = savedInstanceState.getLong(Extras.PUZZLE_ID);
     getActivity().invalidateOptionsMenu();
+  }
+
+  @Override public void onSaveInstanceState(Bundle outState) {
+    outState.putLong(Extras.PUZZLE_ID, mPuzzleId);
   }
 
   @Override public void onPrepareOptionsMenu(Menu menu) {
