@@ -108,6 +108,7 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
     mDbGame = dbGame;
     mGame = new Sudoku(dbGame.puzzle, mRegistry).resume();
     mReplayView.setGame(mGame);
+    mReplayView.setEditable(false);
     try {
       mHistory = GameJson.toHistory(dbGame.history);
     } catch (JSONException e) {
