@@ -12,8 +12,8 @@
         android:orderInCategory="12"
         />
 
-    <item android:id="@+id/menu_next_puzzle"
-        android:title="@string/menu_next_puzzle"
+    <item android:id="@+id/menu_give_up"
+        android:title="@string/menu_give_up"
         android:showAsAction="never|withText"
         android:orderInCategory="13"
         />

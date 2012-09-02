@@ -34,7 +34,7 @@ END
    - Use this as the seed for generating the puzzle
 ** DONE Implement replay activity (rudimentary)
 ** TODO Show insights during replay (rudimentary)
-** TODO Add "give up" action / kill "next puzzle" action
+** DONE Add "give up" action / kill "next puzzle" action
 ** TODO Show number of set locations next to each trail
 ** TODO Improve the trail colors--there's too much repetition and the yellows are too hard to read
    - Make a new app to experiment with this

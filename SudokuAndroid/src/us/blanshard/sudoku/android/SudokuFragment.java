@@ -228,43 +228,27 @@ public class SudokuFragment
     return Toast.makeText(getActivity().getApplicationContext(), s, Toast.LENGTH_LONG);
   }
 
-  public void nextPuzzle() {
-    cancelCurrentPuzzle(new FindOrMakePuzzle(this, true));
-  }
-
-  private void cancelCurrentPuzzle(final FindOrMakePuzzle replacementAction) {
-    if (mGame == null || mState == Grid.State.SOLVED) {
-      doReplacePuzzle(replacementAction);
-      return;
-    }
+  public void giveUp() {
     DialogFragment dialog = new DialogFragment() {
       @Override public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new AlertDialog.Builder(getActivity())
-            .setMessage(R.string.dialog_cancel_message)
+            .setMessage(R.string.dialog_give_up_message)
             .setPositiveButton(R.string.button_give_up, new OnClickListener() {
                 @Override public void onClick(DialogInterface dialog, int which) {
                   dialog.dismiss();
                   mDbGame.gameState = GameState.GAVE_UP;
-                  doReplacePuzzle(replacementAction);
+                  transitionToInfoPage();
                 }
             })
-            .setNegativeButton(R.string.button_save, new OnClickListener() {
+            .setNegativeButton(android.R.string.cancel, new OnClickListener() {
                 @Override public void onClick(DialogInterface dialog, int which) {
                   dialog.dismiss();
-                  doReplacePuzzle(replacementAction);
                 }
             })
             .create();
       }
     };
     dialog.show(getFragmentManager(), "cancelPuzzle");
-  }
-
-  private void doReplacePuzzle(FindOrMakePuzzle replacementAction) {
-    saveGameFromUiThread();
-    mSudokuView.setGame(null);
-    mProgress.setVisibility(View.VISIBLE);
-    replacementAction.execute();
   }
 
   public void trailCheckChanged(TrailItem item, boolean isChecked) {
@@ -322,7 +306,7 @@ public class SudokuFragment
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    Long gameId = null;
+    long gameId = 0;
     if (getActivity().getIntent().hasExtra(Extras.GAME_ID)) {
       gameId = getActivity().getIntent().getExtras().getLong(Extras.GAME_ID);
     } else if (savedInstanceState != null && savedInstanceState.containsKey(Extras.GAME_ID)) {
@@ -330,8 +314,7 @@ public class SudokuFragment
     } else if (mPrefs.hasCurrentGameId()) {
       gameId = mPrefs.getCurrentGameId();
     }
-    if (gameId == null || gameId == -1) new FindOrMakePuzzle(this).execute();
-    else new FetchGame(this).execute(gameId);
+    new FetchFindOrMakePuzzle(this).execute(gameId);
     mProgress.setVisibility(View.VISIBLE);
   }
 
@@ -389,42 +372,20 @@ public class SudokuFragment
     return answer;
   }
 
-  private static class FetchGame extends WorkerFragment.Task<SudokuFragment, Long, Void, Database.Game> {
-    private final Database mDb;
-
-    FetchGame(SudokuFragment fragment) {
-      super(fragment);
-      mDb = fragment.mDb;
-    }
-
-    @Override protected Database.Game doInBackground(Long... params) {
-      return mDb.getGame(params[0]);
-    }
-
-    @Override protected void onPostExecute(SudokuFragment fragment, Database.Game dbGame) {
-      if (dbGame != null)
-        fragment.setDbGame(dbGame);
-    }
-  }
-
-  private static class FindOrMakePuzzle extends WorkerFragment.Task<SudokuFragment, Void, Void, Database.Game> {
-    private final boolean mFindBeforeMaking;
+  private static class FetchFindOrMakePuzzle extends WorkerFragment.Task<SudokuFragment, Long, Void, Database.Game> {
     private final Database mDb;
     private final Prefs mPrefs;
 
-    FindOrMakePuzzle(SudokuFragment fragment) {
-      this(fragment, true);
-    }
-
-    FindOrMakePuzzle(SudokuFragment fragment, boolean findBeforeMaking) {
+    FetchFindOrMakePuzzle(SudokuFragment fragment) {
       super(fragment, Priority.FOREGROUND, Independence.DEPENDENT);
-      mFindBeforeMaking = findBeforeMaking;
       mDb = fragment.mDb;
       mPrefs = fragment.mPrefs;
     }
 
-    @Override protected Database.Game doInBackground(Void... params) {
-      Database.Game answer = mFindBeforeMaking ? mDb.getFirstOpenGame() : null;
+    @Override protected Database.Game doInBackground(Long... params) {
+      Database.Game answer = mDb.getGame(params[0]);
+      if (answer == null || !answer.gameState.isInPlay())
+        answer = mDb.getFirstOpenGame();
       if (answer == null)
         answer = generateAndStorePuzzle(mDb, mPrefs);
       return answer;
@@ -516,8 +477,8 @@ public class SudokuFragment
 
   @Override public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
-      case R.id.menu_next_puzzle:
-        nextPuzzle();
+      case R.id.menu_give_up:
+        giveUp();
         return true;
 
       case R.id.menu_undo:
@@ -609,14 +570,8 @@ public class SudokuFragment
           boolean wasBroken = mState == Grid.State.BROKEN;
           updateState();
           if (mState == Grid.State.SOLVED) {
-            mPrefs.removeCurrentGameIdAsync();
             makeToast(getString(R.string.text_congrats)).show();
-            saveGameFromUiThread();
-            Intent intent = new Intent(getActivity(), PuzzleInfoActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
-            intent.putExtra(Extras.PUZZLE_ID, mDbGame.puzzleId);
-            startActivity(intent);
-            getActivity().finish();
+            transitionToInfoPage();
           }
           else if (mState == Grid.State.BROKEN && !wasBroken) {
             showStatus(getString(R.string.text_oops));
@@ -633,6 +588,16 @@ public class SudokuFragment
   }
 
   // Private methods
+
+  private void transitionToInfoPage() {
+    mPrefs.removeCurrentGameIdAsync();
+    saveGameFromUiThread();
+    Intent intent = new Intent(getActivity(), PuzzleInfoActivity.class);
+    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
+    intent.putExtra(Extras.PUZZLE_ID, mDbGame.puzzleId);
+    startActivity(intent);
+    getActivity().finish();
+  }
 
   private void makeActiveTrail(Sudoku.Trail trail) {
     for (int i = 0; i < mTrailAdapter.getCount(); ++i) {
