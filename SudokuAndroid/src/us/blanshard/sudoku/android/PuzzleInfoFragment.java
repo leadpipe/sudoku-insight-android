@@ -149,7 +149,7 @@ public class PuzzleInfoFragment extends FragmentBase {
         sb.append("<br>").append(TextUtils.htmlEncode(
             getString(R.string.text_move_and_trail_counts, history.size(), maxTrailId + 1)));
       } catch (JSONException e) {
-        Log.e("PuzzleInfoFragment", "Unexpected json problem", e);
+        Log.e(TAG, "Unexpected json problem", e);
       }
       if (game.lastTime - game.startTime > game.elapsedMillis + MINUTES.toMillis(5)) {
         sb.append("<br>")
