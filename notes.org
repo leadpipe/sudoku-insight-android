@@ -29,7 +29,8 @@ END
    - Choose the first symmetry in the shuffled list that's enabled
    - Add the symmetry to the hash
    - Use this as the seed for generating the puzzle
-** TODO Implement replay activity
+** DONE Implement replay activity (rudimentary)
+** TODO Show insights during replay (rudimentary)
 ** TODO Add "give up" action / kill "next puzzle" action
 ** TODO Show number of set locations next to each trail
 ** TODO Improve the trail colors--there's too much repetition and the yellows are too hard to read
@@ -37,7 +38,8 @@ END
 ** DONE Handle clicking on a link referring to a list
 ** TODO Figure out why the progress indicator stops
    - Damn guava splitter static initialization is one reason
-** TODO Add a count to the list spinner
+   - But can't be the only thing, or probably even the main one
+** TODO Add a count to the list spinner: #puzzles in collection
 ** TODO Handle the importing of collections of puzzles
    - Add an activity that's triggered by .sdm files
    - Change the way we set up new games: look for game-less puzzles and queue one
@@ -50,6 +52,8 @@ END
 ** TODO Make it possible to disable a trail: gray it out and move it to the bottom of the list
 ** TODO Improve new-trail icon
 ** TODO Make icons for launcher, home
+
+** TODO Revamp prefs page to use ICS stuff
 
 ** TODO Preference for non-unique puzzles
 ** TODO Handle completion of potentially non-unique puzzles

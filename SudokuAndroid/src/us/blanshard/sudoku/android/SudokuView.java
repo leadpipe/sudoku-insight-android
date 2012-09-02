@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static us.blanshard.sudoku.core.Numeral.number;
 import static us.blanshard.sudoku.core.Numeral.numeral;
 
@@ -45,6 +46,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 public class SudokuView extends View {
+  public static final int MAX_VISIBLE_TRAILS = 4;
 
   private static final double CLOCK_RADIUS_FACTOR = 0.85;
   private static final int CLOCK_RADIUS_DP = 60;  // 3/8"
@@ -154,7 +156,8 @@ public class SudokuView extends View {
   }
 
   public void setTrails(List<TrailItem> trails) {
-    mTrails = trails;
+    checkArgument(trails.size() <= MAX_VISIBLE_TRAILS);
+    mTrails = ImmutableList.copyOf(trails);
     invalidate();
   }
 

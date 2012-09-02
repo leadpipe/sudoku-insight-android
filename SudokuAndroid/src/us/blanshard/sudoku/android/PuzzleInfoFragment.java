@@ -144,8 +144,8 @@ public class PuzzleInfoFragment extends FragmentBase {
         List<Move> history = GameJson.toHistory(game.history);
         int maxTrailId = -1;
         for (Move m : history)
-          if (m.id > maxTrailId)
-            maxTrailId = m.id;
+          if (m.trailId > maxTrailId)
+            maxTrailId = m.trailId;
         sb.append("<br>").append(TextUtils.htmlEncode(
             getString(R.string.text_move_and_trail_counts, history.size(), maxTrailId + 1)));
       } catch (JSONException e) {

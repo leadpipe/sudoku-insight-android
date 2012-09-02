@@ -138,7 +138,7 @@ public class InsightMeasurer implements Runnable {
   @Override public void run() {
     stateStates.getUnchecked(-1).findInsights(0L);
     for (Move move : history) {
-      stateStates.getUnchecked(move.id).applyMove(move);
+      stateStates.getUnchecked(move.trailId).applyMove(move);
     }
     for (StateState ss : stateStates.asMap().values()) {
       ss.closePendingErrors();

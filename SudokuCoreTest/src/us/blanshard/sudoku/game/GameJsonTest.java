@@ -98,13 +98,13 @@ public class GameJsonTest {
 
     Move.Set m0 = (Move.Set) history.get(0);
     assertEquals(1, m0.timestamp);
-    assertEquals(-1, m0.id);
+    assertEquals(-1, m0.trailId);
     assertEquals(Location.of(22), m0.loc);
     assertEquals(Numeral.of(1), m0.num);
 
     Move.Clear m1 = (Move.Clear) history.get(1);
     assertEquals(2, m1.timestamp);
-    assertEquals(3, m1.id);
+    assertEquals(3, m1.trailId);
     assertEquals(Location.of(45), m1.loc);
   }
 

@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import static us.blanshard.sudoku.android.SudokuView.MAX_VISIBLE_TRAILS;
 import static us.blanshard.sudoku.core.Numeral.number;
 import static us.blanshard.sudoku.core.Numeral.numeral;
 
@@ -90,7 +91,6 @@ public class SudokuFragment
                OnItemLongClickListener {
 
   private static final long DB_UPDATE_MILLIS = TimeUnit.SECONDS.toMillis(10);
-  private static final int MAX_VISIBLE_TRAILS = 4;
 
   private static int sUpdateGameCount;
 
@@ -603,8 +603,8 @@ public class SudokuFragment
       @Override public void moveMade(Sudoku game, Move move) {
         if (game == mGame) {
           mSudokuView.invalidateLocation(move.getLocation());
-          if (move.id >= 0) {
-            makeActiveTrail(game.getTrail(move.id));
+          if (move.trailId >= 0) {
+            makeActiveTrail(game.getTrail(move.trailId));
           }
           boolean wasBroken = mState == Grid.State.BROKEN;
           updateState();

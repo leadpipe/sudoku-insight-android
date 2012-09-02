@@ -38,14 +38,14 @@ public abstract class Move {
   public final long timestamp;
 
   /** The trail ID this applies to, or -1 for the whole state. */
-  public final int id;
+  public final int trailId;
 
   /** Converts this move to a command usable by UndoStack. */
   public abstract MoveCommand toCommand(Sudoku game);
 
-  protected Move(long timestamp, int id) {
+  protected Move(long timestamp, int trailId) {
     this.timestamp = timestamp;
-    this.id = id;
+    this.trailId = trailId;
   }
 
   /** Performs this move on the given game, returns true if it worked. */
@@ -81,15 +81,15 @@ public abstract class Move {
     }
 
     @Override public MoveCommand toCommand(Sudoku game) {
-      return new MoveCommand(game.getState(id), loc, num);
+      return new MoveCommand(game.getState(trailId), loc, num);
     }
 
     @Override boolean apply(Sudoku game) {
-      return game.getState(id).actuallySet(loc, num);
+      return game.getState(trailId).actuallySet(loc, num);
     }
 
     @Override String toJsonValue() {
-      return JOINER.join(timestamp, id, loc.index, num.number);
+      return JOINER.join(timestamp, trailId, loc.index, num.number);
     }
 
     @Override public Location getLocation() {
@@ -111,15 +111,15 @@ public abstract class Move {
     }
 
     @Override public MoveCommand toCommand(Sudoku game) {
-      return new MoveCommand(game.getState(id), loc, null);
+      return new MoveCommand(game.getState(trailId), loc, null);
     }
 
     @Override boolean apply(Sudoku game) {
-      return game.getState(id).actuallyClear(loc);
+      return game.getState(trailId).actuallyClear(loc);
     }
 
     @Override String toJsonValue() {
-      return JOINER.join(timestamp, id, loc.index);
+      return JOINER.join(timestamp, trailId, loc.index);
     }
 
     @Override public Location getLocation() {

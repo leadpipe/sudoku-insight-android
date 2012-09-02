@@ -25,6 +25,7 @@ import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.Sudoku.State;
 import us.blanshard.sudoku.game.UndoStack;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -32,6 +33,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.json.JSONException;
@@ -170,8 +172,11 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
       }
       if (worked) {
         String time = "";
-        if (mHistoryPosition > 0)
-          time = ToText.elapsedTime(mHistory.get(mHistoryPosition - 1).timestamp);
+        if (mHistoryPosition > 0) {
+          Move move = mHistory.get(mHistoryPosition - 1);
+          time = ToText.elapsedTime(move.timestamp);
+          updateTrail(move.trailId);
+        } else updateTrail(-1);
         mTimer.setText(time);
       } else {
         Button pause = (Button) findViewById(R.id.pause);
@@ -179,6 +184,17 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
       }
     }
     if (mRunning) mReplayView.postDelayed(cycler, CYCLE_MILLIS);
+  }
+
+  private void updateTrail(int stateId) {
+    if (mReplayView.getInputState().getId() != stateId) {
+      boolean isTrail = stateId >= 0;
+      ImmutableList<TrailItem> trails = ImmutableList.of();
+      if (isTrail)
+        trails = ImmutableList.of(new TrailItem(mGame.getTrail(stateId), Color.DKGRAY, Color.LTGRAY, true));
+      mReplayView.setTrails(trails);
+      mReplayView.setTrailActive(isTrail);
+    }
   }
 
   @Override public void onMove(State state, Location loc, Numeral num) {
