@@ -24,16 +24,31 @@ END
 ** TODO Use today's date as the seed for generating puzzles
    - Hash the following things together for basic seed:
      - Today's date
-     - A daily counter
+     - A daily counter per symmetry
      - The generator (symmetry preserving or not)
      - "Properness" flag (allows >1 solution or not)
      - An installation number (pref to get different puzzles on different devices)
+       - This solution to this problem sucks
+       - Another not-very-good solution: call to a central server
+         - works, except when (say) on an airplane, the place you're most likely
+           to want to use multiple devices
+       - How about checking in with the central server periodically, and having
+         it keep track of the devices, and assigning each one a number mod
+         device count; each one would then generate every nth puzzle, offset
+         - I think this is the best approach.  It also gives us a jumping off
+           point for recommendations, and for gathering stats on puzzles
    - Use this to shuffle all the symmetries
    - Choose the first symmetry in the shuffled list that's enabled
    - Add the symmetry to the hash
    - Use this as the seed for generating the puzzle
+   - Use json notation for the generator params
+   - Possibly add a name that summarizes all of this
+** TODO Write an appengine app that gathers data from the android app using Google ID (or possibly other OpenId)
+** TODO Use backup service to keep basic prefs, like generation params
+** TODO Generate a GUID at installation time
 ** DONE Implement replay activity (rudimentary)
 ** TODO Add a title for the replay page
+** TODO Add a replay timestamp; display it on the info page
 ** TODO Show insights during replay (rudimentary)
 ** DONE Add "give up" action / kill "next puzzle" action
 ** TODO Show number of set locations next to each trail
