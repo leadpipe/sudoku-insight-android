@@ -52,7 +52,7 @@ END
 ** TODO Show insights during replay (rudimentary)
 ** DONE Add "give up" action / kill "next puzzle" action
 ** TODO Show number of set locations next to each trail
-** TODO Improve the trail colors--there's too much repetition and the yellows are too hard to read
+** DONE Improve the trail colors--there's too much repetition and the yellows are too hard to read
    - Make a new app to experiment with this
 ** DONE Handle clicking on a link referring to a list
 ** TODO Figure out why the progress indicator stops

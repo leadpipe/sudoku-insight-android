@@ -610,11 +610,15 @@ public class SudokuFragment
   }
 
   private TrailItem makeTrailItem(int trailId, boolean shown) {
-    double hueBase = 0.7 + trailId * 0.1573;
+    // This is very scientific:
+    double hueBase = 0.6 + trailId * 0.1573;
+    double valueBase = (0.57 + hueBase) * Math.PI * 256;
     hueBase = hueBase - Math.floor(hueBase);
+    valueBase = valueBase - Math.floor(valueBase);
     float hue = (float) (hueBase * 360);
-    int color = Color.HSVToColor(new float[] { hue, 0.8f, 0.6f });
-    int dimColor = Color.HSVToColor(new float[] { hue, 0.3f, 0.6f });
+    float value = (float) (valueBase * 0.5 + 0.4);
+    int color = Color.HSVToColor(new float[] { hue, 0.9f, value });
+    int dimColor = Color.HSVToColor(new float[] { hue, 0.4f, value });
     TrailItem trailItem = new TrailItem(mGame.getTrail(trailId), color, dimColor, shown);
     return trailItem;
   }
