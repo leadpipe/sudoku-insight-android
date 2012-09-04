@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import android.graphics.Color;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -36,11 +37,13 @@ public class TrailAdapter extends ArrayAdapter<TrailItem> implements OnCheckedCh
   private class ViewHolder {
     final View rowView;
     final TextView label;
+    final TextView count;
     final CheckBox checkbox;
 
     public ViewHolder() {
       rowView = mFragment.getActivity().getLayoutInflater().inflate(R.layout.trail_item, null);
       label = (TextView) rowView.findViewById(R.id.trail_item_label);
+      count = (TextView) rowView.findViewById(R.id.trail_item_count);
       checkbox = (CheckBox) rowView.findViewById(R.id.trail_item_checkbox);
     }
   }
@@ -63,8 +66,11 @@ public class TrailAdapter extends ArrayAdapter<TrailItem> implements OnCheckedCh
       TrailItem item = getItem(position);
       holder.checkbox.setTag(item);
       holder.checkbox.setChecked(item.shown);
-      holder.label.setTextColor(item.color);
+      int color = item.uninteresting ? Color.LTGRAY
+          : position == 0 && mFragment.isTrailActive() ? item.color : item.dimColor;
+      holder.label.setTextColor(color);
       holder.label.setText(item.toString());
+      holder.count.setText(String.valueOf(item.trail.getSetCount()));
       return holder.rowView;
     } finally {
       mBuildingView = false;

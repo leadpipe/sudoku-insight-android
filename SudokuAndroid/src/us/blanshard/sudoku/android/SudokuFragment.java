@@ -253,6 +253,7 @@ public class SudokuFragment
 
   public void trailCheckChanged(TrailItem item, boolean isChecked) {
     if (isChecked) {
+      item.uninteresting = false;
       int count = 0;
       for (int i = 0; i < mTrailAdapter.getCount(); ++i) {
         TrailItem item2 = mTrailAdapter.getItem(i);
@@ -268,6 +269,10 @@ public class SudokuFragment
       mTrailsList.smoothScrollToPosition(mTrailAdapter.getPosition(item));
   }
 
+  public boolean isTrailActive() {
+    return mSudokuView.isTrailActive();
+  }
+
   // Listener implementations
 
   @Override public void onMove(State state, Location loc, Numeral num) {
@@ -277,7 +282,7 @@ public class SudokuFragment
   @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
     if (buttonView == mEditTrailToggle) {
       mSudokuView.setTrailActive(isChecked);
-      stateChanged();
+      fixVisibleItems();
     }
   }
 
@@ -286,8 +291,10 @@ public class SudokuFragment
   }
 
   @Override public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-    // We don't actually do anything on long click, except swallow it so it
-    // doesn't get treated as a regular click.
+    TrailItem item = mTrailAdapter.getItem(position);
+    item.uninteresting = true;
+    item.shown = false;
+    fixVisibleItems();
     return true;
   }
 
@@ -626,6 +633,7 @@ public class SudokuFragment
   private void makeActiveTrailItem(TrailItem item) {
     mTrailAdapter.remove(item);
     item.shown = true;
+    item.uninteresting = false;
     mTrailAdapter.insert(item, 0);
     mTrailsList.smoothScrollToPosition(0);
     fixVisibleItems();
@@ -633,15 +641,17 @@ public class SudokuFragment
   }
 
   private void fixVisibleItems() {
-    List<TrailItem> vis = Lists.newArrayList(), invis = Lists.newArrayList();
+    List<TrailItem> vis = Lists.newArrayList(), invis = Lists.newArrayList(),
+        off = Lists.newArrayList();
     for (int i = 0; i < mTrailAdapter.getCount(); ++i) {
       TrailItem item = mTrailAdapter.getItem(i);
-      (item.shown ? vis : invis).add(item);
+      (item.shown ? vis : item.uninteresting ? off : invis).add(item);
     }
     if (vis.size() > MAX_VISIBLE_TRAILS)
       for (TrailItem item : vis.subList(MAX_VISIBLE_TRAILS, vis.size())) {
         item.shown = false;
       }
+    invis.addAll(off);
     updateTrails(vis, invis);
   }
 

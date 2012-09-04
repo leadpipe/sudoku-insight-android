@@ -38,7 +38,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int maskDrawable=0x7f010004;
     }
     public static final class color {
-        public static final int actionbar_title_color=0x7f050000;
+        public static final int trail_count_color=0x7f050000;
     }
     public static final class dimen {
         public static final int actionbar_compat_button_home_width=0x7f060002;
@@ -80,21 +80,21 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int list_fragment=0x7f07000e;
         public static final int list_item_grid=0x7f07000f;
         public static final int list_item_label=0x7f070010;
-        public static final int menu_capture_puzzle=0x7f070028;
-        public static final int menu_give_up=0x7f070023;
-        public static final int menu_list_puzzles=0x7f07002e;
-        public static final int menu_new_trail=0x7f070026;
-        public static final int menu_play=0x7f070029;
-        public static final int menu_prefs=0x7f070027;
-        public static final int menu_redo=0x7f070025;
-        public static final int menu_redo_to_end=0x7f070022;
+        public static final int menu_capture_puzzle=0x7f070029;
+        public static final int menu_give_up=0x7f070024;
+        public static final int menu_list_puzzles=0x7f07002f;
+        public static final int menu_new_trail=0x7f070027;
+        public static final int menu_play=0x7f07002a;
+        public static final int menu_prefs=0x7f070028;
+        public static final int menu_redo=0x7f070026;
+        public static final int menu_redo_to_end=0x7f070023;
         public static final int menu_refresh=0x7f070004;
-        public static final int menu_sort_by_elapsed=0x7f07002c;
-        public static final int menu_sort_by_number=0x7f07002b;
-        public static final int menu_sort_by_time=0x7f07002d;
-        public static final int menu_sort_list=0x7f07002a;
-        public static final int menu_undo=0x7f070024;
-        public static final int menu_undo_to_start=0x7f070021;
+        public static final int menu_sort_by_elapsed=0x7f07002d;
+        public static final int menu_sort_by_number=0x7f07002c;
+        public static final int menu_sort_by_time=0x7f07002e;
+        public static final int menu_sort_list=0x7f07002b;
+        public static final int menu_undo=0x7f070025;
+        public static final int menu_undo_to_start=0x7f070022;
         public static final int next=0x7f070016;
         public static final int pause=0x7f070019;
         public static final int play=0x7f070017;
@@ -107,7 +107,8 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int sudoku_frame=0x7f07001d;
         public static final int sudoku_view=0x7f070007;
         public static final int timer=0x7f07001a;
-        public static final int trail_item_checkbox=0x7f070020;
+        public static final int trail_item_checkbox=0x7f070021;
+        public static final int trail_item_count=0x7f070020;
         public static final int trail_item_label=0x7f07001f;
         public static final int trails=0x7f07001b;
     }

@@ -161,6 +161,10 @@ public class SudokuView extends View {
     invalidate();
   }
 
+  public boolean isTrailActive() {
+    return mTrailActive;
+  }
+
   public void setTrailActive(boolean flag) {
     mTrailActive = flag;
     invalidate();

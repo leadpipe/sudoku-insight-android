@@ -51,7 +51,7 @@ END
 ** TODO Add a replay timestamp; display it on the info page
 ** TODO Show insights during replay (rudimentary)
 ** DONE Add "give up" action / kill "next puzzle" action
-** TODO Show number of set locations next to each trail
+** DONE Show number of set locations next to each trail
 ** DONE Improve the trail colors--there's too much repetition and the yellows are too hard to read
    - Make a new app to experiment with this
 ** DONE Handle clicking on a link referring to a list
@@ -68,7 +68,7 @@ END
 ** TODO Add voting on (solved) puzzles: +1 or -1 (or 0).  Show dialog on solve, allow update from info page.
 ** TODO Add common menu items (like prefs) to various activities
 ** TODO Figure out how to add "up" behavior to other activities
-** TODO Make it possible to disable a trail: gray it out and move it to the bottom of the list
+** DONE Make it possible to disable a trail: gray it out and move it to the bottom of the list
 ** TODO Improve new-trail icon
 ** TODO Make icons for launcher, home
 

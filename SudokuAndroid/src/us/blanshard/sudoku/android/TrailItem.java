@@ -27,6 +27,7 @@ public class TrailItem {
   public final int color;
   public final int dimColor;
   public boolean shown;
+  public boolean uninteresting;
 
   public TrailItem(Trail trail, int color, int dimColor, boolean shown) {
     this.trail = trail;

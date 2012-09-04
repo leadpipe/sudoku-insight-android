@@ -8,8 +8,22 @@
         android:id="@+id/trail_item_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="20dp"
         android:layout_centerVertical="true"
+        android:textSize="20dp"
+        android:layout_marginLeft="4dp"
+        />
+    
+    <TextView
+        android:id="@+id/trail_item_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:textSize="20dp"
+        android:textColor="@color/trail_count_color"
+        android:layout_toLeftOf="@+id/trail_item_checkbox"
+        android:gravity="right"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
         />
 
     <CheckBox
