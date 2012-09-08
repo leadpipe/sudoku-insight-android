@@ -159,6 +159,10 @@ public class SudokuFragment
 
   private void setDbGame(Database.Game dbGame) {
     mDbGame = dbGame;
+    if (dbGame == null) {
+      setGame(null);
+      return;
+    }
     if (dbGame.gameState == GameState.UNSTARTED) {
       Database.startUnstartedGame(dbGame);
     }
@@ -228,16 +232,17 @@ public class SudokuFragment
     return Toast.makeText(getActivity().getApplicationContext(), s, Toast.LENGTH_LONG);
   }
 
-  public void giveUp() {
+  public void giveUp(final boolean skip) {
     DialogFragment dialog = new DialogFragment() {
       @Override public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new AlertDialog.Builder(getActivity())
-            .setMessage(R.string.dialog_give_up_message)
-            .setPositiveButton(R.string.button_give_up, new OnClickListener() {
+            .setMessage(skip ? R.string.dialog_skip_message : R.string.dialog_give_up_message)
+            .setPositiveButton(skip ? R.string.button_skip: R.string.button_give_up, new OnClickListener() {
                 @Override public void onClick(DialogInterface dialog, int which) {
                   dialog.dismiss();
-                  mDbGame.gameState = GameState.GAVE_UP;
-                  transitionToInfoPage();
+                  mDbGame.gameState = skip ? GameState.SKIPPED : GameState.GAVE_UP;
+                  if (skip) skipToNextPuzzle();
+                  else transitionToInfoPage();
                 }
             })
             .setNegativeButton(android.R.string.cancel, new OnClickListener() {
@@ -462,9 +467,18 @@ public class SudokuFragment
 
   @Override public void onPrepareOptionsMenu(Menu menu) {
     boolean going = mState != Grid.State.SOLVED;
+    boolean moved = mGame != null && !mGame.getHistory().isEmpty();
     for (int i = 0; i < menu.size(); ++i) {
       MenuItem item = menu.getItem(i);
       switch (item.getItemId()) {
+        case R.id.menu_give_up:
+          item.setVisible(moved);
+          break;
+
+        case R.id.menu_skip:
+          item.setVisible(mGame != null && !moved);
+          break;
+
         case R.id.menu_undo:
         case R.id.menu_undo_to_start:
           item.setEnabled(going && mUndoStack.canUndo());
@@ -485,7 +499,8 @@ public class SudokuFragment
   @Override public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
       case R.id.menu_give_up:
-        giveUp();
+      case R.id.menu_skip:
+        giveUp(item.getItemId() == R.id.menu_skip);
         return true;
 
       case R.id.menu_undo:
@@ -604,6 +619,14 @@ public class SudokuFragment
     intent.putExtra(Extras.PUZZLE_ID, mDbGame.puzzleId);
     startActivity(intent);
     getActivity().finish();
+  }
+
+  private void skipToNextPuzzle() {
+    mPrefs.removeCurrentGameIdAsync();
+    if (updateDbGame(true)) new SaveGame(this).execute(mDbGame);
+    setDbGame(null);
+    new FetchFindOrMakePuzzle(this).execute(0L);
+    mProgress.setVisibility(View.VISIBLE);
   }
 
   private void makeActiveTrail(Sudoku.Trail trail) {

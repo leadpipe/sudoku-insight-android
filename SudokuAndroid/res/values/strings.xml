@@ -12,6 +12,7 @@
     <string name="button_pause">Pause</string>
     <string name="button_play">Play</string>
     <string name="button_previous">Previous</string>
+    <string name="button_skip">Skip</string>
     <string name="check_blockwise_symmetry">Blockwise</string>
     <string name="check_blockwise_symmetry_summary">Block families share pattern</string>
     <string name="check_classic_symmetry">Classic</string>
@@ -30,6 +31,7 @@
     <string name="check_rotational_symmetry">Rotational</string>
     <string name="check_rotational_symmetry_summary">90° rotational symmetry</string>
     <string name="dialog_give_up_message">Give up on this puzzle?</string>
+    <string name="dialog_skip_message">Skip this puzzle?</string>
     <string name="hint_capture_source">Where does this puzzle come from?</string>
     <string name="menu_capture_puzzle">Enter a Puzzle</string>
     <string name="menu_give_up">Give Up</string>
@@ -39,9 +41,11 @@
     <string name="menu_prefs">Settings</string>
     <string name="menu_redo">Redo</string>
     <string name="menu_redo_to_end">Redo to End</string>
+    <string name="menu_skip">Skip This Puzzle</string>
     <string name="menu_sort_by_elapsed">By Elapsed Time</string>
     <string name="menu_sort_by_number">By Number</string>
     <string name="menu_sort_by_time">By Last Played Time</string>
+    <string name="menu_sort_by_vote">By Fun</string>
     <string name="menu_sort_list">Sort</string>
     <string name="menu_undo">Undo</string>
     <string name="menu_undo_to_start">Undo to Start</string>
@@ -54,9 +58,11 @@
     <string name="text_collection_with_source">%1$s (%2$s)</string>
     <string name="text_congrats">Congratulations!</string>
     <string name="text_game_gave_up">Gave up after %1$s; last played %2$s</string>
+    <string name="text_game_last_replayed">Last reviewed %1$s.</string>
     <string name="text_game_playing">In progress for %1$s; last played %2$s</string>
     <string name="text_game_queued">Queued to play %2$s</string>
     <string name="text_game_replay">Review</string>
+    <string name="text_game_skipped">Skipped %2$s</string>
     <string name="text_game_solved">Solved in %1$s %2$s</string>
     <string name="text_game_start_time">Started %1$s.</string>
     <string name="text_generated_puzzles">Generated puzzles</string>
@@ -64,10 +70,14 @@
     <string name="text_generator_params">Generator parameters: %1$s</string>
     <string name="text_info_title">Sudoku #%1$d Details</string>
     <string name="text_move_and_trail_counts">Moves: %1$d; trails: %2$d.</string>
+    <string name="text_no_vote">Normal fun.</string>
     <string name="text_oops">Oops!</string>
     <string name="text_puzzle_number">#%1$d</string>
     <string name="text_puzzle_number_start">""Sudoku #%1$d: "</string>
     <string name="text_sentence_end">.</string>
     <string name="text_symmetries">Symmetries of Generated Puzzles</string>
+    <string name="text_vote_down">Not so fun.</string>
+    <string name="text_vote_question">How fun was this puzzle?</string>
+    <string name="text_vote_up">Extra fun!</string>
 
 </resources>

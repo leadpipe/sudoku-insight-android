@@ -47,8 +47,8 @@ public class PuzzleInfoActivity extends ActivityBase implements PuzzleInfoFragme
     return true;
   }
 
-  @Override protected void onPostCreate(Bundle savedInstanceState) {
-    super.onPostCreate(savedInstanceState);
+  @Override protected void onResume() {
+    super.onResume();
     long puzzleId = getPuzzleId();
     mFragment.setPuzzleId(puzzleId);
     setTitle(getString(R.string.text_info_title, puzzleId));
@@ -83,6 +83,10 @@ public class PuzzleInfoActivity extends ActivityBase implements PuzzleInfoFragme
     intent.putExtra(Extras.COLLECTION_ID, collectionId);
     intent.putExtra(Extras.PUZZLE_ID, getPuzzleId());
     startActivity(intent);
+  }
+
+  @Override public void voted() {
+    // Nothing required in the standalone info activity.
   }
 
   private long getPuzzleId() {

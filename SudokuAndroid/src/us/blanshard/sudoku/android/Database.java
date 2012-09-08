@@ -60,6 +60,7 @@ public class Database {
     STARTED(1),
     GAVE_UP(2),
     FINISHED(3),
+    SKIPPED(4),
     ;
 
     private final int number;
@@ -98,6 +99,7 @@ public class Database {
     public long startTime;
     public long lastTime;
     public GameState gameState;
+    public long replayTime;
 
     // Optional other stuff
     public Grid puzzle;
@@ -132,6 +134,7 @@ public class Database {
   public static class Puzzle {
     public long _id;
     public Grid puzzle;
+    public int vote;
     public List<Game> games;
     public List<Element> elements;
   }
@@ -167,26 +170,6 @@ public class Database {
    */
   public Long lookUpPuzzleId(Grid puzzle) throws SQLException {
     return getPuzzleId(mOpenHelper.getReadableDatabase(), puzzle.toFlatString());
-  }
-
-  /**
-   * Returns the starting grid with the given ID, or null.
-   */
-  public Grid getPuzzle(long puzzleId) throws SQLException {
-    return getPuzzle(mOpenHelper.getReadableDatabase(), puzzleId);
-  }
-
-  private static Grid getPuzzle(SQLiteDatabase db, long puzzleId) throws SQLException {
-    Cursor cursor = db.rawQuery("SELECT [puzzle] FROM [Puzzle] WHERE [_id] = ?",
-        new String[]{ Long.toString(puzzleId) });
-    try {
-      if (cursor.moveToFirst()) {
-        return Grid.fromString(cursor.getString(0));
-      }
-      return null;
-    } finally {
-      cursor.close();
-    }
   }
 
   private static long putUnstartedGame(SQLiteDatabase db, long puzzleId) throws SQLException {
@@ -248,6 +231,22 @@ public class Database {
   }
 
   /**
+   * Sets the vote for a puzzle.  Allows any int value.
+   */
+  public void vote(long puzzleId, int vote) {
+    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+    db.beginTransaction();
+    try {
+      ContentValues values = new ContentValues();
+      values.put("vote", vote);
+      db.update("Puzzle", values, "[_id] = ?", new String[]{ Long.toString(puzzleId) });
+      db.setTransactionSuccessful();
+    } finally {
+      db.endTransaction();
+    }
+  }
+
+  /**
    * Returns the game given its ID.
    */
   public Game getGame(long gameId) throws SQLException {
@@ -281,6 +280,14 @@ public class Database {
     }
   }
 
+  private static Puzzle puzzleFromCursor(Cursor cursor) throws SQLException {
+    Puzzle answer = new Puzzle();
+    answer._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
+    answer.puzzle = Grid.fromString(cursor.getString(cursor.getColumnIndexOrThrow("puzzle")));
+    answer.vote = (int) getLong(cursor, "vote", 0);
+    return answer;
+  }
+
   private static Game gameFromCursor(Cursor cursor) throws SQLException {
     Game answer = new Game();
     answer._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
@@ -291,6 +298,7 @@ public class Database {
     answer.startTime = getLong(cursor, "startTime", 0);
     answer.lastTime = cursor.getLong(cursor.getColumnIndexOrThrow("lastTime"));
     answer.gameState = GameState.fromNumber(cursor.getInt(cursor.getColumnIndexOrThrow("gameState")));
+    answer.replayTime = getLong(cursor, "replayTime", 0);
     return answer;
   }
 
@@ -417,6 +425,20 @@ public class Database {
     }
   }
 
+  /** Updates the replay time of the game whose ID is given, to now. */
+  public void noteReplay(long gameId) {
+    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+    db.beginTransaction();
+    try {
+      ContentValues values = new ContentValues();
+      values.put("replayTime", System.currentTimeMillis());
+      db.update("Game", values, "[_id] = ?", new String[]{ Long.toString(gameId) });
+      db.setTransactionSuccessful();
+    } finally {
+      db.endTransaction();
+    }
+  }
+
   /** Returns all the puzzles, each with its games and collections filled in. */
   public List<Puzzle> getAllPuzzles() throws SQLException {
     List<Puzzle> answer = Lists.newArrayList();
@@ -427,9 +449,7 @@ public class Database {
       Cursor cursor = db.rawQuery("SELECT * FROM [Puzzle] ORDER BY [_id]", null);
       try {
         while (cursor.moveToNext()) {
-          Puzzle puzzle = new Puzzle();
-          puzzle._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
-          puzzle.puzzle = Grid.fromString(cursor.getString(cursor.getColumnIndexOrThrow("puzzle")));
+          Puzzle puzzle = puzzleFromCursor(cursor);
           puzzle.elements = Lists.newArrayList();
           puzzle.games = Lists.newArrayList();
           answer.add(puzzle);
@@ -496,22 +516,31 @@ public class Database {
   }
 
   public Puzzle getFullPuzzle(long puzzleId) throws SQLException {
-    Puzzle answer = new Puzzle();
-    answer._id = puzzleId;
+    Puzzle answer = null;
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
     db.beginTransaction();
     try {
-      answer.puzzle = getPuzzle(db, puzzleId);
-      answer.elements = getPuzzleElements(db, puzzleId);
-      answer.games = Lists.newArrayList();
-      String sql = "SELECT * FROM [Game] WHERE [puzzleId] = ? ORDER BY [_id]";
-      Cursor cursor = db.rawQuery(sql, new String[] {Long.toString(puzzleId)});
+      String[] idString = { Long.toString(puzzleId) };
+      Cursor cursor = db.rawQuery("SELECT * FROM [Puzzle] WHERE [_id] = ?", idString);
       try {
-        while (cursor.moveToNext()) {
-          answer.games.add(gameFromCursor(cursor));
+        if (cursor.moveToNext()) {
+          answer = puzzleFromCursor(cursor);
         }
       } finally {
         cursor.close();
+      }
+      if (answer != null) {
+        answer.elements = getPuzzleElements(db, puzzleId);
+        answer.games = Lists.newArrayList();
+        String sql = "SELECT * FROM [Game] WHERE [puzzleId] = ? ORDER BY [_id]";
+        cursor = db.rawQuery(sql, idString);
+        try {
+          while (cursor.moveToNext()) {
+            answer.games.add(gameFromCursor(cursor));
+          }
+        } finally {
+          cursor.close();
+        }
       }
     } finally {
       db.endTransaction();
@@ -570,7 +599,7 @@ public class Database {
     private final Context mContext;
 
     OpenHelper(Context context) {
-      super(context, "db", null, 5);
+      super(context, "db", null, 6);
       mContext = context;
     }
 
@@ -578,7 +607,8 @@ public class Database {
       db.execSQL(""
           + "CREATE TABLE [Puzzle] ("
           + "  [_id] INTEGER PRIMARY KEY AUTOINCREMENT,"
-          + "  [puzzle] TEXT  NOT NULL  UNIQUE)");
+          + "  [puzzle] TEXT  NOT NULL  UNIQUE,"
+          + "  [vote] INTEGER)");
       db.execSQL(""
           + "CREATE TABLE [Collection] ("
           + "  [_id] INTEGER PRIMARY KEY,"
@@ -612,7 +642,8 @@ public class Database {
           + "  [uiState] TEXT,"
           + "  [startTime] INTEGER,"
           + "  [lastTime] INTEGER  NOT NULL,"
-          + "  [gameState] INTEGER  NOT NULL)");
+          + "  [gameState] INTEGER  NOT NULL,"
+          + "  [replayTime] INTEGER)");
       db.execSQL(""
           + "CREATE INDEX [GameByPuzzleIdAndLastTime] ON [Game] ("
           + "  [puzzleId],"
@@ -633,7 +664,7 @@ public class Database {
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-      if (oldVersion < 2 || newVersion != 5)
+      if (oldVersion < 2 || newVersion != 6)
         throw new AssertionError();
       if (oldVersion == 2)
         db.execSQL(""
@@ -647,6 +678,10 @@ public class Database {
         values.put("gameState", GameState.FINISHED.getNumber());
         db.update("Game", values, "[gameState] > ?",
             new String[]{ Integer.toString(GameState.FINISHED.getNumber()) });
+      }
+      if (oldVersion <= 5) {
+        db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [vote] INTEGER");
+        db.execSQL("ALTER TABLE [Game] ADD COLUMN [replayTime] INTEGER");
       }
     }
   }

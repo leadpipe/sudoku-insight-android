@@ -213,7 +213,9 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
     }
 
     @Override protected Database.Game doInBackground(Long... params) {
-      return mDb.getGame(params[0]);
+      Database.Game answer = mDb.getGame(params[0]);
+      mDb.noteReplay(answer._id);
+      return answer;
     }
 
     @Override protected void onPostExecute(ReplayActivity activity, Database.Game game) {

@@ -40,6 +40,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.RadioGroup;
+import android.widget.RadioGroup.OnCheckedChangeListener;
 
 import com.google.common.collect.Lists;
 
@@ -50,10 +52,12 @@ import java.util.List;
 /**
  * @author Luke Blanshard
  */
-public class PuzzleInfoFragment extends FragmentBase {
+public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeListener {
   private static final String TAG = "PuzzleInfoFragment";
   private ActivityCallback mCallback;
   private SudokuView mGrid;
+  private View mVoteLayout;
+  private RadioGroup mVote;
   private WebView mContent;
   private Database.Puzzle mPuzzle;
 
@@ -63,6 +67,9 @@ public class PuzzleInfoFragment extends FragmentBase {
   public interface ActivityCallback {
     /** Shows the given collection in the puzzle list. */
     void showCollection(long collectionId);
+
+    /** Informs the activity that the user voted on this puzzle. */
+    void voted();
   }
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -81,6 +88,9 @@ public class PuzzleInfoFragment extends FragmentBase {
     super.onActivityCreated(savedInstanceState);
     mCallback = (ActivityCallback) getActivity();
     mGrid = (SudokuView) getActivity().findViewById(R.id.info_grid);
+    mVoteLayout = getActivity().findViewById(R.id.vote_layout);
+    mVote = (RadioGroup) getActivity().findViewById(R.id.vote_group);
+    mVote.setOnCheckedChangeListener(this);
     mContent = (WebView) getActivity().findViewById(R.id.info_content);
     mContent.setBackgroundColor(0);  // Makes the background transparent
     mContent.setWebViewClient(new LinkHandler());
@@ -117,9 +127,37 @@ public class PuzzleInfoFragment extends FragmentBase {
     }
   }
 
+  @Override public void onCheckedChanged(RadioGroup group, int checkedId) {
+    int vote = 0;
+    switch (checkedId) {
+      case R.id.radio_vote_down: vote = -1; break;
+      case R.id.radio_vote_up: vote = 1; break;
+    }
+    if (canVote()) {
+      ThreadPolicy policy = StrictMode.allowThreadDiskWrites();
+      try {
+        mDb.vote(mPuzzle._id, vote);
+      } finally {
+        StrictMode.setThreadPolicy(policy);
+      }
+      mCallback.voted();
+    }
+  }
+
+  private boolean canVote() {
+    if (mPuzzle != null)
+      for (Database.Game game : mPuzzle.games)
+        if (game.gameState == GameState.FINISHED)
+          return true;
+    return false;
+  }
+
   private void setPuzzle(Database.Puzzle puzzle) {
     mPuzzle = puzzle;
     mGrid.setPuzzle(puzzle.puzzle);
+    mVoteLayout.setVisibility(canVote() ? View.VISIBLE : View.GONE);
+    mVote.check(puzzle.vote == 0 ? R.id.radio_no_vote
+        : puzzle.vote < 0 ? R.id.radio_vote_down : R.id.radio_vote_up);
     mContent.loadData(makeContentHtml(puzzle), "text/html; charset=UTF-8", null);
     mContent.setBackgroundColor(0);  // Make the background transparent
     getActivity().invalidateOptionsMenu();
@@ -162,6 +200,11 @@ public class PuzzleInfoFragment extends FragmentBase {
       sb.append("<br><a href='" + Uris.REPLAY_URI_PREFIX).append(game._id).append("'>")
           .append(TextUtils.htmlEncode(getString(R.string.text_game_replay)))
           .append("</a>");
+    if (game.replayTime > 0)
+      sb.append("<br>")
+          .append(TextUtils.htmlEncode(getString(
+              R.string.text_game_last_replayed,
+              ToText.relativeDateTime(getActivity(), game.replayTime))));
   }
 
   private void appendElementHtml(Element element, StringBuilder sb) {

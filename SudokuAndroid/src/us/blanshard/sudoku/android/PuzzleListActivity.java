@@ -127,6 +127,10 @@ public class PuzzleListActivity extends ActivityBase
     setCollectionId(collectionId);
   }
 
+  @Override public void voted() {
+    mListFragment.reloadPuzzles();
+  }
+
   public void setCollectionId(long id) {
     int position = getActionBar().getSelectedNavigationIndex();
     for (int i = 0, count = mCollectionAdapter.getCount(); i < count; ++i)

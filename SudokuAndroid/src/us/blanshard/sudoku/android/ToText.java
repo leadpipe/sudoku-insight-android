@@ -107,13 +107,14 @@ public class ToText {
      * Returns a summary of the state of a game: queued, playing, abandoned, or
      * solved, along with when this happened.
      */
-    public static String gameSummaryHtml(Context context, Game game, boolean longTime) {
+  public static String gameSummaryHtml(Context context, Game game, boolean longTime) {
     int resourceId;
     switch (game.gameState) {
-      case UNSTARTED: resourceId = R.string.text_game_queued; break;
+      case UNSTARTED: resourceId = R.string.text_game_queued;  break;
       case STARTED:   resourceId = R.string.text_game_playing; break;
       case GAVE_UP:   resourceId = R.string.text_game_gave_up; break;
-      case FINISHED:  resourceId = R.string.text_game_solved; break;
+      case FINISHED:  resourceId = R.string.text_game_solved;  break;
+      case SKIPPED:   resourceId = R.string.text_game_skipped; break;
       default:
         throw new AssertionError();
     }

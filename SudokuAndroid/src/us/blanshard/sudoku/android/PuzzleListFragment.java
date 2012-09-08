@@ -19,6 +19,7 @@ import us.blanshard.sudoku.android.Database.Game;
 
 import android.os.Bundle;
 import android.text.Html;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -70,6 +71,15 @@ public class PuzzleListFragment extends FragmentBase {
     TIME(R.id.menu_sort_by_time, new Comparator<Database.Puzzle>() {
       @Override public int compare(Database.Puzzle lhs, Database.Puzzle rhs) {
         return ComparisonChain.start()
+            .compare(time(lhs), time(rhs))
+            .compare(lhs._id, rhs._id)
+            .result();
+      }
+    }),
+    VOTE(R.id.menu_sort_by_vote, new Comparator<Database.Puzzle>() {
+      @Override public int compare(Database.Puzzle lhs, Database.Puzzle rhs) {
+        return ComparisonChain.start()
+            .compare(rhs.vote, lhs.vote)  // note reversed order, higher votes first
             .compare(time(lhs), time(rhs))
             .compare(lhs._id, rhs._id)
             .result();
@@ -133,7 +143,6 @@ public class PuzzleListFragment extends FragmentBase {
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    new FetchPuzzles(this).execute();
     mSort = Sort.fromOrdinal(mPrefs.getSort(), Sort.NUMBER);
     if (savedInstanceState != null && savedInstanceState.containsKey(Extras.PUZZLE_ID))
       mPuzzleId = savedInstanceState.getLong(Extras.PUZZLE_ID);
@@ -142,6 +151,11 @@ public class PuzzleListFragment extends FragmentBase {
 
   @Override public void onSaveInstanceState(Bundle outState) {
     outState.putLong(Extras.PUZZLE_ID, mPuzzleId);
+  }
+
+  @Override public void onResume() {
+    super.onResume();
+    reloadPuzzles();
   }
 
   @Override public void onPrepareOptionsMenu(Menu menu) {
@@ -160,6 +174,10 @@ public class PuzzleListFragment extends FragmentBase {
       getActivity().invalidateOptionsMenu();
     }
     return true;
+  }
+
+  public void reloadPuzzles() {
+    new FetchPuzzles(this).execute();
   }
 
   public void setCollectionId(long collectionId) {
@@ -278,27 +296,31 @@ public class PuzzleListFragment extends FragmentBase {
 
     private String puzzleDescriptionHtml(Database.Puzzle puzzle) {
       StringBuilder sb = new StringBuilder();
-      sb.append(getContext().getString(R.string.text_puzzle_number_start, puzzle._id));
+      sb.append(getString(R.string.text_puzzle_number_start, puzzle._id));
+      if (puzzle.vote != 0) {
+        int resId = puzzle.vote < 0 ? R.string.text_vote_down : R.string.text_vote_up;
+        sb.append(TextUtils.htmlEncode(getString(resId))).append("  ");
+      }
       if (!puzzle.games.isEmpty()) {
         appendGameSummary(sb, puzzle.games.get(puzzle.games.size() - 1));
         if (!puzzle.elements.isEmpty()) sb.append("<br>");
       }
       if (!puzzle.elements.isEmpty()) {
-        sb.append(getContext().getString(R.string.text_collection_in_start));
-        Joiner.on(getContext().getString(R.string.text_collection_separator))
+        sb.append(getString(R.string.text_collection_in_start));
+        Joiner.on(getString(R.string.text_collection_separator))
             .appendTo(sb, Iterables.transform(puzzle.elements, new Function<Database.Element, String>() {
                 @Override public String apply(Database.Element element) {
                   return ToText.collectionNameHtml(getContext(), element, false);
                 }
               }));
-        sb.append(getContext().getString(R.string.text_sentence_end));
+        sb.append(getString(R.string.text_sentence_end));
       }
       return sb.toString();
     }
 
     private void appendGameSummary(StringBuilder sb, Game game) {
       sb.append(ToText.gameSummaryHtml(getContext(), game));
-      sb.append(getContext().getString(R.string.text_sentence_end));
+      sb.append(getString(R.string.text_sentence_end));
     }
   }
 }
