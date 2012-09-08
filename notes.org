@@ -19,9 +19,6 @@ END
 
 * App
 ** TODO Bug: Don't use onPause/onResume to pause and resume the game.  See javadoc for onResume.
-** DONE Bug: List goes back to initial selection
-   - Show list.  Select a puzzle different from initial one selected.  Go to info page.
-   - Then go back.  The initial puzzle is selected again.  The new one should be.
 ** TODO Kill the prefs for individual symmetries: just use them all
 ** TODO Use "None" as the name for the Random symmetry (when applicable)
 ** TODO Use today's date as the seed for generating puzzles
@@ -52,14 +49,8 @@ END
 ** TODO Write an appengine app that gathers data from the android app
    - use GUID to identify the installation
    - allow login using Google ID to keep different installations from generating the same puzzles
-** DONE Implement replay activity (rudimentary)
 ** TODO Add a title for the replay page
 ** TODO Show insights during replay (rudimentary)
-** DONE Add "give up" action / kill "next puzzle" action
-** DONE Show number of set locations next to each trail
-** DONE Improve the trail colors--there's too much repetition and the yellows are too hard to read
-   - Make a new app to experiment with this
-** DONE Handle clicking on a link referring to a list
 ** TODO Figure out why the progress indicator stops
    - Damn guava splitter static initialization is one reason
    - But can't be the only thing, or probably even the main one
@@ -70,15 +61,8 @@ END
    - Still want to generate new puzzles: add a pref for how often to do this, as
      a number between 0 and 1 (probably with 4-5 discrete choices: never,
      occasionally, etc)
-** DONE Add a replay timestamp; display it on the info page
-** DONE Add "Skipped" as a game state, and "Skip" as a menu option (in place of Give Up) before the first move
-** DONE Add voting on (solved) puzzles: +1 or -1 (or 0).  Allow update from info page.
-   - Add sort by fun, show +1 votes first, oldest
-   - Reload list on resume; for tablet, reload list on vote
-   - If reloading the list is too awful we can get more sophisticated later
 ** TODO Add common menu items (like prefs) to various activities
 ** TODO Figure out how to add "up" behavior to other activities
-** DONE Make it possible to disable a trail: gray it out and move it to the bottom of the list
 ** TODO Improve new-trail icon
 ** TODO Make icons for launcher, home
 
@@ -87,8 +71,6 @@ END
 ** TODO Preference for non-unique puzzles
 ** TODO Handle completion of potentially non-unique puzzles
    - by asking whether it was unique
-
-** DONE Add filters for list and replay links
 
 ** TODO Give visual indication when try to set an unsettable location
 
