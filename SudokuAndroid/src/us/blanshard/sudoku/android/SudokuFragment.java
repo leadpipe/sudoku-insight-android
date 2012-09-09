@@ -444,11 +444,14 @@ public class SudokuFragment
     }
   }
 
-  @Override public void onPause() {
-    super.onPause();
-    mResumed = false;
-    saveGameFromUiThread();
-    cancelStatus();
+  void gameShowing(boolean showing) {
+    if (mResumed = showing) {
+      if (mGame != null && mState != Grid.State.SOLVED) mGame.resume();
+      new CheckNextGame(this).execute(mDbGame == null ? null : mDbGame._id);
+    } else {
+      saveGameFromUiThread();
+      cancelStatus();
+    }
   }
 
   private void cancelStatus() {
@@ -456,13 +459,6 @@ public class SudokuFragment
       mToast.cancel();
       mToast = null;
     }
-  }
-
-  @Override public void onResume() {
-    super.onResume();
-    mResumed = true;
-    if (mGame != null && mState != Grid.State.SOLVED) mGame.resume();
-    new CheckNextGame(this).execute(mDbGame == null ? null : mDbGame._id);
   }
 
   @Override public void onPrepareOptionsMenu(Menu menu) {

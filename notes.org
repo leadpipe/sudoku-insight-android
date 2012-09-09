@@ -18,7 +18,7 @@ END
 ** TODO Rename getState to... what?
 
 * App
-** TODO Bug: Don't use onPause/onResume to pause and resume the game.  See javadoc for onResume.
+** DONE Bug: Don't use onPause/onResume to pause and resume the game.  See javadoc for onResume.
 ** TODO Kill the prefs for individual symmetries: just use them all
 ** TODO Use "None" as the name for the Random symmetry (when applicable)
 ** TODO Use today's date as the seed for generating puzzles
