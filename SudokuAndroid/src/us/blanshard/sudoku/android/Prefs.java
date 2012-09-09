@@ -47,9 +47,15 @@ public class Prefs {
   private static final String SORT = "sort";
 
   private final SharedPreferences mPrefs;
+  private static Prefs sInstance;
 
-  public Prefs(Context context) {
+  private Prefs(Context context) {
     mPrefs = context.getSharedPreferences("prefs", 0);
+  }
+
+  public static synchronized Prefs instance(Context context) {
+    if (sInstance == null) sInstance = new Prefs(context);
+    return sInstance;
   }
 
   public boolean hasCurrentGameId() {

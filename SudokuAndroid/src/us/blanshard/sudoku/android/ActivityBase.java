@@ -27,12 +27,7 @@ public abstract class ActivityBase extends Activity {
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    mDb = new Database(this);
-    mPrefs = new Prefs(this);
-  }
-
-  @Override protected void onDestroy() {
-    mDb.close();
-    super.onDestroy();
+    mDb = Database.instance(this);
+    mPrefs = Prefs.instance(this);
   }
 }

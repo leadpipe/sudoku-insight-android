@@ -43,7 +43,7 @@ public class PrefsActivity extends PreferenceActivity {
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     addPreferencesFromResource(R.xml.preferences);
-    mPrefs = new Prefs(this);
+    mPrefs = Prefs.instance(this);
     mRandomGenerator = (CheckBoxPreference) findPreference(RANDOM_GENERATOR);
     mSymmetries = mPrefs.getSymmetries();
     for (Symmetry sym : mSymmetries) {

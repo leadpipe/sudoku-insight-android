@@ -46,13 +46,15 @@ public class Database {
   public static final int CAPTURED_COLLECTION_ID = 2;
 
   private final OpenHelper mOpenHelper;
+  private static Database sInstance;
 
-  public Database(Context context) {
-    this.mOpenHelper = new OpenHelper(context);
+  private Database(Context context) {
+    this.mOpenHelper = new OpenHelper(context.getApplicationContext());
   }
 
-  public void close() {
-    mOpenHelper.close();
+  public static synchronized Database instance(Context context) {
+    if (sInstance == null) sInstance = new Database(context);
+    return sInstance;
   }
 
   public enum GameState {

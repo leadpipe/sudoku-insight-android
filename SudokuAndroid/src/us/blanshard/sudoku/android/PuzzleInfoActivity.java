@@ -30,7 +30,6 @@ public class PuzzleInfoActivity extends ActivityBase implements PuzzleInfoFragme
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    mDb = new Database(this);
     setContentView(R.layout.info_activity);
     mFragment = (PuzzleInfoFragment) getFragmentManager().findFragmentById(R.id.info_fragment);
     getActionBar().setDisplayHomeAsUpEnabled(true);
