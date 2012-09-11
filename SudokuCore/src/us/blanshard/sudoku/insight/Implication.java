@@ -75,17 +75,16 @@ public class Implication extends Insight.Molecule {
     return ok;
   }
 
-  @Override public boolean isImpliedBy(Grid grid, Marks marks) {
+  @Override public boolean isImpliedBy(GridMarks gridMarks) {
     // Checks that all antecedents are implied by the given grid and marks; if
     // so, applies the antecedents to new builders and checks that the
     // consequent is implied by the resulting grid and marks.
     for (Insight insight : antecedents)
-      if (!insight.isImpliedBy(grid, marks)) return false;
-    Grid.Builder gridBuilder = grid.toBuilder();
-    Marks.Builder marksBuilder = marks.toBuilder();
+      if (!insight.isImpliedBy(gridMarks)) return false;
+    GridMarks.Builder builder = gridMarks.toBuilder();
     for (Insight insight : antecedents)
-      insight.apply(gridBuilder, marksBuilder);
-    return consequent.isImpliedBy(gridBuilder.build(), marksBuilder.build());
+      builder.apply(insight);
+    return consequent.isImpliedBy(builder.build());
   }
 
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {

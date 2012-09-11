@@ -99,7 +99,7 @@ public abstract class Insight {
   public abstract boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder);
 
   /** Tells whether this insight is implied by the given grid and marks. */
-  public abstract boolean isImpliedBy(Grid grid, Marks marks);
+  public abstract boolean isImpliedBy(GridMarks gridMarks);
 
   /** Tells whether this insight is related to the given elimination. */
   public abstract boolean mightBeRevealedByElimination(Assignment elimination);

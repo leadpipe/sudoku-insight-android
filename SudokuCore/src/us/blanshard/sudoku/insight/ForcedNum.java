@@ -63,9 +63,9 @@ public class ForcedNum extends Insight.Atom {
     return marksBuilder.assign(location, numeral);
   }
 
-  @Override public boolean isImpliedBy(Grid grid, Marks marks) {
-    NumSet set = marks.get(location);
-    return set.size() == 1 && set.get(0) == numeral && !grid.containsKey(location);
+  @Override public boolean isImpliedBy(GridMarks gridMarks) {
+    NumSet set = gridMarks.marks.get(location);
+    return set.size() == 1 && set.get(0) == numeral && !gridMarks.grid.containsKey(location);
   }
 
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {

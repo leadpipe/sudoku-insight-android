@@ -55,9 +55,9 @@ public class Conflict extends Insight.Atom {
     return false;  // it's an error already
   }
 
-  @Override public boolean isImpliedBy(Grid grid, Marks marks) {
+  @Override public boolean isImpliedBy(GridMarks gridMarks) {
     for (Location loc : locations) {
-      if (grid.get(loc) != numeral)
+      if (gridMarks.grid.get(loc) != numeral)
         return false;
     }
     return true;

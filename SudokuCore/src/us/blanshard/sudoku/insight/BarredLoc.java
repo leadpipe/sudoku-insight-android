@@ -45,8 +45,8 @@ public class BarredLoc extends Insight.Atom {
     return false;  // it's an error already
   }
 
-  @Override public boolean isImpliedBy(Grid grid, Marks marks) {
-    return marks.get(location).isEmpty();
+  @Override public boolean isImpliedBy(GridMarks gridMarks) {
+    return gridMarks.marks.get(location).isEmpty();
   }
 
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {

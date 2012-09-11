@@ -24,12 +24,12 @@ import static us.blanshard.sudoku.insight.Analyzer.findSingletonNumerals;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.insight.Analyzer;
+import us.blanshard.sudoku.insight.GridMarks;
 import us.blanshard.sudoku.insight.Implication;
 import us.blanshard.sudoku.insight.Insight;
 
@@ -248,14 +248,12 @@ public class InsightMeasurer implements Runnable {
     }
 
     void findInsights(Long timestamp) {
-      Grid grid = state.getGrid();
-      Marks.Builder builder = Marks.builder();
-      boolean hasErrors = !builder.assignAll(grid);
+      GridMarks gridMarks = new GridMarks(state.getGrid());
 
       foundErrors.clear();
       List<Insight> newInsights = Lists.newArrayList();
       addNewConsequentialInsights(
-          grid, builder.build(), hasErrors, new Collector(insightArrivals.keySet(), newInsights));
+          gridMarks, new Collector(insightArrivals.keySet(), newInsights));
 
       // Handle errors cleared by this move.
       if (!errors.isEmpty()) {
@@ -320,8 +318,6 @@ public class InsightMeasurer implements Runnable {
         this.seen = seen;
       }
 
-      @Override public void phase(Analyzer.Phase phase) {}
-
       @Override public void take(Insight insight) {
         // Keep track of all errors found, out of band.
         if (insight.isError()) foundErrors.add(insight);
@@ -339,48 +335,45 @@ public class InsightMeasurer implements Runnable {
       }
     }
 
-    private void addNewConsequentialInsights(
-        Grid grid, Marks marks, boolean hasErrors, Collector collector) {
+    private void addNewConsequentialInsights(GridMarks gridMarks, Collector collector) {
 
-      if (hasErrors)
-        findErrors(grid, marks, collector);
+      if (gridMarks.hasErrors)
+        findErrors(gridMarks, collector);
 
-      findSingletonLocations(grid, marks, collector);
-      findSingletonNumerals(grid, marks, collector);
+      findSingletonLocations(gridMarks, collector);
+      findSingletonNumerals(gridMarks, collector);
 
       List<Insight> newInsights = collector.getNewInsights();
       int elimsStart = newInsights.size();
-      findOverlapsAndSets(grid, marks, collector);
+      findOverlapsAndSets(gridMarks, collector);
 
       if (newInsights.size() > elimsStart) {
         List<Insight> elimsSublist = newInsights.subList(elimsStart, newInsights.size());
         List<Insight> elims = ImmutableList.copyOf(elimsSublist);
         elimsSublist.clear();
-        addPostEliminationInsights(grid, marks, elims, collector);
+        addPostEliminationInsights(gridMarks, elims, collector);
       }
     }
 
     private void addPostEliminationInsights (
-        Grid grid, Marks marks, List<Insight> elims, Collector collector) {
+        GridMarks gridMarks, List<Insight> elims, Collector collector) {
 
-      Grid.Builder gridBuilder = grid.toBuilder();
-      Marks.Builder marksBuilder = marks.toBuilder();
-      boolean ok = true;
+      GridMarks.Builder builder = gridMarks.toBuilder();
       for (Insight elim : elims)
-        ok &= elim.apply(gridBuilder, marksBuilder);
+        builder.apply(elim);
 
       List<Insight> newInsights = collector.getNewInsights();
       int start = newInsights.size();
 
-      addNewConsequentialInsights(gridBuilder.build(), marksBuilder.build(), !ok, collector);
+      addNewConsequentialInsights(builder.build(), collector);
 
       for (ListIterator<Insight> it = newInsights.listIterator(start); it.hasNext(); ) {
-        it.set(makeImplication(grid, marks, elims, it.next()));
+        it.set(makeImplication(gridMarks, elims, it.next()));
       }
     }
 
     private Implication makeImplication(
-        Grid grid, Marks marks, List<Insight> elims, Insight consequent) {
+        GridMarks gridMarks, List<Insight> elims, Insight consequent) {
 
       // Whittle the universe of elimination insights down to those that might
       // be antecedents to the given consequent.
@@ -398,12 +391,11 @@ public class InsightMeasurer implements Runnable {
       // Then find the first combination of eliminations from that universe that
       // imply the consequent and return it.
       for (CombinationView view = new CombinationView(universe); view.step(); ) {
-        Grid.Builder gridBuilder = grid.toBuilder();
-        Marks.Builder marksBuilder = marks.toBuilder();
+        GridMarks.Builder builder = gridMarks.toBuilder();
         for (Insight elim : view)
-          elim.apply(gridBuilder, marksBuilder);
+          builder.apply(elim);
 
-        if (consequent.isImpliedBy(gridBuilder.build(), marksBuilder.build()))
+        if (consequent.isImpliedBy(builder.build()))
           return new Implication(view, consequent);
       }
 

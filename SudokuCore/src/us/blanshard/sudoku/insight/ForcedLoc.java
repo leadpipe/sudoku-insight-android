@@ -70,9 +70,9 @@ public class ForcedLoc extends Insight.Atom {
     return marksBuilder.assign(location, numeral);
   }
 
-  @Override public boolean isImpliedBy(Grid grid, Marks marks) {
-    UnitSubset set = marks.get(unit, numeral);
-    return set.size() == 1 && set.get(0) == location && !grid.containsKey(location);
+  @Override public boolean isImpliedBy(GridMarks gridMarks) {
+    UnitSubset set = gridMarks.marks.get(unit, numeral);
+    return set.size() == 1 && set.get(0) == location && !gridMarks.grid.containsKey(location);
   }
 
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {

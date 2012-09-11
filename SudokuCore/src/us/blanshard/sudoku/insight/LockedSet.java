@@ -91,13 +91,13 @@ public class LockedSet extends Insight.Atom {
     return ok;
   }
 
-  @Override public boolean isImpliedBy(Grid grid, Marks marks) {
+  @Override public boolean isImpliedBy(GridMarks gridMarks) {
     if (isNakedSet()) {
       for (Location loc : locs)
-        if (!marks.get(loc).isSubsetOf(nums)) return false;
+        if (!gridMarks.marks.get(loc).isSubsetOf(nums)) return false;
     } else {
       for (Numeral num : nums)
-        if (!marks.get(locs.unit, num).isSubsetOf(locs)) return false;
+        if (!gridMarks.marks.get(locs.unit, num).isSubsetOf(locs)) return false;
     }
     return true;
   }

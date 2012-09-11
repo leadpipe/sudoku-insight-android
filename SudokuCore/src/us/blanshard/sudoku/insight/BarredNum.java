@@ -54,8 +54,8 @@ public class BarredNum extends Insight.Atom {
     return false;  // it's an error already
   }
 
-  @Override public boolean isImpliedBy(Grid grid, Marks marks) {
-    return marks.get(unit, numeral).isEmpty();
+  @Override public boolean isImpliedBy(GridMarks gridMarks) {
+    return gridMarks.marks.get(unit, numeral).isEmpty();
   }
 
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {

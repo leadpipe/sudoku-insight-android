@@ -49,7 +49,6 @@ public class AnalyzerTest {
 
   static class Collector implements Analyzer.Callback {
     public final List<Insight> taken = Lists.newArrayList();
-    @Override public void phase(Analyzer.Phase phase) {}
     @Override public void take(Insight insight) {
       taken.add(insight);
     }
@@ -99,11 +98,9 @@ public class AnalyzerTest {
     setAll(game.getState(), state);
     setAll(game.getTrail(0), trail);
 
-    Analyzer analyzer = new Analyzer(game, callback);
-    analyzer.setAnalysisTargetId(0);
+    boolean complete = Analyzer.analyze(state, callback);
 
-    analyzer.analyze();
-
+    assertTrue(complete);
     verify(callback, never()).take(isA(Conflict.class));
     verify(callback, never()).take(isA(BarredNum.class));
     verify(callback, never()).take(isA(BarredLoc.class));
@@ -139,10 +136,9 @@ public class AnalyzerTest {
     Sudoku game = new Sudoku(puzzle, Sudoku.nullRegistry()).resume();
     setAll(game.getState(), state);
 
-    Analyzer analyzer = new Analyzer(game, callback);
+    boolean complete = Analyzer.analyze(state, callback);
 
-    analyzer.analyze();
-
+    assertTrue(complete);
     verify(callback, never()).take(isA(Conflict.class));
     verify(callback, never()).take(isA(BarredNum.class));
     verify(callback, never()).take(isA(BarredLoc.class));
@@ -177,7 +173,7 @@ public class AnalyzerTest {
 
     Collector collector = new Collector();
 
-    Analyzer.findOverlapsAndSets(grid, marks, collector);
+    Analyzer.findOverlapsAndSets(new GridMarks(grid, marks, false), collector);
 
     Unit c2 = Column.of(2);
     assertTrue(collector.taken.contains(new LockedSet(set(1,2), locs(c2, 5, 6), false)));
