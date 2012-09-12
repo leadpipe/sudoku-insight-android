@@ -59,6 +59,12 @@ public class GridMarks {
       return this;
     }
 
+    public Builder apply(Iterable<Insight> insights) {
+      for (Insight insight : insights)
+        apply(insight);
+      return this;
+    }
+
     public GridMarks build() {
       return new GridMarks(gridBuilder.build(), marksBuilder.build(), hasErrors);
     }

@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Block;
 import us.blanshard.sudoku.core.Column;
 import us.blanshard.sudoku.core.Grid;
@@ -25,12 +26,17 @@ import us.blanshard.sudoku.core.Row;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -57,7 +63,7 @@ public class Analyzer {
    *
    * <p> Any {@link Implication}s returned will have elimination-only insights
    * as antecedents, and these may well include insights that have nothing to do
-   * with the consequent. Call {@link minimizeImplication} to squeeze out
+   * with the consequent. Call {@link #minimizeImplication} to squeeze out
    * irrelevant antecedents.
    */
   public static boolean analyze(Grid grid, Callback callback) {
@@ -66,7 +72,7 @@ public class Analyzer {
     GridMarks gridMarks = new GridMarks(grid);
 
     try {
-      findInsights(gridMarks, callback);
+      findInsights(gridMarks, callback, Sets.<Insight>newHashSet());
       complete = true;
 
     } catch (InterruptedException e) {
@@ -75,63 +81,103 @@ public class Analyzer {
     return complete;
   }
 
+  /**
+   * Slims down the antecedents of the given implication (and recursively if its
+   * consequent is also an implication) so it doesn't have any not required to
+   * imply the consequent. This only works on implications produced by
+   * {@link #analyze}.
+   */
   public static Implication minimizeImplication(Grid grid, Implication implication) {
-    return null;
+    return minimizeImplication(new GridMarks(grid), implication);
   }
 
-  private static void findInsights(GridMarks gridMarks, Callback callback)
+  private static void findInsights(GridMarks gridMarks, Callback callback, Set<Insight> index)
       throws InterruptedException {
+
+    Collector collector = new Collector(callback, index, false);
+
     if (gridMarks.hasErrors) {
-      findErrors(gridMarks, callback);
+      findErrors(gridMarks, collector);
       checkInterruption();
     }
 
-    findSingletonLocations(gridMarks, callback);
+    findSingletonLocations(gridMarks, collector);
     checkInterruption();
-    findSingletonNumerals(gridMarks, callback);
+    findSingletonNumerals(gridMarks, collector);
     checkInterruption();
 
-    Collector collector = new Collector(callback);
+    collector = new Collector(callback, index, true);
 
     findOverlaps(gridMarks, collector);
     checkInterruption();
     findSets(gridMarks, collector);
     checkInterruption();
 
-    if (!collector.insights.isEmpty()) {
-      findImplications(gridMarks, collector.insights, callback);
+    if (!collector.list.isEmpty()) {
+      findImplications(gridMarks, collector);
     }
   }
 
-  private static void findImplications(GridMarks gridMarks, List<Insight> elims,
-      Callback callback) throws InterruptedException {
-    GridMarks.Builder builder = gridMarks.toBuilder();
-    for (Insight elim : elims)
-      builder.apply(elim);
+  private static void findImplications(GridMarks gridMarks, Collector elims) throws InterruptedException {
 
-    Collector collector = new Collector(null);
-    findInsights(builder.build(), collector);
+    Collector collector = new Collector(null, elims.index, true);
+    findInsights(gridMarks.toBuilder().apply(elims.list).build(), collector, elims.index);
 
-    for (Insight insight : collector.insights)
-      callback.take(new Implication(elims, insight));
-  }
-
-  public static void checkInterruption() throws InterruptedException {
-    if (Thread.interrupted()) throw new InterruptedException();
+    for (Insight insight : collector.list)
+      if (insight.isError() || !insight.getAssignments().isEmpty())
+        elims.delegate.take(new Implication(elims.list, insight));
   }
 
   private static class Collector implements Callback {
-    @Nullable private final Callback delegate;
-    final List<Insight> insights = Lists.newArrayList();
+    @Nullable final Callback delegate;
+    final Set<Insight> index;
+    @Nullable final List<Insight> list;
 
-    Collector(@Nullable Callback delegate) {
+    Collector(@Nullable Callback delegate, Set<Insight> index, boolean makeList) {
       this.delegate = delegate;
+      this.index = index;
+      this.list = makeList ? Lists.<Insight>newArrayList() : null;
     }
 
     @Override public void take(Insight insight) {
-      insights.add(insight);
-      if (delegate != null) delegate.take(insight);
+      if (index.add(insight)) {
+        if (list != null) list.add(insight);
+        if (delegate != null) delegate.take(insight);
+      }
     }
+  }
+
+  private static Implication minimizeImplication(GridMarks gridMarks, Implication implication) {
+    Insight consequent = implication.getConsequent();
+    ImmutableList<Insight> allAntecedents = ImmutableList.copyOf(implication.getAntecedents());
+    ArrayDeque<Insight> requiredAntecedents = Queues.newArrayDeque();
+
+    if (consequent instanceof Implication) {
+      consequent = minimizeImplication(
+          gridMarks.toBuilder().apply(implication.getAntecedents()).build(),
+          (Implication) consequent);
+    }
+
+    for (int index = allAntecedents.size() - 1; index >= 0; --index) {
+      Insight elim = allAntecedents.get(index);
+      if (mayBeAntecedentTo(elim, consequent)) {
+        GridMarks withoutThisOne = gridMarks.toBuilder()
+            .apply(allAntecedents.subList(0, index))
+            .apply(requiredAntecedents)
+            .build();
+        if (!consequent.isImpliedBy(withoutThisOne))
+          requiredAntecedents.addFirst(elim);
+      }
+    }
+
+    return new Implication(requiredAntecedents, consequent);
+  }
+
+  private static boolean mayBeAntecedentTo(Insight elim, Insight consequent) {
+    for (Assignment assignment : elim.getEliminations())
+      if (consequent.mightBeRevealedByElimination(assignment))
+        return true;
+    return false;
   }
 
   private static class SetState {
@@ -187,6 +233,10 @@ public class Analyzer {
       }
     }
     return false;
+  }
+
+  public static void checkInterruption() throws InterruptedException {
+    if (Thread.interrupted()) throw new InterruptedException();
   }
 
   public static void findOverlapsAndSets(GridMarks gridMarks, Callback callback) {
