@@ -61,6 +61,9 @@ public class Analyzer {
    * time-consuming operation; if run as a background thread it can be stopped
    * early by interrupting the thread.
    *
+   * <p> The insights returned are all "consequential": either errors or
+   * assignments, either direct or indirect via Implications.
+   *
    * <p> Any {@link Implication}s returned will have elimination-only insights
    * as antecedents, and these may well include insights that have nothing to do
    * with the consequent. Call {@link #minimizeImplication} to squeeze out
@@ -106,26 +109,25 @@ public class Analyzer {
     findSingletonNumerals(gridMarks, collector);
     checkInterruption();
 
-    collector = new Collector(callback, index, true);
+    Collector elims = new Collector(null, index, true);
 
-    findOverlaps(gridMarks, collector);
+    findOverlaps(gridMarks, elims);
     checkInterruption();
-    findSets(gridMarks, collector);
+    findSets(gridMarks, elims);
     checkInterruption();
 
-    if (!collector.list.isEmpty()) {
-      findImplications(gridMarks, collector);
+    if (!elims.list.isEmpty()) {
+      findImplications(gridMarks, elims, callback);
     }
   }
 
-  private static void findImplications(GridMarks gridMarks, Collector elims) throws InterruptedException {
+  private static void findImplications(GridMarks gridMarks, Collector elims, Callback callback) throws InterruptedException {
 
     Collector collector = new Collector(null, elims.index, true);
     findInsights(gridMarks.toBuilder().apply(elims.list).build(), collector, elims.index);
 
     for (Insight insight : collector.list)
-      if (insight.isError() || !insight.getAssignments().isEmpty())
-        elims.delegate.take(new Implication(elims.list, insight));
+      callback.take(new Implication(elims.list, insight));
   }
 
   private static class Collector implements Callback {
