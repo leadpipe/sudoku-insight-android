@@ -391,11 +391,7 @@ public class InsightMeasurer implements Runnable {
       // Then find the first combination of eliminations from that universe that
       // imply the consequent and return it.
       for (CombinationView view = new CombinationView(universe); view.step(); ) {
-        GridMarks.Builder builder = gridMarks.toBuilder();
-        for (Insight elim : view)
-          builder.apply(elim);
-
-        if (consequent.isImpliedBy(builder.build()))
+        if (consequent.isImpliedBy(gridMarks.toBuilder().apply(view).build()))
           return new Implication(view, consequent);
       }
 
