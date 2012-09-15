@@ -91,4 +91,8 @@ public class ForcedLoc extends Insight.Atom {
   @Override public int hashCode() {
     return Objects.hashCode(unit, numeral, location);
   }
+
+  @Override public String toString() {
+    return numeral + " \u2208 " + unit + " \u2192 " + location;  // element-of, right-arrow
+  }
 }

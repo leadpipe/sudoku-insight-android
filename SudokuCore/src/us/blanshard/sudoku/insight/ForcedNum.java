@@ -83,4 +83,8 @@ public class ForcedNum extends Insight.Atom {
   @Override public int hashCode() {
     return Objects.hashCode(location, numeral);
   }
+
+  @Override public String toString() {
+    return Assignment.of(location, numeral).toString();
+  }
 }

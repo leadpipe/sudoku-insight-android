@@ -123,6 +123,6 @@ public class LockedSet extends Insight.Atom {
   }
 
   @Override public String toString() {
-    return nums.toString() + " x " + locs;
+    return nums + " \u2194 " + locs;
   }
 }

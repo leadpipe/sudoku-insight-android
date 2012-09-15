@@ -109,4 +109,8 @@ public class Implication extends Insight.Molecule {
   @Override public int hashCode() {
     return Objects.hashCode(antecedents, consequent);
   }
+
+  @Override public String toString() {
+    return antecedents.toString() + " \u21d2 " + consequent.toString();
+  }
 }

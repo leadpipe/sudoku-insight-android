@@ -63,4 +63,8 @@ public class BarredLoc extends Insight.Atom {
   @Override public int hashCode() {
     return location.hashCode();
   }
+
+  @Override public String toString() {
+    return location + " \u2190 \u2205";  // assignment empty-set
+  }
 }

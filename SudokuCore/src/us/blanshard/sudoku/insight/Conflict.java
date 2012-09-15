@@ -78,4 +78,8 @@ public class Conflict extends Insight.Atom {
   @Override public int hashCode() {
     return Objects.hashCode(numeral, locations);
   }
+
+  @Override public String toString() {
+    return numeral + " \u2208 " + locations.unit + " \u219b " + locations;  // element-of, right-arrow
+  }
 }

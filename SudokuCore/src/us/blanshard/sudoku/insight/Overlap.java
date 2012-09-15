@@ -105,7 +105,7 @@ public class Overlap extends Insight.Atom {
   }
 
   @Override public String toString() {
-    return "Overlap(" + toBasicString() + ")";
+    return numeral + " \u2208 " + unit + " \u2229 " + extra.unit;
   }
 
   @Override public boolean equals(Object o) {

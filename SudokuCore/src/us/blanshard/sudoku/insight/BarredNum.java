@@ -73,4 +73,8 @@ public class BarredNum extends Insight.Atom {
   @Override public int hashCode() {
     return Objects.hashCode(unit, numeral);
   }
+
+  @Override public String toString() {
+    return numeral + " \u2209 " + unit;  // not-element-of
+  }
 }
