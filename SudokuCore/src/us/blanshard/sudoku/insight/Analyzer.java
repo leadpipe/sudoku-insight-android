@@ -61,9 +61,6 @@ public class Analyzer {
    * time-consuming operation; if run as a background thread it can be stopped
    * early by interrupting the thread.
    *
-   * <p> The insights returned are all "consequential": either errors or
-   * assignments, either direct or indirect via Implications.
-   *
    * <p> Any {@link Implication}s returned will have elimination-only insights
    * as antecedents, and these may well include insights that have nothing to do
    * with the consequent. Call {@link #minimizeImplication} to squeeze out
@@ -75,7 +72,7 @@ public class Analyzer {
     GridMarks gridMarks = new GridMarks(grid);
 
     try {
-      findInsights(gridMarks, callback, Sets.<Insight>newHashSet());
+      findInsights(gridMarks, callback, null, true);
       complete = true;
 
     } catch (InterruptedException e) {
@@ -94,7 +91,8 @@ public class Analyzer {
     return minimizeImplication(new GridMarks(grid), implication);
   }
 
-  private static void findInsights(GridMarks gridMarks, Callback callback, Set<Insight> index)
+  private static void findInsights(
+      GridMarks gridMarks, Callback callback, @Nullable Set<Insight> index, boolean addElims)
       throws InterruptedException {
 
     Collector collector = new Collector(callback, index, false);
@@ -109,7 +107,7 @@ public class Analyzer {
     findSingletonNumerals(gridMarks, collector);
     checkInterruption();
 
-    Collector elims = new Collector(null, index, true);
+    Collector elims = new Collector(addElims ? callback : null, index, true);
 
     findOverlaps(gridMarks, elims);
     checkInterruption();
@@ -124,7 +122,7 @@ public class Analyzer {
   private static void findImplications(GridMarks gridMarks, Collector elims, Callback callback) throws InterruptedException {
 
     Collector collector = new Collector(null, elims.index, true);
-    findInsights(gridMarks.toBuilder().apply(elims.list).build(), collector, elims.index);
+    findInsights(gridMarks.toBuilder().apply(elims.list).build(), collector, elims.index, false);
 
     for (Insight insight : collector.list)
       callback.take(new Implication(elims.list, insight));
@@ -135,9 +133,9 @@ public class Analyzer {
     final Set<Insight> index;
     @Nullable final List<Insight> list;
 
-    Collector(@Nullable Callback delegate, Set<Insight> index, boolean makeList) {
+    Collector(@Nullable Callback delegate, @Nullable Set<Insight> index, boolean makeList) {
       this.delegate = delegate;
-      this.index = index;
+      this.index = index == null ? Sets.<Insight>newHashSet() : Sets.newHashSet(index);
       this.list = makeList ? Lists.<Insight>newArrayList() : null;
     }
 
