@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 import us.blanshard.sudoku.android.SudokuView.OnMoveListener;
+import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.game.CommandException;
@@ -24,6 +25,8 @@ import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.Sudoku.State;
 import us.blanshard.sudoku.game.UndoStack;
+import us.blanshard.sudoku.insight.Analyzer;
+import us.blanshard.sudoku.insight.Insight;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -51,6 +54,7 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
   private ViewGroup mControls;
   private ViewGroup mPauseControls;
   private TextView mTimer;
+  private TextView mInsightsText;
   private Database.Game mDbGame;
   private Sudoku mGame;
   private final Sudoku.Registry mRegistry = Sudoku.newRegistry();
@@ -59,6 +63,8 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
   private UndoStack mUndoStack = new UndoStack();
   private boolean mRunning;
   private boolean mForward;
+  private Analyze mAnalyze;
+  private List<Insight> mInsights;
 
   private final Runnable cycler = new Runnable() {
     @Override public void run() {
@@ -83,6 +89,7 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
     mControls = (ViewGroup) findViewById(R.id.replay_controls);
     mPauseControls = (ViewGroup) findViewById(R.id.replay_pause_controls);
     mTimer = (TextView) findViewById(R.id.timer);
+    mInsightsText = (TextView) findViewById(R.id.insights);
 
     mReplayView.setOnMoveListener(this);
     setUpButton(R.id.play);
@@ -118,6 +125,12 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
     mHistoryPosition = 0;
     Button play = (Button) findViewById(R.id.play);
     play.performClick();
+  }
+
+  void setInsights(List<Insight> insights) {
+    mInsights = insights;
+    mInsightsText.setText(insights.toString());
+    mAnalyze = null;
   }
 
   @Override public void onClick(View v) {
@@ -179,6 +192,9 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
           updateTrail(move.trailId);
         } else updateTrail(-1);
         mTimer.setText(time);
+        if (mAnalyze != null) mAnalyze.interrupt();
+        mAnalyze = new Analyze(this);
+        mAnalyze.execute(mReplayView.getInputState().getGrid());
       } else {
         Button pause = (Button) findViewById(R.id.pause);
         pause.performClick();
@@ -220,6 +236,52 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
 
     @Override protected void onPostExecute(ReplayActivity activity, Database.Game game) {
       activity.setGame(game);
+    }
+  }
+
+  private static class Analyze extends WorkerFragment.ActivityTask<
+      ReplayActivity, Grid, Void, List<Insight>> {
+    private Thread mThread;
+    private boolean mInterrupted;
+
+    Analyze(ReplayActivity activity) {
+      super(activity);
+    }
+
+    public synchronized void interrupt() {
+      mInterrupted = true;
+      if (mThread != null) mThread.interrupt();
+    }
+
+    @Override protected List<Insight> doInBackground(Grid... params) {
+      final List<Insight> answer = Lists.newArrayList();
+      setUpInterrupt();
+      try {
+        boolean done = Analyzer.analyze(params[0], new Analyzer.Callback() {
+          @Override public void take(Insight insight) {
+            answer.add(insight);
+          }
+        });
+        if (!done)
+          answer.add(null); // mark the interruption
+      } finally {
+        tearDownInterrupt();
+      }
+      return answer;
+    }
+
+    private synchronized void setUpInterrupt() {
+      mThread = Thread.currentThread();
+      if (mInterrupted) mThread.interrupt();
+    }
+
+    private synchronized void tearDownInterrupt() {
+      mThread = null;
+      Thread.interrupted();
+    }
+
+    @Override protected void onPostExecute(ReplayActivity activity, List<Insight> insights) {
+      activity.setInsights(insights);
     }
   }
 }
