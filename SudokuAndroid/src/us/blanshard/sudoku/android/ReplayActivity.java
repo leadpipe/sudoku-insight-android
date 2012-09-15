@@ -15,17 +15,16 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import us.blanshard.sudoku.android.SudokuView.OnMoveListener;
+import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.game.CommandException;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.Sudoku;
-import us.blanshard.sudoku.game.Sudoku.State;
 import us.blanshard.sudoku.game.UndoStack;
 import us.blanshard.sudoku.insight.Analyzer;
+import us.blanshard.sudoku.insight.Implication;
 import us.blanshard.sudoku.insight.Insight;
 
 import android.graphics.Color;
@@ -36,18 +35,22 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 
 import org.json.JSONException;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.ListIterator;
 
 
 /**
  * @author Luke Blanshard
  */
-public class ReplayActivity extends ActivityBase implements OnMoveListener, View.OnClickListener {
+public class ReplayActivity extends ActivityBase implements View.OnClickListener, ReplayView.OnSelectListener {
   private static final String TAG = "ReplayActivity";
   private static final long CYCLE_MILLIS = 500;
   private ReplayView mReplayView;
@@ -55,7 +58,6 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
   private ViewGroup mPauseControls;
   private TextView mTimer;
   private TextView mInsightsText;
-  private Database.Game mDbGame;
   private Sudoku mGame;
   private final Sudoku.Registry mRegistry = Sudoku.newRegistry();
   private List<Move> mHistory;
@@ -64,7 +66,8 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
   private boolean mRunning;
   private boolean mForward;
   private Analyze mAnalyze;
-  private List<Insight> mInsights;
+  private ListMultimap<Location, Insight> mAssignments = ArrayListMultimap.create();
+  private Collection<Insight> mErrors = Lists.newArrayList();
 
   private final Runnable cycler = new Runnable() {
     @Override public void run() {
@@ -91,7 +94,8 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
     mTimer = (TextView) findViewById(R.id.timer);
     mInsightsText = (TextView) findViewById(R.id.insights);
 
-    mReplayView.setOnMoveListener(this);
+    mReplayView.setOnSelectListener(this);
+
     setUpButton(R.id.play);
     setUpButton(R.id.pause);
     setUpButton(R.id.back);
@@ -112,7 +116,6 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
   }
 
   void setGame(Database.Game dbGame) {
-    mDbGame = dbGame;
     mGame = new Sudoku(dbGame.puzzle, mRegistry).resume();
     mReplayView.setGame(mGame);
     mReplayView.setEditable(false);
@@ -128,8 +131,17 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
   }
 
   void setInsights(List<Insight> insights) {
-    mInsights = insights;
-    mInsightsText.setText(insights.toString());
+    mAssignments.clear();
+    mErrors.clear();
+    for (Insight insight : insights) {
+      if (insight == null) continue;
+      if (insight.isError()) mErrors.add(insight);
+      else for (Assignment assignment : insight.getAssignments())
+        mAssignments.put(assignment.location, insight);
+    }
+    mInsightsText.setText(
+        mAssignments.keySet().size() + " assignments, " + mErrors.size() + " errors");
+    mReplayView.setSelectable(mAssignments.keySet());
     mAnalyze = null;
   }
 
@@ -158,6 +170,19 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
         break;
     }
   }
+
+  @Override public void onSelect(Location loc) {
+    List<Insight> insights = mAssignments.get(loc);
+    for (ListIterator<Insight> it = insights.listIterator(); it.hasNext(); ) {
+      Insight insight = it.next();
+      if (insight instanceof Implication) {
+        Grid grid = mReplayView.getInputState().getGrid();
+        it.set(Analyzer.minimizeImplication(grid, (Implication) insight));
+      }
+    }
+    mInsightsText.setText(insights.toString());
+  }
+
 
   void stepReplay(boolean evenIfNotRunning) {
     if (mRunning || evenIfNotRunning) {
@@ -192,7 +217,8 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
           updateTrail(move.trailId);
         } else updateTrail(-1);
         mTimer.setText(time);
-        if (mAnalyze != null) mAnalyze.interrupt();
+        if (mAnalyze == null) mInsightsText.setText("...working...");
+        else mAnalyze.interrupt();
         mAnalyze = new Analyze(this);
         mAnalyze.execute(mReplayView.getInputState().getGrid());
       } else {
@@ -212,11 +238,6 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
       mReplayView.setTrails(trails);
       mReplayView.setTrailActive(isTrail);
     }
-  }
-
-  @Override public void onMove(State state, Location loc, Numeral num) {
-    state.set(loc, num);
-    mReplayView.invalidateLocation(loc);
   }
 
   private static class FetchGame extends WorkerFragment.ActivityTask<
@@ -239,18 +260,34 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
     }
   }
 
-  private static class Analyze extends WorkerFragment.ActivityTask<
-      ReplayActivity, Grid, Void, List<Insight>> {
+  private abstract static class Interruptible<I, P, O> extends WorkerFragment.ActivityTask<ReplayActivity, I, P, O> {
     private Thread mThread;
     private boolean mInterrupted;
 
-    Analyze(ReplayActivity activity) {
+    Interruptible(ReplayActivity activity) {
       super(activity);
     }
 
     public synchronized void interrupt() {
       mInterrupted = true;
       if (mThread != null) mThread.interrupt();
+    }
+
+    protected synchronized void setUpInterrupt() {
+      mThread = Thread.currentThread();
+      if (mInterrupted) mThread.interrupt();
+    }
+
+    protected synchronized void tearDownInterrupt() {
+      mThread = null;
+      Thread.interrupted();
+    }
+  }
+
+  private static class Analyze extends Interruptible<Grid, Void, List<Insight>> {
+
+    Analyze(ReplayActivity activity) {
+      super(activity);
     }
 
     @Override protected List<Insight> doInBackground(Grid... params) {
@@ -268,16 +305,6 @@ public class ReplayActivity extends ActivityBase implements OnMoveListener, View
         tearDownInterrupt();
       }
       return answer;
-    }
-
-    private synchronized void setUpInterrupt() {
-      mThread = Thread.currentThread();
-      if (mInterrupted) mThread.interrupt();
-    }
-
-    private synchronized void tearDownInterrupt() {
-      mThread = null;
-      Thread.interrupted();
     }
 
     @Override protected void onPostExecute(ReplayActivity activity, List<Insight> insights) {

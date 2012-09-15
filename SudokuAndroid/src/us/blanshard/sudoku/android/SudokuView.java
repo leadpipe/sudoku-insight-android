@@ -69,11 +69,11 @@ public class SudokuView extends View {
   private boolean mTrailActive;
 
   private int mThickLineWidth = NORMAL_THICK_LINE_WIDTH;
-  private int mSquareSize;
+  protected int mSquareSize;
   private float mClockRadius;
-  private int[] mOffsetsX;
-  private int[] mOffsetsY;
-  private final Paint mPaint = new Paint();
+  protected int[] mOffsetsX;
+  protected int[] mOffsetsY;
+  protected final Paint mPaint = new Paint();
 
   private Sudoku.State mState;
   private int mPointerId = INVALID_POINTER_ID;
@@ -212,7 +212,7 @@ public class SudokuView extends View {
         : NORMAL_THICK_LINE_WIDTH;
     mSquareSize = (size - 4 * mThickLineWidth - 6 * THIN_LINE_WIDTH) / 9;
     mClockRadius = (float) Math.max(mSquareSize * CLOCK_RADIUS_FACTOR,
-                                    getResources().getDisplayMetrics().density * CLOCK_RADIUS_DP);
+        getResources().getDisplayMetrics().density * CLOCK_RADIUS_DP);
 
     int sizePlus = THIN_LINE_WIDTH + mSquareSize;
     int blockSize = mThickLineWidth + 2 * sizePlus + mSquareSize;
@@ -467,7 +467,7 @@ public class SudokuView extends View {
     return true;
   }
 
-  private Location getLocation(float x, float y) {
+  protected Location getLocation(float x, float y) {
     int xi = findGridIndex(x, mOffsetsX);
     int yi = findGridIndex(y, mOffsetsY);
     if (xi < 0 || yi < 0 || xi >= 9 || yi >= 9)
