@@ -51,7 +51,26 @@ END
    - use GUID to identify the installation
    - allow login using Google ID to keep different installations from generating the same puzzles
 ** TODO Add a title for the replay page
-** TODO Show insights during replay (rudimentary)
+** DONE Show insights during replay (rudimentary)
+** TODO Graphical display of insights (rudimentary)
+   - when paused:
+     - light up all locations with implied moves; on tap, list the insights
+     - also light up all errors: single locations, units, or the actual conflicts
+     - special highlight for the next assigned location (maybe it's just selected first)
+   - when running:
+     - list the insights for the next move
+** TODO Figure out how to find, show productive trailheads
+** TODO Graphical display of insights (animation)
+   - when running, animate first relevant insight for the next move
+   - when paused, animate on tap
+   - how to animate:
+     - forced loc: outline unit, illustrate why all the other locations can't
+       contain the numeral, animating elims as needed
+     - forced num: run through the numerals, illustrating why all but one can't
+       be in the location, animating elims as needed
+** TODO Allow exploration in replay
+   - on long click (?) apply insight: allow deviation from the history
+** TODO Speed up replay playback for "clear" moves
 ** TODO Figure out why the progress indicator stops
    - Damn guava splitter static initialization is one reason
    - But can't be the only thing, or probably even the main one
