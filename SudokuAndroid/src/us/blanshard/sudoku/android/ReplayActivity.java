@@ -44,7 +44,6 @@ import org.json.JSONException;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.ListIterator;
 
 
 /**
@@ -173,13 +172,6 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
   @Override public void onSelect(Location loc) {
     List<Insight> insights = mAssignments.get(loc);
-    for (ListIterator<Insight> it = insights.listIterator(); it.hasNext(); ) {
-      Insight insight = it.next();
-      if (insight instanceof Implication) {
-        Grid grid = mReplayView.getInputState().getGrid();
-        it.set(Analyzer.minimizeImplication(grid, (Implication) insight));
-      }
-    }
     mInsightsText.setText(insights.toString());
   }
 
@@ -290,12 +282,14 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       super(activity);
     }
 
-    @Override protected List<Insight> doInBackground(Grid... params) {
+    @Override protected List<Insight> doInBackground(final Grid... params) {
       final List<Insight> answer = Lists.newArrayList();
       setUpInterrupt();
       try {
-        boolean done = Analyzer.analyze(params[0], new Analyzer.Callback() {
+        boolean done = Analyzer.analyze(params[0], false, new Analyzer.Callback() {
           @Override public void take(Insight insight) {
+            if (insight instanceof Implication)
+              insight = Analyzer.minimizeImplication(params[0], (Implication) insight);
             answer.add(insight);
           }
         });

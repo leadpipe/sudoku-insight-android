@@ -67,12 +67,20 @@ public class Analyzer {
    * irrelevant antecedents.
    */
   public static boolean analyze(Grid grid, Callback callback) {
+    return analyze(grid, true, callback);
+  }
+
+  /**
+   * Like {@link #analyze(Grid, Callback)}, but lets you tell whether to give
+   * elimination-only insights (overlaps and locked sets) to the callback.
+   */
+  public static boolean analyze(Grid grid, boolean addElims, Callback callback) {
     boolean complete = false;
 
     GridMarks gridMarks = new GridMarks(grid);
 
     try {
-      findInsights(gridMarks, callback, null, true);
+      findInsights(gridMarks, callback, null, addElims);
       complete = true;
 
     } catch (InterruptedException e) {
@@ -85,16 +93,22 @@ public class Analyzer {
    * Slims down the antecedents of the given implication (and recursively if its
    * consequent is also an implication) so it doesn't have any not required to
    * imply the consequent. This only works on implications produced by
-   * {@link #analyze}.
+   * {@link #analyze}. May be stopped early by interrupting the thread, in which
+   * case the original implication is returned.
    */
   public static Implication minimizeImplication(Grid grid, Implication implication) {
-    return minimizeImplication(new GridMarks(grid), implication);
+    try {
+      return minimizeImplication(new GridMarks(grid), implication);
+    } catch (InterruptedException e) {
+      return implication;
+    }
   }
 
   private static void findInsights(
       GridMarks gridMarks, Callback callback, @Nullable Set<Insight> index, boolean addElims)
       throws InterruptedException {
 
+    index = index == null ? Sets.<Insight>newHashSet() : Sets.newHashSet(index);
     Collector collector = new Collector(callback, index, false);
 
     if (gridMarks.hasErrors) {
@@ -135,7 +149,7 @@ public class Analyzer {
 
     Collector(@Nullable Callback delegate, @Nullable Set<Insight> index, boolean makeList) {
       this.delegate = delegate;
-      this.index = index == null ? Sets.<Insight>newHashSet() : Sets.newHashSet(index);
+      this.index = index;
       this.list = makeList ? Lists.<Insight>newArrayList() : null;
     }
 
@@ -147,7 +161,7 @@ public class Analyzer {
     }
   }
 
-  private static Implication minimizeImplication(GridMarks gridMarks, Implication implication) {
+  private static Implication minimizeImplication(GridMarks gridMarks, Implication implication) throws InterruptedException {
     Insight consequent = implication.getConsequent();
     ImmutableList<Insight> allAntecedents = ImmutableList.copyOf(implication.getAntecedents());
     ArrayDeque<Insight> requiredAntecedents = Queues.newArrayDeque();
@@ -159,6 +173,7 @@ public class Analyzer {
     }
 
     for (int index = allAntecedents.size() - 1; index >= 0; --index) {
+      checkInterruption();
       Insight elim = allAntecedents.get(index);
       if (mayBeAntecedentTo(elim, consequent)) {
         GridMarks withoutThisOne = gridMarks.toBuilder()
