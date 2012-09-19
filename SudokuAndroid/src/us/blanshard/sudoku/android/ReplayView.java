@@ -20,6 +20,7 @@ import us.blanshard.sudoku.core.Location;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint.Style;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
@@ -68,13 +69,14 @@ public class ReplayView extends SudokuView {
   @Override protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
     if (mSelectable == null || mSelectable.isEmpty()) return;
+    mPaint.setStyle(Style.STROKE);
+    mPaint.setStrokeWidth(0);
     for (Location loc : mSelectable) {
       mPaint.setColor(loc == mSelected ? Color.BLUE : Color.YELLOW);
-      float half = mSquareSize * 0.5f;
-      float cx = mOffsetsX[loc.column.index] + half;
-      float cy = mOffsetsY[loc.row.index] + half;
-      float radius = half - 1;
-      canvas.drawCircle(cx, cy, radius, mPaint);
+      float s = mSquareSize;
+      float x = mOffsetsX[loc.column.index];
+      float y = mOffsetsY[loc.row.index];
+      canvas.drawRect(x + 1, y + 1, x + s - 1, y + s - 1, mPaint);
     }
   }
 

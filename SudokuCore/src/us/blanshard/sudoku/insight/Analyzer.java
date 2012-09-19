@@ -250,8 +250,9 @@ public class Analyzer {
     return false;
   }
 
+  /** Checks for the current thread being interrupted, without clearing the bit. */
   public static void checkInterruption() throws InterruptedException {
-    if (Thread.interrupted()) throw new InterruptedException();
+    if (Thread.currentThread().isInterrupted()) throw new InterruptedException();
   }
 
   public static void findOverlapsAndSets(GridMarks gridMarks, Callback callback) {

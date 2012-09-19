@@ -29,14 +29,17 @@ import us.blanshard.sudoku.insight.Insight;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 
@@ -65,8 +68,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private boolean mRunning;
   private boolean mForward;
   private Analyze mAnalyze;
-  private ListMultimap<Location, Insight> mAssignments = ArrayListMultimap.create();
-  private Collection<Insight> mErrors = Lists.newArrayList();
+  private Insights mInsights;
 
   private final Runnable cycler = new Runnable() {
     @Override public void run() {
@@ -129,18 +131,9 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     play.performClick();
   }
 
-  void setInsights(List<Insight> insights) {
-    mAssignments.clear();
-    mErrors.clear();
-    for (Insight insight : insights) {
-      if (insight == null) continue;
-      if (insight.isError()) mErrors.add(insight);
-      else for (Assignment assignment : insight.getAssignments())
-        mAssignments.put(assignment.location, insight);
-    }
-    mInsightsText.setText(
-        mAssignments.keySet().size() + " assignments, " + mErrors.size() + " errors");
-    mReplayView.setSelectable(mAssignments.keySet());
+  void setInsights(Insights insights) {
+    mInsights = insights;
+    mReplayView.setSelectable(insights.assignments.keySet());
     mAnalyze = null;
   }
 
@@ -171,10 +164,9 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   }
 
   @Override public void onSelect(Location loc) {
-    List<Insight> insights = mAssignments.get(loc);
-    mInsightsText.setText(insights.toString());
+    List<Insight> insights = mInsights.assignments.get(loc);
+    mInsightsText.setText(Html.fromHtml(Joiner.on("<br>").join(insights)));
   }
-
 
   void stepReplay(boolean evenIfNotRunning) {
     if (mRunning || evenIfNotRunning) {
@@ -203,14 +195,16 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       }
       if (worked) {
         String time = "";
+        Location loc = null;
         if (mHistoryPosition > 0) {
           Move move = mHistory.get(mHistoryPosition - 1);
           time = ToText.elapsedTime(move.timestamp);
           updateTrail(move.trailId);
+          if (move instanceof Move.Set) loc = move.getLocation();
         } else updateTrail(-1);
         mTimer.setText(time);
-        if (mAnalyze == null) mInsightsText.setText("...working...");
-        else mAnalyze.interrupt();
+        if (mAnalyze == null && loc != null) mReplayView.setSelected(loc);
+        if (mAnalyze != null) mAnalyze.interrupt();
         mAnalyze = new Analyze(this);
         mAnalyze.execute(mReplayView.getInputState().getGrid());
       } else {
@@ -252,6 +246,12 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     }
   }
 
+  private static class Insights {
+    final ListMultimap<Location, Insight> assignments = ArrayListMultimap.create();
+    final Collection<Insight> errors = Lists.newArrayList();
+    boolean interrupted;
+  }
+
   private abstract static class Interruptible<I, P, O> extends WorkerFragment.ActivityTask<ReplayActivity, I, P, O> {
     private Thread mThread;
     private boolean mInterrupted;
@@ -276,32 +276,37 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     }
   }
 
-  private static class Analyze extends Interruptible<Grid, Void, List<Insight>> {
+  private static class Analyze extends Interruptible<Grid, Void, Insights> {
 
     Analyze(ReplayActivity activity) {
       super(activity);
     }
 
-    @Override protected List<Insight> doInBackground(final Grid... params) {
-      final List<Insight> answer = Lists.newArrayList();
+    @Override protected Insights doInBackground(final Grid... params) {
+      final Insights answer = new Insights();
       setUpInterrupt();
       try {
         boolean done = Analyzer.analyze(params[0], false, new Analyzer.Callback() {
           @Override public void take(Insight insight) {
-            if (insight instanceof Implication)
+            if (insight instanceof Implication
+                && (insight.isError() || !answer.assignments.containsKey(
+                    Iterables.getFirst(insight.getAssignments(), null).location))) {
               insight = Analyzer.minimizeImplication(params[0], (Implication) insight);
-            answer.add(insight);
+            }
+            if (insight.isError()) answer.errors.add(insight);
+            else for (Assignment assignment : insight.getAssignments())
+                answer.assignments.put(assignment.location, insight);
           }
         });
         if (!done)
-          answer.add(null); // mark the interruption
+          answer.interrupted = true;
       } finally {
         tearDownInterrupt();
       }
       return answer;
     }
 
-    @Override protected void onPostExecute(ReplayActivity activity, List<Insight> insights) {
+    @Override protected void onPostExecute(ReplayActivity activity, Insights insights) {
       activity.setInsights(insights);
     }
   }
