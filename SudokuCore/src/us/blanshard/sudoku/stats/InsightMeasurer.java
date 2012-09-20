@@ -33,18 +33,14 @@ import us.blanshard.sudoku.insight.GridMarks;
 import us.blanshard.sudoku.insight.Implication;
 import us.blanshard.sudoku.insight.Insight;
 
-import com.google.common.base.Functions;
-import com.google.common.base.Joiner;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.io.BufferedReader;
@@ -277,9 +273,8 @@ public class InsightMeasurer implements Runnable {
           while (nub instanceof Implication)
             nub = ((Implication) nub).getConsequent();
           errors.put(nub, insight);
-        } else {
-          for (Assignment assignment : insight.getAssignments())
-            assignments.put(assignment, insight);
+        } else if (insight.isAssignment()) {
+          assignments.put(insight.getAssignment(), insight);
         }
       }
     }
@@ -384,8 +379,8 @@ public class InsightMeasurer implements Runnable {
       }
 
       if (universe.size() > 20) {
-        System.err.printf("Checking all combinations of %d elims for %s (%s)%n",
-                          universe.size(), consequent, consequent.getAtoms());
+        System.err.printf("Checking all combinations of %d elims for %s%n",
+                          universe.size(), consequent);
       }
 
       // Then find the first combination of eliminations from that universe that
@@ -408,9 +403,7 @@ public class InsightMeasurer implements Runnable {
 
     private void insightSeen(Insight insight, long at) {
       long arrival = insightArrivals.remove(insight);
-      String atoms = Joiner.on('|').join(Ordering.natural().sortedCopy(
-          Iterables.transform(insight.getAtoms(), Functions.toStringFunction())));
-      out.printf("%s\t%d%n", atoms, at - arrival);
+      out.printf("%s\t%d%n", insight, at - arrival);
       out.flush();
     }
   }

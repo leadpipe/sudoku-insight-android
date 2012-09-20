@@ -24,9 +24,6 @@ import us.blanshard.sudoku.core.Numeral;
 
 import com.google.common.base.Objects;
 
-import java.util.Collection;
-import java.util.Collections;
-
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -36,7 +33,7 @@ import javax.annotation.concurrent.Immutable;
  * @author Luke Blanshard
  */
 @Immutable
-public class ForcedNum extends Insight.Atom {
+public class ForcedNum extends Insight {
   private final Location location;
   private final Numeral numeral;
 
@@ -54,8 +51,8 @@ public class ForcedNum extends Insight.Atom {
     return numeral;
   }
 
-  @Override public Collection<Assignment> getAssignments() {
-    return Collections.singleton(Assignment.of(location, numeral));
+  @Override public Assignment getAssignment() {
+    return Assignment.of(location, numeral);
   }
 
   @Override public boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder) {

@@ -59,11 +59,11 @@ public class ReplayView extends SudokuView {
   }
 
   public void setSelected(Location loc) {
-    if (mSelectable != null && mSelectable.contains(loc)) {
-      mSelected = loc;
-      if (mOnSelectListener != null) mOnSelectListener.onSelect(loc);
-      invalidateLocation(loc);
-    }
+    Location old = mSelected;
+    mSelected = loc;
+    if (mOnSelectListener != null) mOnSelectListener.onSelect(loc);
+    if (old != null) invalidateLocation(old);
+    if (loc != null) invalidateLocation(loc);
   }
 
   @Override protected void onDraw(Canvas canvas) {
@@ -71,7 +71,8 @@ public class ReplayView extends SudokuView {
     if (mSelectable == null || mSelectable.isEmpty()) return;
     mPaint.setStyle(Style.STROKE);
     mPaint.setStrokeWidth(0);
-    for (Location loc : mSelectable) {
+    for (Location loc : Location.ALL) {
+      if (loc != mSelected && !mSelectable.contains(loc)) continue;
       mPaint.setColor(loc == mSelected ? Color.BLUE : Color.YELLOW);
       float s = mSquareSize;
       float x = mOffsetsX[loc.column.index];
@@ -86,7 +87,9 @@ public class ReplayView extends SudokuView {
       case MotionEvent.ACTION_POINTER_DOWN:
         int index = event.getActionIndex();
         float x = event.getX(index), y = event.getY(index);
-        setSelected(getLocation(x, y));
+        Location loc = getLocation(x, y);
+        if (mSelectable != null && mSelectable.contains(loc))
+          setSelected(loc);
     }
     return true;
   }

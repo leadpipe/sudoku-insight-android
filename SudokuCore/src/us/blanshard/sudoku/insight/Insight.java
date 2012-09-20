@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 
+import javax.annotation.Nullable;
+
 /**
  * A fact about a Sudoku board.  This may be a move implied by the current state
  * of the board, an impossible or illegal state, or one of several other
@@ -44,26 +46,23 @@ public abstract class Insight {
     FORCED_NUMERAL,
     OVERLAP,
     LOCKED_SET,
-    IMPLICATION,
-    DISPROVED_ASSIGNMENT,
-    ALL_TRAILS_ASSIGNMENTS;
+    IMPLICATION;
 
     private static final EnumSet<Type> ERRORS =
         EnumSet.of(CONFLICT, BARRED_LOCATION, BARRED_NUMERAL);
-
-    private static final EnumSet<Type> MOLECULES =
-        EnumSet.of(IMPLICATION, DISPROVED_ASSIGNMENT, ALL_TRAILS_ASSIGNMENTS);
+    private static final EnumSet<Type> ASSIGNMENTS = EnumSet.of(FORCED_LOCATION, FORCED_NUMERAL);
+    private static final EnumSet<Type> ELIMINATIONS = EnumSet.of(OVERLAP, LOCKED_SET);
 
     public boolean isError() {
       return ERRORS.contains(this);
     }
 
-    public boolean isAtom() {
-      return !isMolecule();
+    public boolean isAssignment() {
+      return ASSIGNMENTS.contains(this);
     }
 
-    public boolean isMolecule() {
-      return MOLECULES.contains(this);
+    public boolean isElimination() {
+      return ELIMINATIONS.contains(this);
     }
   }
 
@@ -82,9 +81,19 @@ public abstract class Insight {
     return type.isError();
   }
 
-  /** The assignments this insight implies. */
-  public Collection<Assignment> getAssignments() {
-    return Collections.<Assignment>emptySet();
+  /** Tells whether this insight implies an assignment on the board. */
+  public boolean isAssignment() {
+    return type.isAssignment();
+  }
+
+  /** The assignment this insight implies, if any. */
+  @Nullable public Assignment getAssignment() {
+    return null;
+  }
+
+  /** Tells whether this insight implies possible assignments can be eliminated. */
+  public boolean isElimination() {
+    return type.isElimination();
   }
 
   /** The assignments this insight disproves. */
@@ -103,29 +112,4 @@ public abstract class Insight {
 
   /** Tells whether this insight is related to the given elimination. */
   public abstract boolean mightBeRevealedByElimination(Assignment elimination);
-
-  /** The constituent parts of this insight. */
-  public abstract Collection<Atom> getAtoms();
-
-  /**
-   * An indivisible insight.
-   */
-  public abstract static class Atom extends Insight {
-    protected Atom(Type type) {
-      super(type);
-    }
-
-    @Override public Collection<Atom> getAtoms() {
-      return Collections.singleton(this);
-    }
-  }
-
-  /**
-   * An insight with multiple parts.
-   */
-  public abstract static class Molecule extends Insight {
-    protected Molecule(Type type) {
-      super(type);
-    }
-  }
 }

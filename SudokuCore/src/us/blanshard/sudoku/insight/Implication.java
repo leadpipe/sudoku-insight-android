@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -36,7 +37,7 @@ import javax.annotation.concurrent.Immutable;
  * @author Luke Blanshard
  */
 @Immutable
-public class Implication extends Insight.Molecule {
+public class Implication extends Insight {
   private final ImmutableCollection<Insight> antecedents;
   private final Insight consequent;
 
@@ -51,8 +52,16 @@ public class Implication extends Insight.Molecule {
     return consequent.isError();
   }
 
-  @Override public Collection<Assignment> getAssignments() {
-    return consequent.getAssignments();
+  @Override public boolean isAssignment() {
+    return consequent.isAssignment();
+  }
+
+  @Override @Nullable public Assignment getAssignment() {
+    return consequent.getAssignment();
+  }
+
+  @Override public boolean isElimination() {
+    return consequent.isElimination();
   }
 
   @Override public Collection<Assignment> getEliminations() {
@@ -88,14 +97,6 @@ public class Implication extends Insight.Molecule {
     for (Insight insight : antecedents)
       if (insight.mightBeRevealedByElimination(elimination)) return true;
     return consequent.mightBeRevealedByElimination(elimination);
-  }
-
-  @Override public Collection<Insight.Atom> getAtoms() {
-    ImmutableList.Builder<Insight.Atom> builder = ImmutableList.builder();
-    for (Insight i : antecedents)
-      builder.addAll(i.getAtoms());
-    builder.addAll(consequent.getAtoms());
-    return builder.build();
   }
 
   @Override public boolean equals(Object o) {

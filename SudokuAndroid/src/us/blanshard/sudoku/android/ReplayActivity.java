@@ -15,7 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.game.CommandException;
@@ -29,17 +28,14 @@ import us.blanshard.sudoku.insight.Insight;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 
@@ -47,6 +43,8 @@ import org.json.JSONException;
 
 import java.util.Collection;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 
 /**
@@ -129,6 +127,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     mHistoryPosition = 0;
     Button play = (Button) findViewById(R.id.play);
     play.performClick();
+    startAnalysis();
   }
 
   void setInsights(Insights insights) {
@@ -164,8 +163,13 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   }
 
   @Override public void onSelect(Location loc) {
-    List<Insight> insights = mInsights.assignments.get(loc);
-    mInsightsText.setText(Html.fromHtml(Joiner.on("<br>").join(insights)));
+    if (mInsights != null) {
+      StringBuilder sb = new StringBuilder();
+      if (mInsights.assignments.containsKey(loc))
+        sb.append(mInsights.assignments.get(loc).get(0)).append('\n');
+      if (!mInsights.errors.isEmpty()) sb.append("Errors: ").append(mInsights.errors);
+      mInsightsText.setText(sb.toString());
+    }
   }
 
   void stepReplay(boolean evenIfNotRunning) {
@@ -200,19 +204,29 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           Move move = mHistory.get(mHistoryPosition - 1);
           time = ToText.elapsedTime(move.timestamp);
           updateTrail(move.trailId);
-          if (move instanceof Move.Set) loc = move.getLocation();
+          loc = move.getLocation();
         } else updateTrail(-1);
         mTimer.setText(time);
         if (mAnalyze == null && loc != null) mReplayView.setSelected(loc);
         if (mAnalyze != null) mAnalyze.interrupt();
-        mAnalyze = new Analyze(this);
-        mAnalyze.execute(mReplayView.getInputState().getGrid());
+        startAnalysis();
       } else {
         Button pause = (Button) findViewById(R.id.pause);
         pause.performClick();
       }
     }
     if (mRunning) mReplayView.postDelayed(cycler, CYCLE_MILLIS);
+  }
+
+  @Nullable Location nextLocation() {
+    if (mHistoryPosition < mHistory.size())
+      return mHistory.get(mHistoryPosition).getLocation();
+    return null;
+  }
+
+  private void startAnalysis() {
+    mAnalyze = new Analyze(this);
+    mAnalyze.execute(mReplayView.getInputState().getGrid());
   }
 
   private void updateTrail(int stateId) {
@@ -278,8 +292,11 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
   private static class Analyze extends Interruptible<Grid, Void, Insights> {
 
+    private final Location mTarget;
+
     Analyze(ReplayActivity activity) {
       super(activity);
+      mTarget = activity.mRunning ? activity.nextLocation() : null;
     }
 
     @Override protected Insights doInBackground(final Grid... params) {
@@ -288,14 +305,16 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       try {
         boolean done = Analyzer.analyze(params[0], false, new Analyzer.Callback() {
           @Override public void take(Insight insight) {
+            Location loc = insight.isAssignment() ? insight.getAssignment().location : null;
             if (insight instanceof Implication
-                && (insight.isError() || !answer.assignments.containsKey(
-                    Iterables.getFirst(insight.getAssignments(), null).location))) {
+                && (loc == null || loc == mTarget
+                    || (mTarget == null && !answer.assignments.containsKey(loc)))) {
               insight = Analyzer.minimizeImplication(params[0], (Implication) insight);
             }
-            if (insight.isError()) answer.errors.add(insight);
-            else for (Assignment assignment : insight.getAssignments())
-                answer.assignments.put(assignment.location, insight);
+            if (insight.isError())
+              answer.errors.add(insight);
+            else if (loc == mTarget || mTarget == null)
+              answer.assignments.put(loc, insight);
           }
         });
         if (!done)
