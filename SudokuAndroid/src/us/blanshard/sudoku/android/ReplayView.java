@@ -54,7 +54,6 @@ public class ReplayView extends SudokuView {
 
   public void setSelectable(Set<Location> selectable) {
     mSelectable = selectable;
-    mSelected = null;
     invalidate();
   }
 

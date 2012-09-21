@@ -66,6 +66,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private boolean mRunning;
   private boolean mForward;
   private Analyze mAnalyze;
+  private boolean mAnalyzeInterrupted;
   private Insights mInsights;
 
   private final Runnable cycler = new Runnable() {
@@ -127,13 +128,16 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     mHistoryPosition = 0;
     Button play = (Button) findViewById(R.id.play);
     play.performClick();
-    startAnalysis();
   }
 
   void setInsights(Insights insights) {
     mInsights = insights;
-    mReplayView.setSelectable(insights.assignments.keySet());
     mAnalyze = null;
+    if (mAnalyzeInterrupted) {
+      mAnalyzeInterrupted = false;
+      stepReplay(true);
+    }
+    mReplayView.setSelectable(insights.assignments.keySet());
   }
 
   @Override public void onClick(View v) {
@@ -145,12 +149,14 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mRunning = true;
         mForward = (v.getId() == R.id.play);
         mReplayView.postDelayed(cycler, CYCLE_MILLIS);
+        startAnalysis();
         break;
 
       case R.id.pause:
         mControls.setVisibility(View.VISIBLE);
         mPauseControls.setVisibility(View.GONE);
         mRunning = false;
+        startAnalysis();
         break;
 
       case R.id.next:
@@ -174,6 +180,11 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
   void stepReplay(boolean evenIfNotRunning) {
     if (mRunning || evenIfNotRunning) {
+      if (mAnalyze != null) {
+        mAnalyzeInterrupted = true;
+        mAnalyze.interrupt();
+        return;
+      }
       boolean worked = false;
       if (mForward) {
         if (mHistoryPosition < mHistory.size()) {
@@ -207,8 +218,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           loc = move.getLocation();
         } else updateTrail(-1);
         mTimer.setText(time);
-        if (mAnalyze == null && loc != null) mReplayView.setSelected(loc);
-        if (mAnalyze != null) mAnalyze.interrupt();
+        mReplayView.setSelected(loc);
         startAnalysis();
       } else {
         Button pause = (Button) findViewById(R.id.pause);
