@@ -169,13 +169,13 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   }
 
   @Override public void onSelect(Location loc) {
+    StringBuilder sb = new StringBuilder();
     if (mInsights != null) {
-      StringBuilder sb = new StringBuilder();
       if (mInsights.assignments.containsKey(loc))
         sb.append(mInsights.assignments.get(loc).get(0)).append('\n');
       if (!mInsights.errors.isEmpty()) sb.append("Errors: ").append(mInsights.errors);
-      mInsightsText.setText(sb.toString());
     }
+    mInsightsText.setText(sb.toString());
   }
 
   void stepReplay(boolean evenIfNotRunning) {
@@ -316,7 +316,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         boolean done = Analyzer.analyze(params[0], false, new Analyzer.Callback() {
           @Override public void take(Insight insight) {
             Location loc = insight.isAssignment() ? insight.getAssignment().location : null;
-            if (insight instanceof Implication
+            if (insight instanceof Implication && !Thread.currentThread().isInterrupted()
                 && (loc == null || loc == mTarget
                     || (mTarget == null && !answer.assignments.containsKey(loc)))) {
               insight = Analyzer.minimizeImplication(params[0], (Implication) insight);

@@ -67,7 +67,7 @@ public class ReplayView extends SudokuView {
 
   @Override protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
-    if (mSelectable == null || mSelectable.isEmpty()) return;
+    if (mSelectable == null || mSelectable.isEmpty() && mSelected == null) return;
     mPaint.setStyle(Style.STROKE);
     mPaint.setStrokeWidth(0);
     for (Location loc : Location.ALL) {
