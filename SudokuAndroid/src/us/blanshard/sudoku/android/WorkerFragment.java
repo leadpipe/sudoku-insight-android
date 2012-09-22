@@ -118,9 +118,13 @@ public class WorkerFragment extends Fragment {
         mWorker.mDependentTasks.add(this);
     }
 
-    /** Interrupts the background thread, if possible. */
+    /**
+     * Interrupts the background thread, if possible. Can only be run after
+     * {@link #execute} has been called. If the task hasn't already been
+     * started, this may prevent it from being started.
+     */
     public final void cancel() {
-      if (mFuture != null) mFuture.cancel(true);
+      mFuture.cancel(true);
     }
 
     // Subclass API
