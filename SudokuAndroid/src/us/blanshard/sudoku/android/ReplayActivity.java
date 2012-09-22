@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.game.CommandException;
@@ -41,7 +42,6 @@ import com.google.common.collect.Lists;
 
 import org.json.JSONException;
 
-import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -52,7 +52,8 @@ import javax.annotation.Nullable;
  */
 public class ReplayActivity extends ActivityBase implements View.OnClickListener, ReplayView.OnSelectListener {
   private static final String TAG = "ReplayActivity";
-  private static final long CYCLE_MILLIS = 500;
+  private static final long SET_CYCLE_MILLIS = 500;
+  private static final long CLEAR_CYCLE_MILLIS = 200;
   private ReplayView mReplayView;
   private ViewGroup mControls;
   private ViewGroup mPauseControls;
@@ -66,7 +67,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private boolean mRunning;
   private boolean mForward;
   private Analyze mAnalyze;
-  private boolean mAnalyzeInterrupted;
+  private boolean mAnalysisRanLong;
   private Insights mInsights;
 
   private final Runnable cycler = new Runnable() {
@@ -133,8 +134,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   void setInsights(Insights insights) {
     mInsights = insights;
     mAnalyze = null;
-    if (mAnalyzeInterrupted) {
-      mAnalyzeInterrupted = false;
+    if (mAnalysisRanLong) {
+      mAnalysisRanLong = false;
       stepReplay(true);
     }
     mReplayView.setSelectable(insights.assignments.keySet());
@@ -148,7 +149,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mPauseControls.setVisibility(View.VISIBLE);
         mRunning = true;
         mForward = (v.getId() == R.id.play);
-        mReplayView.postDelayed(cycler, CYCLE_MILLIS);
+        mReplayView.postDelayed(cycler, SET_CYCLE_MILLIS);
         startAnalysis();
         break;
 
@@ -173,7 +174,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     if (mInsights != null) {
       if (mInsights.assignments.containsKey(loc))
         sb.append(mInsights.assignments.get(loc).get(0)).append('\n');
-      if (!mInsights.errors.isEmpty()) sb.append("Errors: ").append(mInsights.errors);
+      if (!mInsights.errors.isEmpty()) sb.append("Error: ").append(mInsights.errors.get(0));
     }
     mInsightsText.setText(sb.toString());
   }
@@ -181,10 +182,11 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   void stepReplay(boolean evenIfNotRunning) {
     if (mRunning || evenIfNotRunning) {
       if (mAnalyze != null) {
-        mAnalyzeInterrupted = true;
-        mAnalyze.interrupt();
+        mAnalysisRanLong = true;
+        maybeCancelAnalysis();
         return;
       }
+
       boolean worked = false;
       if (mForward) {
         if (mHistoryPosition < mHistory.size()) {
@@ -208,6 +210,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           }
         }
       }
+
+      boolean foundInsight = false;
       if (worked) {
         String time = "";
         Location loc = null;
@@ -216,27 +220,41 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           time = ToText.elapsedTime(move.timestamp);
           updateTrail(move.trailId);
           loc = move.getLocation();
+          if (mInsights.errors.isEmpty() && (move instanceof Move.Clear || mInsights.assignments.containsKey(loc)))
+            foundInsight = true;
         } else updateTrail(-1);
         mTimer.setText(time);
         mReplayView.setSelected(loc);
         startAnalysis();
-      } else {
+      }
+
+      if (!worked || !foundInsight) {
         Button pause = (Button) findViewById(R.id.pause);
         pause.performClick();
       }
     }
-    if (mRunning) mReplayView.postDelayed(cycler, CYCLE_MILLIS);
+    if (mRunning) {
+      long cycleMillis = nextAssignment() == null ? CLEAR_CYCLE_MILLIS : SET_CYCLE_MILLIS;
+      mReplayView.postDelayed(cycler, cycleMillis);
+    }
   }
 
-  @Nullable Location nextLocation() {
+  @Nullable Assignment nextAssignment() {
     if (mHistoryPosition < mHistory.size())
-      return mHistory.get(mHistoryPosition).getLocation();
+      return mHistory.get(mHistoryPosition).getAssignment();
     return null;
   }
 
   private void startAnalysis() {
-    mAnalyze = new Analyze(this);
-    mAnalyze.execute(mReplayView.getInputState().getGrid());
+    if (mAnalyze == null) {
+      mAnalyze = new Analyze(this);
+      mAnalyze.execute(mReplayView.getInputState().getGrid());
+    }
+  }
+
+  void maybeCancelAnalysis() {
+    if (mAnalysisRanLong && mAnalyze.mCancelable)
+      mAnalyze.cancel();
   }
 
   private void updateTrail(int stateId) {
@@ -272,67 +290,52 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
   private static class Insights {
     final ListMultimap<Location, Insight> assignments = ArrayListMultimap.create();
-    final Collection<Insight> errors = Lists.newArrayList();
-    boolean interrupted;
+    final List<Insight> errors = Lists.newArrayList();
   }
 
-  private abstract static class Interruptible<I, P, O> extends WorkerFragment.ActivityTask<ReplayActivity, I, P, O> {
-    private Thread mThread;
-    private boolean mInterrupted;
+  private static class Analyze extends WorkerFragment.ActivityTask<ReplayActivity, Grid, Void, Insights> {
 
-    Interruptible(ReplayActivity activity) {
-      super(activity);
-    }
-
-    public synchronized void interrupt() {
-      mInterrupted = true;
-      if (mThread != null) mThread.interrupt();
-    }
-
-    protected synchronized void setUpInterrupt() {
-      mThread = Thread.currentThread();
-      if (mInterrupted) mThread.interrupt();
-    }
-
-    protected synchronized void tearDownInterrupt() {
-      mThread = null;
-      Thread.interrupted();
-    }
-  }
-
-  private static class Analyze extends Interruptible<Grid, Void, Insights> {
-
-    private final Location mTarget;
+    private final Assignment mTarget;
+    boolean mCancelable;
 
     Analyze(ReplayActivity activity) {
       super(activity);
-      mTarget = activity.mRunning ? activity.nextLocation() : null;
+      mTarget = activity.mRunning && activity.mForward ? activity.nextAssignment() : null;
     }
 
     @Override protected Insights doInBackground(final Grid... params) {
       final Insights answer = new Insights();
-      setUpInterrupt();
-      try {
-        boolean done = Analyzer.analyze(params[0], false, new Analyzer.Callback() {
-          @Override public void take(Insight insight) {
-            Location loc = insight.isAssignment() ? insight.getAssignment().location : null;
-            if (insight instanceof Implication && !Thread.currentThread().isInterrupted()
-                && (loc == null || loc == mTarget
-                    || (mTarget == null && !answer.assignments.containsKey(loc)))) {
-              insight = Analyzer.minimizeImplication(params[0], (Implication) insight);
-            }
-            if (insight.isError())
-              answer.errors.add(insight);
-            else if (loc == mTarget || mTarget == null)
-              answer.assignments.put(loc, insight);
+      Analyzer.analyze(params[0], false, new Analyzer.Callback() {
+        private boolean mAiming = mTarget != null;
+        @Override public void take(Insight insight) {
+          Assignment assignment = insight.getAssignment();
+          if (insight instanceof Implication && !Thread.currentThread().isInterrupted()
+              && ((assignment == null && answer.errors.isEmpty())
+                  || assignment.equals(mTarget)
+                  || (mTarget == null && !answer.assignments.containsKey(assignment.location)))) {
+            insight = Analyzer.minimizeImplication(params[0], (Implication) insight);
           }
-        });
-        if (!done)
-          answer.interrupted = true;
-      } finally {
-        tearDownInterrupt();
-      }
+          if (insight.isError()) {
+            answer.errors.add(insight);
+            hit();
+          } else if (mTarget == null || assignment.equals(mTarget)) {
+            answer.assignments.put(assignment.location, insight);
+            hit();
+          }
+        }
+        private void hit() {
+          if (mAiming) {
+            mAiming = false;
+            publishProgress();
+          }
+        }
+      });
       return answer;
+    }
+
+    @Override protected void onProgressUpdate(ReplayActivity activity, Void... values) {
+      mCancelable = true;
+      activity.maybeCancelAnalysis();
     }
 
     @Override protected void onPostExecute(ReplayActivity activity, Insights insights) {

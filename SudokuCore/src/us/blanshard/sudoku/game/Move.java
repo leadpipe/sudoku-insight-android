@@ -19,11 +19,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static us.blanshard.sudoku.game.GameJson.JOINER;
 import static us.blanshard.sudoku.game.GameJson.SPLITTER;
 
+import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 
 import java.util.Iterator;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -65,6 +67,8 @@ public abstract class Move {
 
   public abstract Location getLocation();
 
+  @Nullable public abstract Assignment getAssignment();
+
   @Immutable
   public static class Set extends Move {
     public final Location loc;
@@ -95,6 +99,10 @@ public abstract class Move {
     @Override public Location getLocation() {
       return loc;
     }
+
+    @Override @Nullable public Assignment getAssignment() {
+      return Assignment.of(loc, num);
+    }
   }
 
   @Immutable
@@ -124,6 +132,10 @@ public abstract class Move {
 
     @Override public Location getLocation() {
       return loc;
+    }
+
+    @Override @Nullable public Assignment getAssignment() {
+      return null;
     }
   }
 }

@@ -127,6 +127,11 @@ public class WorkerFragment extends Fragment {
       mFuture.cancel(true);
     }
 
+    /** Tells whether this task was canceled. */
+    public final boolean wasCanceled() {
+      return mFuture != null && mFuture.isCancelled();
+    }
+
     // Subclass API
 
     /**
@@ -185,7 +190,6 @@ public class WorkerFragment extends Fragment {
 
     abstract class Foreground implements Runnable {
       final void runInForeground() {
-        if (mFuture.isCancelled()) return;
         if (getAnchor() == null)
           mWorker.runWhenAttached(this);
         else
