@@ -211,7 +211,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         }
       }
 
-      boolean foundInsight = false;
+      boolean foundInsight = !mForward;  // Don't worry about it if going backwards.
       if (worked) {
         String time = "";
         Location loc = null;
@@ -228,7 +228,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         startAnalysis();
       }
 
-      if (!worked || !foundInsight) {
+      if (mRunning && (!worked || !foundInsight)) {
         Button pause = (Button) findViewById(R.id.pause);
         pause.performClick();
       }
@@ -304,6 +304,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     }
 
     @Override protected Insights doInBackground(final Grid... params) {
+      if (mTarget == null) publishProgress();  // allow cancellation right away
       final Insights answer = new Insights();
       Analyzer.analyze(params[0], false, new Analyzer.Callback() {
         private boolean mAiming = mTarget != null;
@@ -311,8 +312,9 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           Assignment assignment = insight.getAssignment();
           if (insight instanceof Implication && !Thread.currentThread().isInterrupted()
               && ((assignment == null && answer.errors.isEmpty())
-                  || assignment.equals(mTarget)
-                  || (mTarget == null && !answer.assignments.containsKey(assignment.location)))) {
+                  || (assignment != null && assignment.equals(mTarget))
+                  || (assignment != null && mTarget == null
+                      && !answer.assignments.containsKey(assignment.location)))) {
             insight = Analyzer.minimizeImplication(params[0], (Implication) insight);
           }
           if (insight.isError()) {
