@@ -8,14 +8,30 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     >
-
-    <us.blanshard.sudoku.android.ReplayView
-        android:id="@+id/replay_view"
-        android:layout_width="320dp"
-        android:layout_height="320dp"
-        android:padding="20dp"
+    
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        />
+        >
+
+	    <us.blanshard.sudoku.android.ReplayView
+	        android:id="@+id/replay_view"
+	        android:layout_width="320dp"
+	        android:layout_height="320dp"
+	        android:padding="20dp"
+	        />
+	
+	
+	    <ProgressBar
+	        android:id="@+id/progress"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_gravity="center"
+	        android:visibility="gone"
+	        />
+
+    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/replay_controls"

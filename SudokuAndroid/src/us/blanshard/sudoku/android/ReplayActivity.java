@@ -33,6 +33,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -55,6 +56,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private static final long SET_CYCLE_MILLIS = 500;
   private static final long CLEAR_CYCLE_MILLIS = 200;
   private ReplayView mReplayView;
+  private ProgressBar mProgress;
   private ViewGroup mControls;
   private ViewGroup mPauseControls;
   private TextView mTimer;
@@ -90,6 +92,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     setContentView(R.layout.replay);
 
     mReplayView = (ReplayView) findViewById(R.id.replay_view);
+    mProgress = (ProgressBar) findViewById(R.id.progress);
     mControls = (ViewGroup) findViewById(R.id.replay_controls);
     mPauseControls = (ViewGroup) findViewById(R.id.replay_pause_controls);
     mTimer = (TextView) findViewById(R.id.timer);
@@ -134,6 +137,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   void setInsights(Insights insights) {
     mInsights = insights;
     mAnalyze = null;
+    mProgress.setVisibility(View.GONE);
     if (mAnalysisRanLong) {
       mAnalysisRanLong = false;
       stepReplay(true);
@@ -249,6 +253,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     if (mAnalyze == null) {
       mAnalyze = new Analyze(this);
       mAnalyze.execute(mReplayView.getInputState().getGrid());
+      if (!mRunning)
+        mProgress.setVisibility(View.VISIBLE);
     }
   }
 
