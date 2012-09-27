@@ -71,6 +71,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private Analyze mAnalyze;
   private boolean mAnalysisRanLong;
   private Insights mInsights;
+  private boolean mErrors;
 
   private final Runnable cycler = new Runnable() {
     @Override public void run() {
@@ -191,6 +192,19 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         return;
       }
 
+      if (mRunning && mForward) {
+        if (!mErrors && !mInsights.errors.isEmpty()) {
+          mErrors = true;
+          pause();
+          return;
+        }
+        Assignment assignment = nextAssignment();
+        if (assignment != null && !mInsights.assignments.containsKey(assignment.location)) {
+          pause();
+          return;
+        }
+      }
+
       boolean worked = false;
       if (mForward) {
         if (mHistoryPosition < mHistory.size()) {
@@ -215,7 +229,6 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         }
       }
 
-      boolean foundInsight = !mForward;  // Don't worry about it if going backwards.
       if (worked) {
         String time = "";
         Location loc = null;
@@ -224,23 +237,25 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           time = ToText.elapsedTime(move.timestamp);
           updateTrail(move.trailId);
           loc = move.getLocation();
-          if (mInsights.errors.isEmpty() && (move instanceof Move.Clear || mInsights.assignments.containsKey(loc)))
-            foundInsight = true;
         } else updateTrail(-1);
         mTimer.setText(time);
         mReplayView.setSelected(loc);
         startAnalysis();
       }
 
-      if (mRunning && (!worked || !foundInsight)) {
-        Button pause = (Button) findViewById(R.id.pause);
-        pause.performClick();
+      if (mRunning && !worked) {
+        pause();
+        return;
       }
     }
     if (mRunning) {
       long cycleMillis = nextAssignment() == null ? CLEAR_CYCLE_MILLIS : SET_CYCLE_MILLIS;
       mReplayView.postDelayed(cycler, cycleMillis);
     }
+  }
+
+  private void pause() {
+    findViewById(R.id.pause).performClick();
   }
 
   @Nullable Assignment nextAssignment() {
