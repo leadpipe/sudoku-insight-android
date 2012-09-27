@@ -101,6 +101,16 @@ public abstract class Insight {
     return Collections.<Assignment>emptySet();
   }
 
+  /** Returns the "nub" of this insight. */
+  public Insight getNub() {
+    return this;
+  }
+
+  /** Returns the number of levels of implication this insight embodies. */
+  public int getDepth() {
+    return 0;
+  }
+
   /**
    * Applies the assignments and eliminations of this insight to the given
    * builders, returns true if it doesn't uncover any errors.

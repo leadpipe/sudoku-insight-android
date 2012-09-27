@@ -68,6 +68,14 @@ public class Implication extends Insight {
     return consequent.getEliminations();
   }
 
+  @Override public Insight getNub() {
+    return consequent.getNub();
+  }
+
+  @Override public int getDepth() {
+    return 1 + consequent.getDepth();
+  }
+
   public ImmutableCollection<Insight> getAntecedents() {
     return antecedents;
   }
