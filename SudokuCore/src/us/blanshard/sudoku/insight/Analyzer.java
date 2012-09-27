@@ -48,8 +48,7 @@ import javax.annotation.Nullable;
 public class Analyzer {
 
   /**
-   * Called by {@link #analyze} for each insight found and for each phase
-   * traversed.
+   * Called by {@link #analyze} for each insight found.
    */
   public interface Callback {
     void take(Insight insight);
@@ -67,20 +66,12 @@ public class Analyzer {
    * irrelevant antecedents.
    */
   public static boolean analyze(Grid grid, Callback callback) {
-    return analyze(grid, true, callback);
-  }
-
-  /**
-   * Like {@link #analyze(Grid, Callback)}, but lets you tell whether to give
-   * elimination-only insights (overlaps and locked sets) to the callback.
-   */
-  public static boolean analyze(Grid grid, boolean addElims, Callback callback) {
     boolean complete = false;
 
     GridMarks gridMarks = new GridMarks(grid);
 
     try {
-      findInsights(gridMarks, callback, null, addElims);
+      findInsights(gridMarks, callback, null);
       complete = true;
 
     } catch (InterruptedException e) {
@@ -105,41 +96,42 @@ public class Analyzer {
   }
 
   private static void findInsights(
-      GridMarks gridMarks, Callback callback, @Nullable Set<Insight> index, boolean addElims)
+      GridMarks gridMarks, Callback callback, @Nullable Set<Insight> index)
       throws InterruptedException {
 
     index = index == null ? Sets.<Insight>newHashSet() : Sets.newHashSet(index);
-    Collector collector = new Collector(callback, index, false);
+    Collector collector;
 
     if (gridMarks.hasErrors) {
+      collector = new Collector(callback, index, false);
       findErrors(gridMarks, collector);
       checkInterruption();
     }
+
+    collector = new Collector(callback, index, true);
 
     findSingletonLocations(gridMarks, collector);
     checkInterruption();
     findSingletonNumerals(gridMarks, collector);
     checkInterruption();
 
-    Collector elims = new Collector(addElims ? callback : null, index, true);
-
-    findOverlaps(gridMarks, elims);
+    findOverlaps(gridMarks, collector);
     checkInterruption();
-    findSets(gridMarks, elims);
+    findSets(gridMarks, collector);
     checkInterruption();
 
-    if (!elims.list.isEmpty()) {
-      findImplications(gridMarks, elims, callback);
+    if (!collector.list.isEmpty()) {
+      findImplications(gridMarks, collector, callback);
     }
   }
 
-  private static void findImplications(GridMarks gridMarks, Collector elims, Callback callback) throws InterruptedException {
+  private static void findImplications(GridMarks gridMarks, Collector antecedents, Callback callback) throws InterruptedException {
 
-    Collector collector = new Collector(null, elims.index, true);
-    findInsights(gridMarks.toBuilder().apply(elims.list).build(), collector, elims.index, false);
+    Collector collector = new Collector(null, antecedents.index, true);
+    findInsights(gridMarks.toBuilder().apply(antecedents.list).build(), collector, antecedents.index);
 
     for (Insight insight : collector.list)
-      callback.take(new Implication(elims.list, insight));
+      callback.take(new Implication(antecedents.list, insight));
   }
 
   private static class Collector implements Callback {

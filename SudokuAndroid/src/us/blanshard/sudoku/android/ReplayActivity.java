@@ -36,14 +36,14 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.json.JSONException;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -177,8 +177,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     StringBuilder sb = new StringBuilder();
     if (mInsights != null) {
       if (mInsights.assignments.containsKey(loc))
-        sb.append(mInsights.assignments.get(loc).get(0)).append('\n');
-      if (!mInsights.errors.isEmpty()) sb.append("Error: ").append(mInsights.errors.get(0));
+        sb.append(mInsights.assignments.get(loc).insight).append('\n');
+      if (!mInsights.errors.isEmpty()) sb.append("Error: ").append(mInsights.errors.get(0).insight);
     }
     mInsightsText.setText(sb.toString());
   }
@@ -294,9 +294,33 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     }
   }
 
+  private static class InsightMin {
+    volatile Insight insight;
+    boolean minimized;
+
+    InsightMin(Insight insight) {
+      this.insight = insight;
+      this.minimized = !(insight instanceof Implication);
+    }
+
+    boolean minimize(Grid grid) {
+      if (!minimized) {
+        Implication imp = Analyzer.minimizeImplication(grid, (Implication) insight);
+        minimized = (imp != insight);
+        insight = imp;
+      }
+      return minimized;
+    }
+  }
+
   private static class Insights {
-    final ListMultimap<Location, Insight> assignments = ArrayListMultimap.create();
-    final List<Insight> errors = Lists.newArrayList();
+    final Grid grid;
+    final Map<Location, InsightMin> assignments = Maps.newHashMap();
+    final List<InsightMin> errors = Lists.newArrayList();
+
+    Insights(Grid grid) {
+      this.grid = grid;
+    }
   }
 
   private static class Analyze extends WorkerFragment.ActivityTask<ReplayActivity, Grid, Void, Insights> {
@@ -311,24 +335,20 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
     @Override protected Insights doInBackground(final Grid... params) {
       if (mTarget == null) publishProgress();  // allow cancellation right away
-      final Insights answer = new Insights();
-      Analyzer.analyze(params[0], false, new Analyzer.Callback() {
+      final Insights answer = new Insights(params[0]);
+      Analyzer.analyze(answer.grid, new Analyzer.Callback() {
         private boolean mAiming = mTarget != null;
         @Override public void take(Insight insight) {
-          Assignment assignment = insight.getAssignment();
-          if (insight instanceof Implication && !Thread.currentThread().isInterrupted()
-              && ((assignment == null && answer.errors.isEmpty())
-                  || (assignment != null && assignment.equals(mTarget))
-                  || (assignment != null && mTarget == null
-                      && !answer.assignments.containsKey(assignment.location)))) {
-            insight = Analyzer.minimizeImplication(params[0], (Implication) insight);
-          }
           if (insight.isError()) {
-            answer.errors.add(insight);
+            answer.errors.add(new InsightMin(insight));
             hit();
-          } else if (mTarget == null || assignment.equals(mTarget)) {
-            answer.assignments.put(assignment.location, insight);
-            hit();
+          } else if (insight.isAssignment()) {
+            Assignment assignment = insight.getAssignment();
+            if (!answer.assignments.containsKey(assignment.location)
+                && (mTarget == null || assignment.equals(mTarget))) {
+              answer.assignments.put(assignment.location, new InsightMin(insight));
+              hit();
+            }
           }
         }
         private void hit() {
@@ -348,6 +368,22 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
     @Override protected void onPostExecute(ReplayActivity activity, Insights insights) {
       activity.setInsights(insights);
+    }
+  }
+
+  private static class Minimize extends WorkerFragment.ActivityTask<ReplayActivity, InsightMin, Void, Void> {
+    private final Grid mGrid;
+
+    Minimize(ReplayActivity activity, Grid grid) {
+      super(activity);
+      this.mGrid = grid;
+    }
+
+    @Override protected Void doInBackground(InsightMin... params) {
+      for (InsightMin min : params)
+        if (!min.minimize(mGrid))
+          break;
+      return null;
     }
   }
 }
