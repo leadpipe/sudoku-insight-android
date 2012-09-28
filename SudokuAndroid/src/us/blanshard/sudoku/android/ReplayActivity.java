@@ -198,6 +198,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           pause();
           return;
         }
+        mErrors = !mInsights.errors.isEmpty();
         Assignment assignment = nextAssignment();
         if (assignment != null && !mInsights.assignments.containsKey(assignment.location)) {
           pause();
