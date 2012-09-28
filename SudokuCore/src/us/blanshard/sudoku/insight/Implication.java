@@ -120,6 +120,6 @@ public class Implication extends Insight {
   }
 
   @Override public String toString() {
-    return antecedents.toString() + " \u21d2 " + consequent.toString();
+    return consequent + " \u2235 " + antecedents;  // "because" symbol
   }
 }
