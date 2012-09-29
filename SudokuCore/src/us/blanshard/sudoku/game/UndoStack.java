@@ -45,7 +45,7 @@ public class UndoStack {
     this.position = checkPositionIndex(position, commands.size());
   }
 
-  int getPosition() {
+  public int getPosition() {
     return position;
   }
 
