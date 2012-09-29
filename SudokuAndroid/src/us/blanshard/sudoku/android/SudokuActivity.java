@@ -19,7 +19,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 
 public class SudokuActivity extends ActivityBase {
@@ -48,9 +47,7 @@ public class SudokuActivity extends ActivityBase {
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {
     super.onCreateOptionsMenu(menu);
-    MenuInflater inflater = getMenuInflater();
-    inflater.inflate(R.menu.list_item, menu);
-    inflater.inflate(R.menu.common, menu);
+    getMenuInflater().inflate(R.menu.list_item, menu);
     return true;
   }
 
@@ -59,16 +56,6 @@ public class SudokuActivity extends ActivityBase {
       case R.id.menu_list_puzzles: {
         Intent intent = new Intent(this, PuzzleListActivity.class);
         intent.putExtra(Extras.PUZZLE_ID, mBoardFragment.getPuzzleId());
-        startActivity(intent);
-        return true;
-      }
-      case R.id.menu_capture_puzzle: {
-        Intent intent = new Intent(this, CapturePuzzleActivity.class);
-        startActivity(intent);
-        return true;
-      }
-      case R.id.menu_prefs: {
-        Intent intent = new Intent(this, PrefsActivity.class);
         startActivity(intent);
         return true;
       }

@@ -16,7 +16,10 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 
 /**
  * @author Luke Blanshard
@@ -29,5 +32,27 @@ public abstract class ActivityBase extends Activity {
     super.onCreate(savedInstanceState);
     mDb = Database.instance(this);
     mPrefs = Prefs.instance(this);
+  }
+
+  @Override public boolean onCreateOptionsMenu(Menu menu) {
+    super.onCreateOptionsMenu(menu);
+    getMenuInflater().inflate(R.menu.common, menu);
+    return true;
+  }
+
+  @Override public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case R.id.menu_capture_puzzle: {
+        Intent intent = new Intent(this, CapturePuzzleActivity.class);
+        startActivity(intent);
+        return true;
+      }
+      case R.id.menu_prefs: {
+        Intent intent = new Intent(this, PrefsActivity.class);
+        startActivity(intent);
+        return true;
+      }
+    }
+    return super.onOptionsItemSelected(item);
   }
 }
