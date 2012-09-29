@@ -34,6 +34,7 @@
     <string name="dialog_skip_message">Skip this puzzle?</string>
     <string name="hint_capture_source">Where does this puzzle come from?</string>
     <string name="menu_capture_puzzle">Enter a Puzzle</string>
+    <string name="menu_explore">Explore</string>
     <string name="menu_give_up">Give Up</string>
     <string name="menu_list_puzzles">List Puzzles</string>
     <string name="menu_new_trail">New Trail</string>
@@ -41,6 +42,7 @@
     <string name="menu_prefs">Settings</string>
     <string name="menu_redo">Redo</string>
     <string name="menu_redo_to_end">Redo to End</string>
+    <string name="menu_resume_replay">Resume Review</string>
     <string name="menu_skip">Skip This Puzzle</string>
     <string name="menu_sort_by_elapsed">By Elapsed Time</string>
     <string name="menu_sort_by_number">By Number</string>

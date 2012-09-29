@@ -21,6 +21,7 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.game.CommandException;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
+import us.blanshard.sudoku.game.MoveCommand;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.UndoStack;
 import us.blanshard.sudoku.insight.Analyzer;
@@ -29,7 +30,10 @@ import us.blanshard.sudoku.insight.Insight;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.FloatMath;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -69,6 +73,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private UndoStack mUndoStack = new UndoStack();
   private boolean mRunning;
   private boolean mForward;
+  private boolean mExploring;
   private Analyze mAnalyze;
   private boolean mAnalysisRanLong;
   private Insights mInsights;
@@ -79,8 +84,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     sMinSelectableColors = new Integer[7];
     sUnminSelectableColors = new Integer[7];
     for (int i = 0; i < 7; ++i) {
-      float sat = 1f - i * i * 0.02f;
-      sMinSelectableColors[i] = Color.HSVToColor(new float[] {40f, sat, 0.9f});
+      float sat = 1f - FloatMath.sqrt(i) * 0.3f;
+      sMinSelectableColors[i] = Color.HSVToColor(new float[] {90f, sat, 0.9f});
       sUnminSelectableColors[i] = Color.HSVToColor(new float[] {60f, sat, 0.95f});
     }
   }
@@ -103,6 +108,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    getActionBar().setDisplayHomeAsUpEnabled(true);
 
     if (!getIntent().hasExtra(Extras.GAME_ID)) {
       Log.e(TAG, "No game ID");
@@ -143,6 +149,57 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     b.setOnClickListener(this);
   }
 
+  @Override public boolean onCreateOptionsMenu(Menu menu) {
+    super.onCreateOptionsMenu(menu);
+    getMenuInflater().inflate(R.menu.replay, menu);
+    return true;
+  }
+
+  @Override public boolean onPrepareOptionsMenu(Menu menu) {
+    for (int i = 0; i < menu.size(); ++i) {
+      MenuItem item = menu.getItem(i);
+      switch (item.getItemId()) {
+        case R.id.menu_explore:
+          item.setEnabled(!mRunning && !mExploring);
+          break;
+
+        case R.id.menu_resume_replay:
+          item.setEnabled(mExploring);
+          break;
+      }
+    }
+    return super.onPrepareOptionsMenu(menu);
+  }
+
+  @Override public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case android.R.id.home:
+        finish();
+        return true;
+
+      case R.id.menu_explore:
+        mExploring = true;
+        mControls.setVisibility(View.GONE);
+        mPauseControls.setVisibility(View.GONE);
+        mTimer.setVisibility(View.GONE);
+        invalidateOptionsMenu();
+        return true;
+
+      case R.id.menu_resume_replay:
+        mExploring = false;
+        try {
+          while (mUndoStack.getPosition() > mHistoryPosition)
+            mUndoStack.undo();
+        } catch (CommandException e) {
+          Log.e(TAG, "Can't resume replay", e);
+        }
+        mTimer.setVisibility(View.VISIBLE);
+        pause();
+        return true;
+    }
+    return super.onOptionsItemSelected(item);
+  }
+
   void setGame(Database.Game dbGame) {
     mGame = new Sudoku(dbGame.puzzle, mRegistry).resume();
     mReplayView.setGame(mGame);
@@ -181,6 +238,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mForward = (v.getId() == R.id.play);
         mReplayView.postDelayed(cycler, SET_CYCLE_MILLIS);
         startAnalysis();
+        invalidateOptionsMenu();
         break;
 
       case R.id.pause:
@@ -188,6 +246,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mPauseControls.setVisibility(View.GONE);
         mRunning = false;
         startAnalysis();
+        invalidateOptionsMenu();
         break;
 
       case R.id.next:
@@ -202,9 +261,19 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   @Override public void onSelect(Location loc) {
     StringBuilder sb = new StringBuilder();
     if (mInsights != null) {
-      if (mInsights.assignments.containsKey(loc))
-        sb.append(mInsights.assignments.get(loc)).append('\n');
-      if (!mInsights.errors.isEmpty()) sb.append("Error: ").append(mInsights.errors);
+      InsightMin insightMin = mInsights.assignments.get(loc);
+      if (insightMin != null) {
+        sb.append(insightMin).append('\n');
+        if (mExploring) {
+          try {
+            mUndoStack.doCommand(new MoveCommand(mGame.getState(), loc, insightMin.insight.getAssignment().numeral));
+          } catch (CommandException e) {
+            Log.e(TAG, "Couldn't apply insight");
+          }
+          startAnalysis();
+        }
+      }
+      if (!mInsights.errors.isEmpty()) sb.append("Error: ").append(mInsights.errors.get(0));
     }
     mInsightsText.setText(sb.toString());
   }
