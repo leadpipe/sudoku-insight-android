@@ -36,6 +36,7 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -73,9 +74,30 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private Insights mInsights;
   private boolean mErrors;
 
+  private static final Integer[] sMinSelectableColors, sUnminSelectableColors;
+  static {
+    sMinSelectableColors = new Integer[7];
+    sUnminSelectableColors = new Integer[7];
+    for (int i = 0; i < 7; ++i) {
+      float sat = 1f - i * i * 0.02f;
+      sMinSelectableColors[i] = Color.HSVToColor(new float[] {40f, sat, 0.9f});
+      sUnminSelectableColors[i] = Color.HSVToColor(new float[] {60f, sat, 0.95f});
+    }
+  }
+
   private final Runnable cycler = new Runnable() {
     @Override public void run() {
       if (mGame != null) stepReplay(false);
+    }
+  };
+  private final Function<Location, Integer> selectableColors = new Function<Location, Integer>() {
+    @Override public Integer apply(Location loc) {
+      if (mInsights == null) return null;
+      InsightMin insightMin = mInsights.assignments.get(loc);
+      if (insightMin == null) return null;
+      Integer[] colors = insightMin.minimized ? sMinSelectableColors : sUnminSelectableColors;
+      int depth = insightMin.insight.getDepth();
+      return depth >= colors.length ? colors[colors.length - 1] : colors[depth];
     }
   };
 
@@ -100,6 +122,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     mInsightsText = (TextView) findViewById(R.id.insights);
 
     mReplayView.setOnSelectListener(this);
+    mReplayView.setSelectableColorsFunction(selectableColors);
 
     setUpButton(R.id.play);
     setUpButton(R.id.pause);
@@ -139,11 +162,13 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     mInsights = insights;
     mAnalyze = null;
     mProgress.setVisibility(View.GONE);
+    if (!insights.errors.isEmpty())
+      mInsightsText.setText("Error: " + insights.errors);
     if (mAnalysisRanLong) {
       mAnalysisRanLong = false;
       stepReplay(true);
     }
-    mReplayView.setSelectable(insights.assignments.keySet());
+    mReplayView.selectableColorsUpdated();
   }
 
   @Override public void onClick(View v) {
@@ -178,8 +203,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     StringBuilder sb = new StringBuilder();
     if (mInsights != null) {
       if (mInsights.assignments.containsKey(loc))
-        sb.append(mInsights.assignments.get(loc).insight).append('\n');
-      if (!mInsights.errors.isEmpty()) sb.append("Error: ").append(mInsights.errors.get(0).insight);
+        sb.append(mInsights.assignments.get(loc)).append('\n');
+      if (!mInsights.errors.isEmpty()) sb.append("Error: ").append(mInsights.errors);
     }
     mInsightsText.setText(sb.toString());
   }
@@ -312,7 +337,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
   private static class InsightMin {
     volatile Insight insight;
-    boolean minimized;
+    volatile boolean minimized;
 
     InsightMin(Insight insight) {
       this.insight = insight;
@@ -326,6 +351,11 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         insight = imp;
       }
       return minimized;
+    }
+
+    @Override public String toString() {
+      if (minimized) return insight.toString();
+      return insight.getNub() + " \u2235 \u2026 [" + insight.getDepth() + "]";
     }
   }
 

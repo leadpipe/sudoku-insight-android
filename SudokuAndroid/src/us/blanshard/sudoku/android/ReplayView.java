@@ -24,7 +24,8 @@ import android.graphics.Paint.Style;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
-import java.util.Set;
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 
 /**
  * @author Luke Blanshard
@@ -32,7 +33,8 @@ import java.util.Set;
 public class ReplayView extends SudokuView {
 
   private OnSelectListener mOnSelectListener;
-  private Set<Location> mSelectable;
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  private Function<Location, Integer> mSelectableColors = (Function) Functions.constant(null);
   private Location mSelected;
 
   public ReplayView(Context context, AttributeSet attrs) {
@@ -52,8 +54,11 @@ public class ReplayView extends SudokuView {
     mOnSelectListener = listener;
   }
 
-  public void setSelectable(Set<Location> selectable) {
-    mSelectable = selectable;
+  public void setSelectableColorsFunction(Function<Location, Integer> selectableColors) {
+    mSelectableColors = selectableColors;
+  }
+
+  public void selectableColorsUpdated() {
     invalidate();
   }
 
@@ -67,12 +72,12 @@ public class ReplayView extends SudokuView {
 
   @Override protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
-    if (mSelectable == null || mSelectable.isEmpty() && mSelected == null) return;
     mPaint.setStyle(Style.STROKE);
     mPaint.setStrokeWidth(0);
     for (Location loc : Location.ALL) {
-      if (loc != mSelected && !mSelectable.contains(loc)) continue;
-      mPaint.setColor(loc == mSelected ? Color.BLUE : Color.YELLOW);
+      Integer color = mSelectableColors.apply(loc);
+      if (color == null && loc != mSelected) continue;
+      mPaint.setColor(loc == mSelected ? Color.BLUE : color);
       float s = mSquareSize;
       float x = mOffsetsX[loc.column.index];
       float y = mOffsetsY[loc.row.index];
@@ -87,7 +92,7 @@ public class ReplayView extends SudokuView {
         int index = event.getActionIndex();
         float x = event.getX(index), y = event.getY(index);
         Location loc = getLocation(x, y);
-        if (mSelectable != null && mSelectable.contains(loc))
+        if (mSelectableColors.apply(loc) != null)
           setSelected(loc);
     }
     return true;
