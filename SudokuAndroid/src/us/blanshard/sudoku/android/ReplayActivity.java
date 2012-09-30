@@ -79,6 +79,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private boolean mAnalysisRanLong;
   private Insights mInsights;
   private boolean mErrors;
+  private Minimize mMinimize;
 
   private static final Integer[] sMinSelectableColors, sUnminSelectableColors;
   static {
@@ -222,17 +223,27 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     findViewById(R.id.play).performClick();
   }
 
+  @SuppressWarnings("unchecked")  // the varargs of Iterable<...>
   void setInsights(Insights insights) {
     mInsights = insights;
     mAnalyze = null;
+    mMinimize = new Minimize(this, insights.grid);
+    mMinimize.execute(insights.assignments.values(), insights.errors);
     mProgress.setVisibility(View.GONE);
-    if (!insights.errors.isEmpty())
-      mInsightsText.setText("Error: " + insights.errors);
+    if (!mErrors && !insights.errors.isEmpty())
+      mInsightsText.setText("Error: " + insights.errors.get(0));
     if (mAnalysisRanLong) {
       mAnalysisRanLong = false;
       stepReplay(true);
     }
     mReplayView.selectableColorsUpdated();
+  }
+
+  void minimizationComplete(Minimize instance) {
+    if (instance == mMinimize) {
+      mMinimize = null;
+      mReplayView.invalidate();
+    }
   }
 
   @Override public void onClick(View v) {
@@ -393,6 +404,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
   private void startAnalysis() {
     if (mAnalyze == null) {
+      if (mMinimize != null) mMinimize.cancel();
       mAnalyze = new Analyze(this);
       mAnalyze.execute(mReplayView.getInputState().getGrid());
       if (!mRunning)
@@ -447,9 +459,9 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
     boolean minimize(Grid grid) {
       if (!minimized) {
-        Implication imp = Analyzer.minimizeImplication(grid, (Implication) insight);
-        minimized = (imp != insight);
-        insight = imp;
+        Insight min = Analyzer.minimizeImplication(grid, (Implication) insight);
+        minimized = (min != insight);
+        insight = min;
       }
       return minimized;
     }
@@ -462,7 +474,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
   private static class Insights {
     final Grid grid;
-    final Map<Location, InsightMin> assignments = Maps.newHashMap();
+    final Map<Location, InsightMin> assignments = Maps.newLinkedHashMap();
     final List<InsightMin> errors = Lists.newArrayList();
 
     Insights(Grid grid) {
@@ -518,7 +530,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     }
   }
 
-  private static class Minimize extends WorkerFragment.ActivityTask<ReplayActivity, InsightMin, Void, Void> {
+  private static class Minimize extends WorkerFragment.ActivityTask<ReplayActivity, Iterable<InsightMin>, Void, Void> {
     private final Grid mGrid;
 
     Minimize(ReplayActivity activity, Grid grid) {
@@ -526,11 +538,16 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       this.mGrid = grid;
     }
 
-    @Override protected Void doInBackground(InsightMin... params) {
-      for (InsightMin min : params)
-        if (!min.minimize(mGrid))
-          break;
+    @Override protected Void doInBackground(Iterable<InsightMin>... params) {
+      for (Iterable<InsightMin> iterable : params)
+        for (InsightMin min : iterable)
+          if (!min.minimize(mGrid))
+            break;
       return null;
+    }
+
+    @Override protected void onPostExecute(ReplayActivity activity, Void ignored) {
+      activity.minimizationComplete(this);
     }
   }
 }

@@ -83,11 +83,11 @@ public class Analyzer {
   /**
    * Slims down the antecedents of the given implication (and recursively if its
    * consequent is also an implication) so it doesn't have any not required to
-   * imply the consequent. This only works on implications produced by
-   * {@link #analyze}. May be stopped early by interrupting the thread, in which
-   * case the original implication is returned.
+   * imply the consequent. May simply return the consequent if none of its
+   * antecedents are required. May be stopped early by interrupting the thread,
+   * in which case the original implication is returned.
    */
-  public static Implication minimizeImplication(Grid grid, Implication implication) {
+  public static Insight minimizeImplication(Grid grid, Implication implication) {
     try {
       return minimizeImplication(new GridMarks(grid), implication);
     } catch (InterruptedException e) {
@@ -153,7 +153,7 @@ public class Analyzer {
     }
   }
 
-  private static Implication minimizeImplication(GridMarks gridMarks, Implication implication) throws InterruptedException {
+  private static Insight minimizeImplication(GridMarks gridMarks, Implication implication) throws InterruptedException {
     Insight consequent = implication.getConsequent();
     ImmutableList<Insight> allAntecedents = ImmutableList.copyOf(implication.getAntecedents());
     ArrayDeque<Insight> requiredAntecedents = Queues.newArrayDeque();
@@ -166,22 +166,25 @@ public class Analyzer {
 
     for (int index = allAntecedents.size() - 1; index >= 0; --index) {
       checkInterruption();
-      Insight elim = allAntecedents.get(index);
-      if (mayBeAntecedentTo(elim, consequent)) {
+      Insight antecedent = allAntecedents.get(index);
+      if (mayBeAntecedentTo(antecedent, consequent)) {
         GridMarks withoutThisOne = gridMarks.toBuilder()
             .apply(allAntecedents.subList(0, index))
             .apply(requiredAntecedents)
             .build();
         if (!consequent.isImpliedBy(withoutThisOne))
-          requiredAntecedents.addFirst(elim);
+          requiredAntecedents.addFirst(antecedent);
       }
     }
 
+    if (requiredAntecedents.isEmpty())
+      return consequent;
     return new Implication(requiredAntecedents, consequent);
   }
 
-  private static boolean mayBeAntecedentTo(Insight elim, Insight consequent) {
-    for (Assignment assignment : elim.getEliminations())
+  private static boolean mayBeAntecedentTo(Insight antecedent, Insight consequent) {
+    if (antecedent.isAssignment()) return true;
+    for (Assignment assignment : antecedent.getEliminations())
       if (consequent.mightBeRevealedByElimination(assignment))
         return true;
     return false;
