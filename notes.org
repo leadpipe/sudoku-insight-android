@@ -50,7 +50,7 @@ END
 ** TODO Write an appengine app that gathers data from the android app
    - use GUID to identify the installation
    - allow login using Google ID to keep different installations from generating the same puzzles
-** TODO Add a title for the replay page
+** DONE Add a title for the replay page
 ** DONE Show insights during replay (rudimentary)
 ** TODO Graphical display of insights (rudimentary)
    - when paused:
@@ -68,9 +68,8 @@ END
        contain the numeral, animating elims as needed
      - forced num: run through the numerals, illustrating why all but one can't
        be in the location, animating elims as needed
-** TODO Allow exploration in replay
-   - on long click (?) apply insight: allow deviation from the history
-** TODO Speed up replay playback for "clear" moves
+** DONE Allow exploration in replay
+** DONE Speed up replay playback for "clear" moves
 ** TODO Figure out why the progress indicator stops
    - Damn guava splitter static initialization is one reason
    - But can't be the only thing, or probably even the main one

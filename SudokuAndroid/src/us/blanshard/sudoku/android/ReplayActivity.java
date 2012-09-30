@@ -202,6 +202,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
   void setGame(Database.Game dbGame) {
     mGame = new Sudoku(dbGame.puzzle, mRegistry).resume();
+    setTitle(getString(R.string.text_replay_title, dbGame.puzzleId));
     mReplayView.setGame(mGame);
     mReplayView.setEditable(false);
     try {
@@ -266,7 +267,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         sb.append(insightMin).append('\n');
         if (mExploring) {
           try {
-            mUndoStack.doCommand(new MoveCommand(mGame.getState(), loc, insightMin.insight.getAssignment().numeral));
+            mUndoStack.doCommand(new MoveCommand(
+                mReplayView.getInputState(), loc, insightMin.insight.getAssignment().numeral));
           } catch (CommandException e) {
             Log.e(TAG, "Couldn't apply insight");
           }

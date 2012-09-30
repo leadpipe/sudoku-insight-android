@@ -76,6 +76,7 @@
     <string name="text_oops">Oops!</string>
     <string name="text_puzzle_number">#%1$d</string>
     <string name="text_puzzle_number_start">""Sudoku #%1$d: "</string>
+    <string name="text_replay_title">Review #%1$d</string>
     <string name="text_sentence_end">.</string>
     <string name="text_symmetries">Symmetries of Generated Puzzles</string>
     <string name="text_vote_down">Not so fun.</string>

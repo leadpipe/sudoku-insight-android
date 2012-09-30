@@ -217,11 +217,12 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int text_oops=0x7f080048;
         public static final int text_puzzle_number=0x7f080049;
         public static final int text_puzzle_number_start=0x7f08004a;
-        public static final int text_sentence_end=0x7f08004b;
-        public static final int text_symmetries=0x7f08004c;
-        public static final int text_vote_down=0x7f08004d;
-        public static final int text_vote_question=0x7f08004e;
-        public static final int text_vote_up=0x7f08004f;
+        public static final int text_replay_title=0x7f08004b;
+        public static final int text_sentence_end=0x7f08004c;
+        public static final int text_symmetries=0x7f08004d;
+        public static final int text_vote_down=0x7f08004e;
+        public static final int text_vote_question=0x7f08004f;
+        public static final int text_vote_up=0x7f080050;
     }
     public static final class xml {
         public static final int preferences=0x7f040000;
