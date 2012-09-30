@@ -89,6 +89,24 @@
 
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/replay_undo_controls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center_horizontal"
+        android:visibility="gone"
+        >
+
+	    <Button
+	        android:id="@+id/undo"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/button_undo"
+	        />
+
+    </LinearLayout>
+
     <TextView
         android:id="@+id/timer"
         android:layout_width="wrap_content"

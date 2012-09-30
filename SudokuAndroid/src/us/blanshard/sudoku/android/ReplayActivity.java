@@ -64,6 +64,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private ProgressBar mProgress;
   private ViewGroup mControls;
   private ViewGroup mPauseControls;
+  private ViewGroup mUndoControls;
   private TextView mTimer;
   private TextView mInsightsText;
   private Sudoku mGame;
@@ -124,6 +125,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     mProgress = (ProgressBar) findViewById(R.id.progress);
     mControls = (ViewGroup) findViewById(R.id.replay_controls);
     mPauseControls = (ViewGroup) findViewById(R.id.replay_pause_controls);
+    mUndoControls = (ViewGroup) findViewById(R.id.replay_undo_controls);
     mTimer = (TextView) findViewById(R.id.timer);
     mInsightsText = (TextView) findViewById(R.id.insights);
 
@@ -135,6 +137,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     setUpButton(R.id.back);
     setUpButton(R.id.next);
     setUpButton(R.id.previous);
+    setUpButton(R.id.undo);
 
     mRegistry.addListener(new Sudoku.Adapter() {
       @Override public void moveMade(Sudoku game, Move move) {
@@ -182,6 +185,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mControls.setVisibility(View.GONE);
         mPauseControls.setVisibility(View.GONE);
         mTimer.setVisibility(View.GONE);
+        mUndoControls.setVisibility(View.VISIBLE);
+        setUndoEnablement();
         invalidateOptionsMenu();
         return true;
 
@@ -194,6 +199,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           Log.e(TAG, "Can't resume replay", e);
         }
         mTimer.setVisibility(View.VISIBLE);
+        mUndoControls.setVisibility(View.GONE);
         pause();
         return true;
     }
@@ -212,8 +218,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       mHistory = Lists.newArrayList();
     }
     mHistoryPosition = 0;
-    Button play = (Button) findViewById(R.id.play);
-    play.performClick();
+    setControlsEnablement();
+    findViewById(R.id.play).performClick();
   }
 
   void setInsights(Insights insights) {
@@ -256,7 +262,29 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mForward = (v.getId() == R.id.next);
         stepReplay(true);
         break;
+
+      case R.id.undo:
+        if (mUndoStack.getPosition() > mHistoryPosition)
+          try {
+            mUndoStack.undo();
+          } catch (CommandException e) {
+            Log.e(TAG, "Undo failed", e);
+          }
+        startAnalysis();
+        setUndoEnablement();
+        break;
     }
+  }
+
+  private void setControlsEnablement() {
+    findViewById(R.id.play).setEnabled(mHistoryPosition < mHistory.size());
+    findViewById(R.id.next).setEnabled(mHistoryPosition < mHistory.size());
+    findViewById(R.id.back).setEnabled(mHistoryPosition > 0);
+    findViewById(R.id.previous).setEnabled(mHistoryPosition > 0);
+  }
+
+  private void setUndoEnablement() {
+    findViewById(R.id.undo).setEnabled(mUndoStack.getPosition() > mHistoryPosition);
   }
 
   @Override public void onSelect(Location loc) {
@@ -273,6 +301,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
             Log.e(TAG, "Couldn't apply insight");
           }
           startAnalysis();
+          setUndoEnablement();
         }
       }
       if (!mInsights.errors.isEmpty()) sb.append("Error: ").append(mInsights.errors.get(0));
@@ -349,6 +378,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       long cycleMillis = nextAssignment() == null ? CLEAR_CYCLE_MILLIS : SET_CYCLE_MILLIS;
       mReplayView.postDelayed(cycler, cycleMillis);
     }
+    setControlsEnablement();
   }
 
   private void pause() {
