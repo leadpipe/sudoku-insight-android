@@ -16,8 +16,6 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 
@@ -50,8 +48,8 @@ public class BarredNum extends Insight {
     return numeral;
   }
 
-  @Override public boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder) {
-    return false;  // it's an error already
+  @Override public void apply(GridMarks.Builder builder) {
+    // Nothing to do, it's an error.
   }
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {

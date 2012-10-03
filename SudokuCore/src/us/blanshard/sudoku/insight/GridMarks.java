@@ -15,8 +15,11 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Marks;
+import us.blanshard.sudoku.core.Numeral;
 
 /**
  * @author Luke Blanshard
@@ -54,14 +57,33 @@ public class GridMarks {
       this.hasErrors = o.hasErrors;
     }
 
+    public Builder assign(Assignment assignment) {
+      return assign(assignment.location, assignment.numeral);
+    }
+
+    public Builder assign(Location loc, Numeral num) {
+      gridBuilder.put(loc, num);
+      hasErrors |= marksBuilder.assign(loc, num);
+      return this;
+    }
+
+    public Builder eliminate(Assignment assignment) {
+      return eliminate(assignment.location, assignment.numeral);
+    }
+
+    public Builder eliminate(Location loc, Numeral num) {
+      hasErrors |= marksBuilder.eliminate(loc, num);
+      return this;
+    }
+
     public Builder apply(Insight insight) {
-      hasErrors |= !insight.apply(gridBuilder, marksBuilder);
+      insight.apply(this);
       return this;
     }
 
     public Builder apply(Iterable<Insight> insights) {
       for (Insight insight : insights)
-        apply(insight);
+        insight.apply(this);
       return this;
     }
 

@@ -16,9 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.UnitSubset;
@@ -84,11 +82,9 @@ public class LockedSet extends Insight {
     return locs;
   }
 
-  @Override public boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder) {
-    boolean ok = true;
+  @Override public void apply(GridMarks.Builder builder) {
     for (Assignment assignment : getEliminations())
-      ok &= marksBuilder.eliminate(assignment);
-    return ok;
+      builder.eliminate(assignment);
   }
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {

@@ -16,8 +16,6 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.core.Marks;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -46,12 +44,13 @@ public abstract class Insight {
     FORCED_NUMERAL,
     OVERLAP,
     LOCKED_SET,
-    IMPLICATION;
+    IMPLICATION,
+    DISPROVED_ASSIGNMENT;
 
     private static final EnumSet<Type> ERRORS =
         EnumSet.of(CONFLICT, BARRED_LOCATION, BARRED_NUMERAL);
     private static final EnumSet<Type> ASSIGNMENTS = EnumSet.of(FORCED_LOCATION, FORCED_NUMERAL);
-    private static final EnumSet<Type> ELIMINATIONS = EnumSet.of(OVERLAP, LOCKED_SET);
+    private static final EnumSet<Type> ELIMINATIONS = EnumSet.of(OVERLAP, LOCKED_SET, DISPROVED_ASSIGNMENT);
 
     public boolean isError() {
       return ERRORS.contains(this);
@@ -113,9 +112,9 @@ public abstract class Insight {
 
   /**
    * Applies the assignments and eliminations of this insight to the given
-   * builders, returns true if it doesn't uncover any errors.
+   * builder.
    */
-  public abstract boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder);
+  public abstract void apply(GridMarks.Builder builder);
 
   /** Tells whether this insight is implied by the given grid and marks. */
   public abstract boolean isImpliedBy(GridMarks gridMarks);

@@ -16,9 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
@@ -62,9 +60,8 @@ public class ForcedLoc extends Insight {
     return Assignment.of(location, numeral);
   }
 
-  @Override public boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder) {
-    gridBuilder.put(location, numeral);
-    return marksBuilder.assign(location, numeral);
+  @Override public void apply(GridMarks.Builder builder) {
+    builder.assign(location, numeral);
   }
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {

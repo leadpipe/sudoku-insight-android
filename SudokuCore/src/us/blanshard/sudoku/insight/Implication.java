@@ -19,8 +19,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.core.Marks;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableCollection;
@@ -84,12 +82,10 @@ public class Implication extends Insight {
     return consequent;
   }
 
-  @Override public boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder) {
-    boolean ok = true;
+  @Override public void apply(GridMarks.Builder builder) {
     for (Insight insight : antecedents)
-      ok &= insight.apply(gridBuilder, marksBuilder);
-    ok &= consequent.apply(gridBuilder, marksBuilder);
-    return ok;
+      insight.apply(builder);
+    consequent.apply(builder);
   }
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {

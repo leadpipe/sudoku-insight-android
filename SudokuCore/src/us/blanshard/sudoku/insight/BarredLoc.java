@@ -16,9 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Marks;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -41,8 +39,8 @@ public class BarredLoc extends Insight {
     return location;
   }
 
-  @Override public boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder) {
-    return false;  // it's an error already
+  @Override public void apply(GridMarks.Builder builder) {
+    // Nothing to do, it's an error.
   }
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {

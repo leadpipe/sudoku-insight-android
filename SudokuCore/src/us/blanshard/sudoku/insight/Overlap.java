@@ -16,9 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
@@ -85,11 +83,9 @@ public class Overlap extends Insight {
     return unit + ":" + numeral + ":" + extra.unit;
   }
 
-  @Override public boolean apply(Grid.Builder gridBuilder, Marks.Builder marksBuilder) {
-    boolean ok = true;
+  @Override public void apply(GridMarks.Builder builder) {
     for (Location loc : extra)
-      ok &= marksBuilder.eliminate(loc, numeral);
-    return ok;
+      builder.eliminate(loc, numeral);
   }
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {
