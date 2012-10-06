@@ -32,7 +32,7 @@ import javax.annotation.concurrent.Immutable;
  * @author Luke Blanshard
  */
 @Immutable
-public class ForcedLoc extends Insight {
+public final class ForcedLoc extends Insight {
   private final Unit unit;
   private final Numeral numeral;
   private final Location location;

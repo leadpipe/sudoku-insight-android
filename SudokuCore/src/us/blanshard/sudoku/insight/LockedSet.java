@@ -35,7 +35,7 @@ import javax.annotation.concurrent.Immutable;
  * @author Luke Blanshard
  */
 @Immutable
-public class LockedSet extends Insight {
+public final class LockedSet extends Insight {
   private final NumSet nums;
   private final UnitSubset locs;
   private final boolean isNaked;

@@ -17,7 +17,13 @@ package us.blanshard.sudoku.android;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.LocSet;
 import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.NumSet;
+import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.Solver;
+import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.game.CommandException;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
@@ -25,7 +31,9 @@ import us.blanshard.sudoku.game.MoveCommand;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.UndoStack;
 import us.blanshard.sudoku.insight.Analyzer;
-import us.blanshard.sudoku.insight.Implication;
+import us.blanshard.sudoku.insight.Analyzer.StopException;
+import us.blanshard.sudoku.insight.DisprovedAssignment;
+import us.blanshard.sudoku.insight.GridMarks;
 import us.blanshard.sudoku.insight.Insight;
 
 import android.graphics.Color;
@@ -44,9 +52,11 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.primitives.Ints;
 
 import org.json.JSONException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -80,6 +90,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private Insights mInsights;
   private boolean mErrors;
   private Minimize mMinimize;
+  private GridMarks mSolution;
 
   private static final Integer[] sMinSelectableColors, sUnminSelectableColors;
   static {
@@ -227,7 +238,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   void setInsights(Insights insights) {
     mInsights = insights;
     mAnalyze = null;
-    mMinimize = new Minimize(this, insights.grid);
+    mMinimize = new Minimize(this, insights.gridMarks);
     mMinimize.execute(insights.assignments.values(), insights.errors);
     mProgress.setVisibility(View.GONE);
     if (!mErrors && !insights.errors.isEmpty())
@@ -244,6 +255,12 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       mMinimize = null;
       mReplayView.invalidate();
     }
+  }
+
+  void addDisproof(DisprovedAssignment disproof) {
+    Location loc = disproof.getAssignment().location;
+    mInsights.disproofs.put(loc, new InsightMin(disproof));
+    mReplayView.invalidateLocation(loc);
   }
 
   @Override public void onClick(View v) {
@@ -454,31 +471,63 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
     InsightMin(Insight insight) {
       this.insight = insight;
-      this.minimized = !(insight instanceof Implication);
+      this.minimized = insight.getDepth() == 0;
     }
 
-    boolean minimize(Grid grid) {
+    boolean minimize(GridMarks gridMarks) {
       if (!minimized) {
-        Insight min = Analyzer.minimizeImplication(grid, (Implication) insight);
-        minimized = (min != insight);
-        insight = min;
+        insight = Analyzer.minimize(gridMarks, insight);
+        minimized = !Thread.currentThread().isInterrupted();
       }
       return minimized;
     }
 
     @Override public String toString() {
       if (minimized) return insight.toString();
-      return insight.getNub() + " \u2235 \u2026 [" + insight.getDepth() + "]";
+      return insight.toShortString();
     }
   }
 
   private static class Insights {
-    final Grid grid;
+    final GridMarks gridMarks;
     final Map<Location, InsightMin> assignments = Maps.newLinkedHashMap();
+    final Map<Location, InsightMin> disproofs = Maps.newHashMap();
     final List<InsightMin> errors = Lists.newArrayList();
 
     Insights(Grid grid) {
-      this.grid = grid;
+      this.gridMarks = new GridMarks(grid);
+    }
+  }
+
+  private static class PossibleAssignment implements Comparable<PossibleAssignment> {
+    final Location loc;
+    final Numeral num;
+    final int setSize;
+
+    PossibleAssignment(Location loc, Numeral num, int setSize) {
+      this.loc = loc;
+      this.num = num;
+      this.setSize = setSize;
+    }
+
+    Assignment toAssignment() {
+      return Assignment.of(loc, num);
+    }
+
+    @Override public int compareTo(PossibleAssignment that) {
+      return Ints.compare(this.setSize, that.setSize);
+    }
+  }
+
+  /** Analyzer callback that grabs the first error it sees and stops the process. */
+  private static class ErrorGrabber implements Analyzer.Callback {
+    @Nullable Insight error;
+
+    @Override public void take(Insight insight) throws StopException {
+      if (insight.isError()) {
+        error = insight;
+        throw new StopException();
+      }
     }
   }
 
@@ -495,7 +544,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     @Override protected Insights doInBackground(final Grid... params) {
       if (mTarget == null) publishProgress();  // allow cancellation right away
       final Insights answer = new Insights(params[0]);
-      Analyzer.analyze(answer.grid, new Analyzer.Callback() {
+      Analyzer.analyze(answer.gridMarks, new Analyzer.Callback() {
         private boolean mAiming = mTarget != null;
         @Override public void take(Insight insight) {
           if (insight.isError()) {
@@ -531,23 +580,113 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   }
 
   private static class Minimize extends WorkerFragment.ActivityTask<ReplayActivity, Iterable<InsightMin>, Void, Void> {
-    private final Grid mGrid;
+    private final GridMarks mGridMarks;
 
-    Minimize(ReplayActivity activity, Grid grid) {
+    Minimize(ReplayActivity activity, GridMarks gridMarks) {
       super(activity);
-      this.mGrid = grid;
+      this.mGridMarks = gridMarks;
     }
 
     @Override protected Void doInBackground(Iterable<InsightMin>... params) {
       for (Iterable<InsightMin> iterable : params)
         for (InsightMin min : iterable)
-          if (!min.minimize(mGrid))
+          if (!min.minimize(mGridMarks))
             break;
       return null;
     }
 
     @Override protected void onPostExecute(ReplayActivity activity, Void ignored) {
       activity.minimizationComplete(this);
+    }
+  }
+
+  private static class Disprove
+      extends WorkerFragment.ActivityTask<ReplayActivity, Void, DisprovedAssignment, Void> {
+    private final Grid mPuzzle;
+    private final Grid mGrid;
+    private final Insights mInsights;
+    private GridMarks mSolution;
+
+    Disprove(ReplayActivity activity, Grid grid) {
+      super(activity);
+      mPuzzle = activity.mGame.getPuzzle();
+      mGrid = grid;
+      mInsights = activity.mInsights;
+      mSolution = activity.mSolution;
+    }
+
+    @Override protected Void doInBackground(Void... params) {
+      GridMarks solution = getSolution();
+      GridMarks current = new GridMarks(mGrid);
+      LocSet available = LocSet.all().minus(mGrid.keySet()).minus(mInsights.assignments.keySet());
+      List<PossibleAssignment> possibles = findPossibles(solution, current, available);
+
+      // First pass: look for assignments that cause an error on recursive assignment.
+      for (PossibleAssignment p : possibles) {
+        if (available.isEmpty() || wasCanceled()) break;
+        checkForDisproof(current, available, p, true);
+      }
+
+      // Second pass: do the rest.
+      for (PossibleAssignment p : possibles) {
+        if (available.isEmpty() || wasCanceled()) break;
+        checkForDisproof(current, available, p, false);
+      }
+
+      return null;
+    }
+
+    @Override protected void onProgressUpdate(ReplayActivity activity, DisprovedAssignment... disproofs) {
+      activity.addDisproof(disproofs[0]);
+    }
+
+    @Override protected void onPostExecute(ReplayActivity activity, Void result) {
+      if (mSolution != null) activity.mSolution = mSolution;
+    }
+
+    private GridMarks getSolution() {
+      if (mSolution == null) {
+        Solver.Result result = Solver.solve(mPuzzle);
+        mSolution = new GridMarks(result.solution);
+      }
+      return mSolution;
+    }
+
+    private List<PossibleAssignment> findPossibles(GridMarks solution, GridMarks current,
+        LocSet available) {
+      List<PossibleAssignment> possibles = Lists.newArrayList();
+      for (Unit unit : Unit.allUnits())
+        for (Numeral num : Numeral.ALL) {
+          UnitSubset set = current.marks.get(unit, num);
+          UnitSubset solSet = solution.marks.get(unit, num);
+          if (set.size() > 1 && solSet.size() == 1)
+            for (Location loc : available.and(set.minus(solSet))) {
+              possibles.add(new PossibleAssignment(loc, num, set.size()));
+            }
+        }
+      for (Location loc : available) {
+        NumSet set = current.marks.get(loc);
+        NumSet solSet = solution.marks.get(loc);
+        if (set.size() > 1 && solSet.size() == 1)
+          for (Numeral num : set.minus(solSet))
+            possibles.add(new PossibleAssignment(loc, num, set.size()));
+      }
+      Collections.sort(possibles);
+      return possibles;
+    }
+
+    private void checkForDisproof(
+        GridMarks current, LocSet available, PossibleAssignment p, boolean fastPath) {
+      if (!available.contains(p.loc)) return;
+      if (fastPath && current.marks.toBuilder().assignRecursively(p.loc, p.num)) return;
+
+      ErrorGrabber grabber = new ErrorGrabber();
+      Analyzer.analyze(current.toBuilder().assign(p.loc, p.num).build(), grabber);
+
+      if (grabber.error != null) {
+        publishProgress(new DisprovedAssignment(p.toAssignment(), grabber.error));
+        available.remove(p.loc);
+      }
     }
   }
 }

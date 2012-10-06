@@ -65,6 +65,18 @@ public final class LocSet extends AbstractSet<Location> implements Cloneable {
     return answer;
   }
 
+  public LocSet or(Collection<Location> that) {
+    return union(this, that);
+  }
+
+  public LocSet and(Collection<Location> that) {
+    return intersect(this, that);
+  }
+
+  public LocSet minus(Collection<Location> that) {
+    return subtract(this, that);
+  }
+
   @Override public LocSet clone() {
     try {
       return (LocSet) super.clone();

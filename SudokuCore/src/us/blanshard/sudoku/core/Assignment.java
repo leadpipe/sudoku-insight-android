@@ -43,7 +43,7 @@ public final class Assignment {
   }
 
   @Override public String toString() {
-    return location + " \u2190 " + numeral.number;  // That's a left arrow
+    return numeral.number + " \u2192 " + location;  // That's a right arrow
   }
 
   @Override public boolean equals(Object o) {

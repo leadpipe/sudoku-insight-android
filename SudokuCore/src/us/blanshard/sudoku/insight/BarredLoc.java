@@ -27,7 +27,7 @@ import javax.annotation.concurrent.Immutable;
  * @author Luke Blanshard
  */
 @Immutable
-public class BarredLoc extends Insight {
+public final class BarredLoc extends Insight {
   private final Location location;
 
   BarredLoc(Location location) {

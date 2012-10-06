@@ -35,7 +35,7 @@ import javax.annotation.concurrent.Immutable;
  * @author Luke Blanshard
  */
 @Immutable
-public class Implication extends Insight {
+public final class Implication extends Insight {
   private final ImmutableCollection<Insight> antecedents;
   private final Insight consequent;
 
@@ -72,6 +72,10 @@ public class Implication extends Insight {
 
   @Override public int getDepth() {
     return 1 + consequent.getDepth();
+  }
+
+  @Override public String toShortString() {
+    return getNub() + " \u2235 \u2026 [" + getDepth() + "]";
   }
 
   public ImmutableCollection<Insight> getAntecedents() {

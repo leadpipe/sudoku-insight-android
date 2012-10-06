@@ -35,7 +35,7 @@ import javax.annotation.concurrent.Immutable;
  * @author Luke Blanshard
  */
 @Immutable
-public class Overlap extends Insight {
+public final class Overlap extends Insight {
   private final Unit unit;
   private final Numeral numeral;
   private final UnitSubset extra;

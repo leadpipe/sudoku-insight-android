@@ -32,7 +32,7 @@ import javax.annotation.concurrent.Immutable;
  * @author Luke Blanshard
  */
 @Immutable
-public class Conflict extends Insight {
+public final class Conflict extends Insight {
   private final Numeral numeral;
   private final UnitSubset locations;
 

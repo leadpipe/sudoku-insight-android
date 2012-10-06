@@ -31,7 +31,7 @@ import javax.annotation.concurrent.Immutable;
  * @author Luke Blanshard
  */
 @Immutable
-public class ForcedNum extends Insight {
+public final class ForcedNum extends Insight {
   private final Location location;
   private final Numeral numeral;
 
@@ -79,6 +79,6 @@ public class ForcedNum extends Insight {
   }
 
   @Override public String toString() {
-    return numeral.number + " \u2192 " + location;  // That's a right arrow
+    return location + " \u2190 " + numeral.number;  // That's a left arrow
   }
 }

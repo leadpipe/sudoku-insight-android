@@ -65,14 +65,10 @@ public abstract class Insight {
     }
   }
 
-  protected final Type type;
+  public final Type type;
 
   protected Insight(Type type) {
     this.type = type;
-  }
-
-  public Type getType() {
-    return type;
   }
 
   /** Tells whether this insight implies an error in the board. */
@@ -108,6 +104,11 @@ public abstract class Insight {
   /** Returns the number of levels of implication this insight embodies. */
   public int getDepth() {
     return 0;
+  }
+
+  /** Returns an abbreviated string form of this insight. */
+  public String toShortString() {
+    return toString();
   }
 
   /**

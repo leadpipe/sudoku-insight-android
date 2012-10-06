@@ -18,7 +18,6 @@ package us.blanshard.sudoku.insight;
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Block;
 import us.blanshard.sudoku.core.Column;
-import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
@@ -47,11 +46,16 @@ import javax.annotation.Nullable;
  */
 public class Analyzer {
 
+  public static class StopException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+  }
+
   /**
-   * Called by {@link #analyze} for each insight found.
+   * Called by {@link #analyze} for each insight found.  The callback may cut the
+   * work short by throwing a "stop" exception.
    */
   public interface Callback {
-    void take(Insight insight);
+    void take(Insight insight) throws StopException;
   }
 
   /**
@@ -65,10 +69,8 @@ public class Analyzer {
    * with the consequent. Call {@link #minimizeImplication} to squeeze out
    * irrelevant antecedents.
    */
-  public static boolean analyze(Grid grid, Callback callback) {
+  public static boolean analyze(GridMarks gridMarks, Callback callback) {
     boolean complete = false;
-
-    GridMarks gridMarks = new GridMarks(grid);
 
     try {
       findInsights(gridMarks, callback, null);
@@ -76,22 +78,33 @@ public class Analyzer {
 
     } catch (InterruptedException e) {
       // A normal event
+    } catch (StopException e) {
+      // Also a normal event
     }
     return complete;
   }
 
   /**
-   * Slims down the antecedents of the given implication (and recursively if its
-   * consequent is also an implication) so it doesn't have any not required to
-   * imply the consequent. May simply return the consequent if none of its
-   * antecedents are required. May be stopped early by interrupting the thread,
-   * in which case the original implication is returned.
+   * Slims down the given insight, by removing antecendents of implications that
+   * are not required to imply the consequents.  May be stopped early by
+   * interrupting the thread.  Returns the original insight if either the thread
+   * was interrupted or there was no way to reduce it.
    */
-  public static Insight minimizeImplication(Grid grid, Implication implication) {
+  public static Insight minimize(GridMarks gridMarks, Insight insight) {
     try {
-      return minimizeImplication(new GridMarks(grid), implication);
+      switch (insight.type) {
+        case IMPLICATION:
+          return minimizeImplication(gridMarks, (Implication) insight);
+
+        case DISPROVED_ASSIGNMENT:
+          return minimizeDisproof(gridMarks, (DisprovedAssignment) insight);
+
+        default:
+          return insight;
+      }
+
     } catch (InterruptedException e) {
-      return implication;
+      return insight;
     }
   }
 
@@ -153,7 +166,8 @@ public class Analyzer {
     }
   }
 
-  private static Insight minimizeImplication(GridMarks gridMarks, Implication implication) throws InterruptedException {
+  private static Insight minimizeImplication(GridMarks gridMarks, Implication implication)
+      throws InterruptedException {
     Insight consequent = implication.getConsequent();
     ImmutableList<Insight> allAntecedents = ImmutableList.copyOf(implication.getAntecedents());
     ArrayDeque<Insight> requiredAntecedents = Queues.newArrayDeque();
@@ -179,6 +193,8 @@ public class Analyzer {
 
     if (requiredAntecedents.isEmpty())
       return consequent;
+    if (requiredAntecedents.equals(allAntecedents))
+      return implication;
     return new Implication(requiredAntecedents, consequent);
   }
 
@@ -188,6 +204,15 @@ public class Analyzer {
       if (consequent.mightBeRevealedByElimination(assignment))
         return true;
     return false;
+  }
+
+  private static Insight minimizeDisproof(GridMarks gridMarks, DisprovedAssignment disproof)
+      throws InterruptedException {
+    Insight resultingError = disproof.getResultingError();
+    GridMarks postAssignment = gridMarks.toBuilder().eliminate(disproof.getAssignment()).build();
+    Insight minimizedError = minimize(postAssignment, resultingError);
+    return minimizedError == resultingError ? disproof
+        : new DisprovedAssignment(disproof.getAssignment(), minimizedError);
   }
 
   private static class SetState {
@@ -405,6 +430,11 @@ public class Analyzer {
         callback.take(new BarredLoc(loc));
       }
     }
+  }
+
+  public static void findAssignments(GridMarks gridMarks, Callback callback) {
+    findSingletonLocations(gridMarks, callback);
+    findSingletonNumerals(gridMarks, callback);
   }
 
   public static void findSingletonLocations(GridMarks gridMarks, Callback callback) {

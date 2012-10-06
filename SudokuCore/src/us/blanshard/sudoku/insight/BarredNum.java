@@ -30,7 +30,7 @@ import javax.annotation.concurrent.Immutable;
  * @author Luke Blanshard
  */
 @Immutable
-public class BarredNum extends Insight {
+public final class BarredNum extends Insight {
   private final Unit unit;
   private final Numeral numeral;
 

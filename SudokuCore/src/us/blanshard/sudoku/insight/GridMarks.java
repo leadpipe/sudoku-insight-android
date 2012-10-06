@@ -87,6 +87,10 @@ public class GridMarks {
       return this;
     }
 
+    public boolean hasErrors() {
+      return hasErrors;
+    }
+
     public GridMarks build() {
       return new GridMarks(gridBuilder.build(), marksBuilder.build(), hasErrors);
     }
