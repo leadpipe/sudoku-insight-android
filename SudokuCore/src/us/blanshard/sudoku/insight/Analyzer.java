@@ -209,10 +209,11 @@ public class Analyzer {
   private static Insight minimizeDisproof(GridMarks gridMarks, DisprovedAssignment disproof)
       throws InterruptedException {
     Insight resultingError = disproof.getResultingError();
-    GridMarks postAssignment = gridMarks.toBuilder().eliminate(disproof.getAssignment()).build();
+    GridMarks postAssignment = gridMarks.toBuilder()
+        .eliminate(disproof.getDisprovedAssignment()).build();
     Insight minimizedError = minimize(postAssignment, resultingError);
     return minimizedError == resultingError ? disproof
-        : new DisprovedAssignment(disproof.getAssignment(), minimizedError);
+        : new DisprovedAssignment(disproof.getDisprovedAssignment(), minimizedError);
   }
 
   private static class SetState {

@@ -38,7 +38,6 @@ import us.blanshard.sudoku.insight.Insight;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.FloatMath;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -90,16 +89,22 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private Insights mInsights;
   private boolean mErrors;
   private Minimize mMinimize;
+  private Disprove mDisprove;
   private GridMarks mSolution;
 
-  private static final Integer[] sMinSelectableColors, sUnminSelectableColors;
+  private static final Integer[] sMinAssignmentColors, sUnminAssignmentColors;
+  private static final Integer[] sMinDisproofColors, sUnminDisproofColors;
   static {
-    sMinSelectableColors = new Integer[7];
-    sUnminSelectableColors = new Integer[7];
+    sMinAssignmentColors = new Integer[7];
+    sUnminAssignmentColors = new Integer[7];
+    sMinDisproofColors = new Integer[7];
+    sUnminDisproofColors = new Integer[7];
     for (int i = 0; i < 7; ++i) {
-      float sat = 1f - FloatMath.sqrt(i) * 0.3f;
-      sMinSelectableColors[i] = Color.HSVToColor(new float[] {90f, sat, 0.9f});
-      sUnminSelectableColors[i] = Color.HSVToColor(new float[] {60f, sat, 0.95f});
+      float sat = 1f / (1 << i) * 0.75f + 0.25f;
+      sMinAssignmentColors[i] = Color.HSVToColor(new float[] {90f, sat, 0.9f});
+      sUnminAssignmentColors[i] = Color.HSVToColor(new float[] {60f, sat, 0.95f});
+      sMinDisproofColors[i] = Color.HSVToColor(new float[] {0f, sat, 0.8f});
+      sUnminDisproofColors[i] = Color.HSVToColor(new float[] {45f, sat, 0.9f});
     }
   }
 
@@ -110,10 +115,17 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   };
   private final Function<Location, Integer> selectableColors = new Function<Location, Integer>() {
     @Override public Integer apply(Location loc) {
+      if (loc == mReplayView.getSelected()) return Color.BLUE;
       if (mInsights == null) return null;
       InsightMin insightMin = mInsights.assignments.get(loc);
-      if (insightMin == null) return null;
-      Integer[] colors = insightMin.minimized ? sMinSelectableColors : sUnminSelectableColors;
+      boolean assignment = insightMin != null;
+      if (insightMin == null) {
+        insightMin = mInsights.disproofs.get(loc);
+        if (insightMin == null) return null;
+      }
+      Integer[] colors = assignment
+          ? insightMin.minimized ? sMinAssignmentColors : sUnminAssignmentColors
+          : insightMin.minimized ? sMinDisproofColors : sUnminDisproofColors;
       int depth = insightMin.insight.getDepth();
       return depth >= colors.length ? colors[colors.length - 1] : colors[depth];
     }
@@ -234,13 +246,11 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     findViewById(R.id.play).performClick();
   }
 
-  @SuppressWarnings("unchecked")  // the varargs of Iterable<...>
   void setInsights(Insights insights) {
     mInsights = insights;
     mAnalyze = null;
-    mMinimize = new Minimize(this, insights.gridMarks);
-    mMinimize.execute(insights.assignments.values(), insights.errors);
-    mProgress.setVisibility(View.GONE);
+    mDisprove = new Disprove(this);
+    mDisprove.execute();
     if (!mErrors && !insights.errors.isEmpty())
       mInsightsText.setText("Error: " + insights.errors.get(0));
     if (mAnalysisRanLong) {
@@ -250,17 +260,42 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     mReplayView.selectableColorsUpdated();
   }
 
-  void minimizationComplete(Minimize instance) {
-    if (instance == mMinimize) {
-      mMinimize = null;
-      mReplayView.invalidate();
+  @SuppressWarnings("unchecked")  // the varargs of Iterable<...>
+  void disproofComplete(Disprove instance) {
+    if (instance == mDisprove) {
+      mProgress.setVisibility(View.GONE);
+      mDisprove = null;
+      mInsights.disproofsDone = !instance.wasCanceled();
+      mMinimize = new Minimize(this);
+      mMinimize.execute(mInsights.assignments.values(), mInsights.errors, mInsights.disproofs.values());
     }
   }
 
   void addDisproof(DisprovedAssignment disproof) {
-    Location loc = disproof.getAssignment().location;
+    Location loc = disproof.getDisprovedAssignment().location;
     mInsights.disproofs.put(loc, new InsightMin(disproof));
     mReplayView.invalidateLocation(loc);
+  }
+
+  void minimized(Insight insight) {
+    setInsightText(mReplayView.getSelected());
+    if (!insight.isError()) {
+      Location loc;
+      if (insight.isAssignment()) loc = insight.getAssignment().location;
+      else loc = ((DisprovedAssignment) insight).getDisprovedAssignment().location;
+      mReplayView.invalidateLocation(loc);
+    }
+  }
+
+  void minimizationComplete(Minimize instance) {
+    if (instance == mMinimize) {
+      mMinimize = null;
+      mReplayView.invalidate();
+      if (!mInsights.disproofsDone) {
+        mDisprove = new Disprove(this);
+        mDisprove.execute();
+      }
+    }
   }
 
   @Override public void onClick(View v) {
@@ -315,23 +350,41 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     findViewById(R.id.undo).setEnabled(mUndoStack.getPosition() > mHistoryPosition);
   }
 
+  @SuppressWarnings("unchecked")
   @Override public void onSelect(Location loc) {
+    setInsightText(loc);
+    if (mInsights != null) {
+      InsightMin insightMin = mInsights.assignments.get(loc);
+      if (insightMin == null) {
+        insightMin = mInsights.disproofs.get(loc);
+      } else if (mExploring) {
+        try {
+          mUndoStack.doCommand(new MoveCommand(
+              mReplayView.getInputState(), loc, insightMin.insight.getAssignment().numeral));
+        } catch (CommandException e) {
+          Log.e(TAG, "Couldn't apply insight");
+        }
+        startAnalysis();
+        setUndoEnablement();
+      }
+      if (insightMin != null && !insightMin.minimized && !mExploring) {
+        if (mDisprove != null) {
+          mDisprove.cancel();
+          mDisprove = null;
+        }
+        if (mMinimize != null) mMinimize.cancel();
+        mMinimize = new Minimize(this);
+        mMinimize.execute(Collections.singleton(insightMin));
+      }
+    }
+  }
+
+  private void setInsightText(Location loc) {
     StringBuilder sb = new StringBuilder();
     if (mInsights != null) {
       InsightMin insightMin = mInsights.assignments.get(loc);
-      if (insightMin != null) {
-        sb.append(insightMin).append('\n');
-        if (mExploring) {
-          try {
-            mUndoStack.doCommand(new MoveCommand(
-                mReplayView.getInputState(), loc, insightMin.insight.getAssignment().numeral));
-          } catch (CommandException e) {
-            Log.e(TAG, "Couldn't apply insight");
-          }
-          startAnalysis();
-          setUndoEnablement();
-        }
-      }
+      if (insightMin == null) insightMin = mInsights.disproofs.get(loc);
+      if (insightMin != null) sb.append(insightMin).append('\n');
       if (!mInsights.errors.isEmpty()) sb.append("Error: ").append(mInsights.errors.get(0));
     }
     mInsightsText.setText(sb.toString());
@@ -422,6 +475,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private void startAnalysis() {
     if (mAnalyze == null) {
       if (mMinimize != null) mMinimize.cancel();
+      if (mDisprove != null) mDisprove.cancel();
       mAnalyze = new Analyze(this);
       mAnalyze.execute(mReplayView.getInputState().getGrid());
       if (!mRunning)
@@ -474,6 +528,11 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       this.minimized = insight.getDepth() == 0;
     }
 
+    InsightMin(DisprovedAssignment insight) {
+      this.insight = insight;
+      this.minimized = insight.getDepth() == 1;
+    }
+
     boolean minimize(GridMarks gridMarks) {
       if (!minimized) {
         insight = Analyzer.minimize(gridMarks, insight);
@@ -493,6 +552,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     final Map<Location, InsightMin> assignments = Maps.newLinkedHashMap();
     final Map<Location, InsightMin> disproofs = Maps.newHashMap();
     final List<InsightMin> errors = Lists.newArrayList();
+    volatile boolean disproofsDone;
 
     Insights(Grid grid) {
       this.gridMarks = new GridMarks(grid);
@@ -579,20 +639,26 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     }
   }
 
-  private static class Minimize extends WorkerFragment.ActivityTask<ReplayActivity, Iterable<InsightMin>, Void, Void> {
+  private static class Minimize extends WorkerFragment.ActivityTask<ReplayActivity, Iterable<InsightMin>, InsightMin, Void> {
     private final GridMarks mGridMarks;
 
-    Minimize(ReplayActivity activity, GridMarks gridMarks) {
+    Minimize(ReplayActivity activity) {
       super(activity);
-      this.mGridMarks = gridMarks;
+      this.mGridMarks = activity.mInsights.gridMarks;
     }
 
     @Override protected Void doInBackground(Iterable<InsightMin>... params) {
       for (Iterable<InsightMin> iterable : params)
         for (InsightMin min : iterable)
-          if (!min.minimize(mGridMarks))
+          if (min.minimize(mGridMarks))
+            publishProgress(min);
+          else
             break;
       return null;
+    }
+
+    @Override protected void onProgressUpdate(ReplayActivity activity, InsightMin... mins) {
+      activity.minimized(mins[0].insight);
     }
 
     @Override protected void onPostExecute(ReplayActivity activity, Void ignored) {
@@ -603,22 +669,23 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private static class Disprove
       extends WorkerFragment.ActivityTask<ReplayActivity, Void, DisprovedAssignment, Void> {
     private final Grid mPuzzle;
-    private final Grid mGrid;
     private final Insights mInsights;
     private GridMarks mSolution;
 
-    Disprove(ReplayActivity activity, Grid grid) {
+    Disprove(ReplayActivity activity) {
       super(activity);
       mPuzzle = activity.mGame.getPuzzle();
-      mGrid = grid;
       mInsights = activity.mInsights;
       mSolution = activity.mSolution;
     }
 
     @Override protected Void doInBackground(Void... params) {
       GridMarks solution = getSolution();
-      GridMarks current = new GridMarks(mGrid);
-      LocSet available = LocSet.all().minus(mGrid.keySet()).minus(mInsights.assignments.keySet());
+      GridMarks current = mInsights.gridMarks;
+      LocSet available = LocSet.all()
+          .minus(current.grid.keySet())
+          .minus(mInsights.assignments.keySet())
+          .minus(mInsights.disproofs.keySet());
       List<PossibleAssignment> possibles = findPossibles(solution, current, available);
 
       // First pass: look for assignments that cause an error on recursive assignment.
@@ -642,6 +709,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
     @Override protected void onPostExecute(ReplayActivity activity, Void result) {
       if (mSolution != null) activity.mSolution = mSolution;
+      activity.disproofComplete(this);
     }
 
     private GridMarks getSolution() {

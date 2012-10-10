@@ -19,7 +19,6 @@ import us.blanshard.sudoku.core.Location;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint.Style;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -62,6 +61,10 @@ public class ReplayView extends SudokuView {
     invalidate();
   }
 
+  public Location getSelected() {
+    return mSelected;
+  }
+
   public void setSelected(Location loc) {
     Location old = mSelected;
     mSelected = loc;
@@ -76,8 +79,8 @@ public class ReplayView extends SudokuView {
     mPaint.setStrokeWidth(0);
     for (Location loc : Location.ALL) {
       Integer color = mSelectableColors.apply(loc);
-      if (color == null && loc != mSelected) continue;
-      mPaint.setColor(loc == mSelected ? Color.BLUE : color);
+      if (color == null) continue;
+      mPaint.setColor(color);
       float s = mSquareSize;
       float x = mOffsetsX[loc.column.index];
       float y = mOffsetsY[loc.row.index];
