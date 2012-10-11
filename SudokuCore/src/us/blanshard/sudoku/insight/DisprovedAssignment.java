@@ -65,6 +65,9 @@ public final class DisprovedAssignment extends Insight {
     return 1 + resultingError.getDepth();
   }
 
+  @Override public int getCount() {
+    return 1 + resultingError.getCount();
+  }
   @Override public String toShortString() {
     return getPrefix() + resultingError.toShortString();
   }

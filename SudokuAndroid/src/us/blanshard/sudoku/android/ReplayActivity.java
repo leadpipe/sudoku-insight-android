@@ -100,11 +100,14 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     sMinDisproofColors = new Integer[7];
     sUnminDisproofColors = new Integer[7];
     for (int i = 0; i < 7; ++i) {
-      float sat = 1f / (1 << i) * 0.75f + 0.25f;
-      sMinAssignmentColors[i] = Color.HSVToColor(new float[] {90f, sat, 0.9f});
+      float f = 1f / (1 << i);
+      float hue = 1 - f;
+      float sat = f * 0.5f + 0.5f;
+      float val = f * 0.4f + 0.6f;
+      sMinAssignmentColors[i] = Color.HSVToColor(new float[] {90f - 20 * hue, sat, 0.9f * val});
       sUnminAssignmentColors[i] = Color.HSVToColor(new float[] {60f, sat, 0.95f});
-      sMinDisproofColors[i] = Color.HSVToColor(new float[] {0f, sat, 0.8f});
-      sUnminDisproofColors[i] = Color.HSVToColor(new float[] {45f, sat, 0.9f});
+      sMinDisproofColors[i] = Color.HSVToColor(new float[] {30 * hue, sat, 0.8f * val});
+      sUnminDisproofColors[i] = Color.HSVToColor(new float[] {45f, sat, 0.9f * val});
     }
   }
 
@@ -126,8 +129,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       Integer[] colors = assignment
           ? insightMin.minimized ? sMinAssignmentColors : sUnminAssignmentColors
           : insightMin.minimized ? sMinDisproofColors : sUnminDisproofColors;
-      int depth = insightMin.insight.getDepth();
-      return depth >= colors.length ? colors[colors.length - 1] : colors[depth];
+      int num = insightMin.minimized ? insightMin.insight.getCount() : insightMin.insight.getDepth();
+      return num >= colors.length ? colors[colors.length - 1] : colors[num];
     }
   };
 
@@ -247,6 +250,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   }
 
   void setInsights(Insights insights) {
+    mProgress.setVisibility(View.GONE);
     mInsights = insights;
     mAnalyze = null;
     mDisprove = new Disprove(this);
@@ -263,7 +267,6 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   @SuppressWarnings("unchecked")  // the varargs of Iterable<...>
   void disproofComplete(Disprove instance) {
     if (instance == mDisprove) {
-      mProgress.setVisibility(View.GONE);
       mDisprove = null;
       mInsights.disproofsDone = !instance.wasCanceled();
       mMinimize = new Minimize(this);

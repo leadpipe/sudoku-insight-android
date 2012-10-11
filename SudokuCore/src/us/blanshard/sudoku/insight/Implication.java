@@ -74,6 +74,13 @@ public final class Implication extends Insight {
     return 1 + consequent.getDepth();
   }
 
+  @Override public int getCount() {
+    int count = consequent.getCount();
+    for (Insight insight : antecedents)
+      count += insight.getCount();
+    return count;
+  }
+
   @Override public String toShortString() {
     return getNub() + " \u2235 \u2026 [" + getDepth() + "]";
   }

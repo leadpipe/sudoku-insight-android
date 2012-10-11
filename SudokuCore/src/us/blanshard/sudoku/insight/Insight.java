@@ -106,6 +106,11 @@ public abstract class Insight {
     return 0;
   }
 
+  /** Returns the number of individual insights contained in this insight. */
+  public int getCount() {
+    return 1;
+  }
+
   /** Returns an abbreviated string form of this insight. */
   public String toShortString() {
     return toString();
