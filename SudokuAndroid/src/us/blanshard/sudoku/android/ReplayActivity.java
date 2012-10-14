@@ -24,6 +24,7 @@ import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
+import us.blanshard.sudoku.game.Command;
 import us.blanshard.sudoku.game.CommandException;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
@@ -365,7 +366,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           mUndoStack.doCommand(new MoveCommand(
               mReplayView.getInputState(), loc, insightMin.insight.getAssignment().numeral));
         } catch (CommandException e) {
-          Log.e(TAG, "Couldn't apply insight");
+          Log.e(TAG, "Couldn't apply assignment");
         }
         startAnalysis();
         setUndoEnablement();
@@ -580,6 +581,27 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     @Override public int compareTo(PossibleAssignment that) {
       return Ints.compare(this.setSize, that.setSize);
     }
+  }
+
+  private class ElimCommand implements Command {
+    private final Assignment elimination;
+
+    ElimCommand(Assignment elimination) {
+      this.elimination = elimination;
+    }
+
+    @Override public void redo() throws CommandException {
+      mReplayView.addElimination(elimination);
+    }
+
+    @Override public void undo() throws CommandException {
+      mReplayView.removeElimination(elimination);
+    }
+
+    @Override public String toJsonValue() {
+      throw new UnsupportedOperationException();
+    }
+
   }
 
   /** Analyzer callback that grabs the first error it sees and stops the process. */

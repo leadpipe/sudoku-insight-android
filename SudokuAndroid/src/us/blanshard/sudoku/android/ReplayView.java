@@ -87,6 +87,7 @@ public class ReplayView extends SudokuView {
     NumSet set = mEliminations.get(elimination.location);
     mEliminations.put(elimination.location,
         set == null ? NumSet.of(elimination.numeral) : set.with(elimination.numeral));
+    invalidateLocation(elimination.location);
   }
 
   public void removeElimination(Assignment elimination) {
@@ -94,6 +95,7 @@ public class ReplayView extends SudokuView {
     NumSet set = mEliminations.get(elimination.location);
     if (set != null && set.contains(elimination.numeral))
       mEliminations.put(elimination.location, set.without(elimination.numeral));
+    invalidateLocation(elimination.location);
   }
 
   public GridMarks getGridMarks() {
