@@ -61,7 +61,7 @@ public class SudokuView extends View {
   private static final long DEBOUNCE_MS = 50;  // A borderline choice won't flip as you lift your finger
 
   private OnMoveListener mOnMoveListener;
-  private Sudoku mGame;
+  protected Sudoku mGame;
   private boolean mEditable;
   private boolean mPuzzleEditor;
   private Collection<Location> mBroken;
