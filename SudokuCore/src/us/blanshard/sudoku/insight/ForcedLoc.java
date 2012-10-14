@@ -56,7 +56,7 @@ public final class ForcedLoc extends Insight {
     return location;
   }
 
-  @Override public Assignment getAssignment() {
+  @Override public Assignment getImpliedAssignment() {
     return Assignment.of(location, numeral);
   }
 

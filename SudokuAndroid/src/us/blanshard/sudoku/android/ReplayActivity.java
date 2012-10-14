@@ -285,7 +285,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     setInsightText(mReplayView.getSelected());
     if (!insight.isError()) {
       Location loc;
-      if (insight.isAssignment()) loc = insight.getAssignment().location;
+      if (insight.isAssignment()) loc = insight.getImpliedAssignment().location;
       else loc = ((DisprovedAssignment) insight).getDisprovedAssignment().location;
       mReplayView.invalidateLocation(loc);
     }
@@ -361,10 +361,18 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       InsightMin insightMin = mInsights.assignments.get(loc);
       if (insightMin == null) {
         insightMin = mInsights.disproofs.get(loc);
+        if (insightMin != null && mExploring && mReplayView.getInputState().getId() < 0) {
+          DisprovedAssignment da = (DisprovedAssignment) insightMin.insight;
+          try {
+            mUndoStack.doCommand(new ElimCommand(da.getDisprovedAssignment()));
+          } catch (CommandException e) {
+            Log.e(TAG, "Couldn't apply elimination");
+          }
+        }
       } else if (mExploring) {
         try {
           mUndoStack.doCommand(new MoveCommand(
-              mReplayView.getInputState(), loc, insightMin.insight.getAssignment().numeral));
+              mReplayView.getInputState(), loc, insightMin.insight.getImpliedAssignment().numeral));
         } catch (CommandException e) {
           Log.e(TAG, "Couldn't apply assignment");
         }
@@ -636,7 +644,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
             answer.errors.add(new InsightMin(insight));
             hit();
           } else if (insight.isAssignment()) {
-            Assignment assignment = insight.getAssignment();
+            Assignment assignment = insight.getImpliedAssignment();
             if (!answer.assignments.containsKey(assignment.location)
                 && (mTarget == null || assignment.equals(mTarget))) {
               answer.assignments.put(assignment.location, new InsightMin(insight));

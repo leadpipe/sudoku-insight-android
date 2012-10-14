@@ -82,7 +82,7 @@ public abstract class Insight {
   }
 
   /** The assignment this insight implies, if any. */
-  @Nullable public Assignment getAssignment() {
+  @Nullable public Assignment getImpliedAssignment() {
     return null;
   }
 

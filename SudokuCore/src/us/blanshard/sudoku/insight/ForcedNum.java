@@ -49,7 +49,7 @@ public final class ForcedNum extends Insight {
     return numeral;
   }
 
-  @Override public Assignment getAssignment() {
+  @Override public Assignment getImpliedAssignment() {
     return Assignment.of(location, numeral);
   }
 

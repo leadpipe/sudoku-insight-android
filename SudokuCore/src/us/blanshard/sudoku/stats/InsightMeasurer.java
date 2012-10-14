@@ -274,7 +274,7 @@ public class InsightMeasurer implements Runnable {
             nub = ((Implication) nub).getConsequent();
           errors.put(nub, insight);
         } else if (insight.isAssignment()) {
-          assignments.put(insight.getAssignment(), insight);
+          assignments.put(insight.getImpliedAssignment(), insight);
         }
       }
     }

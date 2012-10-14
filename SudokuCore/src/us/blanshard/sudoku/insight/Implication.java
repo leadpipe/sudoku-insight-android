@@ -54,8 +54,8 @@ public final class Implication extends Insight {
     return consequent.isAssignment();
   }
 
-  @Override @Nullable public Assignment getAssignment() {
-    return consequent.getAssignment();
+  @Override @Nullable public Assignment getImpliedAssignment() {
+    return consequent.getImpliedAssignment();
   }
 
   @Override public boolean isElimination() {
