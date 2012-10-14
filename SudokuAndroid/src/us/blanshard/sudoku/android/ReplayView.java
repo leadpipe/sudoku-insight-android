@@ -18,6 +18,8 @@ package us.blanshard.sudoku.android;
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
+import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.insight.GridMarks;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -92,6 +94,18 @@ public class ReplayView extends SudokuView {
     NumSet set = mEliminations.get(elimination.location);
     if (set != null && set.contains(elimination.numeral))
       mEliminations.put(elimination.location, set.without(elimination.numeral));
+  }
+
+  public GridMarks getGridMarks() {
+    GridMarks gm = new GridMarks(getInputState().getGrid());
+    if (getInputState().getId() < 0 && mEliminations != null) {
+      GridMarks.Builder builder = gm.toBuilder();
+      for (Map.Entry<Location, NumSet> entry : mEliminations.entrySet())
+        for (Numeral num : entry.getValue())
+          builder.eliminate(entry.getKey(), num);
+      gm = builder.build();
+    }
+    return gm;
   }
 
   @Override protected void onDraw(Canvas canvas) {

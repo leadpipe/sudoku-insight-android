@@ -480,7 +480,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       if (mMinimize != null) mMinimize.cancel();
       if (mDisprove != null) mDisprove.cancel();
       mAnalyze = new Analyze(this);
-      mAnalyze.execute(mReplayView.getInputState().getGrid());
+      mAnalyze.execute(mReplayView.getGridMarks());
       if (!mRunning)
         mProgress.setVisibility(View.VISIBLE);
     }
@@ -557,8 +557,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     final List<InsightMin> errors = Lists.newArrayList();
     volatile boolean disproofsDone;
 
-    Insights(Grid grid) {
-      this.gridMarks = new GridMarks(grid);
+    Insights(GridMarks gridMarks) {
+      this.gridMarks = gridMarks;
     }
   }
 
@@ -594,7 +594,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     }
   }
 
-  private static class Analyze extends WorkerFragment.ActivityTask<ReplayActivity, Grid, Void, Insights> {
+  private static class Analyze extends WorkerFragment.ActivityTask<ReplayActivity, GridMarks, Void, Insights> {
 
     private final Assignment mTarget;
     boolean mCancelable;
@@ -604,7 +604,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       mTarget = activity.mRunning && activity.mForward ? activity.nextAssignment() : null;
     }
 
-    @Override protected Insights doInBackground(final Grid... params) {
+    @Override protected Insights doInBackground(final GridMarks... params) {
       if (mTarget == null) publishProgress();  // allow cancellation right away
       final Insights answer = new Insights(params[0]);
       Analyzer.analyze(answer.gridMarks, new Analyzer.Callback() {
