@@ -102,13 +102,13 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     sUnminDisproofColors = new Integer[7];
     for (int i = 0; i < 7; ++i) {
       float f = 1f / (1 << i);
-      float hue = 1 - f;
-      float sat = f * 0.5f + 0.5f;
-      float val = f * 0.4f + 0.6f;
-      sMinAssignmentColors[i] = Color.HSVToColor(new float[] {90f - 20 * hue, sat, 0.9f * val});
-      sUnminAssignmentColors[i] = Color.HSVToColor(new float[] {60f, sat, 0.95f});
-      sMinDisproofColors[i] = Color.HSVToColor(new float[] {30 * hue, sat, 0.8f * val});
-      sUnminDisproofColors[i] = Color.HSVToColor(new float[] {45f, sat, 0.9f * val});
+      float h = 1 - f;
+      float s = f * 0.5f + 0.5f;
+      float v = h * 0.4f + 0.6f;
+      sMinAssignmentColors[i] = Color.HSVToColor(new float[] {90f - 20 * h, s, 0.9f * v});
+      sUnminAssignmentColors[i] = Color.HSVToColor(new float[] {60f, s, 0.95f});
+      sMinDisproofColors[i] = Color.HSVToColor(new float[] {30 * h, s, 0.8f * v});
+      sUnminDisproofColors[i] = Color.HSVToColor(new float[] {45f, s, 0.9f * v});
     }
   }
 
@@ -269,15 +269,15 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   void disproofComplete(Disprove instance) {
     if (instance == mDisprove) {
       mDisprove = null;
-      mInsights.disproofsDone = !instance.wasCanceled();
+      mInsights.disproofsSetSize = 0;
       mMinimize = new Minimize(this);
-      mMinimize.execute(mInsights.assignments.values(), mInsights.errors, mInsights.disproofs.values());
+      mMinimize.execute(mInsights.errors, mInsights.assignments.values(), mInsights.disproofs.values());
     }
   }
 
-  void addDisproof(DisprovedAssignment disproof) {
+  void addDisproof(DisprovedAssignment disproof, boolean minimized) {
     Location loc = disproof.getDisprovedAssignment().location;
-    mInsights.disproofs.put(loc, new InsightMin(disproof));
+    mInsights.disproofs.put(loc, minimized ? new InsightMin(disproof, true) : new InsightMin(disproof));
     mReplayView.invalidateLocation(loc);
   }
 
@@ -295,7 +295,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     if (instance == mMinimize) {
       mMinimize = null;
       mReplayView.invalidate();
-      if (!mInsights.disproofsDone) {
+      if (mInsights.disproofsSetSize > 0) {
         mDisprove = new Disprove(this);
         mDisprove.execute();
       }
@@ -361,6 +361,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       InsightMin insightMin = mInsights.assignments.get(loc);
       if (insightMin == null) {
         insightMin = mInsights.disproofs.get(loc);
+        Log.d(TAG, "Exploring, inputState: " + mExploring + ", " + mReplayView.getInputState().getId());
         if (insightMin != null && mExploring && mReplayView.getInputState().getId() < 0) {
           DisprovedAssignment da = (DisprovedAssignment) insightMin.insight;
           try {
@@ -368,6 +369,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           } catch (CommandException e) {
             Log.e(TAG, "Couldn't apply elimination");
           }
+          startAnalysis();
+          setUndoEnablement();
         }
       } else if (mExploring) {
         try {
@@ -536,13 +539,16 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     volatile boolean minimized;
 
     InsightMin(Insight insight) {
-      this.insight = insight;
-      this.minimized = insight.getDepth() == 0;
+      this(insight, insight.getDepth() == 0);
     }
 
     InsightMin(DisprovedAssignment insight) {
+      this(insight, insight.getDepth() == 1);
+    }
+
+    InsightMin(Insight insight, boolean minimized) {
       this.insight = insight;
-      this.minimized = insight.getDepth() == 1;
+      this.minimized = minimized;
     }
 
     boolean minimize(GridMarks gridMarks) {
@@ -564,7 +570,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     final Map<Location, InsightMin> assignments = Maps.newLinkedHashMap();
     final Map<Location, InsightMin> disproofs = Maps.newHashMap();
     final List<InsightMin> errors = Lists.newArrayList();
-    volatile boolean disproofsDone;
+    int disproofsSetSize;
 
     Insights(GridMarks gridMarks) {
       this.gridMarks = gridMarks;
@@ -704,12 +710,14 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     private final Grid mPuzzle;
     private final Insights mInsights;
     private GridMarks mSolution;
+    private int mSetSize;
 
     Disprove(ReplayActivity activity) {
       super(activity);
       mPuzzle = activity.mGame.getPuzzle();
       mInsights = activity.mInsights;
       mSolution = activity.mSolution;
+      mSetSize = mInsights.disproofsSetSize;
     }
 
     @Override protected Void doInBackground(Void... params) {
@@ -737,7 +745,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     }
 
     @Override protected void onProgressUpdate(ReplayActivity activity, DisprovedAssignment... disproofs) {
-      activity.addDisproof(disproofs[0]);
+      mInsights.disproofsSetSize = mSetSize;
+      activity.addDisproof(disproofs[0], true);
     }
 
     @Override protected void onPostExecute(ReplayActivity activity, Void result) {
@@ -779,13 +788,17 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     private void checkForDisproof(
         GridMarks current, LocSet available, PossibleAssignment p, boolean fastPath) {
       if (!available.contains(p.loc)) return;
+      if (mSetSize > 0 && p.setSize > mSetSize) return;
       if (fastPath && current.marks.toBuilder().assignRecursively(p.loc, p.num)) return;
 
       ErrorGrabber grabber = new ErrorGrabber();
       Analyzer.analyze(current.toBuilder().assign(p.loc, p.num).build(), grabber);
 
       if (grabber.error != null) {
-        publishProgress(new DisprovedAssignment(p.toAssignment(), grabber.error));
+        mSetSize = p.setSize;
+        DisprovedAssignment disproof = new DisprovedAssignment(p.toAssignment(), grabber.error);
+        disproof = (DisprovedAssignment) Analyzer.minimize(current, disproof);
+        publishProgress(disproof);
         available.remove(p.loc);
       }
     }

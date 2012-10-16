@@ -25,7 +25,9 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint.Style;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import com.google.common.base.Function;
@@ -44,6 +46,7 @@ public class ReplayView extends SudokuView {
   private Function<Location, Integer> mSelectableColors = (Function) Functions.constant(null);
   private Location mSelected;
   private Map<Location, NumSet> mEliminations;
+  private static final int ELIM_COLOR = Color.argb(128, 255, 100, 100);
 
   public ReplayView(Context context, AttributeSet attrs) {
     super(context, attrs);
@@ -88,6 +91,7 @@ public class ReplayView extends SudokuView {
     mEliminations.put(elimination.location,
         set == null ? NumSet.of(elimination.numeral) : set.with(elimination.numeral));
     invalidateLocation(elimination.location);
+    Log.d("ReplayView", "Eliminated " + elimination);
   }
 
   public void removeElimination(Assignment elimination) {
@@ -96,6 +100,7 @@ public class ReplayView extends SudokuView {
     if (set != null && set.contains(elimination.numeral))
       mEliminations.put(elimination.location, set.without(elimination.numeral));
     invalidateLocation(elimination.location);
+    Log.d("ReplayView", "Removed elimination " + elimination);
   }
 
   public GridMarks getGridMarks() {
@@ -114,6 +119,8 @@ public class ReplayView extends SudokuView {
     super.onDraw(canvas);
     mPaint.setStyle(Style.STROKE);
     mPaint.setStrokeWidth(0);
+    mPaint.setTypeface(Typeface.DEFAULT);
+    mPaint.setFakeBoldText(false);
     for (Location loc : Location.ALL) {
       drawEliminations(canvas, loc);
       drawSelectable(canvas, loc);
@@ -121,10 +128,10 @@ public class ReplayView extends SudokuView {
   }
 
   private void drawEliminations(Canvas canvas, Location loc) {
-    if (mGame.getState().get(loc) != null) return;
+    if (mGame == null || mGame.getState().get(loc) != null) return;
     NumSet set = mEliminations == null ? null : mEliminations.get(loc);
     if (set == null || set.isEmpty()) return;
-    StringBuilder sb = new StringBuilder(set.get(0).number);
+    StringBuilder sb = new StringBuilder().append(set.get(0).number);
     for (int i = 1; i < set.size(); ++i) sb.append(',').append(set.get(i).number);
     String text = sb.toString();
     float s = mSquareSize;
@@ -133,8 +140,8 @@ public class ReplayView extends SudokuView {
     float w = mPaint.measureText(text);
     float textSize = mPaint.getTextSize();
     if (w >= s - 2) mPaint.setTextSize(textSize * (s - 2) / w);
-    mPaint.setColor(Color.DKGRAY);
-    canvas.drawText(text, x + s/2, y + s + mPaint.ascent(), mPaint);
+    mPaint.setColor(ELIM_COLOR);
+    canvas.drawText(text, x + s/2, y - mPaint.ascent() + (s - mPaint.getTextSize()) / 2 - 1, mPaint);
     mPaint.setTextSize(textSize);
   }
 
