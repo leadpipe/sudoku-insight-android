@@ -118,7 +118,6 @@ public class ReplayView extends SudokuView {
   @Override protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
     mPaint.setStyle(Style.STROKE);
-    mPaint.setStrokeWidth(0);
     mPaint.setTypeface(Typeface.DEFAULT);
     mPaint.setFakeBoldText(false);
     for (Location loc : Location.ALL) {
@@ -141,6 +140,8 @@ public class ReplayView extends SudokuView {
     float textSize = mPaint.getTextSize();
     if (w >= s - 2) mPaint.setTextSize(textSize * (s - 2) / w);
     mPaint.setColor(ELIM_COLOR);
+    mPaint.setStrokeWidth(s * 0.05f);
+    canvas.drawLine(x, y, x + s, y + s, mPaint);
     canvas.drawText(text, x + s/2, y - mPaint.ascent() + (s - mPaint.getTextSize()) / 2 - 1, mPaint);
     mPaint.setTextSize(textSize);
   }
@@ -152,6 +153,7 @@ public class ReplayView extends SudokuView {
     float s = mSquareSize;
     float x = mOffsetsX[loc.column.index];
     float y = mOffsetsY[loc.row.index];
+    mPaint.setStrokeWidth(0);
     canvas.drawRect(x + 1, y + 1, x + s - 1, y + s - 1, mPaint);
   }
 
