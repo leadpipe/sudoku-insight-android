@@ -254,8 +254,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     mProgress.setVisibility(View.GONE);
     mInsights = insights;
     mAnalyze = null;
-    mDisprove = new Disprove(this);
-    mDisprove.execute();
+    minimizeEverything();
     if (!mErrors && !insights.errors.isEmpty())
       mInsightsText.setText("Error: " + insights.errors.get(0));
     if (mAnalysisRanLong) {
@@ -266,12 +265,15 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   }
 
   @SuppressWarnings("unchecked")  // the varargs of Iterable<...>
+  private void minimizeEverything() {
+    mMinimize = new Minimize(this, true);
+    mMinimize.execute(mInsights.errors, mInsights.assignments.values(), mInsights.disproofs.values());
+  }
+
   void disproofComplete(Disprove instance) {
     if (instance == mDisprove) {
       mDisprove = null;
       mInsights.disproofsSetSize = 0;
-      mMinimize = new Minimize(this);
-      mMinimize.execute(mInsights.errors, mInsights.assignments.values(), mInsights.disproofs.values());
     }
   }
 
@@ -294,11 +296,10 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   void minimizationComplete(Minimize instance) {
     if (instance == mMinimize) {
       mMinimize = null;
-      mReplayView.invalidate();
-      if (mInsights.disproofsSetSize > 0) {
+      if (instance.mEverything) {
         mDisprove = new Disprove(this);
         mDisprove.execute();
-      }
+      } else minimizeEverything();
     }
   }
 
@@ -383,12 +384,9 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         setUndoEnablement();
       }
       if (insightMin != null && !insightMin.minimized && !mExploring) {
-        if (mDisprove != null) {
-          mDisprove.cancel();
-          mDisprove = null;
-        }
+        if (mDisprove != null) mDisprove.cancel();
         if (mMinimize != null) mMinimize.cancel();
-        mMinimize = new Minimize(this);
+        mMinimize = new Minimize(this, false);
         mMinimize.execute(Collections.singleton(insightMin));
       }
     }
@@ -680,10 +678,12 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
   private static class Minimize extends WorkerFragment.ActivityTask<ReplayActivity, Iterable<InsightMin>, InsightMin, Void> {
     private final GridMarks mGridMarks;
+    final boolean mEverything;
 
-    Minimize(ReplayActivity activity) {
+    Minimize(ReplayActivity activity, boolean everything) {
       super(activity);
-      this.mGridMarks = activity.mInsights.gridMarks;
+      mGridMarks = activity.mInsights.gridMarks;
+      mEverything = everything;
     }
 
     @Override protected Void doInBackground(Iterable<InsightMin>... params) {
