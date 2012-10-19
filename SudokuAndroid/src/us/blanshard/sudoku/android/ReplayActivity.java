@@ -270,6 +270,12 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     mMinimize.execute(mInsights.errors, mInsights.assignments.values(), mInsights.disproofs.values());
   }
 
+  @SuppressWarnings("unchecked")  // the varargs of Iterable<...>
+  private void minimizeInsight(InsightMin insightMin) {
+    mMinimize = new Minimize(this, false);
+    mMinimize.execute(Collections.singleton(insightMin));
+  }
+
   void disproofComplete(Disprove instance) {
     if (instance == mDisprove) {
       mDisprove = null;
@@ -355,14 +361,12 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     findViewById(R.id.undo).setEnabled(mUndoStack.getPosition() > mHistoryPosition);
   }
 
-  @SuppressWarnings("unchecked")
   @Override public void onSelect(Location loc) {
     setInsightText(loc);
     if (mInsights != null) {
       InsightMin insightMin = mInsights.assignments.get(loc);
       if (insightMin == null) {
         insightMin = mInsights.disproofs.get(loc);
-        Log.d(TAG, "Exploring, inputState: " + mExploring + ", " + mReplayView.getInputState().getId());
         if (insightMin != null && mExploring && mReplayView.getInputState().getId() < 0) {
           DisprovedAssignment da = (DisprovedAssignment) insightMin.insight;
           try {
@@ -386,8 +390,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       if (insightMin != null && !insightMin.minimized && !mExploring) {
         if (mDisprove != null) mDisprove.cancel();
         if (mMinimize != null) mMinimize.cancel();
-        mMinimize = new Minimize(this, false);
-        mMinimize.execute(Collections.singleton(insightMin));
+        minimizeInsight(insightMin);
       }
     }
   }

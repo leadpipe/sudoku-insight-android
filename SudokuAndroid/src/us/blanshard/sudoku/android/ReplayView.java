@@ -27,7 +27,6 @@ import android.graphics.Color;
 import android.graphics.Paint.Style;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 
 import com.google.common.base.Function;
@@ -91,7 +90,6 @@ public class ReplayView extends SudokuView {
     mEliminations.put(elimination.location,
         set == null ? NumSet.of(elimination.numeral) : set.with(elimination.numeral));
     invalidateLocation(elimination.location);
-    Log.d("ReplayView", "Eliminated " + elimination);
   }
 
   public void removeElimination(Assignment elimination) {
@@ -100,7 +98,6 @@ public class ReplayView extends SudokuView {
     if (set != null && set.contains(elimination.numeral))
       mEliminations.put(elimination.location, set.without(elimination.numeral));
     invalidateLocation(elimination.location);
-    Log.d("ReplayView", "Removed elimination " + elimination);
   }
 
   public GridMarks getGridMarks() {
