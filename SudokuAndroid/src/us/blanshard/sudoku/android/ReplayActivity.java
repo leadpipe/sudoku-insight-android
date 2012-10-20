@@ -270,7 +270,10 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       mInsightsText.setText("Error: " + insights.errors.get(0));
     if (mAnalysisRanLong) {
       mAnalysisRanLong = false;
-      stepReplay(true);
+      if (mExploring)
+        startAnalysis();
+      else
+        stepReplay(true);
     }
     mReplayView.selectableColorsUpdated();
   }
@@ -357,6 +360,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           }
         startAnalysis();
         setUndoEnablement();
+        mReplayView.setSelected(null);
         break;
 
       case R.id.cont:
@@ -516,8 +520,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       if (mAntecedentIndex >= 0) {
         mInsightsText.setText("Error: " + mDisproof.getResultingError().getNub());
         mAntecedentIndex = -1;
-        setUndoEnablement();
         startAnalysis();
+        setUndoEnablement();
       } else {
         try {
           while (mUndoStack.getPosition() > mDisproofUndoPosition)
@@ -567,6 +571,9 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       mAnalyze.execute(mReplayView.getGridMarks());
       if (!mRunning)
         mProgress.setVisibility(View.VISIBLE);
+    } else {
+      mAnalysisRanLong = true;
+      maybeCancelAnalysis();
     }
   }
 
