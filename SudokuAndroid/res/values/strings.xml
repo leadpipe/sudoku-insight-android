@@ -7,6 +7,7 @@
     <string name="button_done">Done</string>
     <string name="button_capture_play">Play Now</string>
     <string name="button_capture_save">Save for Later</string>
+    <string name="button_continue">Continue</string>
     <string name="button_give_up">Give Up</string>
     <string name="button_next">Next</string>
     <string name="button_pause">Pause</string>

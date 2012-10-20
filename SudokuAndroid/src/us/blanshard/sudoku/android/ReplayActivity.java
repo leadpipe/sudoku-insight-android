@@ -71,7 +71,6 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private static final String TAG = "ReplayActivity";
   private static final long SET_CYCLE_MILLIS = 500;
   private static final long CLEAR_CYCLE_MILLIS = 200;
-  private static final long ERROR_CYCLE_MILLIS = 2000;
   private ReplayView mReplayView;
   private ProgressBar mProgress;
   private ViewGroup mControls;
@@ -177,6 +176,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     setUpButton(R.id.next);
     setUpButton(R.id.previous);
     setUpButton(R.id.undo);
+    setUpButton(R.id.cont);
 
     mRegistry.addListener(new Sudoku.Adapter() {
       @Override public void moveMade(Sudoku game, Move move) {
@@ -358,6 +358,10 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         startAnalysis();
         setUndoEnablement();
         break;
+
+      case R.id.cont:
+        stepDisproof();
+        break;
     }
   }
 
@@ -369,8 +373,10 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   }
 
   private void setUndoEnablement() {
-    boolean enabled = mUndoStack.getPosition() > mHistoryPosition && mDisproof == null;
-    findViewById(R.id.undo).setEnabled(enabled);
+    boolean undoEnabled = mUndoStack.getPosition() > mHistoryPosition && mDisproof == null;
+    findViewById(R.id.undo).setEnabled(undoEnabled);
+    boolean contEnabled = mDisproof != null && mAntecedentIndex < 0;
+    findViewById(R.id.cont).setEnabled(contEnabled);
   }
 
   @Override public void onSelect(Location loc) {
@@ -387,8 +393,9 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           Insight resultingError = mDisproof.getResultingError();
           assignImplication(resultingError);
           mReplayView.postDelayed(disproofCycler, SET_CYCLE_MILLIS);
+          setUndoEnablement();
         }
-      } else if (mExploring) {
+      } else if (mExploring && mDisproof == null) {
         doCommand(makeMoveCommand(insightMin.insight.getImpliedAssignment()));
         startAnalysis();
         setUndoEnablement();
@@ -509,7 +516,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       if (mAntecedentIndex >= 0) {
         mInsightsText.setText("Error: " + mDisproof.getResultingError().getNub());
         mAntecedentIndex = -1;
-        mReplayView.postDelayed(disproofCycler, ERROR_CYCLE_MILLIS);
+        setUndoEnablement();
+        startAnalysis();
       } else {
         try {
           while (mUndoStack.getPosition() > mDisproofUndoPosition)
@@ -517,6 +525,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         } catch (CommandException e) {
           Log.e(TAG, "Can't back out of disproof", e);
         }
+        updateTrail(-1);
         doCommand(new ElimCommand(mDisproof.getDisprovedAssignment()));
         mDisproof = null;
         startAnalysis();
