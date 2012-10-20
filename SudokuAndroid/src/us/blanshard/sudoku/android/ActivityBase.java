@@ -27,11 +27,13 @@ import android.view.MenuItem;
 public abstract class ActivityBase extends Activity {
   protected Database mDb;
   protected Prefs mPrefs;
+  protected String mInstallationId;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     mDb = Database.instance(this);
     mPrefs = Prefs.instance(this);
+    mInstallationId = Installation.id(this);
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {

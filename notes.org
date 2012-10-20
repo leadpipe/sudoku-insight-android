@@ -46,7 +46,7 @@ END
    - Use json notation for the generator params
    - Possibly add a name that summarizes all of this
 ** TODO Use backup service to keep basic prefs, like generation params
-** TODO Generate a GUID at installation time
+** DONE Generate a GUID at installation time
 ** TODO Write an appengine app that gathers data from the android app
    - use GUID to identify the installation
    - allow login using Google ID to keep different installations from generating the same puzzles
