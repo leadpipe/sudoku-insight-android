@@ -329,8 +329,9 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       case R.id.back:
         mControls.setVisibility(View.GONE);
         mPauseControls.setVisibility(View.VISIBLE);
-        mRunning = true;
         mForward = (v.getId() == R.id.play);
+        stepReplay(true);
+        mRunning = true;
         mReplayView.postDelayed(replayCycler, SET_CYCLE_MILLIS);
         startAnalysis();
         invalidateOptionsMenu();
