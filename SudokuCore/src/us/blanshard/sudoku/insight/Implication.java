@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import us.blanshard.sudoku.core.Assignment;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
@@ -36,7 +35,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public final class Implication extends Insight {
-  private final ImmutableCollection<Insight> antecedents;
+  private final ImmutableList<Insight> antecedents;
   private final Insight consequent;
 
   public Implication(Collection<? extends Insight> antecedents, Insight consequent) {
@@ -85,7 +84,7 @@ public final class Implication extends Insight {
     return getNub() + " \u2235 \u2026 [" + getDepth() + "]";
   }
 
-  public ImmutableCollection<Insight> getAntecedents() {
+  public ImmutableList<Insight> getAntecedents() {
     return antecedents;
   }
 
