@@ -35,6 +35,7 @@ import us.blanshard.sudoku.insight.Analyzer;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
 import us.blanshard.sudoku.insight.DisprovedAssignment;
 import us.blanshard.sudoku.insight.GridMarks;
+import us.blanshard.sudoku.insight.Implication;
 import us.blanshard.sudoku.insight.Insight;
 
 import android.graphics.Color;
@@ -70,6 +71,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private static final String TAG = "ReplayActivity";
   private static final long SET_CYCLE_MILLIS = 500;
   private static final long CLEAR_CYCLE_MILLIS = 200;
+  private static final long ERROR_CYCLE_MILLIS = 2000;
   private ReplayView mReplayView;
   private ProgressBar mProgress;
   private ViewGroup mControls;
@@ -92,6 +94,10 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private Minimize mMinimize;
   private Disprove mDisprove;
   private GridMarks mSolution;
+  private DisprovedAssignment mDisproof;
+  private Implication mImplication;
+  private int mAntecedentIndex;
+  private int mDisproofUndoPosition;
 
   private static final Integer[] sMinAssignmentColors, sUnminAssignmentColors;
   private static final Integer[] sMinDisproofColors, sUnminDisproofColors;
@@ -112,9 +118,14 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     }
   }
 
-  private final Runnable cycler = new Runnable() {
+  private final Runnable replayCycler = new Runnable() {
     @Override public void run() {
       if (mGame != null) stepReplay(false);
+    }
+  };
+  private final Runnable disproofCycler = new Runnable() {
+    @Override public void run() {
+      stepDisproof();
     }
   };
   private final Function<Location, Integer> selectableColors = new Function<Location, Integer>() {
@@ -317,7 +328,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mPauseControls.setVisibility(View.VISIBLE);
         mRunning = true;
         mForward = (v.getId() == R.id.play);
-        mReplayView.postDelayed(cycler, SET_CYCLE_MILLIS);
+        mReplayView.postDelayed(replayCycler, SET_CYCLE_MILLIS);
         startAnalysis();
         invalidateOptionsMenu();
         break;
@@ -358,7 +369,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   }
 
   private void setUndoEnablement() {
-    findViewById(R.id.undo).setEnabled(mUndoStack.getPosition() > mHistoryPosition);
+    boolean enabled = mUndoStack.getPosition() > mHistoryPosition && mDisproof == null;
+    findViewById(R.id.undo).setEnabled(enabled);
   }
 
   @Override public void onSelect(Location loc) {
@@ -368,22 +380,16 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       if (insightMin == null) {
         insightMin = mInsights.disproofs.get(loc);
         if (insightMin != null && mExploring && mReplayView.getInputState().getId() < 0) {
-          DisprovedAssignment da = (DisprovedAssignment) insightMin.insight;
-          try {
-            mUndoStack.doCommand(new ElimCommand(da.getDisprovedAssignment()));
-          } catch (CommandException e) {
-            Log.e(TAG, "Couldn't apply elimination");
-          }
-          startAnalysis();
-          setUndoEnablement();
+          mDisproof = (DisprovedAssignment) insightMin.insight;
+          mDisproofUndoPosition = mUndoStack.getPosition();
+          updateTrail(mGame.newTrail().getId());
+          doCommand(makeMoveCommand(mDisproof.getDisprovedAssignment()));
+          Insight resultingError = mDisproof.getResultingError();
+          assignImplication(resultingError);
+          mReplayView.postDelayed(disproofCycler, SET_CYCLE_MILLIS);
         }
       } else if (mExploring) {
-        try {
-          mUndoStack.doCommand(new MoveCommand(
-              mReplayView.getInputState(), loc, insightMin.insight.getImpliedAssignment().numeral));
-        } catch (CommandException e) {
-          Log.e(TAG, "Couldn't apply assignment");
-        }
+        doCommand(makeMoveCommand(insightMin.insight.getImpliedAssignment()));
         startAnalysis();
         setUndoEnablement();
       }
@@ -392,6 +398,24 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         if (mMinimize != null) mMinimize.cancel();
         minimizeInsight(insightMin);
       }
+    }
+  }
+
+  private void assignImplication(Insight insight) {
+    mImplication = insight instanceof Implication ? (Implication) insight : null;
+    mAntecedentIndex = 0;
+  }
+
+  private MoveCommand makeMoveCommand(Assignment assignment) {
+    return new MoveCommand(
+        mReplayView.getInputState(), assignment.location, assignment.numeral);
+  }
+
+  private void doCommand(Command command) {
+    try {
+      mUndoStack.doCommand(command);
+    } catch (CommandException e) {
+      Log.e(TAG, e.getMessage());
     }
   }
 
@@ -473,9 +497,47 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     }
     if (mRunning) {
       long cycleMillis = nextAssignment() == null ? CLEAR_CYCLE_MILLIS : SET_CYCLE_MILLIS;
-      mReplayView.postDelayed(cycler, cycleMillis);
+      mReplayView.postDelayed(replayCycler, cycleMillis);
     }
     setControlsEnablement();
+  }
+
+  private void stepDisproof() {
+    if (!mExploring) return;
+    Insight insight = nextDisproofAssignment();
+    if (insight == null) {
+      if (mAntecedentIndex >= 0) {
+        mInsightsText.setText("Error: " + mDisproof.getResultingError().getNub());
+        mAntecedentIndex = -1;
+        mReplayView.postDelayed(disproofCycler, ERROR_CYCLE_MILLIS);
+      } else {
+        try {
+          while (mUndoStack.getPosition() > mDisproofUndoPosition)
+            mUndoStack.undo();
+        } catch (CommandException e) {
+          Log.e(TAG, "Can't back out of disproof", e);
+        }
+        doCommand(new ElimCommand(mDisproof.getDisprovedAssignment()));
+        mDisproof = null;
+        startAnalysis();
+        setUndoEnablement();
+      }
+    } else {
+      doCommand(makeMoveCommand(insight.getImpliedAssignment()));
+      mReplayView.postDelayed(disproofCycler, SET_CYCLE_MILLIS);
+    }
+  }
+
+  @Nullable private Insight nextDisproofAssignment() {
+    while (mImplication != null) {
+      while (mAntecedentIndex < mImplication.getAntecedents().size()) {
+        Insight insight = mImplication.getAntecedents().get(mAntecedentIndex++);
+        if (insight.isAssignment())
+          return insight;
+      }
+      assignImplication(mImplication.getConsequent());
+    }
+    return null;
   }
 
   private void pause() {
