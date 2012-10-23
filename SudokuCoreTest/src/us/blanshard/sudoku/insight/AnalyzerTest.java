@@ -98,7 +98,7 @@ public class AnalyzerTest {
     setAll(game.getState(), state);
     setAll(game.getTrail(0), trail);
 
-    boolean complete = Analyzer.analyze(state, callback);
+    boolean complete = Analyzer.analyze(new GridMarks(state), callback);
 
     assertTrue(complete);
     verify(callback, never()).take(isA(Conflict.class));
@@ -136,7 +136,7 @@ public class AnalyzerTest {
     Sudoku game = new Sudoku(puzzle, Sudoku.nullRegistry()).resume();
     setAll(game.getState(), state);
 
-    boolean complete = Analyzer.analyze(state, callback);
+    boolean complete = Analyzer.analyze(new GridMarks(state), callback);
 
     assertTrue(complete);
     verify(callback, never()).take(isA(Conflict.class));
