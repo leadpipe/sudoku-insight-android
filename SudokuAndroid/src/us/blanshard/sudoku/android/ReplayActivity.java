@@ -275,7 +275,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       else
         stepReplay(true);
     }
-    mReplayView.selectableColorsUpdated();
+    if (!mRunning)
+      mReplayView.selectableColorsUpdated();
   }
 
   @SuppressWarnings("unchecked")  // the varargs of Iterable<...>
