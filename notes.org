@@ -18,8 +18,6 @@ END
 ** TODO Rename getState to... what?
 
 * App
-** DONE Bug: Don't use onPause/onResume to pause and resume the game.  See javadoc for onResume.
-** DONE Change the Skip functionality to just start the next game
 ** TODO Kill the prefs for individual symmetries: just use them all
 ** TODO Use "None" as the name for the Random symmetry (when applicable)
 ** TODO Use today's date as the seed for generating puzzles
@@ -46,30 +44,43 @@ END
    - Use json notation for the generator params
    - Possibly add a name that summarizes all of this
 ** TODO Use backup service to keep basic prefs, like generation params
-** DONE Generate a GUID at installation time
 ** TODO Write an appengine app that gathers data from the android app
    - use GUID to identify the installation
    - allow login using Google ID to keep different installations from generating the same puzzles
-** DONE Add a title for the replay page
-** DONE Show insights during replay (rudimentary)
-** TODO Graphical display of insights (rudimentary)
+** DONE Graphical display of insights (rudimentary)
    - when paused:
      - light up all locations with implied moves; on tap, list the insights
-     - also light up all errors: single locations, units, or the actual conflicts
+     - (not done) also light up all errors: single locations, units, or the actual conflicts
      - special highlight for the next assigned location (maybe it's just selected first)
    - when running:
      - list the insights for the next move
-** TODO Figure out how to find, show productive trailheads
-** TODO Graphical display of insights (animation)
-   - when running, animate first relevant insight for the next move
-   - when paused, animate on tap
-   - how to animate:
-     - forced loc: outline unit, illustrate why all the other locations can't
-       contain the numeral, animating elims as needed
-     - forced num: run through the numerals, illustrating why all but one can't
-       be in the location, animating elims as needed
-** DONE Allow exploration in replay
-** DONE Speed up replay playback for "clear" moves
+** DONE Figure out how to find, show productive trailheads
+** TODO Get a better handle on when to stop the replay
+   - we should be stopping on switch of trail, rather than only on lack of justifying insight
+   - we should be showing the move that we stopped on, with the reason for the stop
+** TODO Graphical display of insights (advanced)
+   - when running, display the insights found for the latest move
+   - when paused, display the insights that would be applied on tap
+   - when exploring, display the insights after the move
+   - how to display:
+     - forced loc: the numeral with a representation of the unit as either a line or a square
+     - forced num: the numeral overlaid on a representation of all the numerals
+       in a 3x3 grid, with all but the numeral in question crossed out
+     - overlap: 3x3 grid of numerals within the overlapping locations, with the
+       numerals of the overlaps going through that location shown, and connected
+       with a line somehow
+     - locked set: for each location, the list of possible numerals for that location
+     - conflict: show conflicting assignments in red
+     - barred loc: like forced num, but without an overlaid numeral and with
+       _all_ the numerals in the 3x3 grid crossed out; also, rim the location in
+       red
+     - barred num: rim the unit in red, display the numeral crossed out in every
+       open location
+     - also, we need a way to highlight a move that is not supported by a set of
+       insights.  Maybe this is a special kind of (non-)insight?  I'm thinking
+       maybe a 2x2 grid of question marks behind the numeral
+** TODO Think about animation of insight display
+   - it's mostly the overlaps that would be obviously improved by this
 ** TODO Figure out why the progress indicator stops
    - Damn guava splitter static initialization is one reason
    - But can't be the only thing, or probably even the main one
