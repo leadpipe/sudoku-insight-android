@@ -404,6 +404,10 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       } else if (mExploring && mDisproof == null) {
         doCommand(makeMoveCommand(insightMin.insight.getImpliedAssignment()));
         startAnalysis();
+        mReplayView.clearInsights();
+        for (InsightMin error : mInsights.errors)
+          mReplayView.addInsight(error.insight);
+        mReplayView.addInsight(insightMin.insight);
         setUndoEnablement();
       }
       if (insightMin != null && !insightMin.minimized && !mExploring) {
@@ -498,9 +502,14 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           updateTrail(move.trailId);
           loc = move.getLocation();
         } else updateTrail(-1);
+        startAnalysis();
         mTimer.setText(time);
         mReplayView.setSelected(loc);
-        startAnalysis();
+        mReplayView.clearInsights();
+        for (InsightMin insightMin : mInsights.errors)
+          mReplayView.addInsight(insightMin.insight);
+        if (mInsights.assignments.containsKey(loc))
+          mReplayView.addInsight(mInsights.assignments.get(loc).insight);
       }
 
       if (mRunning && !worked) {
