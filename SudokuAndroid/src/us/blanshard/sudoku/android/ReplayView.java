@@ -42,8 +42,8 @@ import android.view.MotionEvent;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.util.Collection;
 import java.util.Map;
@@ -143,7 +143,7 @@ public class ReplayView extends SudokuView {
       Conflict conflict = (Conflict) insight;
       mConflicts.addAll(conflict.getLocations());
     } else {
-      if (mInsights == null) mInsights = Lists.newArrayList();
+      if (mInsights == null) mInsights = Sets.newLinkedHashSet();
       mInsights.add(insight);
     }
   }
