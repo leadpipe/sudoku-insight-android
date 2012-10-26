@@ -506,10 +506,12 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mTimer.setText(time);
         mReplayView.setSelected(loc);
         mReplayView.clearInsights();
-        for (InsightMin insightMin : mInsights.errors)
-          mReplayView.addInsight(insightMin.insight);
-        if (mInsights.assignments.containsKey(loc))
-          mReplayView.addInsight(mInsights.assignments.get(loc).insight);
+        if (mInsights != null) {
+          for (InsightMin insightMin : mInsights.errors)
+            mReplayView.addInsight(insightMin.insight);
+          if (mInsights.assignments.containsKey(loc))
+            mReplayView.addInsight(mInsights.assignments.get(loc).insight);
+        }
       }
 
       if (mRunning && !worked) {

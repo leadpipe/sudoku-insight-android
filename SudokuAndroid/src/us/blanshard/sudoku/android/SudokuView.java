@@ -68,12 +68,15 @@ public class SudokuView extends View {
   private List<TrailItem> mTrails = ImmutableList.<TrailItem> of();
   private boolean mTrailActive;
 
-  private int mThickLineWidth = NORMAL_THICK_LINE_WIDTH;
+  protected int mThickLineWidth = NORMAL_THICK_LINE_WIDTH;
   protected int mSquareSize;
   private float mClockRadius;
   protected int[] mOffsetsX;
   protected int[] mOffsetsY;
   protected final Paint mPaint = new Paint();
+  protected float mTextSize;
+  protected float mToBaseline;
+
 
   private Sudoku.State mState;
   private int mPointerId = INVALID_POINTER_ID;
@@ -270,9 +273,9 @@ public class SudokuView extends View {
     mPaint.setStyle(Paint.Style.FILL);
     mPaint.setTextAlign(Align.CENTER);
 
-    float textSize = mSquareSize * (mThickLineWidth > THIN_LINE_WIDTH ? 0.75f : 0.85f);
-    mPaint.setTextSize(textSize);
-    float toBaseline = (mSquareSize - mPaint.getTextSize()) / 2 - mPaint.ascent() - 1;
+    mTextSize = mSquareSize * (mThickLineWidth > THIN_LINE_WIDTH ? 0.75f : 0.85f);
+    mPaint.setTextSize(mTextSize);
+    mToBaseline = (mSquareSize - mPaint.getTextSize()) / 2 - mPaint.ascent() - 1;
     float half = mSquareSize * 0.5f;
     float toCenter = half;
 
@@ -291,7 +294,7 @@ public class SudokuView extends View {
         float left = mOffsetsX[loc.column.index];
         float top = mOffsetsY[loc.row.index];
         if (num != null) {
-          canvas.drawText(num.toString(), left + toCenter, top + toBaseline, mPaint);
+          canvas.drawText(num.toString(), left + toCenter, top + mToBaseline, mPaint);
         }
         if (!given && !mTrails.isEmpty()) {
           mPaint.setFakeBoldText(false);
@@ -308,7 +311,7 @@ public class SudokuView extends View {
             }
           }
           mPaint.setTextSkewX(0);
-          mPaint.setTextSize(textSize);
+          mPaint.setTextSize(mTextSize);
           mPaint.setColor(Color.BLACK);
         }
       }
@@ -334,21 +337,21 @@ public class SudokuView extends View {
       mPaint.setColor(color);
 
       if (mChoice >= 0) {
-        drawChoice(mChoice, canvas, x + toCenter, y + toBaseline, mPaint);
-        drawChoice(mChoice, canvas, mPreviewX, mPreviewY - half + toBaseline, mPaint);
+        drawChoice(mChoice, canvas, x + toCenter, y + mToBaseline, mPaint);
+        drawChoice(mChoice, canvas, mPreviewX, mPreviewY - half + mToBaseline, mPaint);
         if (mPreviewX2 > mPreviewX)
-          drawChoice(mChoice, canvas, mPreviewX2, mPreviewY - half + toBaseline, mPaint);
+          drawChoice(mChoice, canvas, mPreviewX2, mPreviewY - half + mToBaseline, mPaint);
       }
 
       mPaint.setTextSize(Math.max(7, mSquareSize * 0.33f));
 
-      toBaseline = -mPaint.ascent() / 2.0f;
-      float r2 = r - toBaseline;
+      mToBaseline = -mPaint.ascent() / 2.0f;
+      float r2 = r - mToBaseline;
       for (int i = 0; i <= 9; ++i) {
         float radians = (float) (i * Math.PI / 6 - Math.PI / 2);
         x = r2 * FloatMath.cos(radians);
         y = r2 * FloatMath.sin(radians);
-        drawChoice(i, canvas, x + cx, y + cy + toBaseline, mPaint);
+        drawChoice(i, canvas, x + cx, y + cy + mToBaseline, mPaint);
       }
     }
   }

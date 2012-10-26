@@ -54,6 +54,7 @@ import java.util.Map;
 public class ReplayView extends SudokuView {
 
   private static final int ELIM_COLOR = Color.argb(128, 255, 100, 100);
+  private static final int ASGMT_COLOR = Color.argb(128, 96, 96, 128);
 
   private OnSelectListener mOnSelectListener;
   @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -132,6 +133,7 @@ public class ReplayView extends SudokuView {
   public void clearInsights() {
     mInsights = null;
     mConflicts.clear();
+    invalidate();
   }
 
   public void addInsight(Insight insight) {
@@ -146,6 +148,7 @@ public class ReplayView extends SudokuView {
       if (mInsights == null) mInsights = Sets.newLinkedHashSet();
       mInsights.add(insight);
     }
+    invalidate();
   }
 
   public void addInsights(Iterable<Insight> insights) {
@@ -156,6 +159,7 @@ public class ReplayView extends SudokuView {
   @Override protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
     mPaint.setStyle(Style.STROKE);
+    mPaint.setStrokeWidth(mThickLineWidth);
     mPaint.setTypeface(Typeface.DEFAULT);
     mPaint.setFakeBoldText(false);
     for (Location loc : Location.ALL) {
@@ -178,13 +182,11 @@ public class ReplayView extends SudokuView {
     float x = mOffsetsX[loc.column.index];
     float y = mOffsetsY[loc.row.index];
     float w = mPaint.measureText(text);
-    float textSize = mPaint.getTextSize();
-    if (w >= s - 2) mPaint.setTextSize(textSize * (s - 2) / w);
+    if (w >= s - 2) mPaint.setTextSize(mTextSize * (s - 2) / w);
     mPaint.setColor(ELIM_COLOR);
-    mPaint.setStrokeWidth(s * 0.05f);
     canvas.drawLine(x, y, x + s, y + s, mPaint);
-    canvas.drawText(text, x + s/2, y - mPaint.ascent() + (s - mPaint.getTextSize()) / 2 - 1, mPaint);
-    mPaint.setTextSize(textSize);
+    canvas.drawText(text, x + s/2, y + mToBaseline, mPaint);
+    mPaint.setTextSize(mTextSize);
   }
 
   private void drawSelectable(Canvas canvas, Location loc) {
@@ -194,7 +196,6 @@ public class ReplayView extends SudokuView {
     float s = mSquareSize;
     float x = mOffsetsX[loc.column.index];
     float y = mOffsetsY[loc.row.index];
-    mPaint.setStrokeWidth(0);
     canvas.drawRect(x + 1, y + 1, x + s - 1, y + s - 1, mPaint);
   }
 
@@ -235,7 +236,27 @@ public class ReplayView extends SudokuView {
   }
 
   private void drawForcedLoc(Canvas canvas, ForcedLoc forcedLoc) {
-
+    Location loc = forcedLoc.getLocation();
+    float s = mSquareSize;
+    float h = s * 0.5f;
+    float x = mOffsetsX[loc.column.index];
+    float y = mOffsetsY[loc.row.index];
+    mPaint.setColor(ASGMT_COLOR);
+    if (getInputState().get(loc) == null) {
+      canvas.drawText(forcedLoc.getNumeral().toString(), x + h, y + mToBaseline, mPaint);
+    }
+    switch (forcedLoc.getUnit().getType()) {
+      case ROW:
+        canvas.drawLine(x + h, y, x + h, y + s, mPaint);
+        break;
+      case COLUMN:
+        canvas.drawLine(x, y + h, x + s, y + h, mPaint);
+        break;
+      case BLOCK:
+        float q = h * 0.5f;
+        canvas.drawRect(x + q, y + q, x + h + q, y + h + q, mPaint);
+        break;
+    }
   }
 
   private void drawForcedNum(Canvas canvas, ForcedNum forcedNum) {
