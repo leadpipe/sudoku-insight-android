@@ -53,6 +53,12 @@ public final class NumSet extends AbstractSet<Numeral> implements Set<Numeral> {
     return instances[bits];
   }
 
+  /** The empty NumSet. */
+  public static final NumSet NONE;
+
+  /** The full NumSet. */
+  public static final NumSet ALL;
+
   /** Returns the set containing the given numerals. */
   public static NumSet of(Numeral... nums) {
     int bits = 0;
@@ -163,5 +169,7 @@ public final class NumSet extends AbstractSet<Numeral> implements Set<Numeral> {
     for (short i = 0; i < instances.length; ++i) {
       instances[i] = new NumSet(i);
     }
+    NONE = ofBits(0);
+    ALL = NONE.not();
   }
 }

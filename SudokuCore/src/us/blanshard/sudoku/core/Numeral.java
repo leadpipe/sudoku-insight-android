@@ -56,6 +56,10 @@ public final class Numeral implements Comparable<Numeral> {
     return num == null ? 0 : num.number;
   }
 
+  public NumSet asSet() {
+    return NumSet.ofBits(bit);
+  }
+
   /** All the numerals. */
   public static final List<Numeral> ALL;
 

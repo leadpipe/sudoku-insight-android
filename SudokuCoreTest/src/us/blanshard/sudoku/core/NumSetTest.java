@@ -20,15 +20,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Test;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
-import org.junit.Test;
-
-import us.blanshard.sudoku.core.NumSet;
-import us.blanshard.sudoku.core.Numeral;
 
 public class NumSetTest {
 
@@ -40,8 +37,8 @@ public class NumSetTest {
   }
 
   @Test public void of() {
-    assertEquals(set(), NumSet.of());
-    assertEquals(set(4), NumSet.of(Numeral.of(4)));
+    assertEquals(set(), NumSet.NONE);
+    assertEquals(set(4), Numeral.of(4).asSet());
     assertEquals(set(1, 8), NumSet.of(Numeral.of(1), Numeral.of(8)));
   }
 

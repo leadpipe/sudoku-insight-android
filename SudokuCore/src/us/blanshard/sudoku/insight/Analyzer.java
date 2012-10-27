@@ -222,7 +222,7 @@ public class Analyzer {
 
     NumSet getNums(Unit unit) {
       NumSet set = nums.get(unit);
-      return set == null ? NumSet.of() : set;
+      return set == null ? NumSet.NONE : set;
     }
 
     UnitSubset getLocs(Unit unit) {
@@ -359,7 +359,7 @@ public class Analyzer {
   private static void findHiddenSets(GridMarks gridMarks, Callback callback,
       SetState setState, Unit unit, int size, int[] indices) {
     NumSet inSets = setState.getNums(unit);
-    NumSet toCheck = NumSet.of();
+    NumSet toCheck = NumSet.NONE;
     int unsetCount = 0;
     for (Numeral num : Numeral.ALL) {
       UnitSubset possible = gridMarks.marks.get(unit, num);
@@ -383,7 +383,7 @@ public class Analyzer {
         if (alreadyUsed) continue;
         UnitSubset locs = UnitSubset.ofBits(unit, bits);
         if (locs.size() == size) {
-          NumSet nums = NumSet.of();
+          NumSet nums = NumSet.NONE;
           for (int i = 0; i < size; ++i)
             nums = nums.with(toCheck.get(indices[i]));
           setState.add(nums, locs);
@@ -398,8 +398,8 @@ public class Analyzer {
     for (Unit unit : Unit.allUnits()) {
 
       // First look for actual conflicting assignments in this unit.
-      NumSet seen = NumSet.ofBits(0);
-      NumSet conflicting = NumSet.ofBits(0);
+      NumSet seen = NumSet.NONE;
+      NumSet conflicting = NumSet.NONE;
       for (Location loc : unit) {
         Numeral num = gridMarks.grid.get(loc);
         if (num != null) {

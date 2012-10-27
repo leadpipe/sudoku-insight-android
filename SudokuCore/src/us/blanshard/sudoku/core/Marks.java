@@ -171,7 +171,7 @@ public final class Marks {
         answer &= eliminate(peer, num);
 
       // Remove the other numerals from this location.
-      NumSet others = get(loc).minus(NumSet.of(num));
+      NumSet others = get(loc).minus(num.asSet());
       for (Numeral other : others)
         answer &= eliminate(loc, other);
 
@@ -234,7 +234,7 @@ public final class Marks {
      * consistent with the rules of Sudoku.
      */
     public boolean assignRecursively(Location loc, Numeral num) {
-      NumSet others = get(loc).minus(NumSet.of(num));
+      NumSet others = get(loc).minus(num.asSet());
       for (Numeral other : others)
         if (!eliminateRecursively(loc, other))
           return false;
@@ -376,7 +376,7 @@ public final class Marks {
       words = words.subList(1, words.size());
     checkArgument(words.size() == 81, "expected 81 words, got %s", words);
     for (Location loc : Location.ALL) {
-      NumSet nums = NumSet.of();
+      NumSet nums = NumSet.NONE;
       for (char c : words.get(loc.index).toCharArray()) {
         if (c >= '1' && c <= '9')
           nums = nums.with(Numeral.of(c - '0'));

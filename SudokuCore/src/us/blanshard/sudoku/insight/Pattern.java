@@ -397,17 +397,17 @@ public abstract class Pattern {
   }
 
   public static @Nullable BarredLoc barredLocationOrNull(Grid grid, Location loc) {
-    NumSet inBlock = NumSet.of();
+    NumSet inBlock = NumSet.NONE;
     for (Location blockLoc : loc.block) {
       Numeral num = grid.get(blockLoc);
       if (num != null) inBlock = inBlock.with(num);
     }
-    NumSet inRowButNotBlock = NumSet.of();
+    NumSet inRowButNotBlock = NumSet.NONE;
     for (Location rowLoc : loc.row.subtract(loc.block)) {
       Numeral num = grid.get(rowLoc);
       if (num != null && !inBlock.contains(num)) inRowButNotBlock = inRowButNotBlock.with(num);
     }
-    NumSet inColButNotBlock = NumSet.of();
+    NumSet inColButNotBlock = NumSet.NONE;
     for (Location colLoc : loc.column.subtract(loc.block)) {
       Numeral num = grid.get(colLoc);
       if (num != null && !inBlock.contains(num)) inColButNotBlock = inColButNotBlock.with(num);
@@ -678,17 +678,17 @@ public abstract class Pattern {
   }
 
   public static ForcedNum forcedNumeral(Grid grid, Location loc) {
-    NumSet inBlock = NumSet.of();
+    NumSet inBlock = NumSet.NONE;
     for (Location blockLoc : loc.block) {
       Numeral num = grid.get(blockLoc);
       if (num != null) inBlock = inBlock.with(num);
     }
-    NumSet inRowButNotBlock = NumSet.of();
+    NumSet inRowButNotBlock = NumSet.NONE;
     for (Location rowLoc : loc.row.subtract(loc.block)) {
       Numeral num = grid.get(rowLoc);
       if (num != null && !inBlock.contains(num)) inRowButNotBlock = inRowButNotBlock.with(num);
     }
-    NumSet inColButNotBlock = NumSet.of();
+    NumSet inColButNotBlock = NumSet.NONE;
     for (Location colLoc : loc.column.subtract(loc.block)) {
       Numeral num = grid.get(colLoc);
       if (num != null && !inBlock.contains(num)) inColButNotBlock = inColButNotBlock.with(num);

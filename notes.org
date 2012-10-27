@@ -65,20 +65,31 @@ END
    - how to display:
      - forced loc: the numeral with a representation of the unit as either a line or a square
      - forced num: the numeral overlaid on a representation of all the numerals
-       in a 3x3 grid, with all but the numeral in question crossed out
-     - overlap: 3x3 grid of numerals within the overlapping locations, with the
+       in a clock face, with all but the numeral in question crossed out
+     - overlap: clock face of numerals within the overlapping locations, with the
        numerals of the overlaps going through that location shown, and connected
        with a line somehow
      - locked set: for each location, the list of possible numerals for that location
      - conflict: show conflicting assignments in red
      - barred loc: like forced num, but without an overlaid numeral and with
-       _all_ the numerals in the 3x3 grid crossed out; also, rim the location in
+       _all_ the numerals in the clock face crossed out; also, rim the location in
        red
      - barred num: rim the unit in red, display the numeral crossed out in every
        open location
      - also, we need a way to highlight a move that is not supported by a set of
        insights.  Maybe this is a special kind of (non-)insight?  I'm thinking
        maybe a 2x2 grid of question marks behind the numeral
+   - per-location insight display:
+     - 3 bits for unit indicators; set by forced loc, overlap, locked set
+     - NumSet for crossed-out numerals on clock face; set by forced num,
+       overlap, locked set, barred loc, barred num.
+     - maybe 2nd NumSet for the error ones, to display in red?
+     - NumSet for numerals to be highlighted on the clock face, set by overlaps
+     - NumSet for numerals to be displayed within the clock circle: set by
+       assignments and locked sets
+     - flag for error border
+     - flag for question marks
+   - list or set of units containing errors for border
 ** TODO Think about animation of insight display
    - it's mostly the overlaps that would be obviously improved by this
 ** TODO Figure out why the progress indicator stops

@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
 public class SudokuView extends View {
   public static final int MAX_VISIBLE_TRAILS = 4;
 
-  private static final double CLOCK_RADIUS_FACTOR = 0.85;
+  private static final float CLOCK_RADIUS_FACTOR = 0.85f;
   private static final int CLOCK_RADIUS_DP = 60;  // 3/8"
   private static final int THIN_LINE_WIDTH = 1;
   private static final int NORMAL_THICK_LINE_WIDTH = 3;
@@ -75,8 +75,6 @@ public class SudokuView extends View {
   protected int[] mOffsetsY;
   protected final Paint mPaint = new Paint();
   protected float mTextSize;
-  protected float mToBaseline;
-
 
   private Sudoku.State mState;
   private int mPointerId = INVALID_POINTER_ID;
@@ -214,7 +212,8 @@ public class SudokuView extends View {
         : size < SMALL_SIZE_CUTOFF ? SMALL_THICK_LINE_WIDTH
         : NORMAL_THICK_LINE_WIDTH;
     mSquareSize = (size - 4 * mThickLineWidth - 6 * THIN_LINE_WIDTH) / 9;
-    mClockRadius = (float) Math.max(mSquareSize * CLOCK_RADIUS_FACTOR,
+    mTextSize = mSquareSize * (mThickLineWidth > THIN_LINE_WIDTH ? 0.75f : 0.85f);
+    mClockRadius = Math.max(mSquareSize * CLOCK_RADIUS_FACTOR,
         getResources().getDisplayMetrics().density * CLOCK_RADIUS_DP);
 
     int sizePlus = THIN_LINE_WIDTH + mSquareSize;
@@ -273,9 +272,8 @@ public class SudokuView extends View {
     mPaint.setStyle(Paint.Style.FILL);
     mPaint.setTextAlign(Align.CENTER);
 
-    mTextSize = mSquareSize * (mThickLineWidth > THIN_LINE_WIDTH ? 0.75f : 0.85f);
     mPaint.setTextSize(mTextSize);
-    mToBaseline = (mSquareSize - mPaint.getTextSize()) / 2 - mPaint.ascent() - 1;
+    float toBaseline = calcToBaseline();
     float half = mSquareSize * 0.5f;
     float toCenter = half;
 
@@ -294,7 +292,7 @@ public class SudokuView extends View {
         float left = mOffsetsX[loc.column.index];
         float top = mOffsetsY[loc.row.index];
         if (num != null) {
-          canvas.drawText(num.toString(), left + toCenter, top + mToBaseline, mPaint);
+          canvas.drawText(num.toString(), left + toCenter, top + toBaseline, mPaint);
         }
         if (!given && !mTrails.isEmpty()) {
           mPaint.setFakeBoldText(false);
@@ -337,23 +335,27 @@ public class SudokuView extends View {
       mPaint.setColor(color);
 
       if (mChoice >= 0) {
-        drawChoice(mChoice, canvas, x + toCenter, y + mToBaseline, mPaint);
-        drawChoice(mChoice, canvas, mPreviewX, mPreviewY - half + mToBaseline, mPaint);
+        drawChoice(mChoice, canvas, x + toCenter, y + toBaseline, mPaint);
+        drawChoice(mChoice, canvas, mPreviewX, mPreviewY - half + toBaseline, mPaint);
         if (mPreviewX2 > mPreviewX)
-          drawChoice(mChoice, canvas, mPreviewX2, mPreviewY - half + mToBaseline, mPaint);
+          drawChoice(mChoice, canvas, mPreviewX2, mPreviewY - half + toBaseline, mPaint);
       }
 
       mPaint.setTextSize(Math.max(7, mSquareSize * 0.33f));
 
-      mToBaseline = -mPaint.ascent() / 2.0f;
-      float r2 = r - mToBaseline;
+      toBaseline = -mPaint.ascent() / 2.0f;
+      float r2 = r - toBaseline;
       for (int i = 0; i <= 9; ++i) {
         float radians = (float) (i * Math.PI / 6 - Math.PI / 2);
         x = r2 * FloatMath.cos(radians);
         y = r2 * FloatMath.sin(radians);
-        drawChoice(i, canvas, x + cx, y + cy + mToBaseline, mPaint);
+        drawChoice(i, canvas, x + cx, y + cy + toBaseline, mPaint);
       }
     }
+  }
+
+  protected float calcToBaseline() {
+    return (mSquareSize - mPaint.getTextSize()) / 2 - mPaint.ascent() - 1;
   }
 
   private void drawChoice(int choice, Canvas canvas, float x, float y, Paint paint) {
