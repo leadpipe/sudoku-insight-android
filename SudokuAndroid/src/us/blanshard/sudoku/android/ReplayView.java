@@ -318,7 +318,7 @@ public class ReplayView extends SudokuView {
       mPaint.setStyle(Style.FILL);
       mPaint.setColor(ELIM_COLOR);
       for (Numeral num : locDisplay.crossedOut) {
-        canvas.drawText("\u00d7", x + mClockX[num.number], y + mClockY[num.number], mPaint);
+        canvas.drawText("\u274c", x + mClockX[num.number], y + mClockY[num.number], mPaint);
       }
     }
 
