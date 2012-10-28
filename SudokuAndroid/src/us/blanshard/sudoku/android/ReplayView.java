@@ -15,8 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.LocSet;
 import us.blanshard.sudoku.core.Location;
@@ -41,6 +39,7 @@ import android.graphics.Color;
 import android.graphics.Paint.Style;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
+import android.util.FloatMath;
 import android.view.MotionEvent;
 
 import com.google.common.base.Function;
@@ -56,8 +55,11 @@ import java.util.Map;
  */
 public class ReplayView extends SudokuView {
 
+  private static final float ASGMT_SCALE = 0.75f;
+  private static final float CLOCK_SCALE = 0.4f;
   private static final int ELIM_COLOR = Color.argb(128, 255, 100, 100);
   private static final int ASGMT_COLOR = Color.argb(128, 96, 96, 128);
+  private static final int UNIT_COLOR = Color.argb(128, 96, 96, 128);
   private static final int UNIT_MASK = 7;
   private static final int ERROR_BORDER_MASK = 8;
   private static final int QUESTION_MASK = 16;
@@ -72,8 +74,9 @@ public class ReplayView extends SudokuView {
   private Map<Location, LocDisplay> mLocDisplays;
   private Collection<Unit> mErrorUnits;
 
-  private float mInsightTextSize;
   private float mToBaseline;
+  private float[] mClockX;
+  private float[] mClockY;
 
   public ReplayView(Context context, AttributeSet attrs) {
     super(context, attrs);
@@ -175,9 +178,20 @@ public class ReplayView extends SudokuView {
 
   @Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    mInsightTextSize = mTextSize * 0.75f;
-    mPaint.setTextSize(mInsightTextSize);
+    mPaint.setTextSize(mTextSize * ASGMT_SCALE);
     mToBaseline = calcToBaseline();
+
+    mPaint.setTextSize(mTextSize * CLOCK_SCALE);
+    float r = (mSquareSize + mPaint.ascent()) * 0.5f - mThickLineWidth;
+    float h = mSquareSize * 0.5f;
+
+    mClockX = new float[10];
+    mClockY = new float[10];
+    for (Numeral num : Numeral.ALL) {
+      float radians = calcRadians(num.number);
+      mClockX[num.number] = h + r * FloatMath.cos(radians);
+      mClockY[num.number] = h + r * FloatMath.sin(radians);
+    }
   }
 
   @Override protected void onDraw(Canvas canvas) {
@@ -187,14 +201,15 @@ public class ReplayView extends SudokuView {
     mPaint.setStrokeWidth(mThickLineWidth);
     mPaint.setTypeface(Typeface.DEFAULT);
     mPaint.setFakeBoldText(false);
-    mPaint.setTextSize(mInsightTextSize);
+    mPaint.setTextSize(mTextSize * ASGMT_SCALE);
     for (Location loc : Location.ALL) {
-      drawEliminations(canvas, loc);
       drawSelectable(canvas, loc);
+      if (mLocDisplays != null)
+        drawInsights(canvas, loc, mLocDisplays.get(loc));
     }
-    if (mInsights != null)
-      for (Insight insight : mInsights)
-        drawInsight(canvas, insight);
+    if (mErrorUnits != null)
+      for (Unit unit : mErrorUnits)
+        drawErrorUnit(canvas, unit);
   }
 
   private void buildLocDisplays() {
@@ -259,6 +274,11 @@ public class ReplayView extends SudokuView {
         }
       }
     }
+    if (mEliminations != null) {
+      for (Map.Entry<Location, NumSet> entry : mEliminations.entrySet()) {
+        getLocDisplay(entry.getKey()).crossOut(entry.getValue());
+      }
+    }
   }
 
   private LocDisplay getLocDisplay(Location loc) {
@@ -268,22 +288,73 @@ public class ReplayView extends SudokuView {
     return answer;
   }
 
-  private void drawEliminations(Canvas canvas, Location loc) {
-    if (mGame == null || mGame.getState().get(loc) != null) return;
-    NumSet set = mEliminations == null ? null : mEliminations.get(loc);
-    if (set == null || set.isEmpty()) return;
-    StringBuilder sb = new StringBuilder().append(set.get(0).number);
-    for (int i = 1; i < set.size(); ++i) sb.append(',').append(set.get(i).number);
-    String text = sb.toString();
+  private void drawInsights(Canvas canvas, Location loc, LocDisplay locDisplay) {
+    if (locDisplay == null) return;
+
     float s = mSquareSize;
+    float h = s * 0.5f;
     float x = mOffsetsX[loc.column.index];
     float y = mOffsetsY[loc.row.index];
-    float w = mPaint.measureText(text);
-    if (w >= s - 2) mPaint.setTextSize(mInsightTextSize * (s - 2) / w);
-    mPaint.setColor(ELIM_COLOR);
-    canvas.drawLine(x, y, x + s, y + s, mPaint);
-    canvas.drawText(text, x + s/2, y + mToBaseline, mPaint);
-    mPaint.setTextSize(mInsightTextSize);
+
+    if ((locDisplay.flags & ERROR_BORDER_MASK) != 0) {
+      mPaint.setColor(Color.RED);
+      canvas.drawRect(x, y, x + s, y + s, mPaint);
+    }
+
+    if ((locDisplay.flags & UNIT_MASK) != 0) {
+      mPaint.setColor(UNIT_COLOR);
+      if (locDisplay.hasUnit(Unit.Type.ROW))
+        canvas.drawLine(x, y + h, x + s, y + h, mPaint);
+      if (locDisplay.hasUnit(Unit.Type.COLUMN))
+        canvas.drawLine(x + h, y, x + h, y + s, mPaint);
+      if (locDisplay.hasUnit(Unit.Type.BLOCK)) {
+        float q = h * 0.5f;
+        canvas.drawRect(x + q, y + q, x + h + q, y + h + q, mPaint);
+      }
+    }
+
+    if (!locDisplay.crossedOut.isEmpty()) {
+      mPaint.setTextSize(mTextSize * CLOCK_SCALE);
+      mPaint.setStyle(Style.FILL);
+      mPaint.setColor(ELIM_COLOR);
+      for (Numeral num : locDisplay.crossedOut) {
+        canvas.drawText("\u00d7", x + mClockX[num.number], y + mClockY[num.number], mPaint);
+      }
+    }
+
+    boolean open = isOpen(loc);
+    if (open && !locDisplay.overlaps.isEmpty()) {
+      mPaint.setTextSize(mTextSize * CLOCK_SCALE);
+      mPaint.setStyle(Style.FILL);
+      mPaint.setColor(ASGMT_COLOR);
+      for (Numeral num : locDisplay.overlaps) {
+        canvas.drawText(num.toString(), x + mClockX[num.number], y + mClockY[num.number], mPaint);
+      }
+    }
+
+    if (open && !locDisplay.possibles.isEmpty()) {
+      mPaint.setTextSize(mTextSize * ASGMT_SCALE);
+      mPaint.setStyle(Style.FILL);
+      mPaint.setColor(ASGMT_COLOR);
+      String text = locDisplay.possibles.toString();
+      text = text.substring(1, text.length() - 1);  // strip brackets
+      float w = mPaint.measureText(text);
+      if (w >= s - 2) mPaint.setTextSize(mTextSize * ASGMT_SCALE * (s - 2) / w);
+      canvas.drawText(text, x + h, y + mToBaseline, mPaint);
+    }
+
+    mPaint.setTextSize(mTextSize * ASGMT_SCALE);
+    mPaint.setStyle(Style.STROKE);
+  }
+
+  private void drawErrorUnit(Canvas canvas, Unit unit) {
+    mPaint.setColor(Color.RED);
+    float s = mSquareSize;
+    float top = mOffsetsX[unit.get(0).column.index];
+    float left = mOffsetsY[unit.get(0).row.index];
+    float bottom = s + mOffsetsX[unit.get(9 - 1).column.index];
+    float right = s + mOffsetsY[unit.get(9 - 1).row.index];
+    canvas.drawRect(left, top, right, bottom, mPaint);
   }
 
   private void drawSelectable(Canvas canvas, Location loc) {
@@ -294,93 +365,6 @@ public class ReplayView extends SudokuView {
     float x = mOffsetsX[loc.column.index];
     float y = mOffsetsY[loc.row.index];
     canvas.drawRect(x + 1, y + 1, x + s - 1, y + s - 1, mPaint);
-  }
-
-  private void drawInsight(Canvas canvas, Insight insight) {
-    switch (insight.type) {
-      case BARRED_LOCATION:
-        drawBarredLoc(canvas, (BarredLoc) insight);
-        break;
-
-      case BARRED_NUMERAL:
-        drawBarredNum(canvas, (BarredNum) insight);
-        break;
-
-      case FORCED_LOCATION:
-        drawForcedLoc(canvas, (ForcedLoc) insight);
-        break;
-
-      case FORCED_NUMERAL:
-        drawForcedNum(canvas, (ForcedNum) insight);
-        break;
-
-      case LOCKED_SET:
-        drawLockedSet(canvas, (LockedSet) insight);
-        break;
-
-      case OVERLAP:
-        drawOverlap(canvas, (Overlap) insight);
-        break;
-    }
-  }
-
-  private void drawBarredLoc(Canvas canvas, BarredLoc barredLoc) {
-    mPaint.setColor(Color.RED);
-    Location loc = barredLoc.getLocation();
-    float s = mSquareSize;
-    float x = mOffsetsX[loc.column.index];
-    float y = mOffsetsY[loc.row.index];
-    canvas.drawRect(x, y, x + s, y + s, mPaint);
-    // TODO: x out all of 1-9 on the clock face
-  }
-
-  private void drawBarredNum(Canvas canvas, BarredNum barredNum) {
-    mPaint.setColor(Color.RED);
-    Unit unit = barredNum.getUnit();
-    float s = mSquareSize;
-    float top = mOffsetsX[unit.get(0).column.index];
-    float left = mOffsetsY[unit.get(0).row.index];
-    float bottom = s + mOffsetsX[unit.get(9 - 1).column.index];
-    float right = s + mOffsetsY[unit.get(9 - 1).row.index];
-    canvas.drawRect(left, top, right, bottom, mPaint);
-    // TODO: for each open location in the unit, x out the numeral
-  }
-
-  private void drawForcedLoc(Canvas canvas, ForcedLoc forcedLoc) {
-    mPaint.setColor(ASGMT_COLOR);
-    Location loc = forcedLoc.getLocation();
-    float s = mSquareSize;
-    float h = s * 0.5f;
-    float x = mOffsetsX[loc.column.index];
-    float y = mOffsetsY[loc.row.index];
-    if (isOpen(loc)) {
-      canvas.drawText(forcedLoc.getNumeral().toString(), x + h, y + mToBaseline, mPaint);
-    }
-    switch (forcedLoc.getUnit().getType()) {
-      case ROW:
-        canvas.drawLine(x + h, y, x + h, y + s, mPaint);
-        break;
-      case COLUMN:
-        canvas.drawLine(x, y + h, x + s, y + h, mPaint);
-        break;
-      case BLOCK:
-        float q = h * 0.5f;
-        canvas.drawRect(x + q, y + q, x + h + q, y + h + q, mPaint);
-        break;
-    }
-  }
-
-  private void drawForcedNum(Canvas canvas, ForcedNum forcedNum) {
-    mPaint.setColor(ASGMT_COLOR);
-
-  }
-
-  private void drawLockedSet(Canvas canvas, LockedSet lockedSet) {
-
-  }
-
-  private void drawOverlap(Canvas canvas, Overlap overlap) {
-
   }
 
   private boolean isOpen(Location loc) {
@@ -404,29 +388,26 @@ public class ReplayView extends SudokuView {
    * Combines display info for all the insights that affect a given location.
    */
   private static class LocDisplay {
-    int flags;
-    NumSet crossedOut = NumSet.NONE;
-    NumSet overlaps = NumSet.NONE;
-    NumSet possibles = NumSet.NONE;
+    public int flags;
+    public NumSet crossedOut = NumSet.NONE;
+    public NumSet overlaps = NumSet.NONE;
+    public NumSet possibles = NumSet.NONE;
 
-    void addUnit(Unit unit) {
+    public void addUnit(Unit unit) {
       flags |= unitFlag(unit.getType());
     }
 
-    boolean hasUnit(Unit.Type type) {
+    public boolean hasUnit(Unit.Type type) {
       return (flags & unitFlag(type)) != 0;
     }
 
-    void crossOut(NumSet set) {
+    public void crossOut(NumSet set) {
       crossedOut = crossedOut.or(set);
     }
 
-    void updatePossibles(NumSet set) {
+    public void updatePossibles(NumSet set) {
       if (possibles == NumSet.NONE) possibles = set;
-      else {
-        possibles = possibles.and(set);
-        checkState(possibles.isEmpty());
-      }
+      else possibles = possibles.and(set);
     }
 
     private int unitFlag(Unit.Type type) {

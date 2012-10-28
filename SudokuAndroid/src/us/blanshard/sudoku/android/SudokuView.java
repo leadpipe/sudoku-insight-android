@@ -335,10 +335,10 @@ public class SudokuView extends View {
       mPaint.setColor(color);
 
       if (mChoice >= 0) {
-        drawChoice(mChoice, canvas, x + toCenter, y + toBaseline, mPaint);
-        drawChoice(mChoice, canvas, mPreviewX, mPreviewY - half + toBaseline, mPaint);
+        drawChoice(mChoice, canvas, x + toCenter, y + toBaseline);
+        drawChoice(mChoice, canvas, mPreviewX, mPreviewY - half + toBaseline);
         if (mPreviewX2 > mPreviewX)
-          drawChoice(mChoice, canvas, mPreviewX2, mPreviewY - half + toBaseline, mPaint);
+          drawChoice(mChoice, canvas, mPreviewX2, mPreviewY - half + toBaseline);
       }
 
       mPaint.setTextSize(Math.max(7, mSquareSize * 0.33f));
@@ -346,21 +346,25 @@ public class SudokuView extends View {
       toBaseline = -mPaint.ascent() / 2.0f;
       float r2 = r - toBaseline;
       for (int i = 0; i <= 9; ++i) {
-        float radians = (float) (i * Math.PI / 6 - Math.PI / 2);
+        float radians = calcRadians(i);
         x = r2 * FloatMath.cos(radians);
         y = r2 * FloatMath.sin(radians);
-        drawChoice(i, canvas, x + cx, y + cy + toBaseline, mPaint);
+        drawChoice(i, canvas, x + cx, y + cy + toBaseline);
       }
     }
+  }
+
+  protected float calcRadians(int num) {
+    return (float) (num * Math.PI / 6 - Math.PI / 2);
   }
 
   protected float calcToBaseline() {
     return (mSquareSize - mPaint.getTextSize()) / 2 - mPaint.ascent() - 1;
   }
 
-  private void drawChoice(int choice, Canvas canvas, float x, float y, Paint paint) {
+  protected void drawChoice(int choice, Canvas canvas, float x, float y) {
     String text = choice > 0 ? String.valueOf(choice) : "\u25a1";  // white square
-    canvas.drawText(text, x, y, paint);
+    canvas.drawText(text, x, y, mPaint);
   }
 
   @Override public boolean onTouchEvent(MotionEvent event) {
