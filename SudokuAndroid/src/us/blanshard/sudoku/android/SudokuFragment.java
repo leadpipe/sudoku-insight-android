@@ -509,6 +509,7 @@ public class SudokuFragment
         return true;
 
       case R.id.menu_undo_to_start:
+        gameShowing(true);
         try {
           while (mUndoStack.canUndo())
             mUndoStack.undo();
@@ -528,6 +529,7 @@ public class SudokuFragment
         return true;
 
       case R.id.menu_redo_to_end:
+        gameShowing(true);
         try {
           while (mUndoStack.canRedo())
             mUndoStack.redo();
