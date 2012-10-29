@@ -89,8 +89,8 @@ public class SudokuView extends View {
   private long mChoiceChangeTimestamp;
   private Numeral mDefaultChoice;
 
-  private static final float[] TRAIL_X_CENTER = { 0.8f, 0.15f, 0.85f, 0.15f };
-  private static final float[] TRAIL_Y_TOP = { 0.5f, 0f, 0f, 0.6f };
+  private static final float[] TRAIL_X_CENTER = { 0.2f, 0.85f, 0.15f, 0.85f };
+  private static final float[] TRAIL_Y_TOP = { 0f, 0f, 0.6f, 0.6f };
 
   public SudokuView(Context context, AttributeSet attrs) {
     super(context, attrs);
