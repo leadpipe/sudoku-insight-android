@@ -45,12 +45,15 @@ public abstract class Insight {
     OVERLAP,
     LOCKED_SET,
     IMPLICATION,
-    DISPROVED_ASSIGNMENT;
+    DISPROVED_ASSIGNMENT,
+    UNFOUNDED_ASSIGNMENT;
 
     private static final EnumSet<Type> ERRORS =
         EnumSet.of(CONFLICT, BARRED_LOCATION, BARRED_NUMERAL);
-    private static final EnumSet<Type> ASSIGNMENTS = EnumSet.of(FORCED_LOCATION, FORCED_NUMERAL);
-    private static final EnumSet<Type> ELIMINATIONS = EnumSet.of(OVERLAP, LOCKED_SET, DISPROVED_ASSIGNMENT);
+    private static final EnumSet<Type> ASSIGNMENTS =
+        EnumSet.of(FORCED_LOCATION, FORCED_NUMERAL, UNFOUNDED_ASSIGNMENT);
+    private static final EnumSet<Type> ELIMINATIONS =
+        EnumSet.of(OVERLAP, LOCKED_SET, DISPROVED_ASSIGNMENT);
 
     public boolean isError() {
       return ERRORS.contains(this);
