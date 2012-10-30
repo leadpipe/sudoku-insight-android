@@ -24,14 +24,15 @@ import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.insight.BarredLoc;
 import us.blanshard.sudoku.insight.BarredNum;
 import us.blanshard.sudoku.insight.Conflict;
+import us.blanshard.sudoku.insight.DisprovedAssignment;
 import us.blanshard.sudoku.insight.ForcedLoc;
 import us.blanshard.sudoku.insight.ForcedNum;
 import us.blanshard.sudoku.insight.GridMarks;
 import us.blanshard.sudoku.insight.Implication;
 import us.blanshard.sudoku.insight.Insight;
-import us.blanshard.sudoku.insight.Insight.Type;
 import us.blanshard.sudoku.insight.LockedSet;
 import us.blanshard.sudoku.insight.Overlap;
+import us.blanshard.sudoku.insight.UnfoundedAssignment;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -56,10 +57,12 @@ import java.util.Map;
 public class ReplayView extends SudokuView {
 
   private static final float ASGMT_SCALE = 0.75f;
-  private static final float CLOCK_SCALE = 0.4f;
+  private static final float CLOCK_SCALE = 0.5f;
+  private static final float QUESTION_SCALE = 0.5f;
   private static final int ELIM_COLOR = Color.argb(128, 255, 100, 100);
   private static final int ASGMT_COLOR = Color.argb(128, 96, 96, 128);
-  private static final int UNIT_COLOR = Color.argb(128, 96, 96, 128);
+  private static final int QUESTION_COLOR = Color.argb(128, 192, 96, 96);
+  private static final int UNIT_COLOR = Color.argb(128, 96, 96, 192);
   private static final int UNIT_MASK = 7;
   private static final int ERROR_BORDER_MASK = 8;
   private static final int QUESTION_MASK = 16;
@@ -157,18 +160,28 @@ public class ReplayView extends SudokuView {
   }
 
   public void addInsight(Insight insight) {
-    if (insight.type == Insight.Type.IMPLICATION) {
-      Implication implication = (Implication) insight;
-      addInsights(implication.getAntecedents());
-      addInsight(implication.getConsequent());
-    } else if (insight.type == Type.CONFLICT) {
-      Conflict conflict = (Conflict) insight;
-      mConflicts.addAll(conflict.getLocations());
-    } else {
-      if (mInsights == null) mInsights = Sets.newLinkedHashSet();
-      mInsights.add(insight);
+    switch (insight.type) {
+      case IMPLICATION:
+        Implication implication = (Implication) insight;
+        addInsights(implication.getAntecedents());
+        addInsight(implication.getConsequent());
+        break;
+      case CONFLICT:
+        Conflict conflict = (Conflict) insight;
+        mConflicts.addAll(conflict.getLocations());
+        invalidate();
+        break;
+      case DISPROVED_ASSIGNMENT:
+        DisprovedAssignment disprovedAssignment = (DisprovedAssignment) insight;
+        addInsight(new UnfoundedAssignment(disprovedAssignment.getDisprovedAssignment()));
+        addInsight(disprovedAssignment.getResultingError());
+        break;
+      default:
+        if (mInsights == null) mInsights = Sets.newLinkedHashSet();
+        mInsights.add(insight);
+        invalidate();
+        break;
     }
-    invalidate();
   }
 
   public void addInsights(Iterable<Insight> insights) {
@@ -197,11 +210,9 @@ public class ReplayView extends SudokuView {
   @Override protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
     if (mInsights != null && mLocDisplays == null) buildLocDisplays();
-    mPaint.setStyle(Style.STROKE);
     mPaint.setStrokeWidth(mThickLineWidth);
     mPaint.setTypeface(Typeface.DEFAULT);
     mPaint.setFakeBoldText(false);
-    mPaint.setTextSize(mTextSize * ASGMT_SCALE);
     for (Location loc : Location.ALL) {
       drawSelectable(canvas, loc);
       if (mLocDisplays != null)
@@ -231,7 +242,6 @@ public class ReplayView extends SudokuView {
           for (Location loc : barredNum.getUnit()) {
             locDisplay = getLocDisplay(loc);
             locDisplay.crossOut(barredNum.getNumeral().asSet());
-            // TODO: is this visible enough or do we need a different set for errors?
           }
           break;
         }
@@ -255,10 +265,6 @@ public class ReplayView extends SudokuView {
             locDisplay = getLocDisplay(loc);
             locDisplay.addUnit(lockedSet.getLocations().unit);
             locDisplay.updatePossibles(lockedSet.getNumerals());
-            // TODO: consider adding this:
-//            for (Assignment assignment : lockedSet.getEliminations()) {
-//              getLocDisplay(assignment.location).crossOut(assignment.numeral.asSet());
-//            }
           }
           break;
         }
@@ -268,8 +274,15 @@ public class ReplayView extends SudokuView {
             locDisplay = getLocDisplay(loc);
             locDisplay.overlaps = locDisplay.overlaps.or(overlap.getNumeral().asSet());
             locDisplay.addUnit(overlap.getOverlappingUnit());
-            // TODO: consider adding eliminations
           }
+          break;
+        }
+        case UNFOUNDED_ASSIGNMENT: {
+          UnfoundedAssignment unfoundedAssignment = (UnfoundedAssignment) insight;
+          Assignment assignment = unfoundedAssignment.getImpliedAssignment();
+          locDisplay = getLocDisplay(assignment.location);
+          locDisplay.updatePossibles(assignment.numeral.asSet());
+          locDisplay.flags |= QUESTION_MASK;
           break;
         }
       }
@@ -293,24 +306,36 @@ public class ReplayView extends SudokuView {
 
     float s = mSquareSize;
     float h = s * 0.5f;
+    float q = h * 0.5f;
     float x = mOffsetsX[loc.column.index];
     float y = mOffsetsY[loc.row.index];
 
     if ((locDisplay.flags & ERROR_BORDER_MASK) != 0) {
+      mPaint.setStyle(Style.STROKE);
       mPaint.setColor(Color.RED);
       canvas.drawRect(x, y, x + s, y + s, mPaint);
     }
 
+    if ((locDisplay.flags & QUESTION_MASK) != 0) {
+      mPaint.setStyle(Style.FILL);
+      mPaint.setColor(QUESTION_COLOR);
+      mPaint.setTextSize(mTextSize * QUESTION_SCALE);
+      float a = -mPaint.ascent() * 0.5f;
+      canvas.drawText("?", x + q, y + q + a, mPaint);
+      canvas.drawText("?", x + h + q, y + q + a, mPaint);
+      canvas.drawText("?", x + q, y + h + q + a, mPaint);
+      canvas.drawText("?", x + h + q, y + h + q + a, mPaint);
+    }
+
     if ((locDisplay.flags & UNIT_MASK) != 0) {
+      mPaint.setStyle(Style.STROKE);
       mPaint.setColor(UNIT_COLOR);
       if (locDisplay.hasUnit(Unit.Type.ROW))
         canvas.drawLine(x, y + h, x + s, y + h, mPaint);
       if (locDisplay.hasUnit(Unit.Type.COLUMN))
         canvas.drawLine(x + h, y, x + h, y + s, mPaint);
-      if (locDisplay.hasUnit(Unit.Type.BLOCK)) {
-        float q = h * 0.5f;
+      if (locDisplay.hasUnit(Unit.Type.BLOCK))
         canvas.drawRect(x + q, y + q, x + h + q, y + h + q, mPaint);
-      }
     }
 
     if (!locDisplay.crossedOut.isEmpty()) {
@@ -342,9 +367,6 @@ public class ReplayView extends SudokuView {
       if (w >= s - 2) mPaint.setTextSize(mTextSize * ASGMT_SCALE * (s - 2) / w);
       canvas.drawText(text, x + h, y + mToBaseline, mPaint);
     }
-
-    mPaint.setTextSize(mTextSize * ASGMT_SCALE);
-    mPaint.setStyle(Style.STROKE);
   }
 
   private void drawErrorUnit(Canvas canvas, Unit unit) {
@@ -360,6 +382,7 @@ public class ReplayView extends SudokuView {
   private void drawSelectable(Canvas canvas, Location loc) {
     Integer color = mSelectableColors.apply(loc);
     if (color == null) return;
+    mPaint.setStyle(Style.STROKE);
     mPaint.setColor(color);
     float s = mSquareSize;
     float x = mOffsetsX[loc.column.index];
