@@ -524,13 +524,13 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           updateTrail(move.trailId);
           loc = move.getLocation();
         } else updateTrail(-1);
-        startAnalysis();
         mTimer.setText(time);
         mReplayView.setSelected(loc);
         mReplayView.clearInsights();
         if (mInsights != null) {
           displayInsightAndError(mInsights.assignments.get(loc));
         }
+        startAnalysis();
       }
 
       if (mRunning && !worked) {

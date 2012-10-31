@@ -376,6 +376,7 @@ public class ReplayView extends SudokuView {
   }
 
   private void drawErrorUnit(Canvas canvas, Unit unit) {
+    mPaint.setStyle(Style.STROKE);
     mPaint.setColor(Color.RED);
     float s = mSquareSize;
     float top = mOffsetsX[unit.get(0).column.index];
