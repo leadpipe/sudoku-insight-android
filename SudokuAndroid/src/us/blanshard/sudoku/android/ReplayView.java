@@ -357,12 +357,18 @@ public class ReplayView extends SudokuView {
       }
     }
 
-    if (open && !locDisplay.possibles.isEmpty()) {
+    if (open && !locDisplay.possiblesUnion.isEmpty()) {
       mPaint.setTextSize(mTextSize * ASGMT_SCALE);
       mPaint.setStyle(Style.FILL);
       mPaint.setColor(ASGMT_COLOR);
-      String text = locDisplay.possibles.toString();
+      boolean problem = locDisplay.possibles.isEmpty();
+      String text;
+      text = problem ? locDisplay.possiblesUnion.toString() : locDisplay.possibles.toString();
       text = text.substring(1, text.length() - 1);  // strip brackets
+      if (problem) {
+        mPaint.setColor(QUESTION_COLOR);
+        text = "?" + text + "?";
+      }
       float w = mPaint.measureText(text);
       if (w >= s - 2) mPaint.setTextSize(mTextSize * ASGMT_SCALE * (s - 2) / w);
       canvas.drawText(text, x + h, y + mToBaseline, mPaint);
@@ -414,7 +420,8 @@ public class ReplayView extends SudokuView {
     public int flags;
     public NumSet crossedOut = NumSet.NONE;
     public NumSet overlaps = NumSet.NONE;
-    public NumSet possibles = NumSet.NONE;
+    public NumSet possibles = NumSet.ALL;
+    public NumSet possiblesUnion = NumSet.NONE;
 
     public void addUnit(Unit unit) {
       flags |= unitFlag(unit.getType());
@@ -429,8 +436,8 @@ public class ReplayView extends SudokuView {
     }
 
     public void updatePossibles(NumSet set) {
-      if (possibles == NumSet.NONE) possibles = set;
-      else possibles = possibles.and(set);
+      possiblesUnion = possiblesUnion.or(set);
+      possibles = possibles.and(set);
     }
 
     private int unitFlag(Unit.Type type) {
