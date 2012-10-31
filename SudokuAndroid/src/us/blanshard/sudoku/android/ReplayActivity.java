@@ -53,13 +53,16 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 
 import org.json.JSONException;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -89,6 +92,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private Analyze mAnalyze;
   private boolean mAnalysisRanLong;
   private Insights mInsights;
+  private final Set<InsightMin> mToBeDisplayed = Sets.newHashSet();
   private boolean mErrors;
   private Minimize mMinimize;
   private Disprove mDisprove;
@@ -286,9 +290,9 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   }
 
   @SuppressWarnings("unchecked")  // the varargs of Iterable<...>
-  private void minimizeInsight(InsightMin insightMin) {
+  private void minimizeInsights(InsightMin... insightMins) {
     mMinimize = new Minimize(this, false);
-    mMinimize.execute(Collections.singleton(insightMin));
+    mMinimize.execute(Arrays.asList(insightMins));
   }
 
   void disproofComplete(Disprove instance) {
@@ -304,13 +308,17 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     mReplayView.invalidateLocation(loc);
   }
 
-  void minimized(Insight insight) {
+  void minimized(InsightMin insightMin) {
     setInsightText(mReplayView.getSelected());
-    if (!insight.isError()) {
+    if (!insightMin.insight.isError()) {
       Location loc;
-      if (insight.isAssignment()) loc = insight.getImpliedAssignment().location;
-      else loc = ((DisprovedAssignment) insight).getDisprovedAssignment().location;
+      if (insightMin.insight.isAssignment()) loc = insightMin.insight.getImpliedAssignment().location;
+      else loc = ((DisprovedAssignment) insightMin.insight).getDisprovedAssignment().location;
       mReplayView.invalidateLocation(loc);
+    }
+    if (mToBeDisplayed.contains(insightMin)) {
+      mToBeDisplayed.remove(insightMin);
+      mReplayView.addInsight(insightMin.insight);
     }
   }
 
@@ -403,19 +411,33 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         }
       } else if (mExploring && mDisproof == null) {
         doCommand(makeMoveCommand(insightMin.insight.getImpliedAssignment()));
+        displayInsightAndError(insightMin);
         startAnalysis();
-        mReplayView.clearInsights();
-        for (InsightMin error : mInsights.errors)
-          mReplayView.addInsight(error.insight);
-        mReplayView.addInsight(insightMin.insight);
         setUndoEnablement();
       }
       if (insightMin != null && !insightMin.minimized && !mExploring) {
         if (mDisprove != null) mDisprove.cancel();
         if (mMinimize != null) mMinimize.cancel();
-        minimizeInsight(insightMin);
+        minimizeInsights(insightMin);
       }
     }
+  }
+
+  private void displayInsightAndError(InsightMin insightMin) {
+    mReplayView.clearInsights();
+    mToBeDisplayed.clear();
+    if (insightMin != null) displayInsight(insightMin);
+    InsightMin error = null;
+    if (!mInsights.errors.isEmpty()) {
+      error = mInsights.errors.get(0);
+      displayInsight(error);
+    }
+    minimizeInsights(insightMin, error);
+  }
+
+  private void displayInsight(InsightMin insightMin) {
+    if (insightMin.minimized) mReplayView.addInsight(insightMin.insight);
+    else mToBeDisplayed.add(insightMin);
   }
 
   private void assignImplication(Insight insight) {
@@ -507,10 +529,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mReplayView.setSelected(loc);
         mReplayView.clearInsights();
         if (mInsights != null) {
-          for (InsightMin insightMin : mInsights.errors)
-            mReplayView.addInsight(insightMin.insight);
-          if (mInsights.assignments.containsKey(loc))
-            mReplayView.addInsight(mInsights.assignments.get(loc).insight);
+          displayInsightAndError(mInsights.assignments.get(loc));
         }
       }
 
@@ -782,16 +801,18 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
     @Override protected Void doInBackground(Iterable<InsightMin>... params) {
       for (Iterable<InsightMin> iterable : params)
-        for (InsightMin min : iterable)
+        for (InsightMin min : iterable) {
+          if (min == null) continue;
           if (min.minimize(mGridMarks))
             publishProgress(min);
           else
             break;
+        }
       return null;
     }
 
     @Override protected void onProgressUpdate(ReplayActivity activity, InsightMin... mins) {
-      activity.minimized(mins[0].insight);
+      activity.minimized(mins[0]);
     }
 
     @Override protected void onPostExecute(ReplayActivity activity, Void ignored) {
