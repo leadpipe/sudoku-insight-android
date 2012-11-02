@@ -80,7 +80,6 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private ViewGroup mPauseControls;
   private ViewGroup mUndoControls;
   private TextView mTimer;
-  private TextView mInsightsText;
   private Sudoku mGame;
   private final Sudoku.Registry mRegistry = Sudoku.newRegistry();
   private List<Move> mHistory;
@@ -168,7 +167,6 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     mPauseControls = (ViewGroup) findViewById(R.id.replay_pause_controls);
     mUndoControls = (ViewGroup) findViewById(R.id.replay_undo_controls);
     mTimer = (TextView) findViewById(R.id.timer);
-    mInsightsText = (TextView) findViewById(R.id.insights);
 
     mReplayView.setOnSelectListener(this);
     mReplayView.setSelectableColorsFunction(selectableColors);
@@ -456,17 +454,6 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     }
   }
 
-  private void setInsightText(Location loc) {
-    StringBuilder sb = new StringBuilder();
-    if (mInsights != null) {
-      InsightMin insightMin = mInsights.assignments.get(loc);
-      if (insightMin == null) insightMin = mInsights.disproofs.get(loc);
-      if (insightMin != null) sb.append(insightMin).append('\n');
-      if (!mInsights.errors.isEmpty()) sb.append("Error: ").append(mInsights.errors.get(0));
-    }
-    mInsightsText.setText(sb.toString());
-  }
-
   void stepReplay(boolean evenIfNotRunning) {
     if (mRunning || evenIfNotRunning) {
       if (mAnalyze != null) {
@@ -532,7 +519,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       if (mAntecedentIndex >= 0) {
         mReplayView.addInsight(mDisproof.getResultingError().getNub());
         mAntecedentIndex = -1;
-        startAnalysis();
+        //startAnalysis();
         setUndoEnablement();
       } else {
         try {
@@ -550,7 +537,6 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     } else {
       doCommand(makeMoveCommand(insight.getImpliedAssignment()));
       mReplayView.addInsight(insight);
-      mReplayView.invalidate();
       mReplayView.postDelayed(disproofCycler, SET_CYCLE_MILLIS);
     }
   }
