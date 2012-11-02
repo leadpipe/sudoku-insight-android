@@ -50,6 +50,10 @@ public final class DisprovedAssignment extends Insight {
     return assignment;
   }
 
+  public UnfoundedAssignment getUnfoundedAssignment() {
+    return new UnfoundedAssignment(assignment);
+  }
+
   /**
    * Returns the error insight that surfaces after the assignment is made.
    */
@@ -59,6 +63,10 @@ public final class DisprovedAssignment extends Insight {
 
   @Override public Collection<Assignment> getEliminations() {
     return Collections.singleton(assignment);
+  }
+
+  @Override public Insight getNub() {
+    return new Implication(Collections.singleton(getUnfoundedAssignment()), resultingError.getNub());
   }
 
   @Override public int getDepth() {

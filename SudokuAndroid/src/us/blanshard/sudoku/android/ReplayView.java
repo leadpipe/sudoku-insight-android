@@ -57,12 +57,12 @@ import java.util.Map;
 public class ReplayView extends SudokuView {
 
   private static final float ASGMT_SCALE = 0.75f;
-  private static final float CLOCK_SCALE = 0.5f;
+  private static final float CLOCK_SCALE = 0.4f;
   private static final float QUESTION_SCALE = 0.5f;
-  private static final int ELIM_COLOR = Color.argb(128, 255, 100, 100);
-  private static final int ASGMT_COLOR = Color.argb(128, 96, 96, 128);
+  private static final int ELIM_COLOR = Color.argb(192, 255, 100, 100);
+  private static final int ASGMT_COLOR = Color.argb(192, 32, 160, 64);
   private static final int QUESTION_COLOR = Color.argb(128, 192, 96, 96);
-  private static final int UNIT_COLOR = Color.argb(128, 96, 96, 192);
+  private static final int UNIT_COLOR = Color.argb(48, 96, 96, 96);
   private static final int UNIT_MASK = 7;
   private static final int ERROR_BORDER_MASK = 8;
   private static final int QUESTION_MASK = 16;
@@ -173,7 +173,7 @@ public class ReplayView extends SudokuView {
         break;
       case DISPROVED_ASSIGNMENT:
         DisprovedAssignment disprovedAssignment = (DisprovedAssignment) insight;
-        addInsight(new UnfoundedAssignment(disprovedAssignment.getDisprovedAssignment()));
+        addInsight(disprovedAssignment.getUnfoundedAssignment());
         addInsight(disprovedAssignment.getResultingError());
         break;
       default:
@@ -195,15 +195,16 @@ public class ReplayView extends SudokuView {
     mToBaseline = calcToBaseline();
 
     mPaint.setTextSize(mTextSize * CLOCK_SCALE);
-    float r = (mSquareSize + mPaint.ascent()) * 0.5f - mThickLineWidth;
+    float a = mPaint.ascent() * -0.5f;
     float h = mSquareSize * 0.5f;
+    float r = h - a - mThickLineWidth;
 
     mClockX = new float[10];
     mClockY = new float[10];
     for (Numeral num : Numeral.ALL) {
       float radians = calcRadians(num.number);
       mClockX[num.number] = h + r * FloatMath.cos(radians);
-      mClockY[num.number] = h + r * FloatMath.sin(radians);
+      mClockY[num.number] = h + r * FloatMath.sin(radians) + a;
     }
   }
 
@@ -343,7 +344,7 @@ public class ReplayView extends SudokuView {
       mPaint.setStyle(Style.FILL);
       mPaint.setColor(ELIM_COLOR);
       for (Numeral num : locDisplay.crossedOut) {
-        canvas.drawText("\u274c", x + mClockX[num.number], y + mClockY[num.number], mPaint);
+        canvas.drawText("\u00d7", x + mClockX[num.number], y + mClockY[num.number], mPaint);
       }
     }
 
@@ -379,10 +380,10 @@ public class ReplayView extends SudokuView {
     mPaint.setStyle(Style.STROKE);
     mPaint.setColor(Color.RED);
     float s = mSquareSize;
-    float top = mOffsetsX[unit.get(0).column.index];
-    float left = mOffsetsY[unit.get(0).row.index];
-    float bottom = s + mOffsetsX[unit.get(9 - 1).column.index];
-    float right = s + mOffsetsY[unit.get(9 - 1).row.index];
+    float top = mOffsetsX[unit.get(0).row.index];
+    float left = mOffsetsY[unit.get(0).column.index];
+    float bottom = s + mOffsetsX[unit.get(9 - 1).row.index];
+    float right = s + mOffsetsY[unit.get(9 - 1).column.index];
     canvas.drawRect(left, top, right, bottom, mPaint);
   }
 

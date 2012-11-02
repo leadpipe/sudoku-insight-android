@@ -3,7 +3,7 @@
 
     <string name="app_full_name">Sudoku Insight</string>
     <string name="app_short_name">Insight</string>
-    <string name="button_back">Back</string>
+    <string name="button_back">Reverse</string>
     <string name="button_done">Done</string>
     <string name="button_capture_play">Play Now</string>
     <string name="button_capture_save">Save for Later</string>

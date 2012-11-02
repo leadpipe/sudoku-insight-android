@@ -93,7 +93,6 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private boolean mAnalysisRanLong;
   private Insights mInsights;
   private final Set<InsightMin> mToBeDisplayed = Sets.newHashSet();
-  private boolean mErrors;
   private Minimize mMinimize;
   private Disprove mDisprove;
   private GridMarks mSolution;
@@ -266,12 +265,11 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   }
 
   void setInsights(Insights insights) {
-    mProgress.setVisibility(View.GONE);
+    if (!mRunning)
+      mProgress.setVisibility(View.GONE);
     mInsights = insights;
     mAnalyze = null;
     minimizeEverything();
-    if (!mErrors && !insights.errors.isEmpty())
-      mInsightsText.setText("Error: " + insights.errors.get(0));
     if (mAnalysisRanLong) {
       mAnalysisRanLong = false;
       if (mExploring)
@@ -285,14 +283,20 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
 
   @SuppressWarnings("unchecked")  // the varargs of Iterable<...>
   private void minimizeEverything() {
-    mMinimize = new Minimize(this, true);
-    mMinimize.execute(mInsights.errors, mInsights.assignments.values(), mInsights.disproofs.values());
+    if (mAnalyze == null) {
+      mMinimize = new Minimize(this, true);
+      mMinimize.execute(mInsights.errors, mInsights.assignments.values(), mInsights.disproofs.values());
+    }
   }
 
   @SuppressWarnings("unchecked")  // the varargs of Iterable<...>
   private void minimizeInsights(InsightMin... insightMins) {
-    mMinimize = new Minimize(this, false);
-    mMinimize.execute(Arrays.asList(insightMins));
+    if (mAnalyze == null) {
+      if (mDisprove != null) mDisprove.cancel();
+      if (mMinimize != null) mMinimize.cancel();
+      mMinimize = new Minimize(this, false);
+      mMinimize.execute(Arrays.asList(insightMins));
+    }
   }
 
   void disproofComplete(Disprove instance) {
@@ -305,12 +309,12 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   void addDisproof(DisprovedAssignment disproof, boolean minimized) {
     Location loc = disproof.getDisprovedAssignment().location;
     mInsights.disproofs.put(loc, minimized ? new InsightMin(disproof, true) : new InsightMin(disproof));
-    mReplayView.invalidateLocation(loc);
+    if (!mRunning)
+      mReplayView.invalidateLocation(loc);
   }
 
   void minimized(InsightMin insightMin) {
-    setInsightText(mReplayView.getSelected());
-    if (!insightMin.insight.isError()) {
+    if (!mRunning && !insightMin.insight.isError()) {
       Location loc;
       if (insightMin.insight.isAssignment()) loc = insightMin.insight.getImpliedAssignment().location;
       else loc = ((DisprovedAssignment) insightMin.insight).getDisprovedAssignment().location;
@@ -319,6 +323,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     if (mToBeDisplayed.contains(insightMin)) {
       mToBeDisplayed.remove(insightMin);
       mReplayView.addInsight(insightMin.insight);
+      mReplayView.invalidate();
     }
   }
 
@@ -339,7 +344,6 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mControls.setVisibility(View.GONE);
         mPauseControls.setVisibility(View.VISIBLE);
         mForward = (v.getId() == R.id.play);
-        stepReplay(true);
         mRunning = true;
         mReplayView.postDelayed(replayCycler, SET_CYCLE_MILLIS);
         startAnalysis();
@@ -394,7 +398,6 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   }
 
   @Override public void onSelect(Location loc) {
-    setInsightText(loc);
     if (mInsights != null) {
       InsightMin insightMin = mInsights.assignments.get(loc);
       if (insightMin == null) {
@@ -404,22 +407,17 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           mDisproofUndoPosition = mUndoStack.getPosition();
           updateTrail(mGame.newTrail().getId());
           doCommand(makeMoveCommand(mDisproof.getDisprovedAssignment()));
-          Insight resultingError = mDisproof.getResultingError();
-          assignImplication(resultingError);
+          assignImplication(mDisproof.getResultingError());
           mReplayView.postDelayed(disproofCycler, SET_CYCLE_MILLIS);
           setUndoEnablement();
         }
       } else if (mExploring && mDisproof == null) {
         doCommand(makeMoveCommand(insightMin.insight.getImpliedAssignment()));
-        displayInsightAndError(insightMin);
         startAnalysis();
         setUndoEnablement();
       }
-      if (insightMin != null && !insightMin.minimized && !mExploring) {
-        if (mDisprove != null) mDisprove.cancel();
-        if (mMinimize != null) mMinimize.cancel();
-        minimizeInsights(insightMin);
-      }
+      if (mDisproof == null)
+        displayInsightAndError(insightMin);
     }
   }
 
@@ -436,8 +434,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   }
 
   private void displayInsight(InsightMin insightMin) {
-    if (insightMin.minimized) mReplayView.addInsight(insightMin.insight);
-    else mToBeDisplayed.add(insightMin);
+    mReplayView.addInsight(insightMin.getMinimizedInsight());
+    if (!insightMin.minimized) mToBeDisplayed.add(insightMin);
   }
 
   private void assignImplication(Insight insight) {
@@ -477,20 +475,6 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         return;
       }
 
-      if (mRunning && mForward) {
-        if (!mErrors && !mInsights.errors.isEmpty()) {
-          mErrors = true;
-          pause();
-          return;
-        }
-        mErrors = !mInsights.errors.isEmpty();
-        Assignment assignment = nextAssignment();
-        if (assignment != null && !mInsights.assignments.containsKey(assignment.location)) {
-          pause();
-          return;
-        }
-      }
-
       boolean worked = false;
       if (mForward) {
         if (mHistoryPosition < mHistory.size()) {
@@ -524,13 +508,9 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           updateTrail(move.trailId);
           loc = move.getLocation();
         } else updateTrail(-1);
+        startAnalysis();
         mTimer.setText(time);
         mReplayView.setSelected(loc);
-        mReplayView.clearInsights();
-        if (mInsights != null) {
-          displayInsightAndError(mInsights.assignments.get(loc));
-        }
-        startAnalysis();
       }
 
       if (mRunning && !worked) {
@@ -550,7 +530,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     Insight insight = nextDisproofAssignment();
     if (insight == null) {
       if (mAntecedentIndex >= 0) {
-        mInsightsText.setText("Error: " + mDisproof.getResultingError().getNub());
+        mReplayView.addInsight(mDisproof.getResultingError().getNub());
         mAntecedentIndex = -1;
         startAnalysis();
         setUndoEnablement();
@@ -569,6 +549,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       }
     } else {
       doCommand(makeMoveCommand(insight.getImpliedAssignment()));
+      mReplayView.addInsight(insight);
+      mReplayView.invalidate();
       mReplayView.postDelayed(disproofCycler, SET_CYCLE_MILLIS);
     }
   }
@@ -579,6 +561,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         Insight insight = mImplication.getAntecedents().get(mAntecedentIndex++);
         if (insight.isAssignment())
           return insight;
+        mReplayView.addInsight(insight);
       }
       assignImplication(mImplication.getConsequent());
     }
@@ -670,6 +653,10 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       return minimized;
     }
 
+    Insight getMinimizedInsight() {
+      return minimized ? insight : insight.getNub();
+    }
+
     @Override public String toString() {
       if (minimized) return insight.toString();
       return insight.toShortString();
@@ -758,20 +745,23 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         private boolean mAiming = mTarget != null;
         @Override public void take(Insight insight) {
           if (insight.isError()) {
-            answer.errors.add(new InsightMin(insight));
-            hit();
+            InsightMin insightMin = new InsightMin(insight);
+            answer.errors.add(insightMin);
+            hit(insightMin);
           } else if (insight.isAssignment()) {
             Assignment assignment = insight.getImpliedAssignment();
             if (!answer.assignments.containsKey(assignment.location)
                 && (mTarget == null || assignment.equals(mTarget))) {
-              answer.assignments.put(assignment.location, new InsightMin(insight));
-              hit();
+              InsightMin insightMin = new InsightMin(insight);
+              answer.assignments.put(assignment.location, insightMin);
+              hit(insightMin);
             }
           }
         }
-        private void hit() {
+        private void hit(InsightMin insightMin) {
           if (mAiming) {
             mAiming = false;
+            insightMin.minimize(answer.gridMarks);
             publishProgress();
           }
         }

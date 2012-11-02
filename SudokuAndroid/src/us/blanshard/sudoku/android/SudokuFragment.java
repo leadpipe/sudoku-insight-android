@@ -454,6 +454,14 @@ public class SudokuFragment
     }
   }
 
+  @Override public void onResume() {
+    super.onResume();
+    // You wouldn't think implementing this method was necessary, but without it
+    // the game gets suspended when the screen times out and doesn't get resumed
+    // when you turn the screen back on without going through the unlock cycle.
+    gameShowing(true);
+  }
+
   private void cancelStatus() {
     if (mToast != null) {
       mToast.cancel();

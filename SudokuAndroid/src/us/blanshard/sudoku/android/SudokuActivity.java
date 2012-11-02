@@ -64,6 +64,7 @@ public class SudokuActivity extends ActivityBase {
   }
 
   @Override public void onWindowFocusChanged(boolean hasFocus) {
+    super.onWindowFocusChanged(hasFocus);
     mBoardFragment.gameShowing(hasFocus);
   }
 }
