@@ -57,12 +57,12 @@ import java.util.Map;
 public class ReplayView extends SudokuView {
 
   private static final float ASGMT_SCALE = 0.75f;
-  private static final float CLOCK_SCALE = 0.4f;
+  private static final float CLOCK_SCALE = 0.5f;
   private static final float QUESTION_SCALE = 0.5f;
   private static final int ELIM_COLOR = Color.argb(192, 255, 100, 100);
   private static final int ASGMT_COLOR = Color.argb(192, 32, 160, 64);
   private static final int QUESTION_COLOR = Color.argb(128, 192, 96, 96);
-  private static final int UNIT_COLOR = Color.argb(48, 96, 96, 96);
+  private static final int UNIT_COLOR = Color.argb(64, 96, 96, 96);
   private static final int UNIT_MASK = 7;
   private static final int ERROR_BORDER_MASK = 8;
   private static final int QUESTION_MASK = 16;
@@ -179,6 +179,7 @@ public class ReplayView extends SudokuView {
       default:
         if (mInsights == null) mInsights = Sets.newLinkedHashSet();
         mInsights.add(insight);
+        mLocDisplays = null;
         invalidate();
         break;
     }
@@ -197,7 +198,7 @@ public class ReplayView extends SudokuView {
     mPaint.setTextSize(mTextSize * CLOCK_SCALE);
     float a = mPaint.ascent() * -0.5f;
     float h = mSquareSize * 0.5f;
-    float r = h - a - mThickLineWidth;
+    float r = h - a;
 
     mClockX = new float[10];
     mClockY = new float[10];
@@ -226,6 +227,7 @@ public class ReplayView extends SudokuView {
 
   private void buildLocDisplays() {
     mLocDisplays = Maps.newHashMap();
+    mErrorUnits = null;
     LocDisplay locDisplay;
     for (Insight insight : mInsights) {
       switch (insight.type) {
