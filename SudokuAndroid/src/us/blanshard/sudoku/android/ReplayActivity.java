@@ -263,8 +263,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   }
 
   void setInsights(Insights insights) {
-    if (!mRunning)
-      mProgress.setVisibility(View.GONE);
+    mProgress.setVisibility(View.GONE);
     mInsights = insights;
     mAnalyze = null;
     minimizeEverything();
@@ -408,6 +407,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           assignImplication(mDisproof.getResultingError());
           mReplayView.postDelayed(disproofCycler, SET_CYCLE_MILLIS);
           setUndoEnablement();
+          if (mDisprove != null) mDisprove.cancel();
         }
       } else if (mExploring && mDisproof == null) {
         doCommand(makeMoveCommand(insightMin.insight.getImpliedAssignment()));
