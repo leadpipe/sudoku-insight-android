@@ -59,10 +59,12 @@ public class ReplayView extends SudokuView {
   private static final float ASGMT_SCALE = 0.75f;
   private static final float CLOCK_SCALE = 0.5f;
   private static final float QUESTION_SCALE = 0.5f;
-  private static final int ELIM_COLOR = Color.argb(192, 255, 100, 100);
   private static final int ASGMT_COLOR = Color.argb(192, 32, 160, 64);
+  private static final int ELIM_COLOR = Color.argb(192, 255, 100, 100);
+  private static final int OVERLAP_COLOR = Color.argb(128, 32, 96, 160);
   private static final int QUESTION_COLOR = Color.argb(128, 192, 96, 96);
   private static final int UNIT_COLOR = Color.argb(64, 96, 96, 96);
+
   private static final int UNIT_MASK = 7;
   private static final int ERROR_BORDER_MASK = 8;
   private static final int QUESTION_MASK = 16;
@@ -358,11 +360,12 @@ public class ReplayView extends SudokuView {
     }
 
     boolean open = isOpen(loc);
-    if (open && !locDisplay.overlaps.isEmpty()) {
+    NumSet drawnOverlaps = locDisplay.overlaps.minus(locDisplay.possiblesUnion);
+    if (open && !drawnOverlaps.isEmpty()) {
       mPaint.setTextSize(mTextSize * CLOCK_SCALE);
       mPaint.setStyle(Style.FILL);
-      mPaint.setColor(ASGMT_COLOR);
-      for (Numeral num : locDisplay.overlaps) {
+      mPaint.setColor(OVERLAP_COLOR);
+      for (Numeral num : drawnOverlaps) {
         canvas.drawText(num.toString(), x + mClockX[num.number], y + mClockY[num.number], mPaint);
       }
     }
