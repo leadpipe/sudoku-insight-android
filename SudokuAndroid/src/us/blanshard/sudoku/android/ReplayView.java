@@ -56,9 +56,11 @@ import java.util.Map;
  */
 public class ReplayView extends SudokuView {
 
-  private static final float ASGMT_SCALE = 0.75f;
+  private static final float ASGMT_SCALE = 0.8f;
+  private static final float ASGMT_SCALE2 = 0.68f;
+  private static final float ASGMT_SCALE3 = 0.55f;
   private static final float CLOCK_SCALE = 0.5f;
-  private static final float QUESTION_SCALE = 0.5f;
+  private static final float QUESTION_SCALE = 0.6f;
   private static final int ASGMT_COLOR = Color.argb(192, 32, 160, 64);
   private static final int ELIM_COLOR = Color.argb(192, 255, 100, 100);
   private static final int OVERLAP_COLOR = Color.argb(128, 32, 96, 160);
@@ -79,7 +81,8 @@ public class ReplayView extends SudokuView {
   private Map<Location, LocDisplay> mLocDisplays;
   private Collection<Unit> mErrorUnits;
 
-  private float mToBaseline;
+  private float[] mToBaseline = new float[3];
+  private float[] mPossiblesSize = new float[3];
   private float[] mClockX;
   private float[] mClockY;
 
@@ -195,8 +198,9 @@ public class ReplayView extends SudokuView {
 
   @Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    mPaint.setTextSize(mTextSize * ASGMT_SCALE);
-    mToBaseline = calcToBaseline();
+    setPossiblesSize(0, mTextSize * ASGMT_SCALE);
+    setPossiblesSize(1, mTextSize * ASGMT_SCALE2);
+    setPossiblesSize(2, mTextSize * ASGMT_SCALE3);
 
     mPaint.setTextSize(mTextSize * CLOCK_SCALE);
     float a = mPaint.ascent() * -0.5f;
@@ -210,6 +214,12 @@ public class ReplayView extends SudokuView {
       mClockX[num.number] = h + r * FloatMath.cos(radians);
       mClockY[num.number] = h + r * FloatMath.sin(radians) + a;
     }
+  }
+
+  private void setPossiblesSize(int index, float size) {
+    mPossiblesSize[index] = size;
+    mPaint.setTextSize(size);
+    mToBaseline[index] = calcToBaseline();
   }
 
   @Override protected void onDraw(Canvas canvas) {
@@ -382,15 +392,30 @@ public class ReplayView extends SudokuView {
       mPaint.setStyle(Style.FILL);
       boolean problem = locDisplay.possibles.isEmpty();
       mPaint.setColor(mConflicts.contains(loc) ? ERROR_COLOR : problem ? QUESTION_COLOR : ASGMT_COLOR);
-      String text;
-      text = problem ? locDisplay.possiblesUnion.toString() : locDisplay.possibles.toString();
-      text = text.substring(1, text.length() - 1);  // strip brackets
+      StringBuilder sb = new StringBuilder();
+      int breakpoint = 0;
       if (problem) {
-        text = "?" + text + "?";
+        for (Numeral num : locDisplay.possiblesUnion) {
+          sb.append(num.number).append('?');
+        }
+        if (sb.length() > 4) breakpoint = sb.length() - 4;
+      } else {
+        for (Numeral num : locDisplay.possibles) {
+          if (sb.length() > 0) sb.append(',');
+          sb.append(num.number);
+        }
+        if (sb.length() > 3) breakpoint = sb.length() - 3;
       }
-      float w = mPaint.measureText(text);
-      if (w >= s - 2) mPaint.setTextSize(mTextSize * ASGMT_SCALE * (s - 2) / w);
-      canvas.drawText(text, x + h, y + mToBaseline, mPaint);
+      int index = sb.length() < 3 ? 0 : breakpoint == 0 ? 1 : 2;
+      mPaint.setTextSize(mPossiblesSize[index]);
+      if (breakpoint == 0) {
+        canvas.drawText(sb.toString(), x + h, y + mToBaseline[index], mPaint);
+      } else {
+        String line = sb.substring(0, breakpoint);
+        canvas.drawText(line, x + h, y + h, mPaint);
+        line = sb.substring(breakpoint);
+        canvas.drawText(line, x + h, y + h - mPaint.ascent(), mPaint);
+      }
     }
   }
 
