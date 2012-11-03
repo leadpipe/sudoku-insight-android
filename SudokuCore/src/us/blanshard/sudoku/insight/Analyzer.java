@@ -395,9 +395,8 @@ public class Analyzer {
   }
 
   public static void findErrors(GridMarks gridMarks, Callback callback) {
+    // First look for actual conflicting assignments.
     for (Unit unit : Unit.allUnits()) {
-
-      // First look for actual conflicting assignments in this unit.
       NumSet seen = NumSet.NONE;
       NumSet conflicting = NumSet.NONE;
       for (Location loc : unit) {
@@ -413,10 +412,12 @@ public class Analyzer {
           if (gridMarks.grid.get(loc) == num) locs = locs.with(loc);
         callback.take(new Conflict(gridMarks.grid, num, locs));
       }
+    }
 
-      // Then look for numerals that have no possible assignments left in this
-      // unit.
-      for (Numeral num : conflicting.not()) {
+    // Then look for numerals that have no possible assignments left in each
+    // unit.
+    for (Unit unit : Unit.allUnits()) {
+      for (Numeral num : Numeral.ALL) {
         UnitSubset set = gridMarks.marks.get(unit, num);
         if (set.isEmpty()) {
           callback.take(new BarredNum(unit, num));
