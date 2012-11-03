@@ -313,7 +313,8 @@ public class ReplayView extends SudokuView {
     }
     if (mEliminations != null) {
       for (Map.Entry<Location, NumSet> entry : mEliminations.entrySet()) {
-        getLocDisplay(entry.getKey()).crossOut(entry.getValue());
+        if (isOpen(entry.getKey()))
+          getLocDisplay(entry.getKey()).crossOut(entry.getValue());
       }
     }
   }
