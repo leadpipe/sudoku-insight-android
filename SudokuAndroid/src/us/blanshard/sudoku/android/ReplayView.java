@@ -160,6 +160,7 @@ public class ReplayView extends SudokuView {
   }
 
   public void addInsight(Insight insight) {
+    if (mInsights == null) mInsights = Sets.newLinkedHashSet();
     switch (insight.type) {
       case IMPLICATION:
         Implication implication = (Implication) insight;
@@ -169,6 +170,7 @@ public class ReplayView extends SudokuView {
       case CONFLICT:
         Conflict conflict = (Conflict) insight;
         mConflicts.addAll(conflict.getLocations());
+        mInsights.add(insight);
         invalidate();
         break;
       case DISPROVED_ASSIGNMENT:
@@ -177,7 +179,6 @@ public class ReplayView extends SudokuView {
         addInsight(disprovedAssignment.getResultingError());
         break;
       default:
-        if (mInsights == null) mInsights = Sets.newLinkedHashSet();
         mInsights.add(insight);
         mLocDisplays = null;
         invalidate();
@@ -248,6 +249,12 @@ public class ReplayView extends SudokuView {
           }
           break;
         }
+        case CONFLICT: {
+          Conflict conflict = (Conflict) insight;
+          if (mErrorUnits == null) mErrorUnits = Sets.newHashSet();
+          mErrorUnits.add(conflict.getLocations().unit);
+          break;
+        }
         case FORCED_LOCATION: {
           ForcedLoc forcedLoc = (ForcedLoc) insight;
           locDisplay = getLocDisplay(forcedLoc.getLocation());
@@ -315,7 +322,7 @@ public class ReplayView extends SudokuView {
 
     if ((locDisplay.flags & ERROR_BORDER_MASK) != 0) {
       mPaint.setStyle(Style.STROKE);
-      mPaint.setColor(Color.RED);
+      mPaint.setColor(ERROR_COLOR);
       canvas.drawRect(x, y, x + s, y + s, mPaint);
     }
 
@@ -363,13 +370,12 @@ public class ReplayView extends SudokuView {
     if (open && !locDisplay.possiblesUnion.isEmpty()) {
       mPaint.setTextSize(mTextSize * ASGMT_SCALE);
       mPaint.setStyle(Style.FILL);
-      mPaint.setColor(ASGMT_COLOR);
       boolean problem = locDisplay.possibles.isEmpty();
+      mPaint.setColor(mConflicts.contains(loc) ? ERROR_COLOR : problem ? QUESTION_COLOR : ASGMT_COLOR);
       String text;
       text = problem ? locDisplay.possiblesUnion.toString() : locDisplay.possibles.toString();
       text = text.substring(1, text.length() - 1);  // strip brackets
       if (problem) {
-        mPaint.setColor(QUESTION_COLOR);
         text = "?" + text + "?";
       }
       float w = mPaint.measureText(text);
@@ -380,7 +386,7 @@ public class ReplayView extends SudokuView {
 
   private void drawErrorUnit(Canvas canvas, Unit unit) {
     mPaint.setStyle(Style.STROKE);
-    mPaint.setColor(Color.RED);
+    mPaint.setColor(ERROR_COLOR);
     float s = mSquareSize;
     float top = mOffsetsX[unit.get(0).row.index];
     float left = mOffsetsY[unit.get(0).column.index];

@@ -47,6 +47,7 @@ import javax.annotation.Nullable;
 
 public class SudokuView extends View {
   public static final int MAX_VISIBLE_TRAILS = 4;
+  public static final int ERROR_COLOR = Color.RED;
 
   private static final float CLOCK_RADIUS_FACTOR = 0.85f;
   private static final int CLOCK_RADIUS_DP = 60;  // 3/8"
@@ -288,7 +289,8 @@ public class SudokuView extends View {
           mPaint.setTypeface(Typeface.DEFAULT);
           mPaint.setFakeBoldText(false);
         }
-        mPaint.setColor(mBroken.contains(loc) ? Color.RED : given || !mTrailActive ? Color.BLACK : Color.GRAY);
+        boolean broken = mBroken.contains(loc);
+        mPaint.setColor(broken ? ERROR_COLOR : given || !mTrailActive ? Color.BLACK : Color.GRAY);
         float left = mOffsetsX[loc.column.index];
         float top = mOffsetsY[loc.row.index];
         if (num != null) {
@@ -300,7 +302,7 @@ public class SudokuView extends View {
             TrailItem item = mTrails.get(i);
             if ((num = item.trail.get(loc)) != null) {
               mPaint.setTextSize(mSquareSize * (i == 0 ? 0.5f : 0.35f));
-              mPaint.setColor(i == 0 && mTrailActive ? item.color : item.dimColor);
+              mPaint.setColor(broken ? ERROR_COLOR : i == 0 && mTrailActive ? item.color : item.dimColor);
               boolean isTrailhead = loc == item.trail.getTrailhead();
               mPaint.setTypeface(isTrailhead ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
               mPaint.setTextSkewX(isTrailhead ? -0.125f : 0);
