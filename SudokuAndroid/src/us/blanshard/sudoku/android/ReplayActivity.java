@@ -404,6 +404,9 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
           mDisproofUndoPosition = mUndoStack.getPosition();
           updateTrail(mGame.newTrail().getId());
           doCommand(makeMoveCommand(mDisproof.getDisprovedAssignment()));
+          mToBeDisplayed.clear();
+          mReplayView.clearInsights();
+          mReplayView.addInsight(mDisproof.getUnfoundedAssignment());
           assignImplication(mDisproof.getResultingError());
           mReplayView.postDelayed(disproofCycler, SET_CYCLE_MILLIS);
           setUndoEnablement();
