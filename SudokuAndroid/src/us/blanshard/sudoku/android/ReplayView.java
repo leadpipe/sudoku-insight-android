@@ -246,8 +246,10 @@ public class ReplayView extends SudokuView {
           if (mErrorUnits == null) mErrorUnits = Sets.newHashSet();
           mErrorUnits.add(barredNum.getUnit());
           for (Location loc : barredNum.getUnit()) {
-            locDisplay = getLocDisplay(loc);
-            locDisplay.crossOut(barredNum.getNumeral().asSet());
+            if (isOpen(loc)) {
+              locDisplay = getLocDisplay(loc);
+              locDisplay.crossOut(barredNum.getNumeral().asSet());
+            }
           }
           break;
         }
@@ -355,6 +357,11 @@ public class ReplayView extends SudokuView {
       mPaint.setStyle(Style.FILL);
       mPaint.setColor(ELIM_COLOR);
       for (Numeral num : locDisplay.crossedOut) {
+        if (locDisplay.crossedOut.size() == 1) {
+          mPaint.setColor(OVERLAP_COLOR);
+          canvas.drawText(num.toString(), x + mClockX[num.number], y + mClockY[num.number], mPaint);
+          mPaint.setColor(ELIM_COLOR);
+        }
         canvas.drawText("\u00d7", x + mClockX[num.number], y + mClockY[num.number], mPaint);
       }
     }
