@@ -47,54 +47,26 @@ END
 ** TODO Write an appengine app that gathers data from the android app
    - use GUID to identify the installation
    - allow login using Google ID to keep different installations from generating the same puzzles
-** DONE Graphical display of insights (rudimentary)
-   - when paused:
-     - light up all locations with implied moves; on tap, list the insights
-     - (not done) also light up all errors: single locations, units, or the actual conflicts
-     - special highlight for the next assigned location (maybe it's just selected first)
-   - when running:
-     - list the insights for the next move
-** DONE Figure out how to find, show productive trailheads
-** TODO Get a better handle on when to stop the replay
-   - we should be stopping on switch of trail, rather than only on lack of justifying insight
-   - we should be showing the move that we stopped on, with the reason for the stop
-** TODO Graphical display of insights (advanced)
-   - when running, display the insights found for the latest move
+   - will android tell us which Google ID installed the app?
+   - when the app is slightly off the ground, sign up for Cloud Endpoints at http://endpoints-trusted-tester.appspot.com/
+** TODO Automatically pause the replay on switch of trail, just after the move
+** TODO Display of insights
+   - when running, display the insight found for the latest move, plus the error
+     that resulted from it.  If no insight is found, show an unfounded assignment.
    - when paused, display the insights that would be applied on tap
-   - when exploring, display the insights after the move
-   - how to display:
-     - forced loc: the numeral with a representation of the unit as either a line or a square
-     - forced num: the numeral overlaid on a representation of all the numerals
-       in a clock face, with all but the numeral in question crossed out
-     - overlap: clock face of numerals within the overlapping locations, with the
-       numerals of the overlaps going through that location shown, and connected
-       with a line somehow
-     - locked set: for each location, the list of possible numerals for that location
-     - conflict: show conflicting assignments in red
-     - barred loc: like forced num, but without an overlaid numeral and with
-       _all_ the numerals in the clock face crossed out; also, rim the location in
-       red
-     - barred num: rim the unit in red, display the numeral crossed out in every
-       open location
-     - also, we need a way to highlight a move that is not supported by a set of
-       insights.  Maybe this is a special kind of (non-)insight?  I'm thinking
-       maybe a 2x2 grid of question marks behind the numeral
-   - per-location insight display:
-     - 3 bits for unit indicators; set by forced loc, overlap, locked set
-     - NumSet for crossed-out numerals on clock face; set by forced num,
-       overlap, locked set, barred loc, barred num.
-     - maybe 2nd NumSet for the error ones, to display in red?
-     - NumSet for numerals to be highlighted on the clock face, set by overlaps
-     - NumSet for numerals to be displayed within the clock circle: set by
-       assignments and locked sets
-     - flag for error border
-     - flag for question marks
-   - list or set of units containing errors for border
+   - when exploring, when tap a square with an assignment, make the assignment
+     and display the insight.  When tap a disproof, display the insight and
+     enable the "apply" button.  When the apply button is pressed, apply the
+     disproof and clear the insight display.
+** TODO Add slider corresponding to progress through replay
 ** TODO Think about animation of insight display
-   - it's mostly the overlaps that would be obviously improved by this
+   - for complex implications, this could help the visualization
+** TODO Make color of disproof border fade out for long implication chains
+   - anything over like 8 insights should be much fainter
 ** TODO Figure out why the progress indicator stops
    - Damn guava splitter static initialization is one reason
    - But can't be the only thing, or probably even the main one
+   - Remove stuff from the foreground thread to figure this out
 ** TODO Add a count to the list spinner: #puzzles in collection
 ** TODO Handle the importing of collections of puzzles
    - Add an activity that's triggered by .sdm files
