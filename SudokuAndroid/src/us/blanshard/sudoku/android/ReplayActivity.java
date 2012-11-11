@@ -47,6 +47,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
 import com.google.common.base.Function;
@@ -70,7 +72,8 @@ import javax.annotation.Nullable;
 /**
  * @author Luke Blanshard
  */
-public class ReplayActivity extends ActivityBase implements View.OnClickListener, ReplayView.OnSelectListener {
+public class ReplayActivity extends ActivityBase
+    implements View.OnClickListener, ReplayView.OnSelectListener, OnSeekBarChangeListener {
   private static final String TAG = "ReplayActivity";
   private static final long SET_CYCLE_MILLIS = 500;
   private static final long CLEAR_CYCLE_MILLIS = 200;
@@ -79,6 +82,9 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private ViewGroup mControls;
   private ViewGroup mPauseControls;
   private ViewGroup mUndoControls;
+  private SeekBar mReplayLocation;
+  private ViewGroup mReplayInfo;
+  private TextView mMoveNumber;
   private TextView mTimer;
   private Sudoku mGame;
   private final Sudoku.Registry mRegistry = Sudoku.newRegistry();
@@ -166,10 +172,14 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     mControls = (ViewGroup) findViewById(R.id.replay_controls);
     mPauseControls = (ViewGroup) findViewById(R.id.replay_pause_controls);
     mUndoControls = (ViewGroup) findViewById(R.id.replay_undo_controls);
+    mReplayLocation = (SeekBar) findViewById(R.id.replay_location);
+    mReplayInfo = (ViewGroup) findViewById(R.id.replay_info);
+    mMoveNumber = (TextView) findViewById(R.id.move_number);
     mTimer = (TextView) findViewById(R.id.timer);
 
     mReplayView.setOnSelectListener(this);
     mReplayView.setSelectableColorsFunction(selectableColors);
+    mReplayLocation.setOnSeekBarChangeListener(this);
 
     setUpButton(R.id.play);
     setUpButton(R.id.pause);
@@ -177,7 +187,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
     setUpButton(R.id.next);
     setUpButton(R.id.previous);
     setUpButton(R.id.undo);
-    setUpButton(R.id.cont);
+    setUpButton(R.id.apply);
 
     mRegistry.addListener(new Sudoku.Adapter() {
       @Override public void moveMade(Sudoku game, Move move) {
@@ -224,7 +234,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mExploring = true;
         mControls.setVisibility(View.GONE);
         mPauseControls.setVisibility(View.GONE);
-        mTimer.setVisibility(View.GONE);
+        mReplayInfo.setVisibility(View.GONE);
+        mReplayLocation.setVisibility(View.GONE);
         mUndoControls.setVisibility(View.VISIBLE);
         setUndoEnablement();
         invalidateOptionsMenu();
@@ -238,13 +249,27 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         } catch (CommandException e) {
           Log.e(TAG, "Can't resume replay", e);
         }
-        mTimer.setVisibility(View.VISIBLE);
+        mReplayInfo.setVisibility(View.VISIBLE);
+        mReplayLocation.setVisibility(View.VISIBLE);
         mUndoControls.setVisibility(View.GONE);
         pause();
         return true;
     }
     return super.onOptionsItemSelected(item);
   }
+
+  @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+    if (mHistory == null || mExploring || mRunning || !fromUser)
+      return;
+    while (progress != mHistoryPosition)
+      if (!move(progress > mHistoryPosition))
+        break;
+    reflectCurrentMove();
+    setControlsEnablement();
+  }
+
+  @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+  @Override public void onStopTrackingTouch(SeekBar seekBar) {}
 
   void setGame(Database.Game dbGame) {
     mGame = new Sudoku(dbGame.puzzle, mRegistry).resume();
@@ -258,6 +283,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       mHistory = Lists.newArrayList();
     }
     mHistoryPosition = 0;
+    mReplayLocation.setMax(mHistory.size());
     setControlsEnablement();
     findViewById(R.id.play).performClick();
   }
@@ -345,6 +371,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mReplayView.postDelayed(replayCycler, SET_CYCLE_MILLIS);
         startAnalysis();
         invalidateOptionsMenu();
+        mReplayLocation.setEnabled(false);
         break;
 
       case R.id.pause:
@@ -353,6 +380,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mRunning = false;
         startAnalysis();
         invalidateOptionsMenu();
+        mReplayLocation.setEnabled(true);
         break;
 
       case R.id.next:
@@ -374,7 +402,7 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         mReplayView.setSelected(null);
         break;
 
-      case R.id.cont:
+      case R.id.apply:
         stepDisproof();
         break;
     }
@@ -390,8 +418,8 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
   private void setUndoEnablement() {
     boolean undoEnabled = mUndoStack.getPosition() > mHistoryPosition && mDisproof == null;
     findViewById(R.id.undo).setEnabled(undoEnabled);
-    boolean contEnabled = mDisproof != null && mAntecedentIndex < 0;
-    findViewById(R.id.cont).setEnabled(contEnabled);
+    boolean applyEnabled = mDisproof != null && mAntecedentIndex < 0;
+    findViewById(R.id.apply).setEnabled(applyEnabled);
   }
 
   @Override public void onSelect(Location loc) {
@@ -465,42 +493,10 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
         return;
       }
 
-      boolean worked = false;
-      if (mForward) {
-        if (mHistoryPosition < mHistory.size()) {
-          Move move = mHistory.get(mHistoryPosition);
-          try {
-            mUndoStack.doCommand(move.toCommand(mGame));
-            ++mHistoryPosition;
-            worked = true;
-          } catch (CommandException e) {
-            Log.e(TAG, "Unable to apply move " + move, e);
-          }
-        }
-      } else {
-        if (mUndoStack.canUndo()) {
-          try {
-            mUndoStack.undo();
-            --mHistoryPosition;
-            worked = true;
-          } catch (CommandException e) {
-            Log.e(TAG, "Can't undo", e);
-          }
-        }
-      }
+      boolean worked = move(mForward);
 
       if (worked) {
-        String time = "";
-        Location loc = null;
-        if (mHistoryPosition > 0) {
-          Move move = mHistory.get(mHistoryPosition - 1);
-          time = ToText.elapsedTime(move.timestamp);
-          updateTrail(move.trailId);
-          loc = move.getLocation();
-        } else updateTrail(-1);
-        startAnalysis();
-        mTimer.setText(time);
-        mReplayView.setSelected(loc);
+        reflectCurrentMove();
       }
 
       if (mRunning && !worked) {
@@ -513,6 +509,48 @@ public class ReplayActivity extends ActivityBase implements View.OnClickListener
       mReplayView.postDelayed(replayCycler, cycleMillis);
     }
     setControlsEnablement();
+  }
+
+  private boolean move(boolean forward) {
+    if (forward) {
+      if (mHistoryPosition < mHistory.size()) {
+        Move move = mHistory.get(mHistoryPosition);
+        try {
+          mUndoStack.doCommand(move.toCommand(mGame));
+          ++mHistoryPosition;
+          return true;
+        } catch (CommandException e) {
+          Log.e(TAG, "Unable to apply move " + move, e);
+        }
+      }
+    } else {
+      if (mUndoStack.canUndo()) {
+        try {
+          mUndoStack.undo();
+          --mHistoryPosition;
+          return true;
+        } catch (CommandException e) {
+          Log.e(TAG, "Can't undo", e);
+        }
+      }
+    }
+    return false;
+  }
+
+  private void reflectCurrentMove() {
+    long timestamp = 0;
+    Location loc = null;
+    if (mHistoryPosition > 0) {
+      Move move = mHistory.get(mHistoryPosition - 1);
+      timestamp = move.timestamp;
+      updateTrail(move.trailId);
+      loc = move.getLocation();
+    } else updateTrail(-1);
+    startAnalysis();
+    mMoveNumber.setText(getString(R.string.text_move_number, mHistoryPosition, mHistory.size()));
+    mReplayLocation.setProgress(mHistoryPosition);
+    mTimer.setText(ToText.elapsedTime(timestamp));
+    mReplayView.setSelected(loc);
   }
 
   private void stepDisproof() {

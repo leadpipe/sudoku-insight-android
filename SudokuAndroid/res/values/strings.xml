@@ -3,11 +3,11 @@
 
     <string name="app_full_name">Sudoku Insight</string>
     <string name="app_short_name">Insight</string>
+    <string name="button_apply">Apply</string>
     <string name="button_back">Reverse</string>
     <string name="button_done">Done</string>
     <string name="button_capture_play">Play Now</string>
     <string name="button_capture_save">Save for Later</string>
-    <string name="button_continue">Continue</string>
     <string name="button_give_up">Give Up</string>
     <string name="button_next">Next</string>
     <string name="button_pause">Pause</string>
@@ -74,6 +74,7 @@
     <string name="text_generator_params">Generator parameters: %1$s</string>
     <string name="text_info_title">Sudoku #%1$d Details</string>
     <string name="text_move_and_trail_counts">Moves: %1$d; trails: %2$d.</string>
+    <string name="text_move_number">%1$d of %2$d</string>
     <string name="text_no_vote">Normal fun.</string>
     <string name="text_oops">Oops!</string>
     <string name="text_puzzle_number">#%1$d</string>

@@ -51,14 +51,17 @@ END
    - when the app is slightly off the ground, sign up for Cloud Endpoints at http://endpoints-trusted-tester.appspot.com/
 ** TODO Automatically pause the replay on switch of trail, just after the move
 ** TODO Display of insights
-   - when running, display the insight found for the latest move, plus the error
-     that resulted from it.  If no insight is found, show an unfounded assignment.
+   - when running forward, display the insight found for the latest move, plus
+     the error that resulted from it.  If no insight is found, show an unfounded
+     assignment.
+   - when running backward, don't look for insights
    - when paused, display the insights that would be applied on tap
    - when exploring, when tap a square with an assignment, make the assignment
      and display the insight.  When tap a disproof, display the insight and
      enable the "apply" button.  When the apply button is pressed, apply the
      disproof and clear the insight display.
-** TODO Add slider corresponding to progress through replay
+** TODO When targeting an assignment to an occupied location, remove that location from the search starting point
+** DONE Add slider corresponding to progress through replay
 ** TODO Think about animation of insight display
    - for complex implications, this could help the visualization
 ** TODO Make color of disproof border fade out for long implication chains
