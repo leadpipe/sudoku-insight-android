@@ -361,6 +361,7 @@ public class ReplayActivity extends ActivityBase
         startAnalysis();
         invalidateOptionsMenu();
         mReplayLocation.setEnabled(false);
+        displayInsightAndError(null);
         break;
 
       case R.id.pause:
@@ -370,6 +371,7 @@ public class ReplayActivity extends ActivityBase
         startAnalysis();
         invalidateOptionsMenu();
         mReplayLocation.setEnabled(true);
+        displayInsightAndError(null);
         break;
 
       case R.id.next:
@@ -389,6 +391,7 @@ public class ReplayActivity extends ActivityBase
         startAnalysis();
         setUndoEnablement();
         mReplayView.setSelected(null);
+        displayInsightAndError(null);
         break;
 
       case R.id.apply:
@@ -433,7 +436,7 @@ public class ReplayActivity extends ActivityBase
     mToBeDisplayed.clear();
     if (insightMin != null) displayInsight(insightMin);
     InsightMin error = null;
-    if (!mInsights.errors.isEmpty()) {
+    if (mInsights != null && !mInsights.errors.isEmpty()) {
       error = mInsights.errors.get(0);
       displayInsight(error);
     }
