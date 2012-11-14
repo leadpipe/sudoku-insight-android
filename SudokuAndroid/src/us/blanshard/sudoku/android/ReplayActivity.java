@@ -107,12 +107,11 @@ public class ReplayActivity extends ActivityBase
   private int mDisproofUndoPosition;
 
   private static final Integer[] sMinAssignmentColors, sUnminAssignmentColors;
-  private static final Integer[] sMinDisproofColors, sUnminDisproofColors;
+  private static final Integer[] sMinDisproofColors;
   static {
     sMinAssignmentColors = new Integer[7];
     sUnminAssignmentColors = new Integer[7];
     sMinDisproofColors = new Integer[7];
-    sUnminDisproofColors = new Integer[7];
     for (int i = 0; i < 7; ++i) {
       float f = 1f / (1 << i);
       float h = 1 - f;
@@ -120,8 +119,7 @@ public class ReplayActivity extends ActivityBase
       float v = h * 0.4f + 0.6f;
       sMinAssignmentColors[i] = Color.HSVToColor(new float[] {90f - 20 * h, s, 0.9f * v});
       sUnminAssignmentColors[i] = Color.HSVToColor(new float[] {60f, s, 0.95f});
-      sMinDisproofColors[i] = Color.HSVToColor(new float[] {30 * h, s, 0.8f * v});
-      sUnminDisproofColors[i] = Color.HSVToColor(new float[] {45f, s, 0.9f * v});
+      sMinDisproofColors[i] = Color.HSVToColor(new float[] {30 * h, s, v});
     }
   }
 
@@ -147,7 +145,7 @@ public class ReplayActivity extends ActivityBase
       }
       Integer[] colors = assignment
           ? insightMin.minimized ? sMinAssignmentColors : sUnminAssignmentColors
-          : insightMin.minimized ? sMinDisproofColors : sUnminDisproofColors;
+          : sMinDisproofColors;
       int num = insightMin.minimized ? insightMin.insight.getCount() : insightMin.insight.getDepth();
       return num >= colors.length ? colors[colors.length - 1] : colors[num];
     }
