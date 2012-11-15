@@ -64,7 +64,7 @@ END
 ** DONE Add slider corresponding to progress through replay
 ** TODO Think about animation of insight display
    - for complex implications, this could help the visualization
-** TODO Make color of disproof border fade out for long implication chains
+** DONE Make color of disproof border fade out for long implication chains
    - anything over like 8 insights should be much fainter
 ** TODO Figure out why the progress indicator stops
    - Damn guava splitter static initialization is one reason
