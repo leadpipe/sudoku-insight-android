@@ -101,20 +101,21 @@ public class ReplayActivity extends ActivityBase
   private Disprove mDisprove;
   private GridMarks mSolution;
 
+  private static final Integer sSelectedColor = Color.BLUE;
   private static final Integer[] sMinAssignmentColors, sUnminAssignmentColors;
   private static final Integer[] sMinDisproofColors;
   static {
-    sMinAssignmentColors = new Integer[7];
-    sUnminAssignmentColors = new Integer[7];
-    sMinDisproofColors = new Integer[7];
-    for (int i = 0; i < 7; ++i) {
+    sMinAssignmentColors = new Integer[10];
+    sUnminAssignmentColors = new Integer[10];
+    sMinDisproofColors = new Integer[10];
+    for (int i = 0; i < 10; ++i) {
       float f = 1f / (1 << i);
       float h = 1 - f;
       float s = f * 0.5f + 0.5f;
       float v = h * 0.4f + 0.6f;
       sMinAssignmentColors[i] = Color.HSVToColor(new float[] {90f - 20 * h, s, 0.9f * v});
       sUnminAssignmentColors[i] = Color.HSVToColor(new float[] {60f, s, 0.95f});
-      sMinDisproofColors[i] = Color.HSVToColor(new float[] {30 * h, s, v});
+      sMinDisproofColors[i] = Color.HSVToColor(new float[] {20 + 10 * h, s, v});
     }
   }
 
@@ -126,19 +127,25 @@ public class ReplayActivity extends ActivityBase
 
   private final Function<Location, Integer> selectableColors = new Function<Location, Integer>() {
     @Override public Integer apply(Location loc) {
-      if (loc == mReplayView.getSelected()) return Color.BLUE;
+      if (loc == mReplayView.getSelected()) return sSelectedColor;
       if (mInsights == null) return null;
+      Integer[] colors;
+      int index;
       InsightMin insightMin = mInsights.assignments.get(loc);
-      boolean assignment = insightMin != null;
       if (insightMin == null) {
         insightMin = mInsights.disproofs.get(loc);
         if (insightMin == null) return null;
+        colors = sMinDisproofColors;
+        index = insightMin.insight.getCount() - 1;
+      } else if (insightMin.minimized) {
+        colors = sMinAssignmentColors;
+        index = insightMin.insight.getCount() - 1;
+      } else {
+        colors = sUnminAssignmentColors;
+        index = insightMin.insight.getDepth();
       }
-      Integer[] colors = assignment
-          ? insightMin.minimized ? sMinAssignmentColors : sUnminAssignmentColors
-          : sMinDisproofColors;
-      int num = insightMin.minimized ? insightMin.insight.getCount() : insightMin.insight.getDepth();
-      return num >= colors.length ? colors[colors.length - 1] : colors[num];
+      index = Math.max(0, Math.min(colors.length - 1, index));
+      return colors[index];
     }
   };
 
