@@ -100,6 +100,7 @@ public class ReplayActivity extends ActivityBase
   private Minimize mMinimize;
   private Disprove mDisprove;
   private GridMarks mSolution;
+  private DisprovedAssignment mPendingDisproof;
 
   private static final Integer sSelectedColor = Color.BLUE;
   private static final Integer[] sMinAssignmentColors, sUnminAssignmentColors;
@@ -395,6 +396,7 @@ public class ReplayActivity extends ActivityBase
           } catch (CommandException e) {
             Log.e(TAG, "Undo failed", e);
           }
+        mPendingDisproof = null;
         startAnalysis();
         setUndoEnablement();
         mReplayView.setSelected(null);
@@ -402,6 +404,11 @@ public class ReplayActivity extends ActivityBase
         break;
 
       case R.id.apply:
+        doCommand(new ElimCommand(mPendingDisproof.getDisprovedAssignment()));
+        mPendingDisproof = null;
+        startAnalysis();
+        setUndoEnablement();
+        displayInsightAndError(null);
         break;
     }
   }
@@ -416,17 +423,17 @@ public class ReplayActivity extends ActivityBase
   private void setUndoEnablement() {
     boolean undoEnabled = mUndoStack.getPosition() > mHistoryPosition;
     findViewById(R.id.undo).setEnabled(undoEnabled);
+    findViewById(R.id.apply).setEnabled(mPendingDisproof != null);
   }
 
   @Override public void onSelect(Location loc) {
+    mPendingDisproof = null;
     if (mInsights != null) {
       InsightMin insightMin = mInsights.assignments.get(loc);
       if (insightMin == null) {
         insightMin = mInsights.disproofs.get(loc);
         if (insightMin != null && mExploring) {
-          DisprovedAssignment disproof = (DisprovedAssignment) insightMin.insight;
-          doCommand(new ElimCommand(disproof.getDisprovedAssignment()));
-          startAnalysis();
+          mPendingDisproof = (DisprovedAssignment) insightMin.insight;
           setUndoEnablement();
         }
       } else if (mExploring) {
@@ -681,7 +688,6 @@ public class ReplayActivity extends ActivityBase
     @Override public String toJsonValue() {
       throw new UnsupportedOperationException();
     }
-
   }
 
   /** Analyzer callback that grabs the first error it sees and stops the process. */
