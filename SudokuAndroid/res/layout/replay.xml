@@ -68,7 +68,7 @@
 	</LinearLayout>
 
     <LinearLayout
-        android:id="@+id/replay_pause_controls"
+        android:id="@+id/pause_controls"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -86,7 +86,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/replay_undo_controls"
+        android:id="@+id/explore_controls"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -102,13 +102,27 @@
 	        />
 
 	    <Button
+	        android:id="@+id/clear"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/button_clear"
+	        />
+
+	    <Button
 	        android:id="@+id/apply"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
 	        android:text="@string/button_apply"
 	        />
 
-    </LinearLayout>
+	    <Button
+	        android:id="@+id/redo"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/button_redo"
+	        />
+
+	    </LinearLayout>
     
     <SeekBar
         android:id="@+id/replay_location"

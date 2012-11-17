@@ -80,7 +80,7 @@ public class ReplayActivity extends ActivityBase
   private ProgressBar mProgress;
   private ViewGroup mControls;
   private ViewGroup mPauseControls;
-  private ViewGroup mUndoControls;
+  private ViewGroup mExploreControls;
   private SeekBar mReplayLocation;
   private ViewGroup mReplayInfo;
   private TextView mMoveNumber;
@@ -167,8 +167,8 @@ public class ReplayActivity extends ActivityBase
     mReplayView = (ReplayView) findViewById(R.id.replay_view);
     mProgress = (ProgressBar) findViewById(R.id.progress);
     mControls = (ViewGroup) findViewById(R.id.replay_controls);
-    mPauseControls = (ViewGroup) findViewById(R.id.replay_pause_controls);
-    mUndoControls = (ViewGroup) findViewById(R.id.replay_undo_controls);
+    mPauseControls = (ViewGroup) findViewById(R.id.pause_controls);
+    mExploreControls = (ViewGroup) findViewById(R.id.explore_controls);
     mReplayLocation = (SeekBar) findViewById(R.id.replay_location);
     mReplayInfo = (ViewGroup) findViewById(R.id.replay_info);
     mMoveNumber = (TextView) findViewById(R.id.move_number);
@@ -184,7 +184,9 @@ public class ReplayActivity extends ActivityBase
     setUpButton(R.id.next);
     setUpButton(R.id.previous);
     setUpButton(R.id.undo);
+    setUpButton(R.id.clear);
     setUpButton(R.id.apply);
+    setUpButton(R.id.redo);
 
     mRegistry.addListener(new Sudoku.Adapter() {
       @Override public void moveMade(Sudoku game, Move move) {
@@ -233,7 +235,7 @@ public class ReplayActivity extends ActivityBase
         mPauseControls.setVisibility(View.GONE);
         mReplayInfo.setVisibility(View.GONE);
         mReplayLocation.setVisibility(View.GONE);
-        mUndoControls.setVisibility(View.VISIBLE);
+        mExploreControls.setVisibility(View.VISIBLE);
         setUndoEnablement();
         invalidateOptionsMenu();
         return true;
@@ -248,7 +250,7 @@ public class ReplayActivity extends ActivityBase
         }
         mReplayInfo.setVisibility(View.VISIBLE);
         mReplayLocation.setVisibility(View.VISIBLE);
-        mUndoControls.setVisibility(View.GONE);
+        mExploreControls.setVisibility(View.GONE);
         pause();
         return true;
     }
@@ -395,6 +397,7 @@ public class ReplayActivity extends ActivityBase
             mUndoStack.undo();
           } catch (CommandException e) {
             Log.e(TAG, "Undo failed", e);
+            break;
           }
         mPendingDisproof = null;
         startAnalysis();
@@ -403,11 +406,31 @@ public class ReplayActivity extends ActivityBase
         displayInsightAndError(null);
         break;
 
+      case R.id.clear:
+        mPendingDisproof = null;
+        setUndoEnablement();
+        displayInsightAndError(null);
+        break;
+
       case R.id.apply:
         doCommand(new ElimCommand(mPendingDisproof.getDisprovedAssignment()));
         mPendingDisproof = null;
         startAnalysis();
         setUndoEnablement();
+        displayInsightAndError(null);
+        break;
+
+      case R.id.redo:
+        try {
+          mUndoStack.redo();
+        } catch (CommandException e) {
+          Log.e(TAG, "Redo failed", e);
+          break;
+        }
+        mPendingDisproof = null;
+        startAnalysis();
+        setUndoEnablement();
+        mReplayView.setSelected(null);
         displayInsightAndError(null);
         break;
     }
@@ -423,7 +446,9 @@ public class ReplayActivity extends ActivityBase
   private void setUndoEnablement() {
     boolean undoEnabled = mUndoStack.getPosition() > mHistoryPosition;
     findViewById(R.id.undo).setEnabled(undoEnabled);
+    findViewById(R.id.clear).setEnabled(mPendingDisproof != null);
     findViewById(R.id.apply).setEnabled(mPendingDisproof != null);
+    findViewById(R.id.redo).setEnabled(mUndoStack.canRedo());
   }
 
   @Override public void onSelect(Location loc) {
