@@ -342,7 +342,9 @@ public class WorkerFragment extends Fragment {
 
   /** Finds the fragment with the given ID, or null. */
   <F extends Fragment> F getFragment(Class<F> fragmentClass, int fragmentId) {
-    Fragment f = getFragmentManager().findFragmentById(fragmentId);
+    FragmentManager fragmentManager = getFragmentManager();
+    if (fragmentManager == null) return null;
+    Fragment f = fragmentManager.findFragmentById(fragmentId);
     return fragmentClass.cast(f);
   }
 
