@@ -224,14 +224,13 @@ public class ReplayView extends SudokuView {
 
   @Override protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
-    if (mInsights != null && mLocDisplays == null) buildLocDisplays();
+    if (mLocDisplays == null) buildLocDisplays();
     mPaint.setStrokeWidth(mThickLineWidth);
     mPaint.setTypeface(Typeface.DEFAULT);
     mPaint.setFakeBoldText(false);
     for (Location loc : Location.ALL) {
       drawSelectable(canvas, loc);
-      if (mLocDisplays != null)
-        drawInsights(canvas, loc, mLocDisplays.get(loc));
+      drawInsights(canvas, loc, mLocDisplays.get(loc));
     }
     if (mErrorUnits != null)
       for (Unit unit : mErrorUnits)
@@ -242,81 +241,81 @@ public class ReplayView extends SudokuView {
     mLocDisplays = Maps.newHashMap();
     mErrorUnits = null;
     LocDisplay locDisplay;
-    for (Insight insight : mInsights) {
-      switch (insight.type) {
-        case BARRED_LOCATION: {
-          BarredLoc barredLoc = (BarredLoc) insight;
-          locDisplay = getLocDisplay(barredLoc.getLocation());
-          locDisplay.crossOut(NumSet.ALL);
-          locDisplay.flags |= ERROR_BORDER_MASK;
-          break;
-        }
-        case BARRED_NUMERAL: {
-          BarredNum barredNum = (BarredNum) insight;
-          if (mErrorUnits == null) mErrorUnits = Sets.newHashSet();
-          mErrorUnits.add(barredNum.getUnit());
-          for (Location loc : barredNum.getUnit()) {
-            if (isOpen(loc)) {
-              locDisplay = getLocDisplay(loc);
-              locDisplay.crossOut(barredNum.getNumeral().asSet());
+    if (mInsights != null)
+      for (Insight insight : mInsights) {
+        switch (insight.type) {
+          case BARRED_LOCATION: {
+            BarredLoc barredLoc = (BarredLoc) insight;
+            locDisplay = getLocDisplay(barredLoc.getLocation());
+            locDisplay.crossOut(NumSet.ALL);
+            locDisplay.flags |= ERROR_BORDER_MASK;
+            break;
+          }
+          case BARRED_NUMERAL: {
+            BarredNum barredNum = (BarredNum) insight;
+            if (mErrorUnits == null) mErrorUnits = Sets.newHashSet();
+            mErrorUnits.add(barredNum.getUnit());
+            for (Location loc : barredNum.getUnit()) {
+              if (isOpen(loc)) {
+                locDisplay = getLocDisplay(loc);
+                locDisplay.crossOut(barredNum.getNumeral().asSet());
+              }
             }
+            break;
           }
-          break;
-        }
-        case CONFLICT: {
-          Conflict conflict = (Conflict) insight;
-          if (mErrorUnits == null) mErrorUnits = Sets.newHashSet();
-          mErrorUnits.add(conflict.getLocations().unit);
-          break;
-        }
-        case FORCED_LOCATION: {
-          ForcedLoc forcedLoc = (ForcedLoc) insight;
-          locDisplay = getLocDisplay(forcedLoc.getLocation());
-          locDisplay.addUnit(forcedLoc.getUnit());
-          locDisplay.updatePossibles(forcedLoc.getNumeral().asSet());
-          break;
-        }
-        case FORCED_NUMERAL: {
-          ForcedNum forcedNum = (ForcedNum) insight;
-          locDisplay = getLocDisplay(forcedNum.getLocation());
-          locDisplay.crossOut(forcedNum.getNumeral().asSet().not());
-          locDisplay.updatePossibles(forcedNum.getNumeral().asSet());
-          break;
-        }
-        case LOCKED_SET: {
-          LockedSet lockedSet = (LockedSet) insight;
-          for (Location loc : lockedSet.getLocations()) {
-            locDisplay = getLocDisplay(loc);
-            locDisplay.addUnit(lockedSet.getLocations().unit);
-            locDisplay.updatePossibles(lockedSet.getNumerals());
+          case CONFLICT: {
+            Conflict conflict = (Conflict) insight;
+            if (mErrorUnits == null) mErrorUnits = Sets.newHashSet();
+            mErrorUnits.add(conflict.getLocations().unit);
+            break;
           }
-          break;
-        }
-        case OVERLAP: {
-          Overlap overlap = (Overlap) insight;
-          for (Location loc : overlap.getUnit().intersect(overlap.getOverlappingUnit())) {
-            locDisplay = getLocDisplay(loc);
-            locDisplay.overlaps = locDisplay.overlaps.or(overlap.getNumeral().asSet());
-            locDisplay.addUnit(overlap.getOverlappingUnit());
+          case FORCED_LOCATION: {
+            ForcedLoc forcedLoc = (ForcedLoc) insight;
+            locDisplay = getLocDisplay(forcedLoc.getLocation());
+            locDisplay.addUnit(forcedLoc.getUnit());
+            locDisplay.updatePossibles(forcedLoc.getNumeral().asSet());
+            break;
           }
-          break;
-        }
-        case UNFOUNDED_ASSIGNMENT: {
-          UnfoundedAssignment unfoundedAssignment = (UnfoundedAssignment) insight;
-          Assignment assignment = unfoundedAssignment.getImpliedAssignment();
-          locDisplay = getLocDisplay(assignment.location);
-          locDisplay.updatePossibles(assignment.numeral.asSet());
-          locDisplay.flags |= QUESTION_MASK;
-          break;
+          case FORCED_NUMERAL: {
+            ForcedNum forcedNum = (ForcedNum) insight;
+            locDisplay = getLocDisplay(forcedNum.getLocation());
+            locDisplay.crossOut(forcedNum.getNumeral().asSet().not());
+            locDisplay.updatePossibles(forcedNum.getNumeral().asSet());
+            break;
+          }
+          case LOCKED_SET: {
+            LockedSet lockedSet = (LockedSet) insight;
+            for (Location loc : lockedSet.getLocations()) {
+              locDisplay = getLocDisplay(loc);
+              locDisplay.addUnit(lockedSet.getLocations().unit);
+              locDisplay.updatePossibles(lockedSet.getNumerals());
+            }
+            break;
+          }
+          case OVERLAP: {
+            Overlap overlap = (Overlap) insight;
+            for (Location loc : overlap.getUnit().intersect(overlap.getOverlappingUnit())) {
+              locDisplay = getLocDisplay(loc);
+              locDisplay.overlaps = locDisplay.overlaps.or(overlap.getNumeral().asSet());
+              locDisplay.addUnit(overlap.getOverlappingUnit());
+            }
+            break;
+          }
+          case UNFOUNDED_ASSIGNMENT: {
+            UnfoundedAssignment unfoundedAssignment = (UnfoundedAssignment) insight;
+            Assignment assignment = unfoundedAssignment.getImpliedAssignment();
+            locDisplay = getLocDisplay(assignment.location);
+            locDisplay.updatePossibles(assignment.numeral.asSet());
+            locDisplay.flags |= QUESTION_MASK;
+            break;
+          }
         }
       }
-    }
-    if (mEliminations != null) {
+    if (mEliminations != null)
       for (Map.Entry<Location, NumSet> entry : mEliminations.entrySet()) {
         if (isOpen(entry.getKey()))
           getLocDisplay(entry.getKey()).crossOut(entry.getValue());
       }
-    }
   }
 
   private LocDisplay getLocDisplay(Location loc) {
