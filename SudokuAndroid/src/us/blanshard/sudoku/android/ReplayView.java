@@ -40,7 +40,6 @@ import android.graphics.Color;
 import android.graphics.Paint.Style;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
-import android.util.FloatMath;
 import android.view.MotionEvent;
 
 import com.google.common.base.Function;
@@ -211,8 +210,8 @@ public class ReplayView extends SudokuView {
     mClockY = new float[10];
     for (Numeral num : Numeral.ALL) {
       float radians = calcRadians(num.number);
-      mClockX[num.number] = h + r * FloatMath.cos(radians);
-      mClockY[num.number] = h + r * FloatMath.sin(radians) + a;
+      mClockX[num.number] = h + r * (float) Math.cos(radians);
+      mClockY[num.number] = h + r * (float) Math.sin(radians) + a;
     }
   }
 
