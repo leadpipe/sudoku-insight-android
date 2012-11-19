@@ -241,8 +241,7 @@ public class ReplayActivity extends ActivityBase
         boolean forward = item.getItemId() == R.id.menu_redo;
         if (mExploring) {
           undoOrRedo(forward);
-        }
-        else {
+        } else {
           mForward = forward;
           stepReplay(true);
         }
@@ -294,6 +293,10 @@ public class ReplayActivity extends ActivityBase
     mPendingInsight = null;
     mPendingCommand = null;
     startAnalysis();
+    if (mUndoStack.getPosition() <= mHistoryPosition) {
+      mExploring = false;
+      setControlsEnablement();
+    }
     invalidateOptionsMenu();
     mReplayView.setSelected(null);
     displayInsightAndError(null);
