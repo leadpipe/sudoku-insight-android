@@ -30,6 +30,7 @@ limitations under the License.
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_full_name"
         android:theme="@android:style/Theme.Holo.Light"
+        android:allowBackup="true"
         >
         <activity
             android:name=".SudokuActivity"
@@ -51,6 +52,7 @@ limitations under the License.
         <activity
             android:name=".ReplayActivity"
             android:label="@string/app_short_name"
+            android:uiOptions="splitActionBarWhenNarrow"
             />
         <activity
             android:name=".PrefsActivity"

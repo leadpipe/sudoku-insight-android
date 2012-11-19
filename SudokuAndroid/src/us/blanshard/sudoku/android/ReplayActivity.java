@@ -79,8 +79,6 @@ public class ReplayActivity extends ActivityBase
   private ReplayView mReplayView;
   private ProgressBar mProgress;
   private ViewGroup mControls;
-  private ViewGroup mPauseControls;
-  private ViewGroup mExploreControls;
   private SeekBar mReplayLocation;
   private ViewGroup mReplayInfo;
   private TextView mMoveNumber;
@@ -100,7 +98,8 @@ public class ReplayActivity extends ActivityBase
   private Minimize mMinimize;
   private Disprove mDisprove;
   private GridMarks mSolution;
-  private DisprovedAssignment mPendingDisproof;
+  private Insight mPendingInsight;
+  private Command mPendingCommand;
 
   private static final Integer sSelectedColor = Color.BLUE;
   private static final Integer[] sMinAssignmentColors, sUnminAssignmentColors;
@@ -167,8 +166,6 @@ public class ReplayActivity extends ActivityBase
     mReplayView = (ReplayView) findViewById(R.id.replay_view);
     mProgress = (ProgressBar) findViewById(R.id.progress);
     mControls = (ViewGroup) findViewById(R.id.replay_controls);
-    mPauseControls = (ViewGroup) findViewById(R.id.pause_controls);
-    mExploreControls = (ViewGroup) findViewById(R.id.explore_controls);
     mReplayLocation = (SeekBar) findViewById(R.id.replay_location);
     mReplayInfo = (ViewGroup) findViewById(R.id.replay_info);
     mMoveNumber = (TextView) findViewById(R.id.move_number);
@@ -181,12 +178,6 @@ public class ReplayActivity extends ActivityBase
     setUpButton(R.id.play);
     setUpButton(R.id.pause);
     setUpButton(R.id.back);
-    setUpButton(R.id.next);
-    setUpButton(R.id.previous);
-    setUpButton(R.id.undo);
-    setUpButton(R.id.clear);
-    setUpButton(R.id.apply);
-    setUpButton(R.id.redo);
 
     mRegistry.addListener(new Sudoku.Adapter() {
       @Override public void moveMade(Sudoku game, Move move) {
@@ -211,8 +202,24 @@ public class ReplayActivity extends ActivityBase
     for (int i = 0; i < menu.size(); ++i) {
       MenuItem item = menu.getItem(i);
       switch (item.getItemId()) {
-        case R.id.menu_explore:
-          item.setEnabled(!mRunning && !mExploring);
+        case R.id.menu_undo: {
+          boolean enabled = (mExploring && mUndoStack.canUndo())
+              || (!mExploring && mHistoryPosition > 0);
+          item.setEnabled(enabled);
+          break;
+        }
+        case R.id.menu_redo: {
+          boolean enabled = (mExploring && mUndoStack.canRedo())
+              || (!mExploring && mHistory != null && mHistoryPosition < mHistory.size());
+          item.setEnabled(enabled);
+          break;
+        }
+        case R.id.menu_clear:
+          item.setEnabled(mPendingInsight != null);
+          break;
+
+        case R.id.menu_apply:
+          item.setEnabled(mPendingCommand != null);
           break;
 
         case R.id.menu_resume_replay:
@@ -229,15 +236,34 @@ public class ReplayActivity extends ActivityBase
         finish();
         return true;
 
-      case R.id.menu_explore:
-        mExploring = true;
-        mControls.setVisibility(View.GONE);
-        mPauseControls.setVisibility(View.GONE);
-        mReplayInfo.setVisibility(View.GONE);
-        mReplayLocation.setVisibility(View.GONE);
-        mExploreControls.setVisibility(View.VISIBLE);
-        setUndoEnablement();
+      case R.id.menu_undo:
+      case R.id.menu_redo:
+        boolean forward = item.getItemId() == R.id.menu_redo;
+        if (mExploring) {
+          undoOrRedo(forward);
+        }
+        else {
+          mForward = forward;
+          stepReplay(true);
+        }
+        return true;
+
+      case R.id.menu_clear:
+        mPendingInsight = null;
+        mPendingCommand = null;
         invalidateOptionsMenu();
+        displayInsightAndError(null);
+        return true;
+
+      case R.id.menu_apply:
+        doCommand(mPendingCommand);
+        mPendingInsight = null;
+        mPendingCommand = null;
+        mExploring = true;
+        startAnalysis();
+        invalidateOptionsMenu();
+        setControlsEnablement();
+        displayInsightAndError(null);
         return true;
 
       case R.id.menu_resume_replay:
@@ -248,13 +274,29 @@ public class ReplayActivity extends ActivityBase
         } catch (CommandException e) {
           Log.e(TAG, "Can't resume replay", e);
         }
-        mReplayInfo.setVisibility(View.VISIBLE);
-        mReplayLocation.setVisibility(View.VISIBLE);
-        mExploreControls.setVisibility(View.GONE);
+        invalidateOptionsMenu();
+        setControlsEnablement();
         pause();
         return true;
     }
     return super.onOptionsItemSelected(item);
+  }
+
+  private void undoOrRedo(boolean redo) {
+    try {
+      if (redo) mUndoStack.redo();
+      else mUndoStack.undo();
+    } catch (CommandException e) {
+      Log.e(TAG, "Undo/redo failed", e);
+      return;
+    }
+
+    mPendingInsight = null;
+    mPendingCommand = null;
+    startAnalysis();
+    invalidateOptionsMenu();
+    mReplayView.setSelected(null);
+    displayInsightAndError(null);
   }
 
   @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -363,108 +405,57 @@ public class ReplayActivity extends ActivityBase
     switch (v.getId()) {
       case R.id.play:
       case R.id.back:
-        mControls.setVisibility(View.GONE);
-        mPauseControls.setVisibility(View.VISIBLE);
         mForward = (v.getId() == R.id.play);
         mRunning = true;
         mReplayView.postDelayed(replayCycler, SET_CYCLE_MILLIS);
         startAnalysis();
         invalidateOptionsMenu();
+        setControlsEnablement();
         mReplayLocation.setEnabled(false);
         displayInsightAndError(null);
         break;
 
       case R.id.pause:
-        mControls.setVisibility(View.VISIBLE);
-        mPauseControls.setVisibility(View.GONE);
         mRunning = false;
         startAnalysis();
         invalidateOptionsMenu();
+        setControlsEnablement();
         mReplayLocation.setEnabled(true);
-        displayInsightAndError(null);
-        break;
-
-      case R.id.next:
-      case R.id.previous:
-        mRunning = false;
-        mForward = (v.getId() == R.id.next);
-        stepReplay(true);
-        break;
-
-      case R.id.undo:
-        if (mUndoStack.getPosition() > mHistoryPosition)
-          try {
-            mUndoStack.undo();
-          } catch (CommandException e) {
-            Log.e(TAG, "Undo failed", e);
-            break;
-          }
-        mPendingDisproof = null;
-        startAnalysis();
-        setUndoEnablement();
-        mReplayView.setSelected(null);
-        displayInsightAndError(null);
-        break;
-
-      case R.id.clear:
-        mPendingDisproof = null;
-        setUndoEnablement();
-        displayInsightAndError(null);
-        break;
-
-      case R.id.apply:
-        doCommand(new ElimCommand(mPendingDisproof.getDisprovedAssignment()));
-        mPendingDisproof = null;
-        startAnalysis();
-        setUndoEnablement();
-        displayInsightAndError(null);
-        break;
-
-      case R.id.redo:
-        try {
-          mUndoStack.redo();
-        } catch (CommandException e) {
-          Log.e(TAG, "Redo failed", e);
-          break;
-        }
-        mPendingDisproof = null;
-        startAnalysis();
-        setUndoEnablement();
-        mReplayView.setSelected(null);
         displayInsightAndError(null);
         break;
     }
   }
 
   private void setControlsEnablement() {
-    findViewById(R.id.play).setEnabled(mHistoryPosition < mHistory.size());
-    findViewById(R.id.next).setEnabled(mHistoryPosition < mHistory.size());
-    findViewById(R.id.back).setEnabled(mHistoryPosition > 0);
-    findViewById(R.id.previous).setEnabled(mHistoryPosition > 0);
-  }
+    int visibility = mExploring ? View.GONE : View.VISIBLE;
+    mControls.setVisibility(visibility);
+    mReplayInfo.setVisibility(visibility);
+    mReplayLocation.setVisibility(visibility);
 
-  private void setUndoEnablement() {
-    boolean undoEnabled = mUndoStack.getPosition() > mHistoryPosition;
-    findViewById(R.id.undo).setEnabled(undoEnabled);
-    findViewById(R.id.clear).setEnabled(mPendingDisproof != null);
-    findViewById(R.id.apply).setEnabled(mPendingDisproof != null);
-    findViewById(R.id.redo).setEnabled(mUndoStack.canRedo());
+    findViewById(R.id.play).setEnabled(
+        !mRunning && !mExploring && mHistoryPosition < mHistory.size());
+    findViewById(R.id.back).setEnabled(
+        !mRunning && !mExploring && mHistoryPosition > 0);
+    findViewById(R.id.pause).setEnabled(mRunning);
   }
 
   @Override public void onSelect(Location loc) {
-    mPendingDisproof = null;
+    mPendingInsight = null;
+    mPendingCommand = null;
     if (mInsights != null) {
       InsightMin insightMin = mInsights.assignments.get(loc);
       if (insightMin == null) {
         insightMin = mInsights.disproofs.get(loc);
-        if (insightMin != null && mExploring) {
-          mPendingDisproof = (DisprovedAssignment) insightMin.insight;
-          setUndoEnablement();
+        if (insightMin != null) {
+          DisprovedAssignment disproof = (DisprovedAssignment) insightMin.insight;
+          mPendingInsight = disproof;
+          mPendingCommand = new ElimCommand(disproof.getDisprovedAssignment());
+          invalidateOptionsMenu();
         }
-      } else if (mExploring) {
-        doCommand(makeMoveCommand(insightMin.insight.getImpliedAssignment()));
-        startAnalysis();
-        setUndoEnablement();
+      } else {
+        mPendingInsight = insightMin.insight;
+        mPendingCommand = makeMoveCommand(insightMin.insight.getImpliedAssignment());
+        invalidateOptionsMenu();
       }
       displayInsightAndError(insightMin);
     }

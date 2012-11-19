@@ -3,20 +3,14 @@
 
     <string name="app_full_name">Sudoku Insight</string>
     <string name="app_short_name">Insight</string>
-    <string name="button_apply">Apply</string>
     <string name="button_back">Reverse</string>
-    <string name="button_clear">Clear</string>
     <string name="button_done">Done</string>
     <string name="button_capture_play">Play Now</string>
     <string name="button_capture_save">Save for Later</string>
     <string name="button_give_up">Give Up</string>
-    <string name="button_next">Next</string>
     <string name="button_pause">Pause</string>
     <string name="button_play">Play</string>
-    <string name="button_previous">Previous</string>
-    <string name="button_redo">Redo</string>
     <string name="button_skip">Skip</string>
-    <string name="button_undo">Undo</string>
     <string name="check_blockwise_symmetry">Blockwise</string>
     <string name="check_blockwise_symmetry_summary">Block families share pattern</string>
     <string name="check_classic_symmetry">Classic</string>
@@ -37,7 +31,9 @@
     <string name="dialog_give_up_message">Give up on this puzzle?</string>
     <string name="dialog_skip_message">Skip this puzzle?</string>
     <string name="hint_capture_source">Where does this puzzle come from?</string>
+    <string name="menu_apply">Apply</string>
     <string name="menu_capture_puzzle">Enter a Puzzle</string>
+    <string name="menu_clear">Clear</string>
     <string name="menu_explore">Explore</string>
     <string name="menu_give_up">Give Up</string>
     <string name="menu_list_puzzles">List Puzzles</string>

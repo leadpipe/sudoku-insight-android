@@ -9,13 +9,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:padding="2dp"
         >
 
 	    <us.blanshard.sudoku.android.ReplayView
 	        android:id="@+id/replay_view"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
-	        android:padding="2dp"
 	        />
 	
 	
@@ -45,17 +45,10 @@
 	        />
 
 	    <Button
-	        android:id="@+id/previous"
+	        android:id="@+id/pause"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
-	        android:text="@string/button_previous"
-	        />
-
-	    <Button
-	        android:id="@+id/next"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/button_next"
+	        android:text="@string/button_pause"
 	        />
 
 	    <Button
@@ -67,63 +60,6 @@
 
 	</LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/pause_controls"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_gravity="center_horizontal"
-        android:visibility="gone"
-        >
-
-	    <Button
-	        android:id="@+id/pause"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/button_pause"
-	        />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/explore_controls"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_gravity="center_horizontal"
-        android:visibility="gone"
-        >
-
-	    <Button
-	        android:id="@+id/undo"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/button_undo"
-	        />
-
-	    <Button
-	        android:id="@+id/clear"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/button_clear"
-	        />
-
-	    <Button
-	        android:id="@+id/apply"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/button_apply"
-	        />
-
-	    <Button
-	        android:id="@+id/redo"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/button_redo"
-	        />
-
-	    </LinearLayout>
-    
     <SeekBar
         android:id="@+id/replay_location"
         android:layout_width="match_parent"
