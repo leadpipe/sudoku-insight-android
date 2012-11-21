@@ -80,7 +80,6 @@ public class ReplayActivity extends ActivityBase
   private ProgressBar mProgress;
   private ViewGroup mControls;
   private SeekBar mReplayLocation;
-  private ViewGroup mReplayInfo;
   private TextView mMoveNumber;
   private TextView mTimer;
   private Sudoku mGame;
@@ -167,7 +166,6 @@ public class ReplayActivity extends ActivityBase
     mProgress = (ProgressBar) findViewById(R.id.progress);
     mControls = (ViewGroup) findViewById(R.id.replay_controls);
     mReplayLocation = (SeekBar) findViewById(R.id.replay_location);
-    mReplayInfo = (ViewGroup) findViewById(R.id.replay_info);
     mMoveNumber = (TextView) findViewById(R.id.move_number);
     mTimer = (TextView) findViewById(R.id.timer);
 
@@ -430,10 +428,8 @@ public class ReplayActivity extends ActivityBase
   }
 
   private void setControlsEnablement() {
-    int visibility = mExploring ? View.GONE : View.VISIBLE;
+    int visibility = mExploring ? View.INVISIBLE : View.VISIBLE;
     mControls.setVisibility(visibility);
-    mReplayInfo.setVisibility(visibility);
-    mReplayLocation.setVisibility(visibility);
 
     findViewById(R.id.play).setEnabled(
         !mRunning && !mExploring && mHistoryPosition < mHistory.size());
