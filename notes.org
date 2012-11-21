@@ -61,11 +61,12 @@ END
      enable the "apply" button.  When the apply button is pressed, apply the
      disproof and clear the insight display.
 ** TODO When targeting an assignment to an occupied location, remove that location from the search starting point
-** DONE Add slider corresponding to progress through replay
 ** TODO Think about animation of insight display
    - for complex implications, this could help the visualization
-** DONE Make color of disproof border fade out for long implication chains
-   - anything over like 8 insights should be much fainter
+** TODO Don't finish the main activity, just replace it when you're done with the puzzle
+   - Also, go to the list activity.  If it doesn't have an info fragment, make it open the info activity.
+** TODO Fix capture activity for manual entry
+   - "you already have this" always shown as you're entering numerals
 ** TODO Figure out why the progress indicator stops
    - Damn guava splitter static initialization is one reason
    - But can't be the only thing, or probably even the main one
