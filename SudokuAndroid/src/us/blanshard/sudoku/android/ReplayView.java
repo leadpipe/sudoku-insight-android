@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 import us.blanshard.sudoku.core.Assignment;
+import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.LocSet;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
@@ -49,6 +50,8 @@ import com.google.common.collect.Sets;
 
 import java.util.Collection;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 /**
  * @author Luke Blanshard
@@ -143,8 +146,11 @@ public class ReplayView extends SudokuView {
     invalidateLocation(elimination.location);
   }
 
-  public GridMarks getGridMarks() {
-    GridMarks gm = new GridMarks(getInputState().getGrid());
+  public GridMarks getGridMarks(@Nullable Location clear) {
+    Grid grid = getInputState().getGrid();
+    if (clear != null)
+      grid = grid.toBuilder().remove(clear).build();
+    GridMarks gm = new GridMarks(grid);
     if (getInputState().getId() < 0 && mEliminations != null) {
       GridMarks.Builder builder = gm.toBuilder();
       for (Map.Entry<Location, NumSet> entry : mEliminations.entrySet())

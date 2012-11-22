@@ -50,17 +50,18 @@ END
    - will android tell us which Google ID installed the app?
    - when the app is slightly off the ground, sign up for Cloud Endpoints at http://endpoints-trusted-tester.appspot.com/
 ** TODO Automatically pause the replay on switch of trail, just after the move
-** TODO Display of insights
+** DONE Display of insights
    - when running forward, display the insight found for the latest move, plus
      the error that resulted from it.  If no insight is found, show an unfounded
      assignment.
    - when running backward, don't look for insights
    - when paused, display the insights that would be applied on tap
-   - when exploring, when tap a square with an assignment, make the assignment
-     and display the insight.  When tap a disproof, display the insight and
-     enable the "apply" button.  When the apply button is pressed, apply the
-     disproof and clear the insight display.
-** TODO When targeting an assignment to an occupied location, remove that location from the search starting point
+** DONE When targeting an assignment to an occupied location, remove that location from the search starting point
+** TODO Bug: errors not shown after analysis complete (when not running)
+** TODO Bug: analysis not being interrupted
+** TODO Bug: disproof markers being shown during forward run
+** TODO Bug: double-time reverse run sometimes
+** TODO Bug: disproofs being shown for size > 2 while there are size = 2 ones showing
 ** TODO Think about animation of insight display
    - for complex implications, this could help the visualization
 ** TODO Don't finish the main activity, just replace it when you're done with the puzzle
