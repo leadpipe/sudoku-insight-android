@@ -57,7 +57,7 @@ END
    - when running backward, don't look for insights
    - when paused, display the insights that would be applied on tap
 ** DONE When targeting an assignment to an occupied location, remove that location from the search starting point
-** TODO Bug: errors not shown after analysis complete (when not running)
+** DONE Bug: errors not shown after analysis complete (when not running)
 ** TODO Bug: analysis not being interrupted
 ** TODO Bug: disproof markers being shown during forward run
 ** TODO Bug: double-time reverse run sometimes

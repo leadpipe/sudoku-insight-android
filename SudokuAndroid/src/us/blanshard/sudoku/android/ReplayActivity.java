@@ -347,6 +347,8 @@ public class ReplayActivity extends ActivityBase
     }
     if (!mRunning)
       mReplayView.selectableColorsUpdated();
+    if (insights.error != null)
+      displayInsightAndError(null);
   }
 
   @SuppressWarnings("unchecked")  // the varargs of Iterable<...>
