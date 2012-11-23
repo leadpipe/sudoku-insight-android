@@ -59,6 +59,8 @@ END
 ** DONE When targeting an assignment to an occupied location, remove that location from the search starting point
 ** DONE Bug: errors not shown after analysis complete (when not running)
 ** TODO Bug: analysis not being interrupted
+** TODO Bug: pausing takes an extra step
+** TODO Bug: restarting main activity loses uninterestingness of trails
 ** TODO Bug: disproof markers being shown during forward run
 ** TODO Bug: double-time reverse run sometimes
 ** DONE Bug: disproofs being shown for size > 2 while there are size = 2 ones showing
