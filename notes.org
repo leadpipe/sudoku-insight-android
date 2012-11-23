@@ -61,7 +61,12 @@ END
 ** TODO Bug: analysis not being interrupted
 ** TODO Bug: disproof markers being shown during forward run
 ** TODO Bug: double-time reverse run sometimes
-** TODO Bug: disproofs being shown for size > 2 while there are size = 2 ones showing
+** DONE Bug: disproofs being shown for size > 2 while there are size = 2 ones showing
+** TODO Make replay view rotate properly
+   - including not losing track of where it is
+** TODO Consider a second progress view for the secondary replay background tasks
+** TODO Investigate turning the progress view on while running replay and analysis runs long
+** TODO Make replay view sized reasonably for tablet
 ** TODO Think about animation of insight display
    - for complex implications, this could help the visualization
 ** TODO Don't finish the main activity, just replace it when you're done with the puzzle

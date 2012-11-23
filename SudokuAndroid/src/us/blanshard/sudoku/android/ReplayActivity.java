@@ -345,15 +345,17 @@ public class ReplayActivity extends ActivityBase
       else
         stepReplay(true);
     }
-    if (!mRunning)
+    if (!mRunning) {
       mReplayView.selectableColorsUpdated();
-    if (insights.error != null)
-      displayInsightAndError(null);
+      onSelect(mReplayView.getSelected());
+    }
   }
 
   @SuppressWarnings("unchecked")  // the varargs of Iterable<...>
   private void minimizeEverything() {
     if (mAnalyze == null) {
+      if (mDisprove != null) mDisprove.cancel();
+      if (mMinimize != null) mMinimize.cancel();
       mMinimize = new Minimize(this, true);
       mMinimize.execute(singleton(mInsights.error), mInsights.assignments.values(), mInsights.disproofs.values());
     }
@@ -370,10 +372,8 @@ public class ReplayActivity extends ActivityBase
   }
 
   void disproofComplete(Disprove instance) {
-    if (instance == mDisprove) {
+    if (instance == mDisprove)
       mDisprove = null;
-      mInsights.disproofsSetSize = 0;
-    }
   }
 
   void addDisproof(DisprovedAssignment disproof, boolean minimized) {
