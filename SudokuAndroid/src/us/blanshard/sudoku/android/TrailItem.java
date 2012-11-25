@@ -27,13 +27,14 @@ public class TrailItem {
   public final int color;
   public final int dimColor;
   public boolean shown;
-  public boolean uninteresting;
+  public boolean off;
 
-  public TrailItem(Trail trail, int color, int dimColor, boolean shown) {
+  public TrailItem(Trail trail, int color, int dimColor, boolean shown, boolean off) {
     this.trail = trail;
     this.color = color;
     this.dimColor = dimColor;
     this.shown = shown;
+    this.off = off;
   }
 
   @Override public String toString() {

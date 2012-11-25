@@ -176,7 +176,8 @@ public class SudokuFragment
         JSONObject uiState = new JSONObject(dbGame.uiState);
         mUndoStack = GameJson.toUndoStack(uiState.getJSONObject("undo"), mGame);
         mSudokuView.setDefaultChoice(numeral(uiState.getInt("defaultChoice")));
-        restoreTrails(uiState.getJSONArray("trailOrder"), uiState.getInt("numVisibleTrails"));
+        restoreTrails(uiState.getJSONArray("trailOrder"), uiState.getInt("numVisibleTrails"),
+            uiState.optInt("numOffTrails"));
         mEditTrailToggle.setChecked(uiState.getBoolean("trailActive"));
       }
       if (dbGame.gameState.isInPlay()) {
@@ -205,7 +206,7 @@ public class SudokuFragment
     List<TrailItem> vis = Lists.newArrayList(), invis = Lists.newArrayList();
     if (game != null)
       for (int i = game.getNumTrails() - 1; i >= 0; --i)
-        invis.add(makeTrailItem(i, false));
+        invis.add(makeTrailItem(i, false, false));
     updateTrails(vis, invis);
     mSudokuView.setDefaultChoice(Numeral.of(1));
     if (game != null) {
@@ -258,7 +259,7 @@ public class SudokuFragment
 
   public void trailCheckChanged(TrailItem item, boolean isChecked) {
     if (isChecked) {
-      item.uninteresting = false;
+      item.off = false;
       int count = 0;
       for (int i = 0; i < mTrailAdapter.getCount(); ++i) {
         TrailItem item2 = mTrailAdapter.getItem(i);
@@ -297,7 +298,7 @@ public class SudokuFragment
 
   @Override public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
     TrailItem item = mTrailAdapter.getItem(position);
-    item.uninteresting = true;
+    item.off = true;
     item.shown = false;
     fixVisibleItems();
     return true;
@@ -559,7 +560,7 @@ public class SudokuFragment
           }
         }
         if (!recycled) {
-          makeActiveTrailItem(makeTrailItem(trailId, true));
+          makeActiveTrailItem(makeTrailItem(trailId, true, false));
         }
         stateChanged();
         return true;
@@ -646,7 +647,7 @@ public class SudokuFragment
     }
   }
 
-  private TrailItem makeTrailItem(int trailId, boolean shown) {
+  private TrailItem makeTrailItem(int trailId, boolean shown, boolean off) {
     // This is very scientific:
     double hueBase = 0.6 + trailId * 0.1573;
     double valueBase = (0.57 + hueBase) * Math.PI * 256;
@@ -656,14 +657,14 @@ public class SudokuFragment
     float value = (float) (valueBase * 0.5 + 0.4);
     int color = Color.HSVToColor(new float[] { hue, 0.9f, value });
     int dimColor = Color.HSVToColor(new float[] { hue, 0.4f, value });
-    TrailItem trailItem = new TrailItem(mGame.getTrail(trailId), color, dimColor, shown);
+    TrailItem trailItem = new TrailItem(mGame.getTrail(trailId), color, dimColor, shown, off);
     return trailItem;
   }
 
   private void makeActiveTrailItem(TrailItem item) {
     mTrailAdapter.remove(item);
     item.shown = true;
-    item.uninteresting = false;
+    item.off = false;
     mTrailAdapter.insert(item, 0);
     mTrailsList.smoothScrollToPosition(0);
     fixVisibleItems();
@@ -675,7 +676,7 @@ public class SudokuFragment
         off = Lists.newArrayList();
     for (int i = 0; i < mTrailAdapter.getCount(); ++i) {
       TrailItem item = mTrailAdapter.getItem(i);
-      (item.shown ? vis : item.uninteresting ? off : invis).add(item);
+      (item.shown ? vis : item.off ? off : invis).add(item);
     }
     if (vis.size() > MAX_VISIBLE_TRAILS)
       for (TrailItem item : vis.subList(MAX_VISIBLE_TRAILS, vis.size())) {
@@ -712,6 +713,7 @@ public class SudokuFragment
     object.put("defaultChoice", number(mSudokuView.getDefaultChoice()));
     object.put("trailOrder", makeTrailOrder());
     object.put("numVisibleTrails", countVisibleTrails());
+    object.put("numOffTrails", countOffTrails());
     object.put("trailActive", mEditTrailToggle.isChecked());
     return object;
   }
@@ -732,10 +734,20 @@ public class SudokuFragment
     return count;
   }
 
-  private void restoreTrails(JSONArray trailOrder, int numVisibleTrails) throws JSONException {
+  private int countOffTrails() {
+    int count = 0;
+    for (int i = 0; i < mTrailAdapter.getCount(); ++i) {
+      if (mTrailAdapter.getItem(i).off) ++count;
+    }
+    return count;
+  }
+
+  private void restoreTrails(JSONArray trailOrder, int numVisibleTrails, int numOffTrails)
+      throws JSONException {
     List<TrailItem> vis = Lists.newArrayList(), invis = Lists.newArrayList();
+    int offIndex = trailOrder.length() - numOffTrails;
     for (int i = 0; i < trailOrder.length(); ++i) {
-      TrailItem item = makeTrailItem(trailOrder.getInt(i), i < numVisibleTrails);
+      TrailItem item = makeTrailItem(trailOrder.getInt(i), i < numVisibleTrails, i >= offIndex);
       (item.shown ? vis : invis).add(item);
     }
     updateTrails(vis, invis);

@@ -608,7 +608,7 @@ public class ReplayActivity extends ActivityBase
       boolean isTrail = stateId >= 0;
       ImmutableList<TrailItem> trails = ImmutableList.of();
       if (isTrail)
-        trails = ImmutableList.of(new TrailItem(mGame.getTrail(stateId), Color.DKGRAY, Color.LTGRAY, true));
+        trails = ImmutableList.of(new TrailItem(mGame.getTrail(stateId), Color.DKGRAY, Color.LTGRAY, true, false));
       mReplayView.setTrails(trails);
       mReplayView.setTrailActive(isTrail);
     }

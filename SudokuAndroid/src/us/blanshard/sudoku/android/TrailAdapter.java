@@ -66,7 +66,7 @@ public class TrailAdapter extends ArrayAdapter<TrailItem> implements OnCheckedCh
       TrailItem item = getItem(position);
       holder.checkbox.setTag(item);
       holder.checkbox.setChecked(item.shown);
-      int color = item.uninteresting ? Color.LTGRAY
+      int color = item.off ? Color.LTGRAY
           : position == 0 && mFragment.isTrailActive() ? item.color : item.dimColor;
       holder.label.setTextColor(color);
       holder.label.setText(item.toString());
