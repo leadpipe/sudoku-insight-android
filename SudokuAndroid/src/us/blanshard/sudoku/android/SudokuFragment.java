@@ -620,9 +620,10 @@ public class SudokuFragment
   private void transitionToInfoPage() {
     mPrefs.removeCurrentGameIdAsync();
     saveGameFromUiThread();
-    Intent intent = new Intent(getActivity(), PuzzleInfoActivity.class);
-    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
+    Intent intent = new Intent(getActivity(), PuzzleListActivity.class);
+    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_CLEAR_TOP);
     intent.putExtra(Extras.PUZZLE_ID, mDbGame.puzzleId);
+    intent.putExtra(Extras.SHOW_INFO, true);
     startActivity(intent);
     getActivity().finish();
   }

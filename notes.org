@@ -71,7 +71,7 @@ END
 ** TODO Make replay view sized reasonably for tablet
 ** TODO Think about animation of insight display
    - for complex implications, this could help the visualization
-** TODO Don't finish the main activity, just replace it when you're done with the puzzle
+** DONE Fix activity transitions when you're done with a puzzle
    - Also, go to the list activity.  If it doesn't have an info fragment, make it open the info activity.
 ** TODO Fix capture activity for manual entry
    - "you already have this" always shown as you're entering numerals
@@ -79,6 +79,7 @@ END
    - Damn guava splitter static initialization is one reason
    - But can't be the only thing, or probably even the main one
    - Remove stuff from the foreground thread to figure this out
+   - Hmm, doesn't appear to be my stuff?  Build a release version and see if it still happens.
 ** TODO Add a count to the list spinner: #puzzles in collection
 ** TODO Handle the importing of collections of puzzles
    - Add an activity that's triggered by .sdm files

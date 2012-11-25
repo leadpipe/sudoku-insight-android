@@ -19,8 +19,6 @@ import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,10 +43,20 @@ public class PuzzleListActivity extends ActivityBase
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    new FetchCollections(this).execute();
     setContentView(R.layout.list_activity);
     mListFragment = (PuzzleListFragment) getFragmentManager().findFragmentById(R.id.list_fragment);
     mInfoFragment = (PuzzleInfoFragment) getFragmentManager().findFragmentById(R.id.info_fragment);
+
+    if (mInfoFragment == null && getIntent().getExtras().getBoolean(Extras.SHOW_INFO, false)) {
+      Intent infoIntent = new Intent(this, PuzzleInfoActivity.class);
+      infoIntent.putExtra(Extras.PUZZLE_ID, getIntent().getExtras().getLong(Extras.PUZZLE_ID));
+      infoIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+      startActivity(infoIntent);
+      finish();
+      return;
+    }
+
+    new FetchCollections(this).execute();
     mCollectionAdapter = new CollectionAdapter();
     getActionBar().setDisplayHomeAsUpEnabled(true);
     getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
@@ -74,18 +82,11 @@ public class PuzzleListActivity extends ActivityBase
     }
   }
 
-  @Override public boolean onCreateOptionsMenu(Menu menu) {
-    super.onCreateOptionsMenu(menu);
-    MenuInflater inflater = getMenuInflater();
-    inflater.inflate(R.menu.common, menu);
-    return true;
-  }
-
   @Override public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
       case android.R.id.home:
         Intent upIntent = new Intent(this, SudokuActivity.class);
-        upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        upIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(upIntent);
         finish();
         return true;
