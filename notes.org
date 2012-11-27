@@ -67,7 +67,7 @@ END
 ** TODO Make replay view rotate properly
    - including not losing track of where it is
 ** DONE Consider a second progress view for the secondary replay background tasks
-** TODO Investigate turning the progress view on while running replay and analysis runs long
+** DONE Investigate turning the progress view on while running replay and analysis runs long
 ** TODO Make replay view sized reasonably for tablet
 ** TODO Think about animation of insight display
    - for complex implications, this could help the visualization

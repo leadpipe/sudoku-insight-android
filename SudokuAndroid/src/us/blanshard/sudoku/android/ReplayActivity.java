@@ -338,6 +338,7 @@ public class ReplayActivity extends ActivityBase
     mAnalyze = null;
     if (mAnalysisRanLong) {
       mAnalysisRanLong = false;
+      mProgress.setVisibility(View.GONE);
       if (mExploring)
         startAnalysis();
       else
@@ -506,6 +507,7 @@ public class ReplayActivity extends ActivityBase
     if (mRunning || evenIfNotRunning) {
       if (mAnalyze != null) {
         mAnalysisRanLong = true;
+        mProgress.setVisibility(View.VISIBLE);
         maybeCancelAnalysis();
         return;
       }
@@ -604,6 +606,7 @@ public class ReplayActivity extends ActivityBase
       }
     } else {
       mAnalysisRanLong = true;
+      mProgress.setVisibility(View.VISIBLE);
       maybeCancelAnalysis();
     }
   }
