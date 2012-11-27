@@ -205,13 +205,13 @@ public class ReplayActivity extends ActivityBase
       switch (item.getItemId()) {
         case R.id.menu_undo: {
           boolean enabled = (mExploring && mUndoStack.canUndo())
-              || (!mExploring && mHistoryPosition > 0);
+              || (!mExploring && !mRunning && mHistoryPosition > 0);
           item.setEnabled(enabled);
           break;
         }
         case R.id.menu_redo: {
           boolean enabled = (mExploring && mUndoStack.canRedo())
-              || (!mExploring && mHistory != null && mHistoryPosition < mHistory.size());
+              || (!mExploring && !mRunning && mHistory != null && mHistoryPosition < mHistory.size());
           item.setEnabled(enabled);
           break;
         }
@@ -413,6 +413,7 @@ public class ReplayActivity extends ActivityBase
       case R.id.back:
         mForward = (v.getId() == R.id.play);
         mRunning = true;
+        mReplayView.removeCallbacks(replayCycler);
         mReplayView.postDelayed(replayCycler, SET_CYCLE_MILLIS);
         startAnalysis();
         invalidateOptionsMenu();
@@ -423,6 +424,7 @@ public class ReplayActivity extends ActivityBase
 
       case R.id.pause:
         mRunning = false;
+        mReplayView.removeCallbacks(replayCycler);
         startAnalysis();
         invalidateOptionsMenu();
         setControlsEnablement();
@@ -515,6 +517,7 @@ public class ReplayActivity extends ActivityBase
     }
     if (mRunning) {
       long cycleMillis = nextAssignment() == null ? CLEAR_CYCLE_MILLIS : SET_CYCLE_MILLIS;
+      mReplayView.removeCallbacks(replayCycler);
       mReplayView.postDelayed(replayCycler, cycleMillis);
     }
     setControlsEnablement();
