@@ -337,7 +337,6 @@ public class ReplayActivity extends ActivityBase
     mProgress.setVisibility(View.GONE);
     mInsights = insights;
     mAnalyze = null;
-    minimizeEverything();
     if (mAnalysisRanLong) {
       mAnalysisRanLong = false;
       if (mExploring)
@@ -346,6 +345,7 @@ public class ReplayActivity extends ActivityBase
         stepReplay(true);
     }
     if (!mRunning) {
+      minimizeEverything();
       mReplayView.selectableColorsUpdated();
       onSelect(mReplayView.getSelected());
     }

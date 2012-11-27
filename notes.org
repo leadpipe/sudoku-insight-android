@@ -61,7 +61,7 @@ END
 ** TODO Bug: analysis not being interrupted
 ** TODO Bug: pausing takes an extra step
 ** DONE Bug: restarting main activity loses uninterestingness of trails
-** TODO Bug: disproof markers being shown during forward run
+** DONE Bug: disproof markers being shown during forward run
 ** TODO Bug: double-time reverse run sometimes
 ** DONE Bug: disproofs being shown for size > 2 while there are size = 2 ones showing
 ** TODO Make replay view rotate properly
