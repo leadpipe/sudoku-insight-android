@@ -46,7 +46,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
@@ -81,7 +80,7 @@ public class ReplayActivity extends ActivityBase
   private static final long CLEAR_CYCLE_MILLIS = 200;
   private ReplayView mReplayView;
   private ProgressBar mProgress;
-  private ViewGroup mControls;
+  private ProgressBar mProgress2;
   private SeekBar mReplayLocation;
   private TextView mMoveNumber;
   private TextView mTimer;
@@ -167,7 +166,7 @@ public class ReplayActivity extends ActivityBase
 
     mReplayView = (ReplayView) findViewById(R.id.replay_view);
     mProgress = (ProgressBar) findViewById(R.id.progress);
-    mControls = (ViewGroup) findViewById(R.id.replay_controls);
+    mProgress2 = (ProgressBar) findViewById(R.id.progress2);
     mReplayLocation = (SeekBar) findViewById(R.id.replay_location);
     mMoveNumber = (TextView) findViewById(R.id.move_number);
     mTimer = (TextView) findViewById(R.id.timer);
@@ -436,12 +435,19 @@ public class ReplayActivity extends ActivityBase
 
   private void setControlsEnablement() {
     if (mExploring) {
-      mControls.setVisibility(View.INVISIBLE);
+      findViewById(R.id.play).setEnabled(false);
+      findViewById(R.id.back).setEnabled(false);
+      findViewById(R.id.pause).setEnabled(false);
+      mReplayLocation.setEnabled(false);
+      mTimer.setTextColor(Color.LTGRAY);
+      mMoveNumber.setTextColor(Color.LTGRAY);
     } else {
-      mControls.setVisibility(View.VISIBLE);
       findViewById(R.id.play).setEnabled(!mRunning && mHistoryPosition < mHistory.size());
       findViewById(R.id.back).setEnabled(!mRunning && mHistoryPosition > 0);
       findViewById(R.id.pause).setEnabled(mRunning);
+      mReplayLocation.setEnabled(true);
+      mTimer.setTextColor(Color.BLACK);
+      mMoveNumber.setTextColor(Color.BLACK);
     }
   }
 
@@ -586,6 +592,7 @@ public class ReplayActivity extends ActivityBase
       if (mDisprove != null) mDisprove.cancel();
       if (!mRunning || mForward) {
         mAnalyze = new Analyze(this);
+        mProgress2.setVisibility(View.GONE);
         Location toClear = null;
         if (!mExploring) {
           Assignment asmt = nextAssignment();
@@ -818,6 +825,7 @@ public class ReplayActivity extends ActivityBase
       super(activity);
       mGridMarks = activity.mInsights.gridMarks;
       mEverything = everything;
+      activity.mProgress2.setVisibility(View.VISIBLE);
     }
 
     @Override protected Void doInBackground(Iterable<InsightMin>... params) {

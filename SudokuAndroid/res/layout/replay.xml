@@ -36,7 +36,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         >
-	    <!-- Top line: buttons -->
+	    <!-- Top line: buttons, 2nd progress indicator -->
 	    <Button
 	        android:id="@+id/back"
 	        android:layout_width="wrap_content"
@@ -59,6 +59,16 @@
 	        android:layout_height="wrap_content"
 	        android:text="@string/button_play"
 	        android:layout_toRightOf="@+id/pause"
+	        />
+	    
+	    <ProgressBar
+	        android:id="@+id/progress2" 
+	        android:layout_width="wrap_content"
+	        android:layout_height="0dp"
+	        android:layout_alignParentRight="true"
+	        android:layout_alignTop="@id/pause"
+	        android:layout_alignBottom="@id/pause"
+	        android:visibility="gone"
 	        />
 
 	    <!-- Middle line: seek bar -->
