@@ -372,8 +372,10 @@ public class ReplayActivity extends ActivityBase
   }
 
   void disproofComplete(Disprove instance) {
-    if (instance == mDisprove)
+    if (instance == mDisprove) {
       mDisprove = null;
+      if (mMinimize == null) mProgress2.setVisibility(View.GONE);
+    }
   }
 
   void addDisproof(DisprovedAssignment disproof, boolean minimized) {
