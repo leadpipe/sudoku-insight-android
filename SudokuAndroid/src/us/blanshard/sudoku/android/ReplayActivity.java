@@ -102,7 +102,6 @@ public class ReplayActivity extends ActivityBase
   private Insight mPendingInsight;
   private Command mPendingCommand;
 
-  private static final Integer sSelectedColor = Color.BLUE;
   private static final Integer[] sMinAssignmentColors, sUnminAssignmentColors;
   private static final Integer[] sMinDisproofColors;
   static {
@@ -128,7 +127,6 @@ public class ReplayActivity extends ActivityBase
 
   private final Function<Location, Integer> selectableColors = new Function<Location, Integer>() {
     @Override public Integer apply(Location loc) {
-      if (loc == mReplayView.getSelected()) return sSelectedColor;
       if (mInsights == null) return null;
       Integer[] colors;
       int index;
