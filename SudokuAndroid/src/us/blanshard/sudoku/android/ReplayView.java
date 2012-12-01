@@ -99,8 +99,11 @@ public class ReplayView extends SudokuView {
   }
 
   public interface OnSelectListener {
-    /** Called when the user has touched the given location. */
-    void onSelect(Location loc);
+    /**
+     * Called when the user has touched the given location, or the location has
+     * been selected programmatically.
+     */
+    void onSelect(Location loc, boolean byUser);
   }
 
   public void setOnSelectListener(OnSelectListener listener) {
@@ -120,9 +123,13 @@ public class ReplayView extends SudokuView {
   }
 
   public void setSelected(Location loc) {
+    setSelected(loc, false);
+  }
+
+  private void setSelected(Location loc, boolean byUser) {
     Location old = mSelected;
     mSelected = loc;
-    if (mOnSelectListener != null) mOnSelectListener.onSelect(loc);
+    if (mOnSelectListener != null) mOnSelectListener.onSelect(loc, byUser);
     if (old != null) invalidateLocation(old);
     if (loc != null) invalidateLocation(loc);
   }
@@ -467,7 +474,7 @@ public class ReplayView extends SudokuView {
         float x = event.getX(index), y = event.getY(index);
         Location loc = getLocation(x, y);
         if (mSelectableColors.apply(loc) != null)
-          setSelected(loc);
+          setSelected(loc, true);
     }
     return true;
   }

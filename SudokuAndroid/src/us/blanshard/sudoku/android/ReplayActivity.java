@@ -253,7 +253,7 @@ public class ReplayActivity extends ActivityBase
         return true;
 
       case R.id.menu_apply:
-        applyPendingCommand();
+        applyPendingCommand(true);
         return true;
 
       case R.id.menu_resume_replay:
@@ -272,14 +272,14 @@ public class ReplayActivity extends ActivityBase
     return super.onOptionsItemSelected(item);
   }
 
-  private void applyPendingCommand() {
+  private void applyPendingCommand(boolean clear) {
     doCommand(mPendingCommand);
     mPendingCommand = null;
     mExploring = true;
     startAnalysis();
     invalidateOptionsMenu();
     setControlsEnablement();
-    displayInsightAndError(null);
+    if (clear) displayInsightAndError(null);
   }
 
   private void undoOrRedo(boolean redo) {
@@ -307,7 +307,6 @@ public class ReplayActivity extends ActivityBase
     }
     invalidateOptionsMenu();
     mReplayView.setSelected(loc);
-    displayInsightAndError(null);
   }
 
   @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -355,7 +354,7 @@ public class ReplayActivity extends ActivityBase
     if (!mRunning) {
       minimizeEverything();
       mReplayView.selectableColorsUpdated();
-      onSelect(mReplayView.getSelected());
+      onSelect(mReplayView.getSelected(), false);
     }
   }
 
@@ -460,9 +459,12 @@ public class ReplayActivity extends ActivityBase
     }
   }
 
-  @Override public void onSelect(Location loc) {
-    mPendingInsight = null;
-    mPendingCommand = null;
+  @Override public void onSelect(Location loc, boolean byUser) {
+    if (byUser) {
+      mPendingInsight = null;
+      mPendingCommand = null;
+      invalidateOptionsMenu();
+    }
     if (mInsights != null) {
       InsightMin insightMin = mInsights.assignments.get(loc);
       if (insightMin == null) {
@@ -477,9 +479,10 @@ public class ReplayActivity extends ActivityBase
         mPendingInsight = insightMin.insight;
         mPendingCommand = makeMoveCommand(insightMin.insight.getImpliedAssignment());
         invalidateOptionsMenu();
-        if (mExploring) applyPendingCommand();
+        if (mExploring && byUser) applyPendingCommand(false);
       }
-      displayInsightAndError(insightMin);
+      if (byUser || insightMin != null)
+        displayInsightAndError(insightMin);
     }
   }
 
