@@ -61,6 +61,10 @@ public class MoveCommand implements Command {
     return new MoveCommand(game.getState(id), loc, num, prevNum);
   }
 
+  public Location getLocation() {
+    return loc;
+  }
+
   @Override public void redo() throws CommandException {
     set(num);
   }

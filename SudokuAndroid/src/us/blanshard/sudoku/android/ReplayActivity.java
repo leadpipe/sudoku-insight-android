@@ -291,6 +291,13 @@ public class ReplayActivity extends ActivityBase
       return;
     }
 
+    Command command = mUndoStack.getLastCommand(redo);
+    Location loc = null;
+    if (command instanceof MoveCommand)
+      loc = ((MoveCommand) command).getLocation();
+    else if (command instanceof ElimCommand)
+      loc = ((ElimCommand) command).elimination.location;
+
     mPendingInsight = null;
     mPendingCommand = null;
     startAnalysis();
@@ -299,7 +306,7 @@ public class ReplayActivity extends ActivityBase
       setControlsEnablement();
     }
     invalidateOptionsMenu();
-    mReplayView.setSelected(null);
+    mReplayView.setSelected(loc);
     displayInsightAndError(null);
   }
 

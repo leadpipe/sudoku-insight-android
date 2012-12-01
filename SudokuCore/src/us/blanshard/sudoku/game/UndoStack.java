@@ -49,6 +49,12 @@ public class UndoStack {
     return position;
   }
 
+  /** Returns the command last performed, either redone (if forward) or undone. */
+  public Command getLastCommand(boolean forward) {
+    checkState(forward ? canUndo() : canRedo());
+    return commands.get(forward ? position - 1 : position);
+  }
+
   /** Pushes the given command on the stack, and executes it. */
   public void doCommand(Command command) throws CommandException {
     command.redo();  // Execute first, so an exception won't affect the stack.
@@ -64,7 +70,7 @@ public class UndoStack {
 
   /** Undoes the previous command. */
   public void undo() throws CommandException {
-    checkState(position > 0);
+    checkState(canUndo());
     commands.get(position - 1).undo();
     // Decrement after undoing so an exception won't affect the stack.
     --position;
@@ -77,7 +83,7 @@ public class UndoStack {
 
   /** Redoes the next command. */
   public void redo() throws CommandException {
-    checkState(position < commands.size());
+    checkState(canRedo());
     commands.get(position).redo();
     // Increment after redoing so an exception won't affect the stack.
     ++position;
