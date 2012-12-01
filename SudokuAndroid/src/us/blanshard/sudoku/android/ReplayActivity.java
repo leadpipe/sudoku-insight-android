@@ -255,14 +255,7 @@ public class ReplayActivity extends ActivityBase
         return true;
 
       case R.id.menu_apply:
-        doCommand(mPendingCommand);
-        mPendingInsight = null;
-        mPendingCommand = null;
-        mExploring = true;
-        startAnalysis();
-        invalidateOptionsMenu();
-        setControlsEnablement();
-        displayInsightAndError(null);
+        applyPendingCommand();
         return true;
 
       case R.id.menu_resume_replay:
@@ -279,6 +272,16 @@ public class ReplayActivity extends ActivityBase
         return true;
     }
     return super.onOptionsItemSelected(item);
+  }
+
+  private void applyPendingCommand() {
+    doCommand(mPendingCommand);
+    mPendingCommand = null;
+    mExploring = true;
+    startAnalysis();
+    invalidateOptionsMenu();
+    setControlsEnablement();
+    displayInsightAndError(null);
   }
 
   private void undoOrRedo(boolean redo) {
@@ -469,6 +472,7 @@ public class ReplayActivity extends ActivityBase
         mPendingInsight = insightMin.insight;
         mPendingCommand = makeMoveCommand(insightMin.insight.getImpliedAssignment());
         invalidateOptionsMenu();
+        if (mExploring) applyPendingCommand();
       }
       displayInsightAndError(insightMin);
     }
