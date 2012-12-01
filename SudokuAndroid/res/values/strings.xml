@@ -63,7 +63,7 @@
     <string name="text_game_last_replayed">Last reviewed %1$s.</string>
     <string name="text_game_playing">In progress for %1$s; last played %2$s</string>
     <string name="text_game_queued">Queued to play %2$s</string>
-    <string name="text_game_replay">Review</string>
+    <string name="text_game_replay">Review for insights</string>
     <string name="text_game_skipped">Skipped %2$s</string>
     <string name="text_game_solved">Solved in %1$s %2$s</string>
     <string name="text_game_start_time">Started %1$s.</string>
