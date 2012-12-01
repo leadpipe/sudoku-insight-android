@@ -418,7 +418,6 @@ public class ReplayActivity extends ActivityBase
         startAnalysis();
         invalidateOptionsMenu();
         setControlsEnablement();
-        mReplayLocation.setEnabled(false);
         displayInsightAndError(null);
         break;
 
@@ -428,7 +427,6 @@ public class ReplayActivity extends ActivityBase
         startAnalysis();
         invalidateOptionsMenu();
         setControlsEnablement();
-        mReplayLocation.setEnabled(true);
         displayInsightAndError(null);
         break;
     }
@@ -446,7 +444,7 @@ public class ReplayActivity extends ActivityBase
       findViewById(R.id.play).setEnabled(!mRunning && mHistoryPosition < mHistory.size());
       findViewById(R.id.back).setEnabled(!mRunning && mHistoryPosition > 0);
       findViewById(R.id.pause).setEnabled(mRunning);
-      mReplayLocation.setEnabled(true);
+      mReplayLocation.setEnabled(!mRunning);
       mTimer.setTextColor(Color.BLACK);
       mMoveNumber.setTextColor(Color.BLACK);
     }
