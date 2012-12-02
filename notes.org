@@ -50,9 +50,12 @@ END
    - will android tell us which Google ID installed the app?
    - when the app is slightly off the ground, sign up for Cloud Endpoints at http://endpoints-trusted-tester.appspot.com/
 ** TODO Automatically pause the replay on switch of trail, just after the move
+   - Or, rethink this.  Not clear it would be helpful.
 ** TODO Bug: analysis not being interrupted
+   - No longer seeing this?
 ** TODO Make replay view rotate properly
    - including not losing track of where it is
+   - Or, rethink this too.  What's the value in having landscape mode for small devices?
 ** TODO Clearing the present insight should clear the selected location too
    - should it also clear the error displayed?
    - or possibly everything but the nub of the error?
