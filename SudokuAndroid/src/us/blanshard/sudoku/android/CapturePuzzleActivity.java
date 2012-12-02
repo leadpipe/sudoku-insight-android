@@ -27,6 +27,8 @@ import us.blanshard.sudoku.game.Sudoku.State;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -91,6 +93,18 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
     state.set(loc, num);
     mSudokuView.invalidateLocation(loc);
     updateState();
+  }
+
+  @Override public boolean onPrepareOptionsMenu(Menu menu) {
+    for (int i = 0; i < menu.size(); ++i) {
+      MenuItem item = menu.getItem(i);
+      switch (item.getItemId()) {
+        case R.id.menu_capture_puzzle:
+          item.setVisible(false);
+          break;
+      }
+    }
+    return super.onPrepareOptionsMenu(menu);
   }
 
   private Grid getPuzzle() {

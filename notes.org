@@ -62,7 +62,7 @@ END
 ** TODO Make replay view sized reasonably for tablet
 ** TODO Think about animation of insight display
    - for complex implications, this could help the visualization
-** TODO Fix capture activity for manual entry
+** DONE Fix capture activity for manual entry
    - "you already have this" always shown as you're entering numerals
 ** TODO Figure out why the progress indicator stops
    - Damn guava splitter static initialization is one reason

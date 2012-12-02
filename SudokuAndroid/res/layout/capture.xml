@@ -11,7 +11,7 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:hint="@string/text_already_have_puzzle"
-        android:visibility="visible"
+        android:visibility="gone"
         android:textSize="20sp"
         android:padding="20dp"
         />
