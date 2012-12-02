@@ -69,6 +69,7 @@ END
 ** DONE Consider a second progress view for the secondary replay background tasks
 ** TODO Clearing the present insight should clear the selected location too
    - should it also clear the error displayed?
+   - or possibly everything but the nub of the error?
 ** DONE Investigate turning the progress view on while running replay and analysis runs long
 ** TODO Make replay view sized reasonably for tablet
 ** TODO Think about animation of insight display
