@@ -50,32 +50,15 @@ END
    - will android tell us which Google ID installed the app?
    - when the app is slightly off the ground, sign up for Cloud Endpoints at http://endpoints-trusted-tester.appspot.com/
 ** TODO Automatically pause the replay on switch of trail, just after the move
-** DONE Display of insights
-   - when running forward, display the insight found for the latest move, plus
-     the error that resulted from it.  If no insight is found, show an unfounded
-     assignment.
-   - when running backward, don't look for insights
-   - when paused, display the insights that would be applied on tap
-** DONE When targeting an assignment to an occupied location, remove that location from the search starting point
-** DONE Bug: errors not shown after analysis complete (when not running)
 ** TODO Bug: analysis not being interrupted
-** DONE Bug: pausing takes an extra step
-** DONE Bug: restarting main activity loses uninterestingness of trails
-** DONE Bug: disproof markers being shown during forward run
-** DONE Bug: double-time reverse run sometimes
-** DONE Bug: disproofs being shown for size > 2 while there are size = 2 ones showing
 ** TODO Make replay view rotate properly
    - including not losing track of where it is
-** DONE Consider a second progress view for the secondary replay background tasks
 ** TODO Clearing the present insight should clear the selected location too
    - should it also clear the error displayed?
    - or possibly everything but the nub of the error?
-** DONE Investigate turning the progress view on while running replay and analysis runs long
 ** TODO Make replay view sized reasonably for tablet
 ** TODO Think about animation of insight display
    - for complex implications, this could help the visualization
-** DONE Fix activity transitions when you're done with a puzzle
-   - Also, go to the list activity.  If it doesn't have an info fragment, make it open the info activity.
 ** TODO Fix capture activity for manual entry
    - "you already have this" always shown as you're entering numerals
 ** TODO Figure out why the progress indicator stops
