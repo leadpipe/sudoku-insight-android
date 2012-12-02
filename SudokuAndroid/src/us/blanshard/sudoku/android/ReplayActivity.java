@@ -99,7 +99,7 @@ public class ReplayActivity extends ActivityBase
   private Minimize mMinimize;
   private Disprove mDisprove;
   private GridMarks mSolution;
-  private Insight mPendingInsight;
+  private InsightMin mPendingInsight;
   private Command mPendingCommand;
 
   private static final Integer[] sMinAssignmentColors, sUnminAssignmentColors;
@@ -246,9 +246,7 @@ public class ReplayActivity extends ActivityBase
         return true;
 
       case R.id.menu_clear:
-        mPendingInsight = null;
-        mPendingCommand = null;
-        invalidateOptionsMenu();
+        clearPending();
         displayInsightAndError(null);
         return true;
 
@@ -264,12 +262,18 @@ public class ReplayActivity extends ActivityBase
         } catch (CommandException e) {
           Log.e(TAG, "Can't resume replay", e);
         }
-        invalidateOptionsMenu();
+        clearPending();
         setControlsEnablement();
         pause();
         return true;
     }
     return super.onOptionsItemSelected(item);
+  }
+
+  private void clearPending() {
+    mPendingInsight = null;
+    mPendingCommand = null;
+    invalidateOptionsMenu();
   }
 
   private void applyPendingCommand(boolean clear) {
@@ -279,7 +283,11 @@ public class ReplayActivity extends ActivityBase
     startAnalysis();
     invalidateOptionsMenu();
     setControlsEnablement();
-    if (clear) displayInsightAndError(null);
+    if (clear) {
+      mPendingInsight = null;
+      displayInsightAndError(null);
+      mReplayView.setSelected(null);
+    }
   }
 
   private void undoOrRedo(boolean redo) {
@@ -291,30 +299,30 @@ public class ReplayActivity extends ActivityBase
       return;
     }
 
+    startAnalysis();
+    clearPending();
+    if (mUndoStack.getPosition() <= mHistoryPosition) {
+      mExploring = false;
+      setControlsEnablement();
+    }
+
     Command command = mUndoStack.getLastCommand(redo);
     Location loc = null;
     if (command instanceof MoveCommand)
       loc = ((MoveCommand) command).getLocation();
     else if (command instanceof ElimCommand)
       loc = ((ElimCommand) command).elimination.location;
-
-    mPendingInsight = null;
-    mPendingCommand = null;
-    startAnalysis();
-    if (mUndoStack.getPosition() <= mHistoryPosition) {
-      mExploring = false;
-      setControlsEnablement();
-    }
-    invalidateOptionsMenu();
     mReplayView.setSelected(loc);
   }
 
   @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
     if (mHistory == null || mExploring || mRunning || !fromUser)
       return;
+    mForward = progress > mHistoryPosition;
     while (progress != mHistoryPosition)
-      if (!move(progress > mHistoryPosition))
+      if (!move(mForward))
         break;
+    clearPending();
     reflectCurrentMove();
     setControlsEnablement();
   }
@@ -341,6 +349,7 @@ public class ReplayActivity extends ActivityBase
 
   void setInsights(Insights insights) {
     mProgress.setVisibility(View.GONE);
+    boolean prevError = mInsights != null && mInsights.error != null;
     mInsights = insights;
     mAnalyze = null;
     if (mAnalysisRanLong) {
@@ -352,6 +361,7 @@ public class ReplayActivity extends ActivityBase
         stepReplay(true);
     }
     if (!mRunning) {
+      if (prevError) displayInsightAndError(null);
       minimizeEverything();
       mReplayView.selectableColorsUpdated();
       onSelect(mReplayView.getSelected(), false);
@@ -409,10 +419,14 @@ public class ReplayActivity extends ActivityBase
   void minimizationComplete(Minimize instance) {
     if (instance == mMinimize) {
       mMinimize = null;
-      if (instance.mEverything) {
+      if (!instance.mEverything) {
+        minimizeEverything();
+      } else if (mInsights != null && mInsights.error == null) {
         mDisprove = new Disprove(this);
         mDisprove.execute();
-      } else minimizeEverything();
+      } else {
+        mProgress2.setVisibility(View.GONE);
+      }
     }
   }
 
@@ -460,29 +474,26 @@ public class ReplayActivity extends ActivityBase
   }
 
   @Override public void onSelect(Location loc, boolean byUser) {
-    if (byUser) {
-      mPendingInsight = null;
-      mPendingCommand = null;
-      invalidateOptionsMenu();
-    }
+    if (byUser)
+      clearPending();
     if (mInsights != null) {
       InsightMin insightMin = mInsights.assignments.get(loc);
       if (insightMin == null) {
         insightMin = mInsights.disproofs.get(loc);
         if (insightMin != null) {
           DisprovedAssignment disproof = (DisprovedAssignment) insightMin.insight;
-          mPendingInsight = disproof;
+          mPendingInsight = insightMin;
           mPendingCommand = new ElimCommand(disproof.getDisprovedAssignment());
           invalidateOptionsMenu();
         }
       } else {
-        mPendingInsight = insightMin.insight;
+        mPendingInsight = insightMin;
         mPendingCommand = makeMoveCommand(insightMin.insight.getImpliedAssignment());
         invalidateOptionsMenu();
         if (mExploring && byUser) applyPendingCommand(false);
       }
-      if (byUser || insightMin != null)
-        displayInsightAndError(insightMin);
+      if (byUser || mPendingInsight != null)
+        displayInsightAndError(mPendingInsight);
     }
   }
 
@@ -492,7 +503,8 @@ public class ReplayActivity extends ActivityBase
     if (insightMin != null) displayInsight(insightMin);
     InsightMin error = null;
     if (mInsights != null && mInsights.error != null) {
-      displayInsight(mInsights.error);
+      error = mInsights.error;
+      displayInsight(error);
     }
     minimizeInsights(insightMin, error);
   }
@@ -817,7 +829,7 @@ public class ReplayActivity extends ActivityBase
         Analyzer.analyze(postTarget, grabber);
         if (grabber.error != null) {
           answer.error = new InsightMin(grabber.error);
-          answer.error.minimize(postTarget);
+          //answer.error.minimize(postTarget);
         }
       }
     }
