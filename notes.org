@@ -76,7 +76,7 @@ END
    - Still want to generate new puzzles: add a pref for how often to do this, as
      a number between 0 and 1 (probably with 4-5 discrete choices: never,
      occasionally, etc)
-** TODO Add common menu items (like prefs) to various activities
+** DONE Add common menu items (like prefs) to various activities
 ** TODO Figure out how to add "up" behavior to other activities
 ** TODO Improve new-trail icon
 ** TODO Make icons for launcher, home
