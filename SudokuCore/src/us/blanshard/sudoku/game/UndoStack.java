@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.Lists;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.concurrent.NotThreadSafe;
@@ -43,6 +44,10 @@ public class UndoStack {
   UndoStack(List<Command> commands, int position) {
     this.commands = checkNotNull(commands);
     this.position = checkPositionIndex(position, commands.size());
+  }
+
+  public List<Command> getCommands() {
+    return Collections.unmodifiableList(commands);
   }
 
   public int getPosition() {

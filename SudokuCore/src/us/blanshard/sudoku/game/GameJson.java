@@ -68,24 +68,33 @@ public class GameJson {
     return object;
   }
 
-  public static UndoStack toUndoStack(String json, Sudoku game) throws JSONException {
-    if (json == null) return new UndoStack();
-    return toUndoStack(new JSONObject(json), game);
+  public static class CommandFactory {
+    protected final Sudoku game;
+
+    public CommandFactory(Sudoku game) {
+      this.game = game;
+    }
+
+    public Command toCommand(String type, Iterator<String> values) {
+      if (type.equals("move"))
+        return MoveCommand.fromJsonValues(values, game);
+      throw new IllegalArgumentException("Unrecognized command type " + type);
+    }
   }
 
-  public static UndoStack toUndoStack(JSONObject object, Sudoku game) throws JSONException {
+  public static UndoStack toUndoStack(String json, CommandFactory factory) throws JSONException {
+    if (json == null) return new UndoStack();
+    return toUndoStack(new JSONObject(json), factory);
+  }
+
+  public static UndoStack toUndoStack(JSONObject object, CommandFactory factory) throws JSONException {
     int position = object.getInt("position");
     List<Command> commands = Lists.newArrayList();
     JSONArray array = object.getJSONArray("commands");
     for (int i = 0; i < array.length(); ++i) {
       Iterator<String> values = SPLITTER.split(array.getString(i)).iterator();
       String type = values.next();
-      if (type.equals("move")) {
-        commands.add(MoveCommand.fromJsonValues(values, game));
-      } else {
-        // TODO(leadpipe): if and when we have other kinds of commands, revisit this.
-        throw new IllegalArgumentException("Unrecognized command type " + type);
-      }
+      commands.add(factory.toCommand(type, values));
     }
     return new UndoStack(commands, position);
   }

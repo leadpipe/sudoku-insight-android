@@ -146,7 +146,7 @@ public class GameJsonTest {
     Sudoku game = makeGame(Grid.BLANK);
 
     // when
-    UndoStack stack = GameJson.toUndoStack(object, game);
+    UndoStack stack = GameJson.toUndoStack(object, new GameJson.CommandFactory(game));
 
     // then
     assertEquals(0, stack.getPosition());
@@ -163,7 +163,7 @@ public class GameJsonTest {
     Sudoku game = makeGame(Grid.BLANK);
 
     // when
-    UndoStack stack = GameJson.toUndoStack(object, game);
+    UndoStack stack = GameJson.toUndoStack(object, new GameJson.CommandFactory(game));
 
     // then
     assertEquals(1, stack.getPosition());

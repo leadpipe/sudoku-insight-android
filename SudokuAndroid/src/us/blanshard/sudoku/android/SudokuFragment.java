@@ -174,7 +174,7 @@ public class SudokuFragment
       setGame(game);
       if (dbGame.uiState != null) {
         JSONObject uiState = new JSONObject(dbGame.uiState);
-        mUndoStack = GameJson.toUndoStack(uiState.getJSONObject("undo"), mGame);
+        mUndoStack = GameJson.toUndoStack(uiState.getJSONObject("undo"), new GameJson.CommandFactory(mGame));
         mSudokuView.setDefaultChoice(numeral(uiState.getInt("defaultChoice")));
         restoreTrails(uiState.getJSONArray("trailOrder"), uiState.getInt("numVisibleTrails"),
             uiState.optInt("numOffTrails"));

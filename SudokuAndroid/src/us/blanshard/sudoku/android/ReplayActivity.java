@@ -16,6 +16,8 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 import static java.util.Collections.singleton;
+import static us.blanshard.sudoku.core.Numeral.numeral;
+import static us.blanshard.sudoku.game.GameJson.JOINER;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
@@ -63,6 +65,7 @@ import org.json.JSONException;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -87,10 +90,11 @@ public class ReplayActivity extends ActivityBase
   private Sudoku mGame;
   private final Sudoku.Registry mRegistry = Sudoku.newRegistry();
   private List<Move> mHistory;
-  private int mHistoryPosition;
+  private int mHistoryPosition = 0;
   private UndoStack mUndoStack = new UndoStack();
-  private boolean mRunning;
-  private boolean mForward;
+  private String mRestoredUndoJson;
+  private boolean mRunning = true;
+  private boolean mForward = true;
   private boolean mExploring;
   private Analyze mAnalyze;
   private boolean mAnalysisRanLong;
@@ -330,6 +334,26 @@ public class ReplayActivity extends ActivityBase
   @Override public void onStartTrackingTouch(SeekBar seekBar) {}
   @Override public void onStopTrackingTouch(SeekBar seekBar) {}
 
+  @Override protected void onSaveInstanceState(Bundle outState) {
+    try {
+      outState.putString("undo", GameJson.fromUndoStack(mUndoStack).toString());
+    } catch (JSONException e) {
+      Log.e(TAG, "Error saving instance state", e);
+    }
+    outState.putInt("historyPosition", mHistoryPosition);
+    outState.putBoolean("running", mRunning);
+    outState.putBoolean("forward", mForward);
+    outState.putBoolean("exploring", mExploring);
+  }
+
+  @Override protected void onRestoreInstanceState(Bundle inState) {
+    mRestoredUndoJson = inState.getString("undo");
+    mHistoryPosition = inState.getInt("historyPosition");
+    mRunning = inState.getBoolean("running");
+    mForward = inState.getBoolean("forward");
+    mExploring = inState.getBoolean("exploring");
+  }
+
   void setGame(Database.Game dbGame) {
     mGame = new Sudoku(dbGame.puzzle, mRegistry).resume();
     setTitle(getString(R.string.text_replay_title, dbGame.puzzleId));
@@ -337,14 +361,36 @@ public class ReplayActivity extends ActivityBase
     mReplayView.setEditable(false);
     try {
       mHistory = GameJson.toHistory(dbGame.history);
+      if (mRestoredUndoJson != null) {
+        GameJson.CommandFactory factory = new GameJson.CommandFactory(mGame) {
+          @Override public Command toCommand(String type, Iterator<String> values) {
+            if (type.equals("elim")) {
+              Location loc = Location.of(Integer.parseInt(values.next()));
+              Numeral num = numeral(Integer.parseInt(values.next()));
+              return new ElimCommand(Assignment.of(loc, num));
+            }
+            return super.toCommand(type, values);
+          }
+        };
+        mUndoStack = GameJson.toUndoStack(mRestoredUndoJson, factory);
+        List<Command> commands = mUndoStack.getCommands();
+        for (int i = 0; i < mUndoStack.getPosition(); ++i)
+          commands.get(i).redo();
+      }
     } catch (JSONException e) {
-      Log.e(TAG, "Unable to restore history for game #" + dbGame._id, e);
+      Log.e(TAG, "Unable to restore state for game #" + dbGame._id, e);
       mHistory = Lists.newArrayList();
+      mHistoryPosition = 0;
+    } catch (CommandException e) {
+      Log.e(TAG, "Unable to restore undo state", e);
     }
-    mHistoryPosition = 0;
+    mRestoredUndoJson = null;
     mReplayLocation.setMax(mHistory.size());
+    if (mRunning)
+      findViewById(mForward ? R.id.play : R.id.back).performClick();
+    else
+      reflectCurrentMove();
     setControlsEnablement();
-    findViewById(R.id.play).performClick();
   }
 
   void setInsights(Insights insights) {
@@ -758,7 +804,7 @@ public class ReplayActivity extends ActivityBase
     }
 
     @Override public String toJsonValue() {
-      throw new UnsupportedOperationException();
+      return JOINER.join("elim", elimination.location.index, elimination.numeral.number);
     }
   }
 
