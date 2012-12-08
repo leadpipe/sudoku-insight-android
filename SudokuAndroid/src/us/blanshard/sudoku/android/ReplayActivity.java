@@ -327,6 +327,7 @@ public class ReplayActivity extends ActivityBase
       if (!move(mForward))
         break;
     clearPending();
+    mInsights = null;
     reflectCurrentMove();
     setControlsEnablement();
   }
@@ -391,11 +392,11 @@ public class ReplayActivity extends ActivityBase
     else
       reflectCurrentMove();
     setControlsEnablement();
+    invalidateOptionsMenu();
   }
 
   void setInsights(Insights insights) {
     mProgress.setVisibility(View.GONE);
-    boolean prevError = mInsights != null && mInsights.error != null;
     mInsights = insights;
     mAnalyze = null;
     if (mAnalysisRanLong) {
@@ -407,7 +408,7 @@ public class ReplayActivity extends ActivityBase
         stepReplay(true);
     }
     if (!mRunning) {
-      if (prevError) displayInsightAndError(null);
+      displayInsightAndError(null);
       minimizeEverything();
       mReplayView.selectableColorsUpdated();
       onSelect(mReplayView.getSelected(), false);
@@ -552,7 +553,8 @@ public class ReplayActivity extends ActivityBase
       error = mInsights.error;
       displayInsight(error);
     }
-    minimizeInsights(insightMin, error);
+    if (insightMin != null || error != null)
+      minimizeInsights(insightMin, error);
   }
 
   private void displayInsight(InsightMin insightMin) {
