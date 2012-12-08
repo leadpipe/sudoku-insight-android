@@ -31,7 +31,6 @@ import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
-import android.util.FloatMath;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -346,11 +345,11 @@ public class SudokuView extends View {
       mPaint.setTextSize(Math.max(7, mSquareSize * 0.33f));
 
       toBaseline = -mPaint.ascent() / 2.0f;
-      float r2 = r - toBaseline;
+      double r2 = r - toBaseline;
       for (int i = 0; i <= 9; ++i) {
         float radians = calcRadians(i);
-        x = r2 * FloatMath.cos(radians);
-        y = r2 * FloatMath.sin(radians);
+        x = (float) (r2 * Math.cos(radians));
+        y = (float) (r2 * Math.sin(radians));
         drawChoice(i, canvas, x + cx, y + cy + toBaseline);
       }
     }
@@ -395,10 +394,10 @@ public class SudokuView extends View {
               mPreviewY = half;
               float h = mClockRadius + half;
               y = cy - half;
-              x = FloatMath.sqrt(h*h - y*y);
+              x = (float) Math.sqrt(h*h - y*y);
               if (x < half) {
                 x = half;
-                y = FloatMath.sqrt(h*h - x*x);
+                y = (float) Math.sqrt(h*h - x*x);
                 mPreviewY = cy - y;
               }
               mPreviewX = cx - x;
