@@ -301,7 +301,7 @@ public class SudokuView extends View {
           for (int i = 0; i < mTrails.size(); ++i) {
             TrailItem item = mTrails.get(i);
             if ((num = item.trail.get(loc)) != null) {
-              mPaint.setTextSize(mSquareSize * (i == 0 ? 0.5f : 0.35f));
+              mPaint.setTextSize(mSquareSize * (i == 0 ? 0.5f : 0.4f));
               mPaint.setColor(broken ? ERROR_COLOR : i == 0 && mTrailActive ? item.color : item.dimColor);
               boolean isTrailhead = loc == item.trail.getTrailhead();
               mPaint.setTypeface(isTrailhead ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
