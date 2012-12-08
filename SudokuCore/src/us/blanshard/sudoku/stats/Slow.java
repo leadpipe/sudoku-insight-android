@@ -63,6 +63,8 @@ public class Slow {
         fnum += 2;
       }
     }
+
+    r.close();
   }
 
   private static void exitWithUsage() {

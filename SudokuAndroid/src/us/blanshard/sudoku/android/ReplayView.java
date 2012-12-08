@@ -322,6 +322,8 @@ public class ReplayView extends SudokuView {
             locDisplay.flags |= QUESTION_MASK;
             break;
           }
+          default:
+            break;
         }
       }
     if (mEliminations != null)

@@ -29,6 +29,7 @@ import org.junit.runners.JUnit4;
  * @author Luke Blanshard
  */
 @RunWith(JUnit4.class)
+@SuppressWarnings("deprecation")
 public class PatternTest {
   static Grid puzzle = Grid.fromString(
       " . . . | . . . | 7 . 9" +
@@ -53,6 +54,7 @@ public class PatternTest {
   }
 
 
+  @SuppressWarnings("unused")
   private static final Grid hardPuzzle = Grid.fromString(
       " . 1 . | 2 . . | . . ." +
       " . . . | 6 8 4 | . . ." +

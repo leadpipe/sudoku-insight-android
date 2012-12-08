@@ -97,6 +97,7 @@ public class InsightMeasurer implements Runnable {
         out.flush();
       }
       out.close();
+      r.close();
       System.err.printf("Done with %s%n", filename);
     }
   }
