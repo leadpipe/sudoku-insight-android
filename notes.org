@@ -95,9 +95,64 @@ END
    - Remember last collection?
    - Filtering?
 
-* Site
-** TODO Look into data backup
-** TODO Figure out how and what to share
+* App engine app
+** API from phone
+   - Send installation info:
+     - installation ID
+     - phone model info
+     - email address (opt)
+     - generation stream number
+   -> return generation stream number (opt)
+   - Send game history:
+     - installation ID
+     - game ID -- why not?
+     - puzzle
+     - generation params
+     - source
+     - history -- log and drop if history's > say 50k
+     - stopTime
+   - Send vote:
+     - installation ID
+     - puzzle
+     - vote
+   - Get puzzle stats
+
+** Schema
+   - Installation: root, key = installation ID
+     - optional email address (with index)
+     - opaque ID with index (generated)
+     - phone model, generation stream number
+     - PuzzleHistory: child, key = puzzle string
+       - index on puzzle string
+       - source, generation params
+       - contains all game histories (up to 20 or something)
+         - each with history string, elapsed time, #moves, #trails,
+           solved/gave up flag, game ID from phone, stopTime
+         - also original installation ID, if not this one? if possible, we
+           should group all interactions with a puzzle under just one of the
+           user's installations, the one that solved it first
+   - Puzzle: root, key = puzzle string
+     - contains generation params if applicable
+     - contains puzzle sources and installation IDs they came from
+     - contains summary of stats on this puzzle:
+       - how many played
+       - how many won on first attempt
+       - avg elapsed time
+       - avg #moves
+       - avg #trails
+       - perhaps distributions of above
+   - User: root, key = email address
+     - opaque ID with index (generated)
+     - contains list of installation IDs
+
+** The web app
+   - sample puzzles?
+   - stats? num puzzles? num installations? num users? rates of change?
+
+** Constraints
+   - The installation ID and email address are secret--can't let them leak out of the app engine app
+   - So we need alternative IDs that we expose and index on
+   - Is there an encryption service?  Is it possible to have params not visible via source?
 
 * Math
 ** Pathological grids
