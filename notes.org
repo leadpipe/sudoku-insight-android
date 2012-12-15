@@ -20,25 +20,15 @@ END
 * App
 ** TODO Kill the prefs for individual symmetries: just use them all
 ** TODO Use "None" as the name for the Random symmetry (when applicable)
-** TODO Use today's date as the seed for generating puzzles
+** TODO Use a date as the seed for generating puzzles
    - Hash the following things together for basic seed:
-     - Today's date
-     - A daily counter per symmetry
+     - Generation stream number
+     - Today's date, or one day after the previous date used, no more than 30 days ago
+     - A counter for the date
      - The generator (symmetry preserving or not)
      - "Properness" flag (allows >1 solution or not)
-     - An installation number (pref to get different puzzles on different devices)
-       - This solution to this problem sucks
-       - Another not-very-good solution: call to a central server
-         - works, except when (say) on an airplane, the place you're most likely
-           to want to use multiple devices
-       - How about checking in with the central server periodically, and having
-         it keep track of the devices, and assigning each one a number mod
-         device count; each one would then generate every nth puzzle, offset
-         - I think this is the best approach.  It also gives us a jumping off
-           point for recommendations, and for gathering stats on puzzles
-   - Use this to shuffle all the symmetries
-     - (if they're all enabled, no need for this step)
-   - Choose the first symmetry in the shuffled list that's enabled
+       - improper puzzles need a bunch of other support
+   - Use this to choose a symmetry
    - Add the symmetry to the hash
    - Use this as the seed for generating the puzzle
    - Use json notation for the generator params
@@ -62,8 +52,6 @@ END
 ** TODO Make replay view sized reasonably for tablet
 ** TODO Think about animation of insight display
    - for complex implications, this could help the visualization
-** DONE Fix capture activity for manual entry
-   - "you already have this" always shown as you're entering numerals
 ** TODO Figure out why the progress indicator stops
    - Damn guava splitter static initialization is one reason
    - But can't be the only thing, or probably even the main one
@@ -76,7 +64,6 @@ END
    - Still want to generate new puzzles: add a pref for how often to do this, as
      a number between 0 and 1 (probably with 4-5 discrete choices: never,
      occasionally, etc)
-** DONE Add common menu items (like prefs) to various activities
 ** TODO Figure out how to add "up" behavior to other activities
 ** TODO Improve new-trail icon
 ** TODO Make icons for launcher, home
@@ -148,6 +135,7 @@ END
 ** The web app
    - sample puzzles?
    - stats? num puzzles? num installations? num users? rates of change?
+   - for logged-in users, info about their stuff
 
 ** Constraints
    - The installation ID and email address are secret--can't let them leak out of the app engine app
