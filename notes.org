@@ -18,9 +18,8 @@ END
 ** TODO Rename getState to... what?
 
 * App
-** TODO Kill the prefs for individual symmetries: just use them all
-** TODO Use "None" as the name for the Random symmetry (when applicable)
-** TODO Use a date as the seed for generating puzzles
+** DONE Use "None" as the name for the Random symmetry (when applicable)
+** DONE Use a date as the seed for generating puzzles
    - Hash the following things together for basic seed:
      - Generator version number
        - we could encode properness into this if we wanted to, and also symmetry preservation
@@ -33,9 +32,13 @@ END
    - Return the puzzle with its properties
      - name the puzzle with the hashed data, eg 1:3:2012-12:34
      - include the symmetry
+** TODO Add puzzle properties to the database, remove from element
    - Kill the distinction between source and generator params, and just have puzzle properties
-     - these should be on the puzzle, not the element, right?
 ** TODO Use backup service to keep basic prefs, like generation params
+   - What would we use this for?  The user ID?
+** TODO Kill the prefs for individual symmetries: just use them all
+   - Add default stream based on hash of installation ID
+** TODO Rewrite prefs activity
 ** TODO Write an appengine app that gathers data from the android app
    - use GUID to identify the installation
    - allow login using Google ID to keep different installations from generating the same puzzles
