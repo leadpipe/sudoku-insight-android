@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.gen;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import us.blanshard.sudoku.core.Block;
 import us.blanshard.sudoku.core.Column;
 import us.blanshard.sudoku.core.Grid;
@@ -22,6 +24,7 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Row;
 import us.blanshard.sudoku.core.Unit;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 import java.util.Arrays;
@@ -40,6 +43,9 @@ public enum Symmetry {
     @Override public Iterable<Location> expand(Location loc) {
       return Collections.singleton(loc);
     }
+    @Override public String getName() {
+      return "none";
+    }
   },
 
   /** The classic Sudoku 180-degree rotational symmetry. */
@@ -48,6 +54,9 @@ public enum Symmetry {
       return loc.index == 40
         ? Collections.singleton(loc)
         : Arrays.asList(loc, Location.of(80 - loc.index));
+    }
+    @Override public String getName() {
+      return "classic";
     }
   },
 
@@ -58,6 +67,9 @@ public enum Symmetry {
         ? Collections.singleton(loc)
         : Arrays.asList(loc, Location.of(loc.row, Column.ofIndex(9 - loc.column.number)));
     }
+    @Override public String getName() {
+      return "mirror";
+    }
   },
 
   /** Mirrors left-right and top-bottom. */
@@ -67,6 +79,9 @@ public enum Symmetry {
       Location vert = Location.of(Row.ofIndex(9 - loc.row.number), loc.column);
       return Iterables.concat(MIRROR.expand(loc), MIRROR.expand(vert));
     }
+    @Override public String getName() {
+      return "double mirror";
+    }
   },
 
   /** A mirror symmetry across one of the main diagonals. */
@@ -75,6 +90,9 @@ public enum Symmetry {
       return loc.column.number == loc.row.number
         ? Collections.singleton(loc)
         : Arrays.asList(loc, Location.of(loc.column.number, loc.row.number));
+    }
+    @Override public String getName() {
+      return "diagonal";
     }
   },
 
@@ -88,6 +106,9 @@ public enum Symmetry {
                         Location.of(10 - loc.row.number, 10 - loc.column.number),
                         Location.of(10 - loc.column.number, loc.row.number));
     }
+    @Override public String getName() {
+      return "rotational";
+    }
   },
 
   /** Repeats locations in diagonally adjacent blocks. */
@@ -100,9 +121,19 @@ public enum Symmetry {
                            Block.ofIndices((row + 1) % 3, (col + 1) % 3).get(withinBlock),
                            Block.ofIndices((row + 2) % 3, (col + 2) % 3).get(withinBlock));
     }
+    @Override public String getName() {
+      return "blockwise";
+    }
   };
 
   private static final Symmetry[] values = values();
+  private static final ImmutableMap<String, Symmetry> names;
+  static {
+    ImmutableMap.Builder<String, Symmetry> builder = ImmutableMap.builder();
+    for (Symmetry s : values)
+      builder.put(s.getName(), s);
+    names = builder.build();
+  }
 
   /**
    * Chooses one of the symmetries at random.
@@ -112,10 +143,15 @@ public enum Symmetry {
   }
 
   /**
-   * Chooses one of the symmetries at random, avoiding RANDOM.
+   * Returns the symmetry whose {@linkplain #getName() name} is given.
+   *
+   * @param name   the name as returned by {@link #getName()}
+   * @return   the corresponding Symmetry
+   * @throws IllegalArgumentException   if the name doesn't match a Symmetry
    */
-  public static Symmetry choosePleasing(Random random) {
-    return values[1 + random.nextInt(values.length - 1)];
+  public static Symmetry byName(String name) {
+    checkArgument(names.containsKey(name), "No symmetry named %s", name);
+    return names.get(name);
   }
 
   /**
@@ -126,9 +162,28 @@ public enum Symmetry {
   public abstract Iterable<Location> expand(Location loc);
 
   /**
+   * Returns a human-readable English name for this symmetry.
+   */
+  public abstract String getName();
+
+  /**
+   * Tells whether this symmetry describes the layout of clues in the given
+   * grid.
+   */
+  public boolean describes(Grid grid) {
+    for (Location loc : Location.ALL) {
+      boolean hasClue = grid.get(loc) != null;
+      for (Location exp : expand(loc))
+        if (hasClue != (grid.get(exp) != null))
+          return false;
+    }
+    return true;
+  }
+
+  /**
    * Generates a simple puzzle.
    */
-  public Grid generate(Random random) {
+  public Grid generateSimple(Random random) {
     return Generator.SIMPLE.generate(random, this);
   }
 }

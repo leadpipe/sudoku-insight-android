@@ -15,14 +15,13 @@ limitations under the License.
 */
 package us.blanshard.sudoku.gen;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Solver;
-import us.blanshard.sudoku.gen.Generator;
-import us.blanshard.sudoku.gen.Symmetry;
-
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Sets;
 
@@ -35,11 +34,11 @@ public class GeneratorTest {
   private final Random random = new Random(0);
 
   @Test public void random() {
-    ensureBasicProperties(Symmetry.RANDOM.generate(random));
+    ensureBasicProperties(Symmetry.RANDOM.generateSimple(random));
   }
 
   @Test public void classic() {
-    Grid grid = Symmetry.CLASSIC.generate(random);
+    Grid grid = Symmetry.CLASSIC.generateSimple(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(grid.containsKey(loc), grid.containsKey(Location.of(80 - loc.index)));
@@ -47,7 +46,7 @@ public class GeneratorTest {
   }
 
   @Test public void mirror() {
-    Grid grid = Symmetry.MIRROR.generate(random);
+    Grid grid = Symmetry.MIRROR.generateSimple(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -57,7 +56,7 @@ public class GeneratorTest {
   }
 
   @Test public void doubleMirror() {
-    Grid grid = Symmetry.DOUBLE_MIRROR.generate(random);
+    Grid grid = Symmetry.DOUBLE_MIRROR.generateSimple(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -70,7 +69,7 @@ public class GeneratorTest {
   }
 
   @Test public void diagonal() {
-    Grid grid = Symmetry.DIAGONAL.generate(random);
+    Grid grid = Symmetry.DIAGONAL.generateSimple(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -80,7 +79,7 @@ public class GeneratorTest {
   }
 
   @Test public void rotational() {
-    Grid grid = Symmetry.ROTATIONAL.generate(random);
+    Grid grid = Symmetry.ROTATIONAL.generateSimple(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -90,7 +89,7 @@ public class GeneratorTest {
   }
 
   @Test public void blockwise() {
-    Grid grid = Symmetry.BLOCKWISE.generate(random);
+    Grid grid = Symmetry.BLOCKWISE.generateSimple(random);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -105,13 +104,8 @@ public class GeneratorTest {
       Symmetry symmetry = Symmetry.choose(random);
       Grid grid = generator.generate(random, symmetry);
       ensureBasicProperties(grid);
-      if (generator.honorsSymmetry()) {
-        for (Location loc : Location.ALL) {
-          for (Location exp : symmetry.expand(loc)) {
-            assertEquals(grid.get(loc) == null, grid.get(exp) == null);
-          }
-        }
-      }
+      if (generator.honorsSymmetry())
+        assertTrue(symmetry.describes(grid));
     }
   }
 
