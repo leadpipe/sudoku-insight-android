@@ -15,7 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.gen.GenerationStrategy;
 import us.blanshard.sudoku.gen.Symmetry;
 
 import android.os.Bundle;
@@ -50,7 +50,7 @@ public class PrefsActivity extends PreferenceActivity {
       CheckBoxPreference check = (CheckBoxPreference) findPreference(SYMMETRY_PREFIX + sym);
       check.setChecked(true);
     }
-    mRandomGenerator.setChecked(mPrefs.getGenerator() == Generator.SUBTRACTIVE_RANDOM);
+    mRandomGenerator.setChecked(mPrefs.getGenerator() == GenerationStrategy.SUBTRACTIVE_RANDOM);
   }
 
   @SuppressWarnings("deprecation")
@@ -65,7 +65,7 @@ public class PrefsActivity extends PreferenceActivity {
       mPrefs.setSymmetries(mSymmetries);
     } else if (preference == mRandomGenerator) {
       mPrefs.setGenerator(
-          mRandomGenerator.isChecked() ? Generator.SUBTRACTIVE_RANDOM : Generator.SUBTRACTIVE);
+          mRandomGenerator.isChecked() ? GenerationStrategy.SUBTRACTIVE_RANDOM : GenerationStrategy.SUBTRACTIVE);
     }
     return answer;
   }

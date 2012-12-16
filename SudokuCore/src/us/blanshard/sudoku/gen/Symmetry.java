@@ -184,6 +184,6 @@ public enum Symmetry {
    * Generates a simple puzzle.
    */
   public Grid generateSimple(Random random) {
-    return Generator.SIMPLE.generate(random, this);
+    return GenerationStrategy.SIMPLE.generate(random, this);
   }
 }

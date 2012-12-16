@@ -34,7 +34,7 @@ import us.blanshard.sudoku.game.MoveCommand;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.Sudoku.State;
 import us.blanshard.sudoku.game.UndoStack;
-import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.gen.GenerationStrategy;
 import us.blanshard.sudoku.gen.Symmetry;
 
 import android.app.AlertDialog;
@@ -374,7 +374,7 @@ public class SudokuFragment
   private static Database.Game generateAndStorePuzzle(Database db, Prefs prefs) {
     Database.Game answer;
     Random random = new Random();
-    Generator gen = prefs.getGenerator();
+    GenerationStrategy gen = prefs.getGenerator();
     Symmetry sym = prefs.chooseSymmetry(random);
     long seed = random.nextLong();
     random = new Random(seed);

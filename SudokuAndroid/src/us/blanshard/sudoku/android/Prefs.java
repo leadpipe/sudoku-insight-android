@@ -17,7 +17,7 @@ package us.blanshard.sudoku.android;
 
 import static us.blanshard.sudoku.android.Extras.GAME_ID;
 
-import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.gen.GenerationStrategy;
 import us.blanshard.sudoku.gen.Symmetry;
 
 import android.content.Context;
@@ -88,12 +88,12 @@ public class Prefs {
     prefs.apply();
   }
 
-  public Generator getGenerator() {
+  public GenerationStrategy getGenerator() {
     return mPrefs.contains(GENERATOR)
-        ? Generator.valueOf(mPrefs.getString(GENERATOR, null)) : Generator.SUBTRACTIVE;
+        ? GenerationStrategy.valueOf(mPrefs.getString(GENERATOR, null)) : GenerationStrategy.SUBTRACTIVE;
   }
 
-  public void setGenerator(Generator generator) {
+  public void setGenerator(GenerationStrategy generator) {
     ThreadPolicy policy = StrictMode.allowThreadDiskWrites();
     try {
       SharedPreferences.Editor prefs = mPrefs.edit();

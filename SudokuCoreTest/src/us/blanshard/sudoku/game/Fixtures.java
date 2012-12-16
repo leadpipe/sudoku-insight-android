@@ -19,7 +19,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.gen.GenerationStrategy;
 import us.blanshard.sudoku.gen.Symmetry;
 
 import com.google.common.base.Predicate;
@@ -32,7 +32,7 @@ import java.util.Random;
 public class Fixtures {
   private static final long SEED = 123;
 
-  static final Grid puzzle = Generator.SIMPLE.generate(new Random(SEED), Symmetry.BLOCKWISE);
+  static final Grid puzzle = GenerationStrategy.SIMPLE.generate(new Random(SEED), Symmetry.BLOCKWISE);
   static final Location openLocation = Iterables.find(Location.ALL, new Predicate<Location>() {
     @Override public boolean apply(Location loc) {
       return !puzzle.containsKey(loc);

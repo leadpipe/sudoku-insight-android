@@ -18,7 +18,7 @@ package us.blanshard.sudoku.stats;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.gen.GenerationStrategy;
 import us.blanshard.sudoku.gen.Symmetry;
 
 import com.google.common.base.Stopwatch;
@@ -62,7 +62,7 @@ public class GenStats {
   private static void generate(int count, long seed, boolean print) {
     if (print) {
       System.out.print("Symmetry\tSeed");
-      for (Generator generator : Generator.values())
+      for (GenerationStrategy generator : GenerationStrategy.values())
         System.out.printf("\t%s:Num Clues\tMicros", generator);
       System.out.println();
     }
@@ -72,7 +72,7 @@ public class GenStats {
       long genSeed = random.nextLong();
       if (print) System.out.printf("%s\t%#x", symmetry, genSeed);
 
-      for (Generator generator : Generator.values()) {
+      for (GenerationStrategy generator : GenerationStrategy.values()) {
         Stopwatch stopwatch = new Stopwatch().start();
         Grid grid = generator.generate(new Random(genSeed), symmetry);
         stopwatch.stop();

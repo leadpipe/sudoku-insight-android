@@ -36,7 +36,7 @@ import java.util.Random;
  *
  * @author Luke Blanshard
  */
-public enum Generator {
+public enum GenerationStrategy {
 
   /**
    * Generates a starting grid that is solved in a single step.

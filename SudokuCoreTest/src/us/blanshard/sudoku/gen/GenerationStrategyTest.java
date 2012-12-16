@@ -29,7 +29,7 @@ import org.junit.Test;
 
 import java.util.Random;
 
-public class GeneratorTest {
+public class GenerationStrategyTest {
 
   private final Random random = new Random(0);
 
@@ -100,7 +100,7 @@ public class GeneratorTest {
   }
 
   @Test public void strategies() {
-    for (Generator generator : Generator.values()) {
+    for (GenerationStrategy generator : GenerationStrategy.values()) {
       Symmetry symmetry = Symmetry.choose(random);
       Grid grid = generator.generate(random, symmetry);
       ensureBasicProperties(grid);
