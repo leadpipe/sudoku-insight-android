@@ -17,10 +17,10 @@ package us.blanshard.sudoku.game;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Symmetry;
+import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.gen.Symmetry;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Ticker;

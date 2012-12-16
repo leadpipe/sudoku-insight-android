@@ -17,9 +17,9 @@ package us.blanshard.sudoku.stats;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
-import us.blanshard.sudoku.core.Generator;
 import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.core.Symmetry;
+import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.gen.Symmetry;
 
 import com.google.common.base.Stopwatch;
 

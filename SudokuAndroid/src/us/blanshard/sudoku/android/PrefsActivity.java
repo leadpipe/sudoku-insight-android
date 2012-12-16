@@ -15,8 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import us.blanshard.sudoku.core.Generator;
-import us.blanshard.sudoku.core.Symmetry;
+import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.gen.Symmetry;
 
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;

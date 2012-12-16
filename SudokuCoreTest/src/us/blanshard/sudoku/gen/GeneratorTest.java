@@ -13,7 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package us.blanshard.sudoku.core;
+package us.blanshard.sudoku.gen;
+
+import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.Marks;
+import us.blanshard.sudoku.core.Solver;
+import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.gen.Symmetry;
 
 import static org.junit.Assert.assertEquals;
 

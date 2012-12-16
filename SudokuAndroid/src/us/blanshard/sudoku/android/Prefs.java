@@ -17,8 +17,8 @@ package us.blanshard.sudoku.android;
 
 import static us.blanshard.sudoku.android.Extras.GAME_ID;
 
-import us.blanshard.sudoku.core.Generator;
-import us.blanshard.sudoku.core.Symmetry;
+import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.gen.Symmetry;
 
 import android.content.Context;
 import android.content.SharedPreferences;
