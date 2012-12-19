@@ -588,6 +588,7 @@ public class SudokuFragment
     mTrailsList.setOnItemClickListener(this);
     mTrailsList.setOnItemLongClickListener(this);
 
+    mSudokuView.setKeepScreenOn(true);
     mSudokuView.setOnMoveListener(this);
     mRegistry.addListener(new Sudoku.Adapter() {
       @Override public void moveMade(Sudoku game, Move move) {
