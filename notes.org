@@ -36,6 +36,15 @@ END
    - Kill the distinction between source and generator params, and just have puzzle properties
 ** TODO Use backup service to keep basic prefs, like generation params
    - What would we use this for?  The user ID?
+** TODO Gather the permissions we need
+   - they're declared in android.Manifest.permission
+   - for talking to the service:
+     - <uses-permission android:name="android.permission.INTERNET" />
+     - <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+   - for getting access to the user's Google accounts:
+     - <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+   - for getting device properties/model name:
+     - freely available as android.os.Build.MODEL (and possibly MANUFACTURER)
 ** TODO Kill the prefs for individual symmetries: just use them all
    - Add default stream based on hash of installation ID
 ** TODO Rewrite prefs activity
