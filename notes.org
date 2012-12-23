@@ -79,7 +79,24 @@ END
      a number between 0 and 1 (probably with 4-5 discrete choices: never,
      occasionally, etc)
 ** TODO Figure out how to add "up" behavior to other activities
-** TODO Improve new-trail icon
+** TODO Use icons from the Noun Project
+   - <a href="http://thenounproject.com/noun/play/#icon-No6506" target="_blank">Play</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
+     - for play and reverse
+   - <a href="http://thenounproject.com/noun/pause/#icon-No6413" target="_blank">Pause</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
+     - for pause
+   - <a href="http://thenounproject.com/noun/arrow/#icon-No6489" target="_blank">Arrow</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
+     - for undo, redo, undo to start, redo to end
+   - <a href="http://thenounproject.com/noun/loop/#icon-No2840" target="_blank">Loop</a> designed by <a href="http://thenounproject.com/somerandomdude" target="_blank">P.J. Onori</a> from The Noun Project
+     - for resume replay
+   - http://thenounproject.com/noun/pin/#icon-No1490 by http://thenounproject.com/brokate KB
+     - pin: for apply
+   - http://thenounproject.com/noun/trail/#icon-No523 by unknown designer, 1982
+     - trail
+   - http://thenounproject.com/noun/wipe/#icon-No3626 by http://thenounproject.com/Gatada Johan H. W. Basberg
+     - wipe: for clear
+   - http://thenounproject.com/using-symbols/
+   - for menu/action icons: 192px, 144px "optical square"; scale down to 64, 48,
+     32; 60% opacity for enabled, 30% for disabled
 ** TODO Make icons for launcher, home
 
 ** TODO Revamp prefs page to use ICS stuff
