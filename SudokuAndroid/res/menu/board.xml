@@ -3,14 +3,14 @@
     <item android:id="@+id/menu_undo_to_start"
         android:title="@string/menu_undo_to_start"
         android:icon="@drawable/menu_undo_all"
-        android:showAsAction="never|withText"
+        android:showAsAction="never"
         android:orderInCategory="11"
         />
 
     <item android:id="@+id/menu_redo_to_end"
         android:title="@string/menu_redo_to_end"
         android:icon="@drawable/menu_redo_all"
-        android:showAsAction="never|withText"
+        android:showAsAction="never"
         android:orderInCategory="12"
         />
 

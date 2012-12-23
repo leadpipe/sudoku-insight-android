@@ -48,7 +48,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -178,9 +177,9 @@ public class ReplayActivity extends ActivityBase
     mReplayView.setSelectableColorsFunction(selectableColors);
     mReplayLocation.setOnSeekBarChangeListener(this);
 
-    setUpButton(R.id.play);
-    setUpButton(R.id.pause);
-    setUpButton(R.id.back);
+    findViewById(R.id.play).setOnClickListener(this);
+    findViewById(R.id.pause).setOnClickListener(this);
+    findViewById(R.id.back).setOnClickListener(this);
 
     mRegistry.addListener(new Sudoku.Adapter() {
       @Override public void moveMade(Sudoku game, Move move) {
@@ -188,11 +187,6 @@ public class ReplayActivity extends ActivityBase
         mReplayView.invalidateLocation(move.getLocation());
       }
     });
-  }
-
-  private void setUpButton(int id) {
-    Button b = (Button) findViewById(id);
-    b.setOnClickListener(this);
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {
@@ -512,8 +506,10 @@ public class ReplayActivity extends ActivityBase
       mTimer.setTextColor(Color.LTGRAY);
       mMoveNumber.setTextColor(Color.LTGRAY);
     } else {
-      findViewById(R.id.play).setEnabled(!mRunning && mHistoryPosition < mHistory.size());
-      findViewById(R.id.back).setEnabled(!mRunning && mHistoryPosition > 0);
+      findViewById(R.id.play).setEnabled(
+          (!mRunning || !mForward) && mHistoryPosition < mHistory.size());
+      findViewById(R.id.back).setEnabled(
+          (!mRunning || mForward) && mHistoryPosition > 0);
       findViewById(R.id.pause).setEnabled(mRunning);
       mReplayLocation.setEnabled(!mRunning);
       mTimer.setTextColor(Color.BLACK);

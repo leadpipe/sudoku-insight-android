@@ -38,27 +38,35 @@
         android:layout_alignParentBottom="true"
         >
 	    <!-- Top line: buttons, 2nd progress indicator -->
-	    <Button
+	    <ImageButton
 	        android:id="@+id/back"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
-	        android:text="@string/button_back"
+	        android:contentDescription="@string/button_back"
+	        style="@android:style/Widget.Button.Small"
+	        android:src="@drawable/btn_reverse"
 	        android:layout_toLeftOf="@+id/pause"
 	        />
 
-	    <Button
+	    <ImageButton
 	        android:id="@+id/pause"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
-	        android:text="@string/button_pause"
+	        android:contentDescription="@string/button_pause"
+	        style="@android:style/Widget.Button.Small"
+	        android:src="@drawable/btn_pause"
 	        android:layout_centerHorizontal="true"
+	        android:layout_marginLeft="4dp"
+	        android:layout_marginRight="4dp"
 	        />
 
-	    <Button
+	    <ImageButton
 	        android:id="@+id/play"
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
-	        android:text="@string/button_play"
+	        android:contentDescription="@string/button_play"
+	        style="@android:style/Widget.Button.Small"
+	        android:src="@drawable/btn_play"
 	        android:layout_toRightOf="@+id/pause"
 	        />
 	    
