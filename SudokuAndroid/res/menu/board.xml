@@ -2,12 +2,14 @@
 
     <item android:id="@+id/menu_undo_to_start"
         android:title="@string/menu_undo_to_start"
+        android:icon="@drawable/menu_undo_all"
         android:showAsAction="never|withText"
         android:orderInCategory="11"
         />
 
     <item android:id="@+id/menu_redo_to_end"
         android:title="@string/menu_redo_to_end"
+        android:icon="@drawable/menu_redo_all"
         android:showAsAction="never|withText"
         android:orderInCategory="12"
         />
@@ -26,21 +28,21 @@
 
     <item android:id="@+id/menu_undo"
         android:title="@string/menu_undo"
-        android:icon="@drawable/action_undo"
+        android:icon="@drawable/menu_undo"
         android:showAsAction="always"
         android:orderInCategory="30"
         />
 
     <item android:id="@+id/menu_redo"
         android:title="@string/menu_redo"
-        android:icon="@drawable/action_redo"
+        android:icon="@drawable/menu_redo"
         android:showAsAction="always"
         android:orderInCategory="31"
         />
 
     <item android:id="@+id/menu_new_trail"
         android:title="@string/menu_new_trail"
-        android:icon="@drawable/action_new_trail"
+        android:icon="@drawable/menu_trail"
         android:showAsAction="always"
         android:orderInCategory="32"
         />
