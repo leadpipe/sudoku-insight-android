@@ -57,6 +57,10 @@ END
    - Or, rethink this.  Not clear it would be helpful.
 ** TODO Bug: analysis not being interrupted
    - No longer seeing this?
+** DONE Clear displayed insights when reverse button hit
+** DONE Hit play button on resume
+** TODO Try making selection color darker
+** TODO Try not minimizing disproofs until they're selected
 ** TODO Make replay view rotate properly
    - including not losing track of where it is
    - Or, rethink this too.  What's the value in having landscape mode for small devices?
@@ -79,7 +83,7 @@ END
      a number between 0 and 1 (probably with 4-5 discrete choices: never,
      occasionally, etc)
 ** TODO Figure out how to add "up" behavior to other activities
-** TODO Use icons from the Noun Project
+** TODO Acknowledge icons from the Noun Project in Settings/About
    - <a href="http://thenounproject.com/noun/play/#icon-No6506" target="_blank">Play</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
      - for play and reverse
    - <a href="http://thenounproject.com/noun/pause/#icon-No6413" target="_blank">Pause</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project

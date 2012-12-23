@@ -236,6 +236,7 @@ public class ReplayActivity extends ActivityBase
       case R.id.menu_undo:
       case R.id.menu_redo:
         boolean forward = item.getItemId() == R.id.menu_redo;
+        clearPending();
         if (mExploring) {
           undoOrRedo(forward);
         } else {
@@ -263,7 +264,7 @@ public class ReplayActivity extends ActivityBase
         }
         clearPending();
         setControlsEnablement();
-        pause();
+        play();
         return true;
     }
     return super.onOptionsItemSelected(item);
@@ -483,6 +484,7 @@ public class ReplayActivity extends ActivityBase
         startAnalysis();
         invalidateOptionsMenu();
         setControlsEnablement();
+        if (!mForward) clearPending();
         displayInsightAndError(null);
         break;
 
@@ -547,15 +549,19 @@ public class ReplayActivity extends ActivityBase
     if (insightMin != null) displayInsight(insightMin);
     InsightMin error = null;
     if (mInsights != null && mInsights.error != null) {
-      error = mInsights.error;
-      displayInsight(error);
+      if (insightMin == null) {
+        mReplayView.addInsight(mInsights.error.insight.getNub());
+      } else {
+        error = mInsights.error;
+        displayInsight(error);
+      }
     }
     if (insightMin != null || error != null)
       minimizeInsights(insightMin, error);
   }
 
   private void displayInsight(InsightMin insightMin) {
-    mReplayView.addInsight(insightMin.getMinimizedInsight());
+    mReplayView.addInsight(insightMin.getMinimizedInsightOrNub());
     if (!insightMin.minimized) mToBeDisplayed.add(insightMin);
   }
 
@@ -649,6 +655,10 @@ public class ReplayActivity extends ActivityBase
 
   private void pause() {
     findViewById(R.id.pause).performClick();
+  }
+
+  private void play() {
+    findViewById(R.id.play).performClick();
   }
 
   @Nullable Assignment nextAssignment() {
@@ -745,7 +755,7 @@ public class ReplayActivity extends ActivityBase
       return minimized;
     }
 
-    Insight getMinimizedInsight() {
+    Insight getMinimizedInsightOrNub() {
       return minimized ? insight : insight.getNub();
     }
 
