@@ -1,0 +1,3 @@
+# Extra stuff for including Guava
+-dontwarn sun.misc.Unsafe
+-dontwarn com.google.common.collect.MinMaxPriorityQueue
