@@ -18,104 +18,93 @@ END
 ** TODO Rename getState to... what?
 
 * App
-** DONE Use "None" as the name for the Random symmetry (when applicable)
-** DONE Use a date as the seed for generating puzzles
-   - Hash the following things together for basic seed:
-     - Generator version number
-       - we could encode properness into this if we wanted to, and also symmetry preservation
-     - Generation stream number
-     - The current month
-     - A counter within the month
-   - Use this to seed an RNG, from which:
-     - choose a symmetry
-     - generate the puzzle
-   - Return the puzzle with its properties
-     - name the puzzle with the hashed data, eg 1:3:2012-12:34
-     - include the symmetry
-** TODO Add puzzle properties to the database, remove from element
-   - Kill the distinction between source and generator params, and just have puzzle properties
-** TODO Use backup service to keep basic prefs, like generation params
-   - What would we use this for?  The user ID?
-** TODO Gather the permissions we need
-   - they're declared in android.Manifest.permission
-   - for talking to the service:
-     - <uses-permission android:name="android.permission.INTERNET" />
-     - <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-   - for getting access to the user's Google accounts:
-     - <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-   - for getting device properties/model name:
-     - freely available as android.os.Build.MODEL (and possibly MANUFACTURER)
-** TODO Kill the prefs for individual symmetries: just use them all
-   - Add default stream based on hash of installation ID
-** TODO Rewrite prefs activity
-** TODO Write an appengine app that gathers data from the android app
-   - use GUID to identify the installation
-   - allow login using Google ID to keep different installations from generating the same puzzles
-   - will android tell us which Google ID installed the app?
-   - when the app is slightly off the ground, sign up for Cloud Endpoints at http://endpoints-trusted-tester.appspot.com/
-** TODO Automatically pause the replay on switch of trail, just after the move
-   - Or, rethink this.  Not clear it would be helpful.
-** TODO Bug: analysis not being interrupted
-   - No longer seeing this?
-** DONE Clear displayed insights when reverse button hit
-** DONE Hit play button on resume
-** TODO Try making selection color darker
-** TODO Try not minimizing disproofs until they're selected
-** TODO Make replay view rotate properly
-   - including not losing track of where it is
-   - Or, rethink this too.  What's the value in having landscape mode for small devices?
-** TODO Clearing the present insight should clear the selected location too
-   - should it also clear the error displayed?
-   - or possibly everything but the nub of the error?
-** TODO Make replay view sized reasonably for tablet
-** TODO Think about animation of insight display
-   - for complex implications, this could help the visualization
-** TODO Figure out why the progress indicator stops
-   - Damn guava splitter static initialization is one reason
-   - But can't be the only thing, or probably even the main one
-   - Remove stuff from the foreground thread to figure this out
-   - Hmm, doesn't appear to be my stuff?  Build a release version and see if it still happens.
-** TODO Add a count to the list spinner: #puzzles in collection
-** TODO Handle the importing of collections of puzzles
-   - Add an activity that's triggered by .sdm files
-   - Change the way we set up new games: look for game-less puzzles and queue one
-   - Still want to generate new puzzles: add a pref for how often to do this, as
-     a number between 0 and 1 (probably with 4-5 discrete choices: never,
-     occasionally, etc)
-** TODO Figure out how to add "up" behavior to other activities
-** TODO Acknowledge icons from the Noun Project in Settings/About
-   - <a href="http://thenounproject.com/noun/play/#icon-No6506" target="_blank">Play</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
-     - for play and reverse
-   - <a href="http://thenounproject.com/noun/pause/#icon-No6413" target="_blank">Pause</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
-     - for pause
-   - <a href="http://thenounproject.com/noun/arrow/#icon-No6489" target="_blank">Arrow</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
-     - for undo, redo, undo to start, redo to end
-   - <a href="http://thenounproject.com/noun/loop/#icon-No2840" target="_blank">Loop</a> designed by <a href="http://thenounproject.com/somerandomdude" target="_blank">P.J. Onori</a> from The Noun Project
-     - for resume replay
-   - http://thenounproject.com/noun/pin/#icon-No1490 by http://thenounproject.com/brokate KB
-     - pin: for apply
-   - http://thenounproject.com/noun/trail/#icon-No523 by unknown designer, 1982
-     - trail
-   - http://thenounproject.com/noun/wipe/#icon-No3626 by http://thenounproject.com/Gatada Johan H. W. Basberg
-     - wipe: for clear
-   - http://thenounproject.com/using-symbols/
-   - for menu/action icons: 192px, 144px "optical square"; scale down to 64, 48,
-     32; 60% opacity for enabled, 30% for disabled
-** TODO Make icons for launcher, home
 
-** TODO Revamp prefs page to use ICS stuff
+** App/UI cleanups
+*** TODO Gather the permissions we need
+    - they're declared in android.Manifest.permission
+    - for talking to the service:
+      - <uses-permission android:name="android.permission.INTERNET" />
+      - <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    - for getting access to the user's Google accounts:
+      - <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    - for getting device properties/model name:
+      - freely available as android.os.Build.MODEL (and possibly MANUFACTURER)
+*** TODO Make replay view rotate properly
+*** TODO Make replay view sized reasonably for tablet
+*** TODO Try out Switch for trail entry mode indicator
+*** TODO Finish adding "up" behavior to all activities
+*** TODO Make icons for launcher, home
+*** TODO Rewrite prefs activity to use new APIs
+*** TODO Kill the prefs for individual symmetries: just use them all
+    - Add default stream based on hash of installation ID
+*** TODO Acknowledge icons from the Noun Project in Settings/About
+    - <a href="http://thenounproject.com/noun/play/#icon-No6506" target="_blank">Play</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
+      - for play and reverse
+    - <a href="http://thenounproject.com/noun/pause/#icon-No6413" target="_blank">Pause</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
+      - for pause
+    - <a href="http://thenounproject.com/noun/arrow/#icon-No6489" target="_blank">Arrow</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
+      - for undo, redo, undo to start, redo to end
+    - <a href="http://thenounproject.com/noun/loop/#icon-No2840" target="_blank">Loop</a> designed by <a href="http://thenounproject.com/somerandomdude" target="_blank">P.J. Onori</a> from The Noun Project
+      - for resume replay
+    - http://thenounproject.com/noun/pin/#icon-No1490 by http://thenounproject.com/brokate KB
+      - pin: for apply
+    - http://thenounproject.com/noun/trail/#icon-No523 by unknown designer, 1982
+      - trail
+    - http://thenounproject.com/noun/wipe/#icon-No3626 by http://thenounproject.com/Gatada Johan H. W. Basberg
+      - wipe: for clear
+    - http://thenounproject.com/using-symbols/
+    - for menu/action icons: 192px, 144px "optical square"; scale down to 64, 48,
+      32; 60% opacity for enabled, 30% for disabled
+*** TODO Figure out why the progress indicator stops
+    - Profile
+*** TODO Give visual indication when try to set an unsettable location
 
-** TODO Preference for non-unique puzzles
-** TODO Handle completion of potentially non-unique puzzles
-   - by asking whether it was unique
+** Improper (non-unique) puzzles
+*** TODO Experiment with improper puzzles
+    - beef up solver to return intersection of solutions
+    - beef up generator to return improper puzzles if asked
+    - play a bunch of these puzzles and see how they are: what's a good max number of solutions?
+*** TODO Fix replay to handle improper puzzles
+*** TODO Add a preference for allowing improper puzzles to be shown
+*** TODO Return a flag for properness in generator's puzzle properties
+*** TODO Handle completion of potentially improper puzzles
+    - by asking whether it was unique (?)
 
-** TODO Give visual indication when try to set an unsettable location
+** Cross-installation work
+*** TODO Add puzzle properties to the database, remove from element
+    - Kill the distinction between source and generator params, and just have puzzle properties
+*** TODO Use backup service to keep basic prefs, like generation params
+    - What would we use this for?  The user ID?
+*** TODO Write an appengine app that gathers data from the android app
+    - use GUID to identify the installation
+    - allow login using Google ID to keep different installations from generating the same puzzles
+    - will android tell us which Google ID installed the app?
+    - when the app is slightly off the ground, sign up for Cloud Endpoints at http://endpoints-trusted-tester.appspot.com/
 
-** TODO Consider supporting other selection-based operations on the list: deletion, exporting
-** Possible list view tweaks
-   - Collection info (or all) in header?
-   - Remember last collection?
-   - Filtering?
+** Replay cleanups
+*** TODO Try making selection color darker
+*** TODO Try not minimizing disproofs until they're selected
+*** TODO Why does the first trail in puzzle 14 switch errors?
+*** TODO Automatically pause the replay on switch of trail, just after the move
+    - Or, rethink this.  Not clear it would be helpful.
+*** TODO Bug: analysis not being interrupted
+    - No longer seeing this?
+*** TODO Clearing the present insight should clear the selected location too
+    - should it also clear the error displayed?
+    - or possibly everything but the nub of the error?
+*** TODO Think about animation of insight display
+    - for complex implications, this could help the visualization
+
+** List view ideas
+*** TODO Add a count to the list spinner: #puzzles in collection
+*** TODO Handle the importing of collections of puzzles
+    - Add an activity that's triggered by .sdm files
+    - Change the way we set up new games: look for game-less puzzles and queue one
+    - Still want to generate new puzzles: add a pref for how often to do this, as
+      a number between 0 and 1 (probably with 4-5 discrete choices: never,
+      occasionally, etc)
+*** TODO Consider supporting other selection-based operations on the list: deletion, exporting
+
 
 * App engine app
 ** API from phone
