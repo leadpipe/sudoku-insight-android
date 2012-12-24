@@ -30,6 +30,8 @@ import android.text.format.DateUtils;
 
 import com.google.common.base.Strings;
 
+import java.util.Locale;
+
 /**
  * Helpful methods for converting various kinds of data to human-readable text.
  *
@@ -43,8 +45,8 @@ public class ToText {
   public static String elapsedTime(long millis) {
     long secs = MILLISECONDS.toSeconds(millis);
     long mins = secs / 60;
-    if (mins < 60) return String.format("%d:%02d", mins, secs % 60);
-    return String.format("%d:%02d:%02d", mins / 60, mins % 60, secs % 60);
+    if (mins < 60) return String.format(Locale.ROOT, "%d:%02d", mins, secs % 60);
+    return String.format(Locale.ROOT, "%d:%02d:%02d", mins / 60, mins % 60, secs % 60);
   }
 
   /**

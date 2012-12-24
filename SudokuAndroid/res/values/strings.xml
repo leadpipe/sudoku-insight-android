@@ -4,7 +4,6 @@
     <string name="app_full_name">Sudoku Insight</string>
     <string name="app_short_name">Insight</string>
     <string name="button_back">Reverse</string>
-    <string name="button_done">Done</string>
     <string name="button_capture_play">Play Now</string>
     <string name="button_capture_save">Save for Later</string>
     <string name="button_give_up">Give Up</string>
@@ -23,7 +22,7 @@
     <string name="check_mirror_symmetry_summary">Left-right mirror symmetry</string>
     <string name="check_random_symmetry">Random</string>
     <string name="check_random_symmetry_summary">No symmetry</string>
-    <string name="check_random_variation">Broken symmetry ok?</string>
+    <string name="check_random_variation">Broken symmetry OK?</string>
     <string name="check_random_variation_summary_on">Yes, make harder puzzles</string>
     <string name="check_random_variation_summary_off">No, make symmetrical puzzles</string>
     <string name="check_rotational_symmetry">Rotational</string>
@@ -31,10 +30,9 @@
     <string name="dialog_give_up_message">Give up on this puzzle?</string>
     <string name="dialog_skip_message">Skip this puzzle?</string>
     <string name="hint_capture_source">Where does this puzzle come from?</string>
-    <string name="menu_apply">Apply</string>
+    <string name="menu_apply">Apply Selected Insight</string>
     <string name="menu_capture_puzzle">Enter a Puzzle</string>
-    <string name="menu_clear">Clear</string>
-    <string name="menu_explore">Explore</string>
+    <string name="menu_clear">Clear Insights</string>
     <string name="menu_give_up">Give Up</string>
     <string name="menu_list_puzzles">List Puzzles</string>
     <string name="menu_new_trail">New Trail</string>
@@ -62,8 +60,10 @@
     <string name="text_game_gave_up">Gave up after %1$s; last played %2$s</string>
     <string name="text_game_last_replayed">Last reviewed %1$s.</string>
     <string name="text_game_playing">In progress for %1$s; last played %2$s</string>
+    <!-- deliberately not using elapsed time argument: -->
     <string name="text_game_queued">Queued to play %2$s</string>
     <string name="text_game_replay">Review for insight</string>
+    <!-- deliberately not using elapsed time argument: -->
     <string name="text_game_skipped">Skipped %2$s</string>
     <string name="text_game_solved">Solved in %1$s %2$s</string>
     <string name="text_game_start_time">Started %1$s.</string>

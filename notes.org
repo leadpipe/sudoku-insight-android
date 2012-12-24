@@ -20,7 +20,7 @@ END
 * App
 
 ** App/UI cleanups
-*** TODO Gather the permissions we need
+*** DONE Gather the permissions we need
     - they're declared in android.Manifest.permission
     - for talking to the service:
       - <uses-permission android:name="android.permission.INTERNET" />

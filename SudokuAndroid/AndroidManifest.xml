@@ -21,10 +21,12 @@ limitations under the License.
 
     <uses-sdk
         android:minSdkVersion="15"
-        android:targetSdkVersion="15"
+        android:targetSdkVersion="17"
         />
-    
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:icon="@drawable/ic_launcher"
@@ -58,10 +60,11 @@ limitations under the License.
             android:name=".PrefsActivity"
             android:label="@string/app_short_name"
             />
-        <activity 
+        <activity
             android:name=".CapturePuzzleActivity"
             android:label="@string/app_short_name"
             android:windowSoftInputMode="stateVisible|adjustPan"
+            android:permission=""
             >
             <intent-filter 
                 android:label="@string/app_full_name"
