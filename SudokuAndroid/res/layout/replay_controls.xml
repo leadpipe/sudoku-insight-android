@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/replay_controls"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    >
+
+    <!-- Top line: buttons, 2nd progress indicator -->
+    <ImageButton
+        android:id="@+id/back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/button_back"
+        style="@android:style/Widget.Button.Small"
+        android:src="@drawable/btn_reverse"
+        android:layout_toLeftOf="@+id/pause"
+        />
+
+    <ImageButton
+        android:id="@+id/pause"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/button_pause"
+        style="@android:style/Widget.Button.Small"
+        android:src="@drawable/btn_pause"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        />
+
+    <ImageButton
+        android:id="@+id/play"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/button_play"
+        style="@android:style/Widget.Button.Small"
+        android:src="@drawable/btn_play"
+        android:layout_toRightOf="@+id/pause"
+        />
+
+    <ProgressBar
+        android:id="@+id/progress2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/pause"
+        android:layout_alignBottom="@id/pause"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="4dp"
+        android:visibility="gone"
+        android:animationResolution="300"
+        />
+<!-- 	        style="@android:style/Widget.ProgressBar.Small"
+  This style doesn't honor the animation resolution, so is unusable.
+-->
+
+    <!-- Middle line: seek bar -->
+    <SeekBar
+        android:id="@+id/replay_location"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/pause"
+        />
+
+    <!-- Bottom line: info text -->
+    <TextView
+        android:id="@+id/move_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/replay_location"
+        android:layout_marginBottom="2dp"
+        />
+
+    <TextView
+        android:id="@+id/timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="right"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/replay_location"
+        android:layout_marginBottom="2dp"
+        android:layout_marginRight="4dp"
+        />
+
+</RelativeLayout>

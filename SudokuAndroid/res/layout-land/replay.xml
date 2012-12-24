@@ -5,17 +5,19 @@
     >
 
     <include layout="@layout/replay_frame"
+        android:id="@+id/replay_frame"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_above="@+id/replay_controls"
+        android:layout_height="match_parent"
         android:padding="2dp"
         />
 
     <include layout="@layout/replay_controls"
         android:id="@+id/replay_controls"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_centerVertical="true"
+        android:layout_toRightOf="@+id/replay_frame"
+        android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
         />
 
