@@ -273,6 +273,7 @@ public class PuzzleListFragment extends FragmentBase {
     }
 
     @Override public long getItemId(int position) {
+      if (this.getCount() <= position) return -1;
       return getItem(position)._id;
     }
 

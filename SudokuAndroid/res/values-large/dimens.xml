@@ -1,0 +1,4 @@
+<resources>
+    <dimen name="sudoku_view_padding">40dp</dimen>
+    <dimen name="replay_view_padding">80dp</dimen>
+</resources>

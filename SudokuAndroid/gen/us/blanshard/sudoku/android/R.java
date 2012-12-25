@@ -9,33 +9,13 @@ package us.blanshard.sudoku.android;
 
 public final class R {
     public static final class attr {
-        /** <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
-or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-         */
-        public static final int actionbarCompatItemHomeStyle=0x7f010002;
-        /** <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
-or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-         */
-        public static final int actionbarCompatItemStyle=0x7f010001;
-        /** <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
-or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-         */
-        public static final int actionbarCompatProgressIndicatorStyle=0x7f010003;
-        /** <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
-or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-         */
-        public static final int actionbarCompatTitleStyle=0x7f010000;
-        /** <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
-or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-         */
-        public static final int borderDrawable=0x7f010005;
-        /** <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
-or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-         */
-        public static final int maskDrawable=0x7f010004;
     }
     public static final class color {
         public static final int trail_count_color=0x7f050000;
+    }
+    public static final class dimen {
+        public static final int replay_view_padding=0x7f060001;
+        public static final int sudoku_view_padding=0x7f060000;
     }
     public static final class drawable {
         public static final int btn_pause=0x7f020000;
@@ -75,65 +55,60 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int menu_undo_all=0x7f020022;
     }
     public static final class id {
-        public static final int actionbar_compat=0x7f060000;
-        public static final int actionbar_compat_item_refresh=0x7f060003;
-        public static final int actionbar_compat_item_refresh_progress=0x7f060002;
-        public static final int actionbar_compat_title=0x7f060001;
-        public static final int already_have_notice=0x7f060005;
-        public static final int back=0x7f060019;
-        public static final int board_fragment=0x7f060016;
-        public static final int capture_play=0x7f060008;
-        public static final int capture_save=0x7f060009;
-        public static final int capture_source=0x7f060006;
-        public static final int edit_trail_toggle=0x7f060023;
-        public static final int info_content=0x7f060010;
-        public static final int info_fragment=0x7f060011;
-        public static final int info_grid=0x7f06000a;
-        public static final int list_fragment=0x7f060013;
-        public static final int list_item_grid=0x7f060014;
-        public static final int list_item_label=0x7f060015;
-        public static final int menu_apply=0x7f060039;
-        public static final int menu_capture_puzzle=0x7f060030;
-        public static final int menu_clear=0x7f060038;
-        public static final int menu_give_up=0x7f06002e;
-        public static final int menu_list_puzzles=0x7f060037;
-        public static final int menu_new_trail=0x7f06002a;
-        public static final int menu_play=0x7f060031;
-        public static final int menu_prefs=0x7f06002f;
-        public static final int menu_redo=0x7f060029;
-        public static final int menu_redo_to_end=0x7f06002c;
-        public static final int menu_refresh=0x7f060004;
-        public static final int menu_resume_replay=0x7f06003a;
-        public static final int menu_skip=0x7f06002d;
-        public static final int menu_sort_by_elapsed=0x7f060034;
-        public static final int menu_sort_by_number=0x7f060033;
-        public static final int menu_sort_by_time=0x7f060035;
-        public static final int menu_sort_by_vote=0x7f060036;
-        public static final int menu_sort_list=0x7f060032;
-        public static final int menu_undo=0x7f060028;
-        public static final int menu_undo_to_start=0x7f06002b;
-        public static final int move_number=0x7f06001e;
-        public static final int pause=0x7f06001a;
-        public static final int play=0x7f06001b;
-        public static final int progress=0x7f060021;
-        public static final int progress2=0x7f06001c;
-        public static final int puzzles=0x7f060012;
-        public static final int radio_no_vote=0x7f06000d;
-        public static final int radio_vote_down=0x7f06000f;
-        public static final int radio_vote_up=0x7f06000e;
-        public static final int replay_controls=0x7f060017;
-        public static final int replay_frame=0x7f060018;
-        public static final int replay_location=0x7f06001d;
-        public static final int replay_view=0x7f060020;
-        public static final int sudoku_frame=0x7f060024;
-        public static final int sudoku_view=0x7f060007;
-        public static final int timer=0x7f06001f;
-        public static final int trail_item_checkbox=0x7f060027;
-        public static final int trail_item_count=0x7f060026;
-        public static final int trail_item_label=0x7f060025;
-        public static final int trails=0x7f060022;
-        public static final int vote_group=0x7f06000c;
-        public static final int vote_layout=0x7f06000b;
+        public static final int already_have_notice=0x7f090000;
+        public static final int back=0x7f090014;
+        public static final int board_fragment=0x7f090011;
+        public static final int capture_play=0x7f090003;
+        public static final int capture_save=0x7f090004;
+        public static final int capture_source=0x7f090001;
+        public static final int edit_trail_toggle=0x7f09001e;
+        public static final int info_content=0x7f09000b;
+        public static final int info_fragment=0x7f09000c;
+        public static final int info_grid=0x7f090005;
+        public static final int list_fragment=0x7f09000e;
+        public static final int list_item_grid=0x7f09000f;
+        public static final int list_item_label=0x7f090010;
+        public static final int menu_apply=0x7f090034;
+        public static final int menu_capture_puzzle=0x7f09002b;
+        public static final int menu_clear=0x7f090033;
+        public static final int menu_give_up=0x7f090029;
+        public static final int menu_list_puzzles=0x7f090032;
+        public static final int menu_new_trail=0x7f090025;
+        public static final int menu_play=0x7f09002c;
+        public static final int menu_prefs=0x7f09002a;
+        public static final int menu_redo=0x7f090024;
+        public static final int menu_redo_to_end=0x7f090027;
+        public static final int menu_resume_replay=0x7f090035;
+        public static final int menu_skip=0x7f090028;
+        public static final int menu_sort_by_elapsed=0x7f09002f;
+        public static final int menu_sort_by_number=0x7f09002e;
+        public static final int menu_sort_by_time=0x7f090030;
+        public static final int menu_sort_by_vote=0x7f090031;
+        public static final int menu_sort_list=0x7f09002d;
+        public static final int menu_undo=0x7f090023;
+        public static final int menu_undo_to_start=0x7f090026;
+        public static final int move_number=0x7f090019;
+        public static final int pause=0x7f090015;
+        public static final int play=0x7f090016;
+        public static final int progress=0x7f09001c;
+        public static final int progress2=0x7f090017;
+        public static final int puzzles=0x7f09000d;
+        public static final int radio_no_vote=0x7f090008;
+        public static final int radio_vote_down=0x7f09000a;
+        public static final int radio_vote_up=0x7f090009;
+        public static final int replay_controls=0x7f090013;
+        public static final int replay_frame=0x7f090012;
+        public static final int replay_location=0x7f090018;
+        public static final int replay_view=0x7f09001b;
+        public static final int sudoku_frame=0x7f09001f;
+        public static final int sudoku_view=0x7f090002;
+        public static final int timer=0x7f09001a;
+        public static final int trail_item_checkbox=0x7f090022;
+        public static final int trail_item_count=0x7f090021;
+        public static final int trail_item_label=0x7f090020;
+        public static final int trails=0x7f09001d;
+        public static final int vote_group=0x7f090007;
+        public static final int vote_layout=0x7f090006;
     }
     public static final class layout {
         public static final int board=0x7f030000;
@@ -248,100 +223,4 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
     public static final class xml {
         public static final int preferences=0x7f040000;
     }
-    public static final class styleable {
-        /** Attributes that can be used with a AppTheme.
-           <p>Includes the following attributes:</p>
-           <table>
-           <colgroup align="left" />
-           <colgroup align="left" />
-           <tr><th>Attribute</th><th>Description</th></tr>
-           <tr><td><code>{@link #AppTheme_actionbarCompatItemHomeStyle us.blanshard.sudoku.android:actionbarCompatItemHomeStyle}</code></td><td></td></tr>
-           <tr><td><code>{@link #AppTheme_actionbarCompatItemStyle us.blanshard.sudoku.android:actionbarCompatItemStyle}</code></td><td></td></tr>
-           <tr><td><code>{@link #AppTheme_actionbarCompatProgressIndicatorStyle us.blanshard.sudoku.android:actionbarCompatProgressIndicatorStyle}</code></td><td></td></tr>
-           <tr><td><code>{@link #AppTheme_actionbarCompatTitleStyle us.blanshard.sudoku.android:actionbarCompatTitleStyle}</code></td><td></td></tr>
-           </table>
-           @see #AppTheme_actionbarCompatItemHomeStyle
-           @see #AppTheme_actionbarCompatItemStyle
-           @see #AppTheme_actionbarCompatProgressIndicatorStyle
-           @see #AppTheme_actionbarCompatTitleStyle
-         */
-        public static final int[] AppTheme = {
-            0x7f010000, 0x7f010001, 0x7f010002, 0x7f010003
-        };
-        /**
-          <p>This symbol is the offset where the {@link us.blanshard.sudoku.android.R.attr#actionbarCompatItemHomeStyle}
-          attribute's value can be found in the {@link #AppTheme} array.
-
-
-          <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
-or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-          @attr name android:actionbarCompatItemHomeStyle
-        */
-        public static final int AppTheme_actionbarCompatItemHomeStyle = 2;
-        /**
-          <p>This symbol is the offset where the {@link us.blanshard.sudoku.android.R.attr#actionbarCompatItemStyle}
-          attribute's value can be found in the {@link #AppTheme} array.
-
-
-          <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
-or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-          @attr name android:actionbarCompatItemStyle
-        */
-        public static final int AppTheme_actionbarCompatItemStyle = 1;
-        /**
-          <p>This symbol is the offset where the {@link us.blanshard.sudoku.android.R.attr#actionbarCompatProgressIndicatorStyle}
-          attribute's value can be found in the {@link #AppTheme} array.
-
-
-          <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
-or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-          @attr name android:actionbarCompatProgressIndicatorStyle
-        */
-        public static final int AppTheme_actionbarCompatProgressIndicatorStyle = 3;
-        /**
-          <p>This symbol is the offset where the {@link us.blanshard.sudoku.android.R.attr#actionbarCompatTitleStyle}
-          attribute's value can be found in the {@link #AppTheme} array.
-
-
-          <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
-or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-          @attr name android:actionbarCompatTitleStyle
-        */
-        public static final int AppTheme_actionbarCompatTitleStyle = 0;
-        /** Attributes that can be used with a BezelImageView.
-           <p>Includes the following attributes:</p>
-           <table>
-           <colgroup align="left" />
-           <colgroup align="left" />
-           <tr><th>Attribute</th><th>Description</th></tr>
-           <tr><td><code>{@link #BezelImageView_borderDrawable us.blanshard.sudoku.android:borderDrawable}</code></td><td></td></tr>
-           <tr><td><code>{@link #BezelImageView_maskDrawable us.blanshard.sudoku.android:maskDrawable}</code></td><td></td></tr>
-           </table>
-           @see #BezelImageView_borderDrawable
-           @see #BezelImageView_maskDrawable
-         */
-        public static final int[] BezelImageView = {
-            0x7f010004, 0x7f010005
-        };
-        /**
-          <p>This symbol is the offset where the {@link us.blanshard.sudoku.android.R.attr#borderDrawable}
-          attribute's value can be found in the {@link #BezelImageView} array.
-
-
-          <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
-or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-          @attr name android:borderDrawable
-        */
-        public static final int BezelImageView_borderDrawable = 1;
-        /**
-          <p>This symbol is the offset where the {@link us.blanshard.sudoku.android.R.attr#maskDrawable}
-          attribute's value can be found in the {@link #BezelImageView} array.
-
-
-          <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
-or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-          @attr name android:maskDrawable
-        */
-        public static final int BezelImageView_maskDrawable = 0;
-    };
 }

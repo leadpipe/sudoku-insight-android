@@ -29,9 +29,9 @@ END
       - <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     - for getting device properties/model name:
       - freely available as android.os.Build.MODEL (and possibly MANUFACTURER)
-*** TODO Make replay view rotate properly
-*** TODO Make replay view sized reasonably for tablet
-*** TODO Try out Switch for trail entry mode indicator
+*** DONE Make replay view rotate properly
+*** DONE Make replay view sized reasonably for tablets
+*** DONE Try out Switch for trail entry mode indicator -- spot is too small
 *** TODO Finish adding "up" behavior to all activities
 *** TODO Make icons for launcher, home
 *** TODO Rewrite prefs activity to use new APIs

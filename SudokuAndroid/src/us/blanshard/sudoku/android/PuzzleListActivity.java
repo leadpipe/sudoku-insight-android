@@ -62,6 +62,10 @@ public class PuzzleListActivity extends ActivityBase
     getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
     getActionBar().setListNavigationCallbacks(mCollectionAdapter, this);
     mListFragment.setOnItemClickListener(this);
+  }
+
+  @Override protected void onPostCreate(Bundle savedInstanceState) {
+    super.onPostCreate(savedInstanceState);
     applyExtras();
   }
 

@@ -3,17 +3,20 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="80dp"
     android:gravity="center"
     >
 
     <include layout="@layout/sudoku_frame"
-	    android:layout_width="400dp"
-	    android:layout_height="400dp"
+	    android:layout_width="480dp"
+	    android:layout_height="wrap_content"
+	    android:layout_gravity="bottom|center_horizontal"
         />
+
     <include layout="@layout/rest_of_board"
 	    android:layout_width="400dp"
-	    android:layout_height="400dp"
+	    android:layout_height="0dp"
+	    android:layout_weight="1"
+	    android:layout_gravity="top|center_horizontal"
         />
 
 </LinearLayout>
