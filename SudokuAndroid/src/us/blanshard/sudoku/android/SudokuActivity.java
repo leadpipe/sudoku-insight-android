@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.WindowManager;
 
 public class SudokuActivity extends ActivityBase {
   private static final boolean STRICT = true;
@@ -29,6 +30,7 @@ public class SudokuActivity extends ActivityBase {
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
+    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     mBoardFragment = (SudokuFragment) getFragmentManager().findFragmentById(R.id.board_fragment);
 
     if (STRICT) {

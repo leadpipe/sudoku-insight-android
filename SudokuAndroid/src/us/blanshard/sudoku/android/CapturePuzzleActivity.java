@@ -30,6 +30,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -54,6 +55,8 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.capture);
+    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
     mSudokuView = (SudokuView) findViewById(R.id.sudoku_view);
     mCaptureSource = (AutoCompleteTextView) findViewById(R.id.capture_source);
     mPlay = (Button) findViewById(R.id.capture_play);

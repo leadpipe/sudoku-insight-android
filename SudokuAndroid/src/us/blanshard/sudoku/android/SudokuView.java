@@ -148,7 +148,6 @@ public class SudokuView extends View {
 
   public void setEditable(boolean editable) {
     mEditable = mGame != null && editable;
-    setKeepScreenOn(mEditable);
   }
 
   public void setBrokenLocations(Collection<Location> broken) {
