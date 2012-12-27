@@ -33,8 +33,12 @@ END
 *** DONE Make replay view sized reasonably for tablets
 *** DONE Try out Switch for trail entry mode indicator -- spot is too small
 *** DONE Try again to keep the screen on
+*** TODO Fix replay layout on squarish screens
+    - controls are being pushed below the bottom
+*** TODO Move undo/redo back into the controls ribbon for replay
 *** TODO Finish adding "up" behavior to all activities
-*** TODO Make icons for launcher, home
+    - Hmm, not sure we want one for the capture activity
+*** DONE Make icon for launcher
 *** TODO Rewrite prefs activity to use new APIs
 *** TODO Kill the prefs for individual symmetries: just use them all
     - Add default stream based on hash of installation ID
@@ -59,6 +63,9 @@ END
 *** TODO Figure out why the progress indicator stops
     - Profile
 *** TODO Give visual indication when try to set an unsettable location
+
+** Publishing the app
+*** TODO Make other graphics for play store
 
 ** Improper (non-unique) puzzles
 *** TODO Experiment with improper puzzles
