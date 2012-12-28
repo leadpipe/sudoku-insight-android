@@ -20,29 +20,16 @@ END
 * App
 
 ** App/UI cleanups
-*** DONE Gather the permissions we need
-    - they're declared in android.Manifest.permission
-    - for talking to the service:
-      - <uses-permission android:name="android.permission.INTERNET" />
-      - <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    - for getting access to the user's Google accounts:
-      - <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    - for getting device properties/model name:
-      - freely available as android.os.Build.MODEL (and possibly MANUFACTURER)
-*** DONE Make replay view rotate properly
-*** DONE Make replay view sized reasonably for tablets
-*** DONE Try out Switch for trail entry mode indicator -- spot is too small
-*** DONE Try again to keep the screen on
-*** TODO Fix replay layout on squarish screens
-    - controls are being pushed below the bottom
-*** TODO Move undo/redo back into the controls ribbon for replay
-*** TODO Finish adding "up" behavior to all activities
-    - Hmm, not sure we want one for the capture activity
-*** DONE Make icon for launcher
 *** TODO Rewrite prefs activity to use new APIs
-*** TODO Kill the prefs for individual symmetries: just use them all
-    - Add default stream based on hash of installation ID
-*** TODO Acknowledge icons from the Noun Project in Settings/About
+    - All the prefs we need:
+      - google account
+      - improper puzzles OK
+      - stream number
+*** TODO Add Help activity
+    - Add to standard action overflow
+    - Make sure it's available from every other activity, even prefs
+    - Make it contextual
+*** TODO Acknowledge icons from the Noun Project in Help/About
     - <a href="http://thenounproject.com/noun/play/#icon-No6506" target="_blank">Play</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
       - for play and reverse
     - <a href="http://thenounproject.com/noun/pause/#icon-No6413" target="_blank">Pause</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
@@ -90,6 +77,10 @@ END
     - when the app is slightly off the ground, sign up for Cloud Endpoints at http://endpoints-trusted-tester.appspot.com/
 
 ** Replay cleanups
+*** TODO Fix replay layout on squarish screens
+    - controls are being pushed below the bottom
+    - hmm, today it isn't happening?
+*** TODO Move undo/redo back into the controls ribbon for replay
 *** TODO Try making selection color darker
 *** TODO Try not minimizing disproofs until they're selected
 *** TODO Why does the first trail in puzzle 14 switch errors?
