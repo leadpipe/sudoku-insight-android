@@ -49,8 +49,8 @@ public abstract class ActivityBase extends Activity {
         startActivity(intent);
         return true;
       }
-      case R.id.menu_prefs: {
-        Intent intent = new Intent(this, PrefsActivity.class);
+      case R.id.menu_settings: {
+        Intent intent = new Intent(this, SettingsActivity.class);
         startActivity(intent);
         return true;
       }

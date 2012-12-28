@@ -57,7 +57,7 @@ limitations under the License.
             android:uiOptions="splitActionBarWhenNarrow"
             />
         <activity
-            android:name=".PrefsActivity"
+            android:name=".SettingsActivity"
             android:label="@string/app_short_name"
             />
         <activity

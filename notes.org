@@ -24,7 +24,6 @@ END
     - All the prefs we need:
       - google account
       - improper puzzles OK
-      - stream number
 *** TODO Add Help activity
     - Add to standard action overflow
     - Make sure it's available from every other activity, even prefs

@@ -24,10 +24,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
+import android.preference.PreferenceManager;
 
 import com.google.common.base.Enums;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -41,6 +43,8 @@ import java.util.Set;
  * @author Luke Blanshard
  */
 public class Prefs {
+  private static final String USER_ID = "googleUserId";
+  private static final String PROPER_ONLY = "properOnly";
   private static final char SEP = ':';
   private static final String GENERATOR = "generator";
   private static final String SYMMETRIES = "symmetries";
@@ -50,6 +54,7 @@ public class Prefs {
   private static Prefs sInstance;
 
   private Prefs(Context context) {
+    PreferenceManager.setDefaultValues(context, "prefs", 0, R.xml.preferences, false);
     mPrefs = context.getSharedPreferences("prefs", 0);
   }
 
@@ -86,6 +91,18 @@ public class Prefs {
     SharedPreferences.Editor prefs = mPrefs.edit();
     prefs.putInt(SORT, sort);
     prefs.apply();
+  }
+
+  public boolean hasUserId() {
+    return !Strings.isNullOrEmpty(getUserId());
+  }
+
+  public String getUserId() {
+    return mPrefs.getString(USER_ID, "");
+  }
+
+  public boolean getProperOnly() {
+    return mPrefs.getBoolean(PROPER_ONLY, true);
   }
 
   public GenerationStrategy getGenerator() {

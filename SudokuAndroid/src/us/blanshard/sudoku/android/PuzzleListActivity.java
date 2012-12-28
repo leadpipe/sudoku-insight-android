@@ -94,16 +94,6 @@ public class PuzzleListActivity extends ActivityBase
         startActivity(upIntent);
         finish();
         return true;
-      case R.id.menu_capture_puzzle: {
-        Intent intent = new Intent(this, CapturePuzzleActivity.class);
-        startActivity(intent);
-        return true;
-      }
-      case R.id.menu_prefs: {
-        Intent intent = new Intent(this, PrefsActivity.class);
-        startActivity(intent);
-        return true;
-      }
     }
     return super.onOptionsItemSelected(item);
   }

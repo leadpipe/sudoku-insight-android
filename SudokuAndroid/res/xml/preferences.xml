@@ -1,69 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-
-    <PreferenceCategory android:title="@string/text_generation_options">
     
-	    <CheckBoxPreference
-	        android:key="randomGenerator"
-	        android:title="@string/check_random_variation"
-	        android:summaryOn="@string/check_random_variation_summary_on"
-	        android:summaryOff="@string/check_random_variation_summary_off"
-	        android:persistent="false"
-	        />
-	    
-    </PreferenceCategory>
-
-    <PreferenceCategory android:title="@string/text_symmetries">
-        
-        <CheckBoxPreference 
-            android:key="symmetry:CLASSIC"
-            android:title="@string/check_classic_symmetry"
-            android:summary="@string/check_classic_symmetry_summary"
-            android:persistent="false"
-            />
-        
-        <CheckBoxPreference 
-            android:key="symmetry:BLOCKWISE"
-            android:title="@string/check_blockwise_symmetry"
-            android:summary="@string/check_blockwise_symmetry_summary"
-            android:persistent="false"
-            />
-        
-        <CheckBoxPreference 
-            android:key="symmetry:MIRROR"
-            android:title="@string/check_mirror_symmetry"
-            android:summary="@string/check_mirror_symmetry_summary"
-            android:persistent="false"
-            />
-        
-        <CheckBoxPreference 
-            android:key="symmetry:DOUBLE_MIRROR"
-            android:title="@string/check_double_mirror_symmetry"
-            android:summary="@string/check_double_mirror_symmetry_summary"
-            android:persistent="false"
-            />
-        
-        <CheckBoxPreference 
-            android:key="symmetry:DIAGONAL"
-            android:title="@string/check_diagonal_symmetry"
-            android:summary="@string/check_diagonal_symmetry_summary"
-            android:persistent="false"
-            />
-        
-        <CheckBoxPreference 
-            android:key="symmetry:ROTATIONAL"
-            android:title="@string/check_rotational_symmetry"
-            android:summary="@string/check_rotational_symmetry_summary"
-            android:persistent="false"
-            />
-        
-        <CheckBoxPreference 
-            android:key="symmetry:RANDOM"
-            android:title="@string/check_random_symmetry"
-            android:summary="@string/check_random_symmetry_summary"
-            android:persistent="false"
-            />
-        
-    </PreferenceCategory>
+    <ListPreference
+        android:key="googleUserId"
+        android:title="@string/prefs_user_id"
+        android:defaultValue=""
+        />
+    
+    <CheckBoxPreference
+        android:key="properOnly"
+        android:title="@string/prefs_proper_only"
+        android:defaultValue="true"
+        android:summaryOn="@string/prefs_proper_desc"
+        android:summaryOff="@string/prefs_improper_desc"
+        />
     
 </PreferenceScreen>
