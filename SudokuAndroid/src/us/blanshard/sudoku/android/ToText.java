@@ -20,8 +20,8 @@ import static android.text.format.DateUtils.FORMAT_SHOW_WEEKDAY;
 import static android.text.format.DateUtils.MINUTE_IN_MILLIS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import us.blanshard.sudoku.android.Database.Game;
-import us.blanshard.sudoku.android.Database.GameState;
+import us.blanshard.sudoku.android.Database.Attempt;
+import us.blanshard.sudoku.android.Database.AttemptState;
 
 import android.content.Context;
 import android.text.Html;
@@ -94,32 +94,32 @@ public class ToText {
   }
 
   /**
-   * Returns a summary of the state of a game: queued, playing, abandoned, or
-   * solved, along with when this happened.
+   * Returns a summary of the state of an attempt: queued, playing, abandoned,
+   * or solved, along with when this happened.
    */
-  public static String gameSummaryHtml(Context context, Game game) {
-    return gameSummaryHtml(context, game, false);
+  public static String attemptSummaryHtml(Context context, Attempt attempt) {
+    return attemptSummaryHtml(context, attempt, false);
   }
     /**
-     * Returns a summary of the state of a game: queued, playing, abandoned, or
-     * solved, along with when this happened.
+     * Returns a summary of the state of an attempt: queued, playing, abandoned,
+     * or solved, along with when this happened.
      */
-  public static String gameSummaryHtml(Context context, Game game, boolean longTime) {
+  public static String attemptSummaryHtml(Context context, Attempt attempt, boolean longTime) {
     int resourceId;
-    switch (game.gameState) {
-      case UNSTARTED: resourceId = R.string.text_game_queued;  break;
-      case STARTED:   resourceId = R.string.text_game_playing; break;
-      case GAVE_UP:   resourceId = R.string.text_game_gave_up; break;
-      case FINISHED:  resourceId = R.string.text_game_solved;  break;
-      case SKIPPED:   resourceId = R.string.text_game_skipped; break;
+    switch (attempt.attemptState) {
+      case UNSTARTED: resourceId = R.string.text_attempt_queued;  break;
+      case STARTED:   resourceId = R.string.text_attempt_playing; break;
+      case GAVE_UP:   resourceId = R.string.text_attempt_gave_up; break;
+      case FINISHED:  resourceId = R.string.text_attempt_solved;  break;
+      case SKIPPED:   resourceId = R.string.text_attempt_skipped; break;
       default:
         throw new AssertionError();
     }
-    String elapsedTime = elapsedTime(game.elapsedMillis);
-    if (game.gameState == GameState.FINISHED)
+    String elapsedTime = elapsedTime(attempt.elapsedMillis);
+    if (attempt.attemptState == AttemptState.FINISHED)
       elapsedTime = "<b>" + elapsedTime + "</b>";
-    CharSequence when = longTime ? relativeDateTime(context, game.lastTime)
-        : dateTimeWithPreposition(context, game.lastTime);
+    CharSequence when = longTime ? relativeDateTime(context, attempt.lastTime)
+        : dateTimeWithPreposition(context, attempt.lastTime);
     return context.getString(resourceId, elapsedTime, when);
   }
 }

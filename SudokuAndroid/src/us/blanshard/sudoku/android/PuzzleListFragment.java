@@ -15,7 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import us.blanshard.sudoku.android.Database.Game;
+import us.blanshard.sudoku.android.Database.Attempt;
 
 import android.os.Bundle;
 import android.text.Html;
@@ -92,12 +92,12 @@ public class PuzzleListFragment extends FragmentBase {
       this.comparator = comparator;
     }
     static long elapsed(Database.Puzzle puzzle) {
-      if (puzzle.games.isEmpty()) return 0;
-      return puzzle.games.get(puzzle.games.size() - 1).elapsedMillis;
+      if (puzzle.attempts.isEmpty()) return 0;
+      return puzzle.attempts.get(puzzle.attempts.size() - 1).elapsedMillis;
     }
     static long time(Database.Puzzle puzzle) {
-      if (puzzle.games.isEmpty()) return 0;
-      return puzzle.games.get(puzzle.games.size() - 1).lastTime;
+      if (puzzle.attempts.isEmpty()) return 0;
+      return puzzle.attempts.get(puzzle.attempts.size() - 1).lastTime;
     }
 
     public final int itemId;
@@ -302,8 +302,8 @@ public class PuzzleListFragment extends FragmentBase {
         int resId = puzzle.vote < 0 ? R.string.text_vote_down : R.string.text_vote_up;
         sb.append(TextUtils.htmlEncode(getString(resId))).append("  ");
       }
-      if (!puzzle.games.isEmpty()) {
-        appendGameSummary(sb, puzzle.games.get(puzzle.games.size() - 1));
+      if (!puzzle.attempts.isEmpty()) {
+        appendAttemptSummary(sb, puzzle.attempts.get(puzzle.attempts.size() - 1));
         if (!puzzle.elements.isEmpty()) sb.append("<br>");
       }
       if (!puzzle.elements.isEmpty()) {
@@ -319,8 +319,8 @@ public class PuzzleListFragment extends FragmentBase {
       return sb.toString();
     }
 
-    private void appendGameSummary(StringBuilder sb, Game game) {
-      sb.append(ToText.gameSummaryHtml(getContext(), game));
+    private void appendAttemptSummary(StringBuilder sb, Attempt attempt) {
+      sb.append(ToText.attemptSummaryHtml(getContext(), attempt));
       sb.append(getString(R.string.text_sentence_end));
     }
   }

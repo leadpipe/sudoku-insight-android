@@ -15,7 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import static us.blanshard.sudoku.android.Extras.GAME_ID;
+import static us.blanshard.sudoku.android.Extras.ATTEMPT_ID;
 import static us.blanshard.sudoku.gen.Generator.NUM_STREAMS;
 
 import android.content.Context;
@@ -57,23 +57,23 @@ public class Prefs {
     return sInstance;
   }
 
-  public boolean hasCurrentGameId() {
-    return mPrefs.contains(GAME_ID);
+  public boolean hasCurrentAttemptId() {
+    return mPrefs.contains(ATTEMPT_ID);
   }
 
-  public long getCurrentGameId() {
-    return mPrefs.getLong(GAME_ID, -1);
+  public long getCurrentAttemptId() {
+    return mPrefs.getLong(ATTEMPT_ID, -1);
   }
 
-  public void setCurrentGameIdAsync(long gameId) {
+  public void setCurrentAttemptIdAsync(long attemptId) {
     SharedPreferences.Editor prefs = mPrefs.edit();
-    prefs.putLong(GAME_ID, gameId);
+    prefs.putLong(ATTEMPT_ID, attemptId);
     prefs.apply();
   }
 
-  public void removeCurrentGameIdAsync() {
+  public void removeCurrentAttemptIdAsync() {
     SharedPreferences.Editor prefs = mPrefs.edit();
-    prefs.remove(GAME_ID);
+    prefs.remove(ATTEMPT_ID);
     prefs.apply();
   }
 

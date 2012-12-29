@@ -19,7 +19,7 @@ import static us.blanshard.sudoku.android.SudokuView.MAX_VISIBLE_TRAILS;
 import static us.blanshard.sudoku.core.Numeral.number;
 import static us.blanshard.sudoku.core.Numeral.numeral;
 
-import us.blanshard.sudoku.android.Database.GameState;
+import us.blanshard.sudoku.android.Database.AttemptState;
 import us.blanshard.sudoku.android.SudokuView.OnMoveListener;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
@@ -91,10 +91,10 @@ public class SudokuFragment
 
   private static final long DB_UPDATE_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
-  private static int sUpdateGameCount;
+  private static int sUpdateAttemptCount;
 
   private UndoStack mUndoStack = new UndoStack();
-  private Database.Game mDbGame;
+  private Database.Attempt mAttempt;
   private Sudoku mGame;
   private boolean mResumed;
   private Grid.State mState;
@@ -123,10 +123,10 @@ public class SudokuFragment
     }
   };
 
-  private final Runnable gameSaver = new Runnable() {
+  private final Runnable attemptSaver = new Runnable() {
     @Override public void run() {
-      if (updateDbGame(false) && mGame.isRunning()) {
-        new SaveGame(SudokuFragment.this).execute(mDbGame.clone());
+      if (updateAttempt(false) && mGame.isRunning()) {
+        new SaveAttempt(SudokuFragment.this).execute(mAttempt.clone());
         mSudokuView.postDelayed(this, DB_UPDATE_MILLIS);
       }
     }
@@ -152,43 +152,43 @@ public class SudokuFragment
   }
 
   public long getPuzzleId() {
-    if (mDbGame == null) return 0;
-    return mDbGame.puzzleId;
+    if (mAttempt == null) return 0;
+    return mAttempt.puzzleId;
   }
 
-  private void setDbGame(Database.Game dbGame) {
-    mDbGame = dbGame;
-    if (dbGame == null) {
+  private void setAttempt(Database.Attempt attempt) {
+    mAttempt = attempt;
+    if (attempt == null) {
       setGame(null);
       return;
     }
-    if (dbGame.gameState == GameState.UNSTARTED) {
-      Database.startUnstartedGame(dbGame);
+    if (attempt.attemptState == AttemptState.UNSTARTED) {
+      Database.startUnstartedAttempt(attempt);
     }
-    new CheckNextGame(this).execute(dbGame._id);
+    new CheckNextAttempt(this).execute(attempt._id);
     try {
       Sudoku game = new Sudoku(
-          dbGame.clues, mRegistry, GameJson.toHistory(dbGame.history), dbGame.elapsedMillis);
-      getActivity().setTitle(getString(R.string.text_puzzle_number, dbGame.puzzleId));
+          attempt.clues, mRegistry, GameJson.toHistory(attempt.history), attempt.elapsedMillis);
+      getActivity().setTitle(getString(R.string.text_puzzle_number, attempt.puzzleId));
       setGame(game);
-      if (dbGame.uiState != null) {
-        JSONObject uiState = new JSONObject(dbGame.uiState);
+      if (attempt.uiState != null) {
+        JSONObject uiState = new JSONObject(attempt.uiState);
         mUndoStack = GameJson.toUndoStack(uiState.getJSONObject("undo"), new GameJson.CommandFactory(mGame));
         mSudokuView.setDefaultChoice(numeral(uiState.getInt("defaultChoice")));
         restoreTrails(uiState.getJSONArray("trailOrder"), uiState.getInt("numVisibleTrails"),
             uiState.optInt("numOffTrails"));
         mEditTrailToggle.setChecked(uiState.getBoolean("trailActive"));
       }
-      if (dbGame.gameState.isInPlay()) {
-        mPrefs.setCurrentGameIdAsync(dbGame._id);
+      if (attempt.attemptState.isInPlay()) {
+        mPrefs.setCurrentAttemptIdAsync(attempt._id);
       }
     } catch (JSONException e) {
-      Log.e("SudokuFragment", "Unable to restore state from puzzle #" + dbGame.puzzleId, e);
+      Log.e("SudokuFragment", "Unable to restore state from puzzle #" + attempt.puzzleId, e);
       setGame(null);
     }
-    if (dbGame.elements != null && !dbGame.elements.isEmpty()) {
+    if (attempt.elements != null && !attempt.elements.isEmpty()) {
       String colls = Joiner.on(getString(R.string.text_collection_separator)).join(
-          Iterables.transform(dbGame.elements, new Function<Database.Element, String>() {
+          Iterables.transform(attempt.elements, new Function<Database.Element, String>() {
               @Override public String apply(Database.Element element) {
                 return ToText.collectionNameAndTimeText(getActivity(), element);
               }
@@ -215,7 +215,7 @@ public class SudokuFragment
     }
     stateChanged();
     mProgress.setVisibility(View.GONE);
-    mSudokuView.postDelayed(gameSaver, DB_UPDATE_MILLIS);
+    mSudokuView.postDelayed(attemptSaver, DB_UPDATE_MILLIS);
   }
 
   public void showError(String s) {
@@ -240,7 +240,7 @@ public class SudokuFragment
             .setPositiveButton(skip ? R.string.button_skip: R.string.button_give_up, new OnClickListener() {
                 @Override public void onClick(DialogInterface dialog, int which) {
                   dialog.dismiss();
-                  mDbGame.gameState = skip ? GameState.SKIPPED : GameState.GAVE_UP;
+                  mAttempt.attemptState = skip ? AttemptState.SKIPPED : AttemptState.GAVE_UP;
                   if (skip) skipToNextPuzzle();
                   else transitionToInfoPage();
                 }
@@ -318,60 +318,62 @@ public class SudokuFragment
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    long gameId = 0;
-    if (getActivity().getIntent().hasExtra(Extras.GAME_ID)) {
-      gameId = getActivity().getIntent().getExtras().getLong(Extras.GAME_ID);
-    } else if (savedInstanceState != null && savedInstanceState.containsKey(Extras.GAME_ID)) {
-      gameId = savedInstanceState.getLong(Extras.GAME_ID);
-    } else if (mPrefs.hasCurrentGameId()) {
-      gameId = mPrefs.getCurrentGameId();
+    long attemptId = 0;
+    if (getActivity().getIntent().hasExtra(Extras.ATTEMPT_ID)) {
+      attemptId = getActivity().getIntent().getExtras().getLong(Extras.ATTEMPT_ID);
+    } else if (savedInstanceState != null && savedInstanceState.containsKey(Extras.ATTEMPT_ID)) {
+      attemptId = savedInstanceState.getLong(Extras.ATTEMPT_ID);
+    } else if (mPrefs.hasCurrentAttemptId()) {
+      attemptId = mPrefs.getCurrentAttemptId();
     }
-    new FetchFindOrMakePuzzle(this).execute(gameId);
+    new FetchFindOrMakePuzzle(this).execute(attemptId);
     mProgress.setVisibility(View.VISIBLE);
   }
 
   @Override public void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
-    saveGameFromUiThread();
-    if (mDbGame != null) outState.putLong(Extras.GAME_ID, mDbGame._id);
+    saveAttemptFromUiThread();
+    if (mAttempt != null) outState.putLong(Extras.ATTEMPT_ID, mAttempt._id);
   }
 
-  private boolean updateDbGame(boolean suspend) {
-    ++sUpdateGameCount;
+  private boolean updateAttempt(boolean suspend) {
+    ++sUpdateAttemptCount;
     if (mGame == null) return false;
     if (suspend) mGame.suspend();
-    mDbGame.history = GameJson.fromHistory(mGame.getHistory()).toString();
-    mDbGame.elapsedMillis = mGame.elapsedMillis();
-    if (mDbGame.gameState.isInPlay()) {
+    mAttempt.history = GameJson.fromHistory(mGame.getHistory()).toString();
+    mAttempt.elapsedMillis = mGame.elapsedMillis();
+    mAttempt.numMoves = mGame.getHistory().size();
+    mAttempt.numTrails = mGame.getNumTrails();
+    if (mAttempt.attemptState.isInPlay()) {
       try {
-        mDbGame.uiState = makeUiState().toString();
+        mAttempt.uiState = makeUiState().toString();
       } catch (JSONException e) {
         Log.e("SudokuFragment", "Unable to save UI state", e);
       }
     } else {
-      mDbGame.uiState = null;
+      mAttempt.uiState = null;
     }
     return true;
   }
 
-  private void saveGameFromUiThread() {
-    if (updateDbGame(true)) {
+  private void saveAttemptFromUiThread() {
+    if (updateAttempt(true)) {
       ThreadPolicy policy = StrictMode.allowThreadDiskWrites();
       try {
-        saveGame(mDb, mDbGame, sUpdateGameCount);
+        saveAttempt(mDb, mAttempt, sUpdateAttemptCount);
       } finally {
         StrictMode.setThreadPolicy(policy);
       }
     }
   }
 
-  private static synchronized void saveGame(Database db, Database.Game game, int count) {
-    if (count == sUpdateGameCount)
-      db.updateGame(game);
+  private static synchronized void saveAttempt(Database db, Database.Attempt attempt, int count) {
+    if (count == sUpdateAttemptCount)
+      db.updateAttempt(attempt);
   }
 
-  private static Database.Game generateAndStorePuzzle(Database db, Prefs prefs) {
-    Database.Game answer;
+  private static Database.Attempt generateAndStorePuzzle(Database db, Prefs prefs) {
+    Database.Attempt answer;
     Calendar cal = Calendar.getInstance();
     JSONObject props;
     try {
@@ -381,11 +383,11 @@ public class SudokuFragment
       throw new RuntimeException(e);
     }
     long id = db.addGeneratedPuzzle(props);
-    answer = db.getCurrentGameForPuzzle(id);
+    answer = db.getCurrentAttemptForPuzzle(id);
     return answer;
   }
 
-  private static class FetchFindOrMakePuzzle extends WorkerFragment.Task<SudokuFragment, Long, Void, Database.Game> {
+  private static class FetchFindOrMakePuzzle extends WorkerFragment.Task<SudokuFragment, Long, Void, Database.Attempt> {
     private final Database mDb;
     private final Prefs mPrefs;
 
@@ -395,52 +397,52 @@ public class SudokuFragment
       mPrefs = fragment.mPrefs;
     }
 
-    @Override protected Database.Game doInBackground(Long... params) {
-      Database.Game answer = mDb.getGame(params[0]);
-      if (answer == null || !answer.gameState.isInPlay())
-        answer = mDb.getFirstOpenGame();
+    @Override protected Database.Attempt doInBackground(Long... params) {
+      Database.Attempt answer = mDb.getAttempt(params[0]);
+      if (answer == null || !answer.attemptState.isInPlay())
+        answer = mDb.getFirstOpenAttempt();
       if (answer == null)
         answer = generateAndStorePuzzle(mDb, mPrefs);
       return answer;
     }
 
-    @Override protected void onPostExecute(SudokuFragment fragment, Database.Game dbGame) {
-      fragment.setDbGame(dbGame);
+    @Override protected void onPostExecute(SudokuFragment fragment, Database.Attempt attempt) {
+      fragment.setAttempt(attempt);
     }
   }
 
-  private static class CheckNextGame extends WorkerFragment.Task<SudokuFragment, Long, Void, Void> {
+  private static class CheckNextAttempt extends WorkerFragment.Task<SudokuFragment, Long, Void, Void> {
     private final Database mDb;
     private final Prefs mPrefs;
 
-    CheckNextGame(SudokuFragment fragment) {
+    CheckNextAttempt(SudokuFragment fragment) {
       super(fragment);
       mDb = fragment.mDb;
       mPrefs = fragment.mPrefs;
     }
 
     @Override protected Void doInBackground(Long... params) {
-      int numOpenGames = mDb.getNumOpenGames();
-      boolean hasNext = numOpenGames > 1
-          || numOpenGames == 1 && (params[0] == null || mDb.getFirstOpenGame()._id != params[0]);
+      int numOpenAttempts = mDb.getNumOpenAttempts();
+      boolean hasNext = numOpenAttempts > 1
+          || numOpenAttempts == 1 && (params[0] == null || mDb.getFirstOpenAttempt()._id != params[0]);
       if (!hasNext)
         generateAndStorePuzzle(mDb, mPrefs);
       return null;
     }
   }
 
-  private static class SaveGame extends WorkerFragment.Task<SudokuFragment, Database.Game, Void, Void> {
+  private static class SaveAttempt extends WorkerFragment.Task<SudokuFragment, Database.Attempt, Void, Void> {
     private final Database mDb;
-    private final int mUpdateGameCount;
+    private final int mUpdateAttemptCount;
 
-    SaveGame(SudokuFragment fragment) {
+    SaveAttempt(SudokuFragment fragment) {
       super(fragment, Priority.BACKGROUND, Independence.FREE);
       mDb = fragment.mDb;
-      mUpdateGameCount = sUpdateGameCount;
+      mUpdateAttemptCount = sUpdateAttemptCount;
     }
 
-    @Override protected Void doInBackground(Database.Game... params) {
-      saveGame(mDb, params[0], mUpdateGameCount);
+    @Override protected Void doInBackground(Database.Attempt... params) {
+      saveAttempt(mDb, params[0], mUpdateAttemptCount);
       return null;
     }
   }
@@ -448,9 +450,9 @@ public class SudokuFragment
   void gameShowing(boolean showing) {
     if (mResumed = showing) {
       if (mGame != null && mState != Grid.State.SOLVED) mGame.resume();
-      new CheckNextGame(this).execute(mDbGame == null ? null : mDbGame._id);
+      new CheckNextAttempt(this).execute(mAttempt == null ? null : mAttempt._id);
     } else {
-      saveGameFromUiThread();
+      saveAttemptFromUiThread();
       cancelStatus();
     }
   }
@@ -620,20 +622,20 @@ public class SudokuFragment
   // Private methods
 
   private void transitionToInfoPage() {
-    mPrefs.removeCurrentGameIdAsync();
-    saveGameFromUiThread();
+    mPrefs.removeCurrentAttemptIdAsync();
+    saveAttemptFromUiThread();
     Intent intent = new Intent(getActivity(), PuzzleListActivity.class);
     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-    intent.putExtra(Extras.PUZZLE_ID, mDbGame.puzzleId);
+    intent.putExtra(Extras.PUZZLE_ID, mAttempt.puzzleId);
     intent.putExtra(Extras.SHOW_INFO, true);
     startActivity(intent);
     getActivity().finish();
   }
 
   private void skipToNextPuzzle() {
-    mPrefs.removeCurrentGameIdAsync();
-    if (updateDbGame(true)) new SaveGame(this).execute(mDbGame);
-    setDbGame(null);
+    mPrefs.removeCurrentAttemptIdAsync();
+    if (updateAttempt(true)) new SaveAttempt(this).execute(mAttempt);
+    setAttempt(null);
     new FetchFindOrMakePuzzle(this).execute(0L);
     mProgress.setVisibility(View.VISIBLE);
   }
@@ -762,7 +764,7 @@ public class SudokuFragment
         mState = Grid.State.SOLVED;
         mSudokuView.setEditable(false);
         mGame.suspend();
-        mDbGame.gameState = GameState.FINISHED;
+        mAttempt.attemptState = AttemptState.FINISHED;
         stateChanged();
       } else {
         mState = Grid.State.BROKEN;

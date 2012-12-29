@@ -18,8 +18,8 @@ package us.blanshard.sudoku.android;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 import us.blanshard.sudoku.android.Database.Element;
-import us.blanshard.sudoku.android.Database.Game;
-import us.blanshard.sudoku.android.Database.GameState;
+import us.blanshard.sudoku.android.Database.Attempt;
+import us.blanshard.sudoku.android.Database.AttemptState;
 import us.blanshard.sudoku.android.Database.Puzzle;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
@@ -152,8 +152,8 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
 
   private boolean canVote() {
     if (mPuzzle != null)
-      for (Database.Game game : mPuzzle.games)
-        if (game.gameState == GameState.FINISHED)
+      for (Database.Attempt attempt : mPuzzle.attempts)
+        if (attempt.attemptState == AttemptState.FINISHED)
           return true;
     return false;
   }
@@ -178,8 +178,8 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
 
   private String makeContentHtml(Puzzle puzzle) {
     StringBuilder sb = new StringBuilder("<ul>");
-    for (Database.Game game : Lists.reverse(puzzle.games))
-      appendGameHtml(game, sb.append("<li>"));
+    for (Database.Attempt attempt : Lists.reverse(puzzle.attempts))
+      appendAttemptHtml(attempt, sb.append("<li>"));
     sb.append("</ul>");
     if (puzzle.source != null)
       sb.append(getString(R.string.text_source, TextUtils.htmlEncode(puzzle.source)))
@@ -203,12 +203,12 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
     return sb.toString();
   }
 
-  private void appendGameHtml(Game game, StringBuilder sb) {
-    sb.append(ToText.gameSummaryHtml(getActivity(), game, true))
+  private void appendAttemptHtml(Attempt attempt, StringBuilder sb) {
+    sb.append(ToText.attemptSummaryHtml(getActivity(), attempt, true))
         .append(getString(R.string.text_sentence_end));
-    if (game.gameState != GameState.UNSTARTED) {
+    if (attempt.attemptState != AttemptState.UNSTARTED) {
       try {
-        List<Move> history = GameJson.toHistory(game.history);
+        List<Move> history = GameJson.toHistory(attempt.history);
         int maxTrailId = -1;
         for (Move m : history)
           if (m.trailId > maxTrailId)
@@ -218,22 +218,22 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
       } catch (JSONException e) {
         Log.e(TAG, "Unexpected json problem", e);
       }
-      if (game.lastTime - game.startTime > game.elapsedMillis + MINUTES.toMillis(5)) {
+      if (attempt.lastTime - attempt.startTime > attempt.elapsedMillis + MINUTES.toMillis(5)) {
         sb.append("<br>")
             .append(TextUtils.htmlEncode(getString(
-                R.string.text_game_start_time,
-                ToText.relativeDateTime(getActivity(), game.startTime))));
+                R.string.text_attempt_start_time,
+                ToText.relativeDateTime(getActivity(), attempt.startTime))));
       }
     }
-    if (!game.gameState.isInPlay())
-      sb.append("<br><a href='" + Uris.REPLAY_URI_PREFIX).append(game._id).append("'>")
-          .append(TextUtils.htmlEncode(getString(R.string.text_game_replay)))
+    if (!attempt.attemptState.isInPlay())
+      sb.append("<br><a href='" + Uris.REPLAY_URI_PREFIX).append(attempt._id).append("'>")
+          .append(TextUtils.htmlEncode(getString(R.string.text_attempt_replay)))
           .append("</a>");
-    if (game.replayTime > 0)
+    if (attempt.replayTime > 0)
       sb.append("<br>")
           .append(TextUtils.htmlEncode(getString(
-              R.string.text_game_last_replayed,
-              ToText.relativeDateTime(getActivity(), game.replayTime))));
+              R.string.text_attempt_last_replayed,
+              ToText.relativeDateTime(getActivity(), attempt.replayTime))));
   }
 
   private void appendElementHtml(Element element, StringBuilder sb) {
@@ -269,12 +269,12 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
     }
 
     @Override protected Long doInBackground(Void... params) {
-      return mDb.getOpenGameForPuzzle(mPuzzleId)._id;
+      return mDb.getOpenAttemptForPuzzle(mPuzzleId)._id;
     }
 
-    @Override protected void onPostExecute(PuzzleInfoFragment fragment, Long gameId) {
+    @Override protected void onPostExecute(PuzzleInfoFragment fragment, Long attemptId) {
       Intent intent = new Intent(fragment.getActivity(), SudokuActivity.class);
-      intent.putExtra(Extras.GAME_ID, gameId);
+      intent.putExtra(Extras.ATTEMPT_ID, attemptId);
       intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
       fragment.startActivity(intent);
     }
@@ -290,7 +290,7 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
       } else if (url.startsWith(Uris.REPLAY_URI_PREFIX)) {
         String tail = url.substring(Uris.REPLAY_URI_PREFIX.length());
         Intent intent = new Intent(getActivity(), ReplayActivity.class);
-        intent.putExtra(Extras.GAME_ID, Long.parseLong(tail));
+        intent.putExtra(Extras.ATTEMPT_ID, Long.parseLong(tail));
         startActivity(intent);
       } else {
         Log.e(TAG, "Unexpected link: " + url);

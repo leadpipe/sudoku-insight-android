@@ -165,24 +165,24 @@ public final class R {
         public static final int prefs_user_id=0x7f070022;
         public static final int text_all_puzzles=0x7f070023;
         public static final int text_already_have_puzzle=0x7f070024;
-        public static final int text_broken_symmetry=0x7f070026;
-        public static final int text_captured_puzzles=0x7f070025;
-        public static final int text_collection_date=0x7f070027;
-        public static final int text_collection_in_start=0x7f070028;
-        public static final int text_collection_separator=0x7f070029;
-        public static final int text_congrats=0x7f07002a;
-        public static final int text_game_gave_up=0x7f07002b;
-        public static final int text_game_last_replayed=0x7f07002c;
-        public static final int text_game_playing=0x7f07002d;
+        public static final int text_attempt_gave_up=0x7f070025;
+        public static final int text_attempt_last_replayed=0x7f070026;
+        public static final int text_attempt_playing=0x7f070027;
         /**  deliberately not using elapsed time argument: 
          */
-        public static final int text_game_queued=0x7f07002e;
-        public static final int text_game_replay=0x7f07002f;
+        public static final int text_attempt_queued=0x7f070028;
+        public static final int text_attempt_replay=0x7f070029;
         /**  deliberately not using elapsed time argument: 
          */
-        public static final int text_game_skipped=0x7f070030;
-        public static final int text_game_solved=0x7f070031;
-        public static final int text_game_start_time=0x7f070032;
+        public static final int text_attempt_skipped=0x7f07002a;
+        public static final int text_attempt_solved=0x7f07002b;
+        public static final int text_attempt_start_time=0x7f07002c;
+        public static final int text_broken_symmetry=0x7f07002e;
+        public static final int text_captured_puzzles=0x7f07002d;
+        public static final int text_collection_date=0x7f07002f;
+        public static final int text_collection_in_start=0x7f070030;
+        public static final int text_collection_separator=0x7f070031;
+        public static final int text_congrats=0x7f070032;
         public static final int text_generated_puzzles=0x7f070033;
         public static final int text_info_title=0x7f070034;
         public static final int text_info_title_name=0x7f070035;

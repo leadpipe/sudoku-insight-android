@@ -191,17 +191,17 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
     @Override protected Long doInBackground(Void... params) {
       if (mPuzzleId == null) {
         long puzzleId = mDb.addCapturedPuzzle(mPuzzle, mSource);
-        return mDb.getCurrentGameForPuzzle(puzzleId)._id;
+        return mDb.getCurrentAttemptForPuzzle(puzzleId)._id;
       } else {
-        return mDb.getOpenGameForPuzzle(mPuzzleId)._id;
+        return mDb.getOpenAttemptForPuzzle(mPuzzleId)._id;
       }
     }
 
-    @Override protected void onPostExecute(CapturePuzzleActivity activity, Long gameId) {
+    @Override protected void onPostExecute(CapturePuzzleActivity activity, Long attemptId) {
       activity.finish();
       if (mPlay) {
         Intent intent = new Intent(activity, SudokuActivity.class);
-        intent.putExtra(Extras.GAME_ID, gameId);
+        intent.putExtra(Extras.ATTEMPT_ID, attemptId);
         activity.startActivity(intent);
       }
     }

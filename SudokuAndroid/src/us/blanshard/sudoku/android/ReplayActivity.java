@@ -157,13 +157,13 @@ public class ReplayActivity extends ActivityBase
     getActionBar().setDisplayHomeAsUpEnabled(true);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-    if (!getIntent().hasExtra(Extras.GAME_ID)) {
-      Log.e(TAG, "No game ID");
+    if (!getIntent().hasExtra(Extras.ATTEMPT_ID)) {
+      Log.e(TAG, "No attempt ID");
       finish();
       return;
     }
 
-    new FetchGame(this).execute(getIntent().getLongExtra(Extras.GAME_ID, 0));
+    new FetchAttempt(this).execute(getIntent().getLongExtra(Extras.ATTEMPT_ID, 0));
 
     setContentView(R.layout.replay);
 
@@ -353,13 +353,13 @@ public class ReplayActivity extends ActivityBase
     mExploring = inState.getBoolean("exploring");
   }
 
-  void setGame(Database.Game dbGame) {
-    mGame = new Sudoku(dbGame.clues, mRegistry).resume();
-    setTitle(getString(R.string.text_replay_title, dbGame.puzzleId));
+  void setAttempt(Database.Attempt attempt) {
+    mGame = new Sudoku(attempt.clues, mRegistry).resume();
+    setTitle(getString(R.string.text_replay_title, attempt.puzzleId));
     mReplayView.setGame(mGame);
     mReplayView.setEditable(false);
     try {
-      mHistory = GameJson.toHistory(dbGame.history);
+      mHistory = GameJson.toHistory(attempt.history);
       if (mRestoredUndoJson != null) {
         GameJson.CommandFactory factory = new GameJson.CommandFactory(mGame) {
           @Override public Command toCommand(String type, Iterator<String> values) {
@@ -377,7 +377,7 @@ public class ReplayActivity extends ActivityBase
           commands.get(i).redo();
       }
     } catch (JSONException e) {
-      Log.e(TAG, "Unable to restore state for game #" + dbGame._id, e);
+      Log.e(TAG, "Unable to restore state for attempt #" + attempt._id, e);
       mHistory = Lists.newArrayList();
       mHistoryPosition = 0;
     } catch (CommandException e) {
@@ -708,27 +708,27 @@ public class ReplayActivity extends ActivityBase
     }
   }
 
-  private static class FetchGame extends WorkerFragment.ActivityTask<
-      ReplayActivity, Long, Void, Database.Game> {
+  private static class FetchAttempt extends WorkerFragment.ActivityTask<
+      ReplayActivity, Long, Void, Database.Attempt> {
     private final Database mDb;
     private GridMarks mSolution;
 
-    FetchGame(ReplayActivity activity) {
+    FetchAttempt(ReplayActivity activity) {
       super(activity);
       mDb = activity.mDb;
     }
 
-    @Override protected Database.Game doInBackground(Long... params) {
-      Database.Game answer = mDb.getGame(params[0]);
+    @Override protected Database.Attempt doInBackground(Long... params) {
+      Database.Attempt answer = mDb.getAttempt(params[0]);
       Solver.Result result = Solver.solve(answer.clues);
       mSolution = new GridMarks(result.solution);
       mDb.noteReplay(answer._id);
       return answer;
     }
 
-    @Override protected void onPostExecute(ReplayActivity activity, Database.Game game) {
+    @Override protected void onPostExecute(ReplayActivity activity, Database.Attempt attempt) {
       activity.mSolution = mSolution;
-      activity.setGame(game);
+      activity.setAttempt(attempt);
     }
   }
 

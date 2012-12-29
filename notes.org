@@ -25,7 +25,7 @@ END
       - google account
       - improper puzzles OK
 *** TODO Show user ID settings page at installation time?
-*** TODO Rename Game to Attempt
+*** DONE Rename Game to Attempt
 *** TODO Show puzzle properties in list, info, solution
 *** TODO Add Help activity
     - Add to standard action overflow

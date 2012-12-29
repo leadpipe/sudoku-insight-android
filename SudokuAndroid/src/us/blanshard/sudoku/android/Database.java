@@ -43,8 +43,8 @@ import java.util.Map;
  */
 public class Database {
 
-  private static final String GAME_SELECT_AND_FROM_CLAUSE =
-      "SELECT g.*, clues FROM [Game] g JOIN [Puzzle] p ON g.puzzleId = p._id ";
+  private static final String ATTEMPT_SELECT_AND_FROM_CLAUSE =
+      "SELECT g.*, clues FROM [Attempt] a JOIN [Puzzle] p ON a.puzzleId = p._id ";
 
   public static final int ALL_PSEUDO_COLLECTION_ID = 0;
   public static final int GENERATED_COLLECTION_ID = 1;
@@ -63,7 +63,7 @@ public class Database {
     return sInstance;
   }
 
-  public enum GameState {
+  public enum AttemptState {
     UNSTARTED(0),
     STARTED(1),
     GAVE_UP(2),
@@ -72,16 +72,16 @@ public class Database {
     ;
 
     private final int number;
-    private static final GameState[] numbersToValues;
+    private static final AttemptState[] numbersToValues;
 
     static {
-      GameState[] values = values();
-      numbersToValues = new GameState[values.length];
-      for (GameState g : values)
-        numbersToValues[g.number] = g;
+      AttemptState[] values = values();
+      numbersToValues = new AttemptState[values.length];
+      for (AttemptState s : values)
+        numbersToValues[s.number] = s;
     }
 
-    private GameState(int number) {
+    private AttemptState(int number) {
       this.number = number;
     }
 
@@ -93,12 +93,12 @@ public class Database {
       return this.number < GAVE_UP.number;
     }
 
-    public static GameState fromNumber(int number) {
+    public static AttemptState fromNumber(int number) {
       return numbersToValues[number];
     }
   }
 
-  public static class Game implements Cloneable {
+  public static class Attempt implements Cloneable {
     public long _id;
     public long puzzleId;
     public String history;
@@ -108,16 +108,16 @@ public class Database {
     public String uiState;
     public long startTime;
     public long lastTime;
-    public GameState gameState;
+    public AttemptState attemptState;
     public long replayTime;
 
     // Optional other stuff
     public Grid clues;
     public List<Element> elements;
 
-    @Override public Game clone() {
+    @Override public Attempt clone() {
       try {
-        return (Game) super.clone();
+        return (Attempt) super.clone();
       } catch (CloneNotSupportedException e) {
         throw new Error(e);
       }
@@ -144,7 +144,7 @@ public class Database {
     public String properties;
     public String source;
     public int vote;
-    public List<Game> games;
+    public List<Attempt> attempts;
     public List<Element> elements;
   }
 
@@ -209,7 +209,7 @@ public class Database {
   /**
    * Adds the puzzle with the given clues, properties, and source to the
    * database, or updates it by merging the properties and source with what's
-   * already there.  If not already present creates a game row for it as well.
+   * already there.  If not already present creates an attempt row for it as well.
    * Returns the puzzle's ID.
    */
   private long addOrUpdatePuzzle(String clues, JSONObject properties, String source) throws SQLException {
@@ -226,7 +226,7 @@ public class Database {
       Long puzzleId = getPuzzleId(db, clues);
       if (puzzleId == null) {
         puzzleId = db.insertOrThrow("Puzzle", null, values);
-        putUnstartedGame(db, puzzleId);
+        putUnstartedAttempt(db, puzzleId);
       } else {
         Puzzle puzzle = getFullPuzzle(puzzleId);
         if (puzzle.properties != null && properties != null) {
@@ -250,12 +250,12 @@ public class Database {
     }
   }
 
-  private static long putUnstartedGame(SQLiteDatabase db, long puzzleId) throws SQLException {
+  private static long putUnstartedAttempt(SQLiteDatabase db, long puzzleId) throws SQLException {
     ContentValues values = new ContentValues();
     values.put("puzzleId", puzzleId);
-    values.put("gameState", GameState.UNSTARTED.getNumber());
+    values.put("attemptState", AttemptState.UNSTARTED.getNumber());
     values.put("lastTime", System.currentTimeMillis());
-    return db.insertOrThrow("Game", null, values);
+    return db.insertOrThrow("Attempt", null, values);
   }
 
   /**
@@ -275,29 +275,29 @@ public class Database {
   }
 
   /**
-   * Returns the game given its ID.
+   * Returns the attempt given its ID.
    */
-  public Game getGame(long gameId) throws SQLException {
+  public Attempt getAttempt(long attemptId) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    String sql = GAME_SELECT_AND_FROM_CLAUSE + "WHERE g._id = ?";
-    return fetchGame(db, sql, Long.toString(gameId));
+    String sql = ATTEMPT_SELECT_AND_FROM_CLAUSE + "WHERE a._id = ?";
+    return fetchAttempt(db, sql, Long.toString(attemptId));
   }
 
   /**
-   * Returns the most recently modified game row for the given puzzle, or null
-   * if there is no such puzzle or it has no game rows.
+   * Returns the most recently modified attempt row for the given puzzle, or null
+   * if there is no such puzzle or it has no attempt rows.
    */
-  public Game getCurrentGameForPuzzle(long puzzleId) throws SQLException {
+  public Attempt getCurrentAttemptForPuzzle(long puzzleId) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    String sql = GAME_SELECT_AND_FROM_CLAUSE + "WHERE [puzzleId] = ? ORDER BY [lastTime] DESC";
-    return fetchGame(db, sql, Long.toString(puzzleId));
+    String sql = ATTEMPT_SELECT_AND_FROM_CLAUSE + "WHERE [puzzleId] = ? ORDER BY [lastTime] DESC";
+    return fetchAttempt(db, sql, Long.toString(puzzleId));
   }
 
-  private static Game fetchGame(SQLiteDatabase db, String sql, String... args) throws SQLException {
+  private static Attempt fetchAttempt(SQLiteDatabase db, String sql, String... args) throws SQLException {
     Cursor cursor = db.rawQuery(sql, args);
     try {
       if (cursor.moveToFirst()) {
-        Game answer = gameFromCursor(cursor);
+        Attempt answer = attemptFromCursor(cursor);
         answer.clues = Grid.fromString(cursor.getString(cursor.getColumnIndexOrThrow("clues")));
         answer.elements = getPuzzleElements(db, answer.puzzleId);
         return answer;
@@ -318,8 +318,8 @@ public class Database {
     return answer;
   }
 
-  private static Game gameFromCursor(Cursor cursor) throws SQLException {
-    Game answer = new Game();
+  private static Attempt attemptFromCursor(Cursor cursor) throws SQLException {
+    Attempt answer = new Attempt();
     answer._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
     answer.puzzleId = cursor.getLong(cursor.getColumnIndexOrThrow("puzzleId"));
     answer.history = cursor.getString(cursor.getColumnIndexOrThrow("history"));
@@ -327,7 +327,7 @@ public class Database {
     answer.uiState = cursor.getString(cursor.getColumnIndexOrThrow("uiState"));
     answer.startTime = getLong(cursor, "startTime", 0);
     answer.lastTime = cursor.getLong(cursor.getColumnIndexOrThrow("lastTime"));
-    answer.gameState = GameState.fromNumber(cursor.getInt(cursor.getColumnIndexOrThrow("gameState")));
+    answer.attemptState = AttemptState.fromNumber(cursor.getInt(cursor.getColumnIndexOrThrow("attemptState")));
     answer.replayTime = getLong(cursor, "replayTime", 0);
     return answer;
   }
@@ -373,55 +373,55 @@ public class Database {
   }
 
   /**
-   * Returns the most recently modified game row for the given puzzle, or
-   * creates a new game row if the existing one's state indicates it is no
-   * longer in play. If the game is unstarted, modifies the returned object (but
-   * not the corresponding row) to started.
+   * Returns the most recently modified attempt row for the given puzzle, or
+   * creates a new attempt row if the existing one's state indicates it is no
+   * longer in play. If the attempt is unstarted, modifies the returned object
+   * (but not the corresponding row) to started.
    */
-  public Game getOpenGameForPuzzle(long puzzleId) throws SQLException {
-    Game answer = getCurrentGameForPuzzle(puzzleId);
-    if (answer == null || !answer.gameState.isInPlay()) {
+  public Attempt getOpenAttemptForPuzzle(long puzzleId) throws SQLException {
+    Attempt answer = getCurrentAttemptForPuzzle(puzzleId);
+    if (answer == null || !answer.attemptState.isInPlay()) {
       SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-      long gameId = putUnstartedGame(db, puzzleId);
-      answer = getGame(gameId);
+      long attemptId = putUnstartedAttempt(db, puzzleId);
+      answer = getAttempt(attemptId);
     }
-    return startUnstartedGame(answer);
+    return startUnstartedAttempt(answer);
   }
 
   /**
-   * Modifies the given Game object, if its state is currently unstarted, by
+   * Modifies the given Attempt object, if its state is currently unstarted, by
    * changing its state to started and setting its start time. Passes nulls
    * through.
    */
-  public static Game startUnstartedGame(Game game) {
-    if (game != null && game.gameState == GameState.UNSTARTED) {
-      game.gameState = GameState.STARTED;
-      game.startTime = System.currentTimeMillis();
+  public static Attempt startUnstartedAttempt(Attempt attempt) {
+    if (attempt != null && attempt.attemptState == AttemptState.UNSTARTED) {
+      attempt.attemptState = AttemptState.STARTED;
+      attempt.startTime = System.currentTimeMillis();
     }
-    return game;
+    return attempt;
   }
 
   /**
-   * Returns the least recently modified open game row in the database, or null.
-   * If the game is unstarted, modifies the returned object (but not the
-   * corresponding row) to started.
+   * Returns the least recently modified open attempt row in the database, or
+   * null.  If the attempt is unstarted, modifies the returned object (but not
+   * the corresponding row) to started.
    */
-  public Game getFirstOpenGame() throws SQLException {
+  public Attempt getFirstOpenAttempt() throws SQLException {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    String sql = GAME_SELECT_AND_FROM_CLAUSE + "WHERE [gameState] IN (?, ?) ORDER BY [lastTime] ASC";
-    Game answer = fetchGame(db, sql, Integer.toString(GameState.UNSTARTED.getNumber()),
-        Integer.toString(GameState.STARTED.getNumber()));
-    return startUnstartedGame(answer);
+    String sql = ATTEMPT_SELECT_AND_FROM_CLAUSE + "WHERE [attemptState] IN (?, ?) ORDER BY [lastTime] ASC";
+    Attempt answer = fetchAttempt(db, sql, Integer.toString(AttemptState.UNSTARTED.getNumber()),
+        Integer.toString(AttemptState.STARTED.getNumber()));
+    return startUnstartedAttempt(answer);
   }
 
   /**
-   * Returns the number of games that are unstarted or in progress.
+   * Returns the number of attempts that are unstarted or in progress.
    */
-  public int getNumOpenGames() throws SQLException {
+  public int getNumOpenAttempts() throws SQLException {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    String sql = "SELECT COUNT(*) FROM [Game] WHERE [gameState] IN (?, ?)";
-    Cursor cursor = db.rawQuery(sql, new String[] {Integer.toString(GameState.UNSTARTED.getNumber()),
-        Integer.toString(GameState.STARTED.getNumber())});
+    String sql = "SELECT COUNT(*) FROM [Attempt] WHERE [attemptState] IN (?, ?)";
+    Cursor cursor = db.rawQuery(sql, new String[] {Integer.toString(AttemptState.UNSTARTED.getNumber()),
+        Integer.toString(AttemptState.STARTED.getNumber())});
     try {
       cursor.moveToFirst();
       return cursor.getInt(0);
@@ -431,23 +431,23 @@ public class Database {
   }
 
   /**
-   * Saves the given game, modifying its last update time to now.
+   * Saves the given attempt, modifying its last update time to now.
    */
-  public void updateGame(Game game) throws SQLException {
+  public void updateAttempt(Attempt attempt) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
     db.beginTransaction();
     try {
       ContentValues values = new ContentValues();
-      values.put("history", game.history);
-      values.put("elapsedMillis", game.elapsedMillis);
-      values.put("numMoves", game.numMoves);
-      values.put("numTrails", game.numTrails);
-      values.put("uiState", game.uiState);
-      values.put("startTime", game.startTime);
-      values.put("lastTime", game.lastTime = System.currentTimeMillis());
-      values.put("gameState", game.gameState.getNumber());
+      values.put("history", attempt.history);
+      values.put("elapsedMillis", attempt.elapsedMillis);
+      values.put("numMoves", attempt.numMoves);
+      values.put("numTrails", attempt.numTrails);
+      values.put("uiState", attempt.uiState);
+      values.put("startTime", attempt.startTime);
+      values.put("lastTime", attempt.lastTime = System.currentTimeMillis());
+      values.put("attemptState", attempt.attemptState.getNumber());
 
-      db.update("Game", values, "[_id] = ?", new String[]{ Long.toString(game._id) });
+      db.update("Attempt", values, "[_id] = ?", new String[]{ Long.toString(attempt._id) });
 
       db.setTransactionSuccessful();
     } finally {
@@ -455,21 +455,21 @@ public class Database {
     }
   }
 
-  /** Updates the replay time of the game whose ID is given, to now. */
-  public void noteReplay(long gameId) {
+  /** Updates the replay time of the attempt whose ID is given, to now. */
+  public void noteReplay(long attemptId) {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
     db.beginTransaction();
     try {
       ContentValues values = new ContentValues();
       values.put("replayTime", System.currentTimeMillis());
-      db.update("Game", values, "[_id] = ?", new String[]{ Long.toString(gameId) });
+      db.update("Attempt", values, "[_id] = ?", new String[]{ Long.toString(attemptId) });
       db.setTransactionSuccessful();
     } finally {
       db.endTransaction();
     }
   }
 
-  /** Returns all the puzzles, each with its games and collections filled in. */
+  /** Returns all the puzzles, each with its attempts and collections filled in. */
   public List<Puzzle> getAllPuzzles() throws SQLException {
     List<Puzzle> answer = Lists.newArrayList();
     Map<Long, Puzzle> puzzles = Maps.newHashMap();
@@ -481,19 +481,19 @@ public class Database {
         while (cursor.moveToNext()) {
           Puzzle puzzle = puzzleFromCursor(cursor);
           puzzle.elements = Lists.newArrayList();
-          puzzle.games = Lists.newArrayList();
+          puzzle.attempts = Lists.newArrayList();
           answer.add(puzzle);
           puzzles.put(puzzle._id, puzzle);
         }
       } finally {
         cursor.close();
       }
-      cursor = db.rawQuery("SELECT * FROM [Game] ORDER BY [_id]", null);
+      cursor = db.rawQuery("SELECT * FROM [Attempt] ORDER BY [_id]", null);
       try {
         while (cursor.moveToNext()) {
-          Game game = gameFromCursor(cursor);
-          Puzzle puzzle = puzzles.get(game.puzzleId);
-          puzzle.games.add(game);
+          Attempt attempt = attemptFromCursor(cursor);
+          Puzzle puzzle = puzzles.get(attempt.puzzleId);
+          puzzle.attempts.add(attempt);
         }
       } finally {
         cursor.close();
@@ -561,12 +561,12 @@ public class Database {
       }
       if (answer != null) {
         answer.elements = getPuzzleElements(db, puzzleId);
-        answer.games = Lists.newArrayList();
-        String sql = "SELECT * FROM [Game] WHERE [puzzleId] = ? ORDER BY [_id]";
+        answer.attempts = Lists.newArrayList();
+        String sql = "SELECT * FROM [Attempt] WHERE [puzzleId] = ? ORDER BY [_id]";
         cursor = db.rawQuery(sql, idString);
         try {
           while (cursor.moveToNext()) {
-            answer.games.add(gameFromCursor(cursor));
+            answer.attempts.add(attemptFromCursor(cursor));
           }
         } finally {
           cursor.close();
@@ -665,7 +665,7 @@ public class Database {
           + "  [puzzleId],"
           + "  [collectionId])");
       db.execSQL(""
-          + "CREATE TABLE [Game] ("
+          + "CREATE TABLE [Attempt] ("
           + "  [_id] INTEGER PRIMARY KEY,"
           + "  [puzzleId] INTEGER  REFERENCES [Puzzle] ON DELETE CASCADE,"
           + "  [history] TEXT,"
@@ -675,15 +675,15 @@ public class Database {
           + "  [uiState] TEXT,"
           + "  [startTime] INTEGER,"
           + "  [lastTime] INTEGER  NOT NULL,"
-          + "  [gameState] INTEGER  NOT NULL,"
+          + "  [attemptState] INTEGER  NOT NULL,"
           + "  [replayTime] INTEGER)");
       db.execSQL(""
-          + "CREATE INDEX [GameByPuzzleIdAndLastTime] ON [Game] ("
+          + "CREATE INDEX [AttemptByPuzzleIdAndLastTime] ON [Attempt] ("
           + "  [puzzleId],"
           + "  [lastTime] DESC)");
       db.execSQL(""
-          + "CREATE INDEX [GameByStateAndLastTime] ON [Game] ("
-          + "  [gameState],"
+          + "CREATE INDEX [AttemptByStateAndLastTime] ON [Attempt] ("
+          + "  [attemptState],"
           + "  [lastTime])");
 
       ContentValues values = new ContentValues();

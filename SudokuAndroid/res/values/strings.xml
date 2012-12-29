@@ -38,22 +38,22 @@
     <string name="prefs_user_id">Google user ID</string>
     <string name="text_all_puzzles">All puzzles</string>
     <string name="text_already_have_puzzle">You already have this puzzle!</string>
+    <string name="text_attempt_gave_up">Gave up after %1$s; last played %2$s</string>
+    <string name="text_attempt_last_replayed">Last reviewed %1$s.</string>
+    <string name="text_attempt_playing">In progress for %1$s; last played %2$s</string>
+    <!-- deliberately not using elapsed time argument: -->
+    <string name="text_attempt_queued">Queued to play %2$s</string>
+    <string name="text_attempt_replay">Review for insight</string>
+    <!-- deliberately not using elapsed time argument: -->
+    <string name="text_attempt_skipped">Skipped %2$s</string>
+    <string name="text_attempt_solved">Solved in %1$s %2$s</string>
+    <string name="text_attempt_start_time">Started %1$s.</string>
     <string name="text_captured_puzzles">Captured puzzles</string>
     <string name="text_broken_symmetry">Symmetry (broken): %1$s</string>
     <string name="text_collection_date">%1$s, %2$s</string>
     <string name="text_collection_in_start">"In: "</string>
     <string name="text_collection_separator">"; "</string>
     <string name="text_congrats">Congratulations!</string>
-    <string name="text_game_gave_up">Gave up after %1$s; last played %2$s</string>
-    <string name="text_game_last_replayed">Last reviewed %1$s.</string>
-    <string name="text_game_playing">In progress for %1$s; last played %2$s</string>
-    <!-- deliberately not using elapsed time argument: -->
-    <string name="text_game_queued">Queued to play %2$s</string>
-    <string name="text_game_replay">Review for insight</string>
-    <!-- deliberately not using elapsed time argument: -->
-    <string name="text_game_skipped">Skipped %2$s</string>
-    <string name="text_game_solved">Solved in %1$s %2$s</string>
-    <string name="text_game_start_time">Started %1$s.</string>
     <string name="text_generated_puzzles">Generated puzzles</string>
     <string name="text_info_title">Sudoku #%1$d Details</string>
     <string name="text_info_title_name">Sudoku %2$s (#%1$d) Details</string>
