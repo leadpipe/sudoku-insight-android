@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.gen.Generator;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -27,6 +28,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -39,11 +44,12 @@ import java.util.Map;
 public class Database {
 
   private static final String GAME_SELECT_AND_FROM_CLAUSE =
-      "SELECT g.*, puzzle FROM [Game] g JOIN [Puzzle] p ON g.puzzleId = p._id ";
+      "SELECT g.*, clues FROM [Game] g JOIN [Puzzle] p ON g.puzzleId = p._id ";
 
   public static final int ALL_PSEUDO_COLLECTION_ID = 0;
   public static final int GENERATED_COLLECTION_ID = 1;
   public static final int CAPTURED_COLLECTION_ID = 2;
+  public static final int SYNCED_COLLECTION_ID = 3;
 
   private final OpenHelper mOpenHelper;
   private static Database sInstance;
@@ -97,6 +103,8 @@ public class Database {
     public long puzzleId;
     public String history;
     public long elapsedMillis;
+    public int numMoves;
+    public int numTrails;
     public String uiState;
     public long startTime;
     public long lastTime;
@@ -104,11 +112,10 @@ public class Database {
     public long replayTime;
 
     // Optional other stuff
-    public Grid puzzle;
+    public Grid clues;
     public List<Element> elements;
 
-    @Override
-    public Game clone() {
+    @Override public Game clone() {
       try {
         return (Game) super.clone();
       } catch (CloneNotSupportedException e) {
@@ -128,37 +135,46 @@ public class Database {
     public long _id;
     public long puzzleId;
     public long createTime;
-    public String generatorParams;
-    public String source;
     public CollectionInfo collection;
   }
 
   public static class Puzzle {
     public long _id;
-    public Grid puzzle;
+    public Grid clues;
+    public String properties;
+    public String source;
     public int vote;
     public List<Game> games;
     public List<Element> elements;
   }
 
   /**
-   * Adds the given puzzle to the database, and if not already present creates a
-   * game row for it as well.  Returns the puzzle's ID.
+   * Looks up the puzzle with the given clues, returns its ID or null if it
+   * isn't already in the database.
    */
-  public long addPuzzle(Grid puzzle) throws SQLException {
+  public Long lookUpPuzzleId(Grid clues) throws SQLException {
+    return getPuzzleId(mOpenHelper.getReadableDatabase(), clues.toFlatString());
+  }
+
+  /**
+   * Adds the puzzle described by the given {@link Generator} properties to the
+   * database, and also to the generated-puzzles collection.  Returns the
+   * puzzle's ID.  Modifies the given properties object.
+   */
+  public long addGeneratedPuzzle(JSONObject properties) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
     db.beginTransaction();
     try {
-      String puzzleText = puzzle.toFlatString();
-      Long puzzleId = getPuzzleId(db, puzzleText);
-      if (puzzleId == null) {
+      String clues = (String) properties.remove(Generator.PUZZLE_KEY);
+      long puzzleId = addOrUpdatePuzzle(clues, properties, null);
+
+      if (getElementId(db, puzzleId, GENERATED_COLLECTION_ID) == null) {
         ContentValues values = new ContentValues();
-        values.put("puzzle", puzzleText);
-        puzzleId = db.insertOrThrow("Puzzle", null, values);
-
-        putUnstartedGame(db, puzzleId);
+        values.put("puzzleId", puzzleId);
+        values.put("collectionId", GENERATED_COLLECTION_ID);
+        values.put("createTime", System.currentTimeMillis());
+        db.insertOrThrow("Element", null, values);
       }
-
       db.setTransactionSuccessful();
       return puzzleId;
     } finally {
@@ -167,11 +183,71 @@ public class Database {
   }
 
   /**
-   * Looks up the given puzzle, returns its ID or null if it isn't already in
-   * the database.
+   * Adds the puzzle puzzle with the given clues to the database, and also to
+   * the captured-puzzles collection.  Returns the puzzle's ID.
    */
-  public Long lookUpPuzzleId(Grid puzzle) throws SQLException {
-    return getPuzzleId(mOpenHelper.getReadableDatabase(), puzzle.toFlatString());
+  public long addCapturedPuzzle(Grid clues, String source) throws SQLException {
+    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+    db.beginTransaction();
+    try {
+      long puzzleId = addOrUpdatePuzzle(clues.toFlatString(), null, source);
+
+      if (getElementId(db, puzzleId, CAPTURED_COLLECTION_ID) == null) {
+        ContentValues values = new ContentValues();
+        values.put("puzzleId", puzzleId);
+        values.put("collectionId", CAPTURED_COLLECTION_ID);
+        values.put("createTime", System.currentTimeMillis());
+        db.insertOrThrow("Element", null, values);
+      }
+      db.setTransactionSuccessful();
+      return puzzleId;
+    } finally {
+      db.endTransaction();
+    }
+  }
+
+  /**
+   * Adds the puzzle with the given clues, properties, and source to the
+   * database, or updates it by merging the properties and source with what's
+   * already there.  If not already present creates a game row for it as well.
+   * Returns the puzzle's ID.
+   */
+  private long addOrUpdatePuzzle(String clues, JSONObject properties, String source) throws SQLException {
+    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+    db.beginTransaction();
+    try {
+      ContentValues values = new ContentValues();
+      values.put("clues", clues);
+      if (properties != null)
+        values.put("properties", properties.toString());
+      if (source != null)
+        values.put("source", source);
+
+      Long puzzleId = getPuzzleId(db, clues);
+      if (puzzleId == null) {
+        puzzleId = db.insertOrThrow("Puzzle", null, values);
+        putUnstartedGame(db, puzzleId);
+      } else {
+        Puzzle puzzle = getFullPuzzle(puzzleId);
+        if (puzzle.properties != null && properties != null) {
+          JSONObject replacement = new JSONObject(puzzle.properties);
+          for (Iterator<?> keys = properties.keys(); keys.hasNext(); ) {
+            String key = (String) keys.next();
+            replacement.put(key, properties.get(key));
+          }
+          values.put("properties", replacement.toString());
+        }
+        // source: no further logic required to replace or leave an existing value.
+        db.update("Puzzle", values, "[_id] = ?", new String[]{ Long.toString(puzzleId) });
+      }
+
+      db.setTransactionSuccessful();
+      return puzzleId;
+    } catch (JSONException e) {
+      throw new RuntimeException(e);
+    } finally {
+      db.endTransaction();
+    }
   }
 
   private static long putUnstartedGame(SQLiteDatabase db, long puzzleId) throws SQLException {
@@ -180,56 +256,6 @@ public class Database {
     values.put("gameState", GameState.UNSTARTED.getNumber());
     values.put("lastTime", System.currentTimeMillis());
     return db.insertOrThrow("Game", null, values);
-  }
-
-  /**
-   * Adds the given puzzle to the database, and also to the generated-puzzles
-   * collection.  Returns the puzzle's ID.
-   */
-  public long addGeneratedPuzzle(Grid puzzle, String generatorParams) throws SQLException {
-    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-    db.beginTransaction();
-    try {
-      long puzzleId = addPuzzle(puzzle);
-
-      if (getElementId(db, puzzleId, GENERATED_COLLECTION_ID) == null) {
-        ContentValues values = new ContentValues();
-        values.put("puzzleId", puzzleId);
-        values.put("collectionId", GENERATED_COLLECTION_ID);
-        values.put("createTime", System.currentTimeMillis());
-        values.put("generatorParams", generatorParams);
-        db.insertOrThrow("Element", null, values);
-      }
-      db.setTransactionSuccessful();
-      return puzzleId;
-    } finally {
-      db.endTransaction();
-    }
-  }
-
-  /**
-   * Adds the given puzzle to the database, and also to the captured-puzzles
-   * collection.  Returns the puzzle's ID.
-   */
-  public long addCapturedPuzzle(Grid puzzle, String source) throws SQLException {
-    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-    db.beginTransaction();
-    try {
-      long puzzleId = addPuzzle(puzzle);
-
-      if (getElementId(db, puzzleId, CAPTURED_COLLECTION_ID) == null) {
-        ContentValues values = new ContentValues();
-        values.put("puzzleId", puzzleId);
-        values.put("collectionId", CAPTURED_COLLECTION_ID);
-        values.put("createTime", System.currentTimeMillis());
-        values.put("source", source);
-        db.insertOrThrow("Element", null, values);
-      }
-      db.setTransactionSuccessful();
-      return puzzleId;
-    } finally {
-      db.endTransaction();
-    }
   }
 
   /**
@@ -272,7 +298,7 @@ public class Database {
     try {
       if (cursor.moveToFirst()) {
         Game answer = gameFromCursor(cursor);
-        answer.puzzle = Grid.fromString(cursor.getString(cursor.getColumnIndexOrThrow("puzzle")));
+        answer.clues = Grid.fromString(cursor.getString(cursor.getColumnIndexOrThrow("clues")));
         answer.elements = getPuzzleElements(db, answer.puzzleId);
         return answer;
       }
@@ -285,8 +311,10 @@ public class Database {
   private static Puzzle puzzleFromCursor(Cursor cursor) throws SQLException {
     Puzzle answer = new Puzzle();
     answer._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
-    answer.puzzle = Grid.fromString(cursor.getString(cursor.getColumnIndexOrThrow("puzzle")));
-    answer.vote = (int) getLong(cursor, "vote", 0);
+    answer.clues = Grid.fromString(cursor.getString(cursor.getColumnIndexOrThrow("clues")));
+    answer.properties = cursor.getString(cursor.getColumnIndexOrThrow("properties"));
+    answer.source = cursor.getString(cursor.getColumnIndexOrThrow("source"));
+    answer.vote = cursor.getInt(cursor.getColumnIndexOrThrow("vote"));
     return answer;
   }
 
@@ -332,8 +360,6 @@ public class Database {
     element._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
     element.puzzleId = cursor.getLong(cursor.getColumnIndexOrThrow("puzzleId"));
     element.createTime = getLong(cursor, "createTime", 0);
-    element.generatorParams = cursor.getString(cursor.getColumnIndexOrThrow("generatorParams"));
-    element.source = cursor.getString(cursor.getColumnIndexOrThrow("source"));
     return element;
   }
 
@@ -414,6 +440,8 @@ public class Database {
       ContentValues values = new ContentValues();
       values.put("history", game.history);
       values.put("elapsedMillis", game.elapsedMillis);
+      values.put("numMoves", game.numMoves);
+      values.put("numTrails", game.numTrails);
       values.put("uiState", game.uiState);
       values.put("startTime", game.startTime);
       values.put("lastTime", game.lastTime = System.currentTimeMillis());
@@ -550,10 +578,11 @@ public class Database {
     return answer;
   }
 
-  /** Returns the set of source strings present in the Element table. */
-  public List<String> getElementSources() {
+  /** Returns the set of source strings present in the Puzzle table. */
+  public List<String> getPuzzleSources() {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    Cursor cursor = db.rawQuery("SELECT DISTINCT [source] FROM [Element] WHERE [source] IS NOT NULL ORDER BY [source]", null);
+    Cursor cursor = db.rawQuery(
+        "SELECT DISTINCT [source] FROM [Puzzle] WHERE [source] IS NOT NULL ORDER BY [source]", null);
     List<String> answer = Lists.newArrayList();
     try {
       while (cursor.moveToNext())
@@ -565,9 +594,9 @@ public class Database {
   }
 
   /** Returns null if not found in the given database. */
-  private static Long getPuzzleId(SQLiteDatabase db, String puzzleText) throws SQLException {
-    Cursor cursor = db.rawQuery("SELECT [_id] FROM [Puzzle] WHERE [puzzle] = ?",
-        new String[]{ puzzleText });
+  private static Long getPuzzleId(SQLiteDatabase db, String clues) throws SQLException {
+    Cursor cursor = db.rawQuery("SELECT [_id] FROM [Puzzle] WHERE [clues] = ?",
+        new String[]{ clues });
     try {
       if (cursor.moveToFirst()) return cursor.getLong(0);
       return null;
@@ -601,7 +630,7 @@ public class Database {
     private final Context mContext;
 
     OpenHelper(Context context) {
-      super(context, "db", null, 6);
+      super(context, "db", null, 7);
       mContext = context;
     }
 
@@ -609,8 +638,10 @@ public class Database {
       db.execSQL(""
           + "CREATE TABLE [Puzzle] ("
           + "  [_id] INTEGER PRIMARY KEY AUTOINCREMENT,"
-          + "  [puzzle] TEXT  NOT NULL  UNIQUE,"
-          + "  [vote] INTEGER)");
+          + "  [clues] TEXT  NOT NULL  UNIQUE,"
+          + "  [properties] TEXT,"
+          + "  [source] TEXT,"
+          + "  [vote] INTEGER  DEFAULT 0)");
       db.execSQL(""
           + "CREATE TABLE [Collection] ("
           + "  [_id] INTEGER PRIMARY KEY,"
@@ -622,9 +653,7 @@ public class Database {
           + "  [_id] INTEGER PRIMARY KEY,"
           + "  [puzzleId] INTEGER  REFERENCES [Puzzle] ON DELETE CASCADE,"
           + "  [collectionId] INTEGER  REFERENCES [Collection] ON DELETE CASCADE,"
-          + "  [createTime] INTEGER  NOT NULL,"
-          + "  [source] TEXT,"
-          + "  [generatorParams] TEXT)");
+          + "  [createTime] INTEGER  NOT NULL)");
       db.execSQL(""
           + "CREATE INDEX [ElementByPuzzleId] ON [Element] ("
           + "  [puzzleId])");
@@ -641,6 +670,8 @@ public class Database {
           + "  [puzzleId] INTEGER  REFERENCES [Puzzle] ON DELETE CASCADE,"
           + "  [history] TEXT,"
           + "  [elapsedMillis] INTEGER,"
+          + "  [numMoves] INTEGER,"
+          + "  [numTrails] INTEGER,"
           + "  [uiState] TEXT,"
           + "  [startTime] INTEGER,"
           + "  [lastTime] INTEGER  NOT NULL,"
@@ -663,28 +694,14 @@ public class Database {
       values.put("_id", CAPTURED_COLLECTION_ID);
       values.put("name", mContext.getString(R.string.text_captured_puzzles));
       db.insertOrThrow("Collection", null, values);
+      values.put("_id", SYNCED_COLLECTION_ID);
+      values.put("name", mContext.getString(R.string.text_synced_puzzles));
+      db.insertOrThrow("Collection", null, values);
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-      if (oldVersion < 2 || newVersion != 6)
-        throw new AssertionError();
-      if (oldVersion == 2)
-        db.execSQL(""
-            + "CREATE UNIQUE INDEX [ElementByIds] ON [Element] ("
-            + "  [puzzleId],"
-            + "  [collectionId])");
-      if (oldVersion <= 3)
-        db.execSQL("ALTER TABLE [Element] ADD COLUMN [createTime] INTEGER");
-      if (oldVersion <= 4) {
-        ContentValues values = new ContentValues();
-        values.put("gameState", GameState.FINISHED.getNumber());
-        db.update("Game", values, "[gameState] > ?",
-            new String[]{ Integer.toString(GameState.FINISHED.getNumber()) });
-      }
-      if (oldVersion <= 5) {
-        db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [vote] INTEGER");
-        db.execSQL("ALTER TABLE [Game] ADD COLUMN [replayTime] INTEGER");
-      }
+      if (oldVersion < 7)
+        throw new AssertionError("Upgrades not supported, please reinstall");
     }
   }
 }

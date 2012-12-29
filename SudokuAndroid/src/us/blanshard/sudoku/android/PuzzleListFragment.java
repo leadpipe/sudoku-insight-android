@@ -290,7 +290,7 @@ public class PuzzleListFragment extends FragmentBase {
         holder = (ViewHolder) convertView.getTag();
       }
       Database.Puzzle puzzle = getItem(position);
-      holder.grid.setPuzzle(puzzle.puzzle);
+      holder.grid.setPuzzle(puzzle.clues);
       holder.label.setText(Html.fromHtml(puzzleDescriptionHtml(puzzle)));
       return holder.rowView;
     }

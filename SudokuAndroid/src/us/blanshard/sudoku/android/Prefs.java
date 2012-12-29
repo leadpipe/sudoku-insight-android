@@ -16,26 +16,18 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 import static us.blanshard.sudoku.android.Extras.GAME_ID;
-
-import us.blanshard.sudoku.gen.GenerationStrategy;
-import us.blanshard.sudoku.gen.Symmetry;
+import static us.blanshard.sudoku.gen.Generator.NUM_STREAMS;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.StrictMode;
-import android.os.StrictMode.ThreadPolicy;
 import android.preference.PreferenceManager;
 
-import com.google.common.base.Enums;
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 
-import java.util.EnumSet;
-import java.util.Random;
-import java.util.Set;
+import java.util.Calendar;
 
 /**
  * Wrapper around shared preferences providing a more convenient API.
@@ -43,19 +35,21 @@ import java.util.Set;
  * @author Luke Blanshard
  */
 public class Prefs {
-  private static final String USER_ID = "googleUserId";
+  private static final String COUNTER = "counter";
+  private static final String MONTH = "month";
   private static final String PROPER_ONLY = "properOnly";
-  private static final char SEP = ':';
-  private static final String GENERATOR = "generator";
-  private static final String SYMMETRIES = "symmetries";
   private static final String SORT = "sort";
+  private static final String STREAM = "stream";
+  private static final String USER_ID = "googleUserId";
 
   private final SharedPreferences mPrefs;
+  private final String mInstallationId;
   private static Prefs sInstance;
 
   private Prefs(Context context) {
     PreferenceManager.setDefaultValues(context, "prefs", 0, R.xml.preferences, false);
     mPrefs = context.getSharedPreferences("prefs", 0);
+    mInstallationId = Installation.id(context);
   }
 
   public static synchronized Prefs instance(Context context) {
@@ -105,49 +99,35 @@ public class Prefs {
     return mPrefs.getBoolean(PROPER_ONLY, true);
   }
 
-  public GenerationStrategy getGenerator() {
-    return mPrefs.contains(GENERATOR)
-        ? GenerationStrategy.valueOf(mPrefs.getString(GENERATOR, null)) : GenerationStrategy.SUBTRACTIVE;
+  public int getStream() {
+    int stream = mPrefs.getInt(STREAM, 0);
+    if (stream == 0) {
+      HashCode code = Hashing.murmur3_128().hashString(mInstallationId, Charsets.UTF_8);
+      stream = 1 + Hashing.consistentHash(code, NUM_STREAMS);
+      setStreamAsync(stream);
+    }
+    return stream;
   }
 
-  public void setGenerator(GenerationStrategy generator) {
-    ThreadPolicy policy = StrictMode.allowThreadDiskWrites();
-    try {
-      SharedPreferences.Editor prefs = mPrefs.edit();
-      prefs.putString(GENERATOR, generator.toString());
-      prefs.commit();
-    } finally {
-      StrictMode.setThreadPolicy(policy);
-    }
+  public void setStreamAsync(int stream) {
+    SharedPreferences.Editor prefs = mPrefs.edit();
+    prefs.putInt(STREAM, stream);
+    prefs.apply();
   }
 
-  public Set<Symmetry> getSymmetries() {
-    if (mPrefs.contains(SYMMETRIES)) {
-      return Sets.newEnumSet(Iterables.transform(
-          Splitter.on(SEP).split(mPrefs.getString(SYMMETRIES, null)),
-          Enums.valueOfFunction(Symmetry.class)), Symmetry.class);
+  public int getNextCounterSync(Calendar cal) {
+    int month = cal.get(Calendar.YEAR) * 100 + cal.get(Calendar.MONTH);
+    int currentMonth = mPrefs.getInt(MONTH, 0);
+    int counter = mPrefs.getInt(COUNTER, 0);
+    SharedPreferences.Editor prefs = mPrefs.edit();
+    if (month == currentMonth) {
+      ++counter;
+    } else {
+      counter = 1;
+      prefs.putInt(MONTH, month);
     }
-    return EnumSet.of(Symmetry.CLASSIC, Symmetry.BLOCKWISE);
-  }
-
-  public Symmetry chooseSymmetry(Random random) {
-    Set<Symmetry> set = getSymmetries();
-    int i = 0, target = random.nextInt(set.size());
-    for (Symmetry sym : set) {
-      if (i++ == target) return sym;
-    }
-    throw new IllegalStateException("No symmetries found? " + set);
-  }
-
-  public void setSymmetries(Set<Symmetry> symmetries) {
-    ThreadPolicy policy = StrictMode.allowThreadDiskWrites();
-    try {
-      SharedPreferences.Editor prefs = mPrefs.edit();
-      if (symmetries.isEmpty()) prefs.remove(SYMMETRIES);
-      else prefs.putString(SYMMETRIES, Joiner.on(SEP).join(symmetries));
-      prefs.commit();
-    } finally {
-      StrictMode.setThreadPolicy(policy);
-    }
+    prefs.putInt(COUNTER, counter);
+    prefs.commit();
+    return counter;
   }
 }

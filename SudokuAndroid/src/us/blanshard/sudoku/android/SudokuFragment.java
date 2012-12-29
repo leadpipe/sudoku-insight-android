@@ -34,8 +34,7 @@ import us.blanshard.sudoku.game.MoveCommand;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.Sudoku.State;
 import us.blanshard.sudoku.game.UndoStack;
-import us.blanshard.sudoku.gen.GenerationStrategy;
-import us.blanshard.sudoku.gen.Symmetry;
+import us.blanshard.sudoku.gen.Generator;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -74,10 +73,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -169,7 +168,7 @@ public class SudokuFragment
     new CheckNextGame(this).execute(dbGame._id);
     try {
       Sudoku game = new Sudoku(
-          dbGame.puzzle, mRegistry, GameJson.toHistory(dbGame.history), dbGame.elapsedMillis);
+          dbGame.clues, mRegistry, GameJson.toHistory(dbGame.history), dbGame.elapsedMillis);
       getActivity().setTitle(getString(R.string.text_puzzle_number, dbGame.puzzleId));
       setGame(game);
       if (dbGame.uiState != null) {
@@ -373,14 +372,15 @@ public class SudokuFragment
 
   private static Database.Game generateAndStorePuzzle(Database db, Prefs prefs) {
     Database.Game answer;
-    Random random = new Random();
-    GenerationStrategy gen = prefs.getGenerator();
-    Symmetry sym = prefs.chooseSymmetry(random);
-    long seed = random.nextLong();
-    random = new Random(seed);
-    Grid puzzle = gen.generate(random, sym);
-    String genParams = String.format("%s:%s:%s", gen, sym, seed);
-    long id = db.addGeneratedPuzzle(puzzle, genParams);
+    Calendar cal = Calendar.getInstance();
+    JSONObject props;
+    try {
+      props = Generator.generateBasicPuzzle(
+          prefs.getStream(), cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), prefs.getNextCounterSync(cal));
+    } catch (JSONException e) {
+      throw new RuntimeException(e);
+    }
+    long id = db.addGeneratedPuzzle(props);
     answer = db.getCurrentGameForPuzzle(id);
     return answer;
   }

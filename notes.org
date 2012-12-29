@@ -24,6 +24,9 @@ END
     - All the prefs we need:
       - google account
       - improper puzzles OK
+*** TODO Show user ID settings page at installation time?
+*** TODO Rename Game to Attempt
+*** TODO Show puzzle properties in list, info, solution
 *** TODO Add Help activity
     - Add to standard action overflow
     - Make sure it's available from every other activity, even prefs
@@ -49,6 +52,8 @@ END
 *** TODO Figure out why the progress indicator stops
     - Profile
 *** TODO Give visual indication when try to set an unsettable location
+*** TODO Evaluate captured puzzles' symmetries, if found store in properties
+*** TODO Make translation of symmetry names possible
 
 ** Publishing the app
 *** TODO Make other graphics for play store
@@ -59,7 +64,7 @@ END
     - beef up generator to return improper puzzles if asked
     - play a bunch of these puzzles and see how they are: what's a good max number of solutions?
 *** TODO Fix replay to handle improper puzzles
-*** TODO Add a preference for allowing improper puzzles to be shown
+*** DONE Add a preference for allowing improper puzzles to be shown
 *** TODO Return a flag for properness in generator's puzzle properties
 *** TODO Handle completion of potentially improper puzzles
     - by asking whether it was unique (?)

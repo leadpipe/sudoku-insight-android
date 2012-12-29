@@ -132,7 +132,7 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
     }
 
     @Override protected List<String> doInBackground(Void... params) {
-      return mDb.getElementSources();
+      return mDb.getPuzzleSources();
     }
 
     @Override protected void onPostExecute(CapturePuzzleActivity activity, List<String> sources) {

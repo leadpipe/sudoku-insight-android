@@ -28,8 +28,6 @@ import android.text.Html;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 
-import com.google.common.base.Strings;
-
 import java.util.Locale;
 
 /**
@@ -66,17 +64,14 @@ public class ToText {
   }
 
   /**
-   * Returns the given element's collection name, combined with the element's
-   * source if it has one, with an embedded link to the list activity.
+   * Returns the given element's collection name, with an embedded link to the
+   * list activity.
    */
   public static String collectionNameHtml(Context context, Database.Element element, boolean link) {
     String html = TextUtils.htmlEncode(element.collection.name);
     if (link)
       html = "<a href='" + Uris.LIST_URI_PREFIX + element.collection._id
           + '/' + element.puzzleId + "'>" + html + "</a>";
-    if (!Strings.isNullOrEmpty(element.source))
-      html = context.getString(
-          R.string.text_collection_with_source, html, TextUtils.htmlEncode(element.source));
     return html;
   }
 

@@ -103,6 +103,11 @@ public class Generator {
   public static final int BASIC_VERSION = 1;
 
   /**
+   * The basic number of streams we will shard everyone into.
+   */
+  public static final int NUM_STREAMS = 5;
+
+  /**
    * Generates a proper Sudoku with the given parameters, returns it as a JSON
    * object with the properties {@link #PUZZLE_KEY}, {@link #NAME_KEY}, and
    * either {@link #SYMMETRY_KEY} or {@link #BROKEN_SYMMETRY_KEY}.

@@ -25,6 +25,7 @@ import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
+import us.blanshard.sudoku.gen.Generator;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -46,6 +47,7 @@ import android.widget.RadioGroup.OnCheckedChangeListener;
 import com.google.common.collect.Lists;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -56,6 +58,7 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
   private static final String TAG = "PuzzleInfoFragment";
   private ActivityCallback mCallback;
   private SudokuView mGrid;
+  private JSONObject mProperties;
   private View mVoteLayout;
   private RadioGroup mVote;
   private WebView mContent;
@@ -65,6 +68,9 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
    * Every activity that hosts this fragment must implement this callback.
    */
   public interface ActivityCallback {
+    /** Shows the given name for this puzzle. */
+    void showName(String name);
+
     /** Shows the given collection in the puzzle list. */
     void showCollection(long collectionId);
 
@@ -154,7 +160,14 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
 
   private void setPuzzle(Database.Puzzle puzzle) {
     mPuzzle = puzzle;
-    mGrid.setPuzzle(puzzle.puzzle);
+    mGrid.setPuzzle(puzzle.clues);
+    try {
+      mProperties = puzzle.properties == null ? new JSONObject() : new JSONObject(puzzle.properties);
+      if (mProperties.has(Generator.NAME_KEY))
+        mCallback.showName(mProperties.getString(Generator.NAME_KEY));
+    } catch (JSONException e) {
+      throw new RuntimeException(e);
+    }
     mVoteLayout.setVisibility(canVote() ? View.VISIBLE : View.GONE);
     mVote.check(puzzle.vote == 0 ? R.id.radio_no_vote
         : puzzle.vote < 0 ? R.id.radio_vote_down : R.id.radio_vote_up);
@@ -167,7 +180,23 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
     StringBuilder sb = new StringBuilder("<ul>");
     for (Database.Game game : Lists.reverse(puzzle.games))
       appendGameHtml(game, sb.append("<li>"));
-    sb.append("</ul><ul>");
+    sb.append("</ul>");
+    if (puzzle.source != null)
+      sb.append(getString(R.string.text_source, TextUtils.htmlEncode(puzzle.source)))
+          .append("<br>");
+    try {
+      if (mProperties.has(Generator.SYMMETRY_KEY))
+        sb.append(getString(R.string.text_symmetry,
+            TextUtils.htmlEncode(mProperties.getString(Generator.SYMMETRY_KEY))))
+            .append("<br>");
+      if (mProperties.has(Generator.BROKEN_SYMMETRY_KEY))
+        sb.append(getString(R.string.text_broken_symmetry,
+            TextUtils.htmlEncode(mProperties.getString(Generator.BROKEN_SYMMETRY_KEY))))
+            .append("<br>");
+    } catch (JSONException e) {
+      throw new RuntimeException(e);
+    }
+    sb.append("<ul>");
     for (Database.Element element : puzzle.elements)
       appendElementHtml(element, sb.append("<li>"));
     sb.append("</ul>");
@@ -210,12 +239,6 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
   private void appendElementHtml(Element element, StringBuilder sb) {
     sb.append(ToText.collectionNameAndTimeHtml(getActivity(), element))
         .append(getString(R.string.text_sentence_end));
-    if (element.generatorParams != null) {
-      sb.append("<br>")
-          .append(TextUtils.htmlEncode(
-              getString(R.string.text_generator_params, element.generatorParams)))
-          .append(getString(R.string.text_sentence_end));
-    }
   }
 
   private static class FetchPuzzle extends WorkerFragment.Task<PuzzleInfoFragment, Long, Void, Database.Puzzle> {

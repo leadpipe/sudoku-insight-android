@@ -354,7 +354,7 @@ public class ReplayActivity extends ActivityBase
   }
 
   void setGame(Database.Game dbGame) {
-    mGame = new Sudoku(dbGame.puzzle, mRegistry).resume();
+    mGame = new Sudoku(dbGame.clues, mRegistry).resume();
     setTitle(getString(R.string.text_replay_title, dbGame.puzzleId));
     mReplayView.setGame(mGame);
     mReplayView.setEditable(false);
@@ -720,7 +720,7 @@ public class ReplayActivity extends ActivityBase
 
     @Override protected Database.Game doInBackground(Long... params) {
       Database.Game answer = mDb.getGame(params[0]);
-      Solver.Result result = Solver.solve(answer.puzzle);
+      Solver.Result result = Solver.solve(answer.clues);
       mSolution = new GridMarks(result.solution);
       mDb.noteReplay(answer._id);
       return answer;
