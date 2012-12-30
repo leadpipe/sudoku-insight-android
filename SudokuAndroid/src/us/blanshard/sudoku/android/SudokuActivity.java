@@ -31,6 +31,7 @@ public class SudokuActivity extends ActivityBase {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    setTitle(R.string.app_short_name);
     mBoardFragment = (SudokuFragment) getFragmentManager().findFragmentById(R.id.board_fragment);
 
     if (STRICT) {

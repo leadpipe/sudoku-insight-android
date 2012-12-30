@@ -118,10 +118,6 @@ public class PuzzleListActivity extends ActivityBase
     }
   }
 
-  @Override public void showName(String name) {
-    // Nothing to do in list view.
-  }
-
   @Override public void showCollection(long collectionId) {
     setCollectionId(collectionId);
   }

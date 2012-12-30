@@ -66,10 +66,6 @@ public class PuzzleInfoActivity extends ActivityBase implements PuzzleInfoFragme
     return super.onOptionsItemSelected(item);
   }
 
-  @Override public void showName(String name) {
-    setTitle(getString(R.string.text_info_title_name, getPuzzleId(), name));
-  }
-
   @Override public void showCollection(long collectionId) {
     Intent intent = new Intent(this, PuzzleListActivity.class);
     intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);

@@ -168,11 +168,7 @@ public class SudokuFragment
     try {
       Sudoku game = new Sudoku(
           attempt.clues, mRegistry, GameJson.toHistory(attempt.history), attempt.elapsedMillis);
-      JSONObject props = new JSONObject(attempt.properties);
-      String title = props.has(Generator.NAME_KEY)
-          ? getString(R.string.text_puzzle_name, props.getString(Generator.NAME_KEY), attempt.puzzleId)
-          : getString(R.string.text_puzzle_number, attempt.puzzleId);
-      getActivity().setTitle(title);
+      getActivity().setTitle(getString(R.string.text_puzzle_number, attempt.puzzleId));
       setGame(game);
       if (attempt.uiState != null) {
         JSONObject uiState = new JSONObject(attempt.uiState);

@@ -68,9 +68,6 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
    * Every activity that hosts this fragment must implement this callback.
    */
   public interface ActivityCallback {
-    /** Shows the given name for this puzzle. */
-    void showName(String name);
-
     /** Shows the given collection in the puzzle list. */
     void showCollection(long collectionId);
 
@@ -163,8 +160,6 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
     mGrid.setPuzzle(puzzle.clues);
     try {
       mProperties = new JSONObject(puzzle.properties);
-      if (mProperties.has(Generator.NAME_KEY))
-        mCallback.showName(mProperties.getString(Generator.NAME_KEY));
     } catch (JSONException e) {
       throw new RuntimeException(e);
     }
