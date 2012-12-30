@@ -181,6 +181,8 @@ public class ReplayActivity extends ActivityBase
     findViewById(R.id.play).setOnClickListener(this);
     findViewById(R.id.pause).setOnClickListener(this);
     findViewById(R.id.back).setOnClickListener(this);
+    findViewById(R.id.undo).setOnClickListener(this);
+    findViewById(R.id.redo).setOnClickListener(this);
 
     mRegistry.addListener(new Sudoku.Adapter() {
       @Override public void moveMade(Sudoku game, Move move) {
@@ -200,18 +202,6 @@ public class ReplayActivity extends ActivityBase
     for (int i = 0; i < menu.size(); ++i) {
       MenuItem item = menu.getItem(i);
       switch (item.getItemId()) {
-        case R.id.menu_undo: {
-          boolean enabled = (mExploring && mUndoStack.canUndo())
-              || (!mExploring && !mRunning && mHistoryPosition > 0);
-          item.setEnabled(enabled);
-          break;
-        }
-        case R.id.menu_redo: {
-          boolean enabled = (mExploring && mUndoStack.canRedo())
-              || (!mExploring && !mRunning && mHistory != null && mHistoryPosition < mHistory.size());
-          item.setEnabled(enabled);
-          break;
-        }
         case R.id.menu_clear:
           item.setEnabled(mPendingInsight != null);
           break;
@@ -232,18 +222,6 @@ public class ReplayActivity extends ActivityBase
     switch (item.getItemId()) {
       case android.R.id.home:
         finish();
-        return true;
-
-      case R.id.menu_undo:
-      case R.id.menu_redo:
-        boolean forward = item.getItemId() == R.id.menu_redo;
-        clearPending();
-        if (mExploring) {
-          undoOrRedo(forward);
-        } else {
-          mForward = forward;
-          stepReplay(true);
-        }
         return true;
 
       case R.id.menu_clear:
@@ -497,6 +475,20 @@ public class ReplayActivity extends ActivityBase
         setControlsEnablement();
         displayInsightAndError(null);
         break;
+
+      case R.id.undo:
+      case R.id.redo:
+        mRunning = false;
+        mReplayView.removeCallbacks(replayCycler);
+        boolean forward = v.getId() == R.id.redo;
+        clearPending();
+        if (mExploring) {
+          undoOrRedo(forward);
+        } else {
+          mForward = forward;
+          stepReplay(true);
+        }
+        break;
     }
   }
 
@@ -505,6 +497,8 @@ public class ReplayActivity extends ActivityBase
       findViewById(R.id.play).setEnabled(false);
       findViewById(R.id.back).setEnabled(false);
       findViewById(R.id.pause).setEnabled(false);
+      findViewById(R.id.undo).setEnabled(mUndoStack.canUndo());
+      findViewById(R.id.redo).setEnabled(mUndoStack.canRedo());
       mReplayLocation.setEnabled(false);
       mTimer.setTextColor(Color.LTGRAY);
       mMoveNumber.setTextColor(Color.LTGRAY);
@@ -514,6 +508,8 @@ public class ReplayActivity extends ActivityBase
       findViewById(R.id.back).setEnabled(
           (!mRunning || mForward) && mHistoryPosition > 0);
       findViewById(R.id.pause).setEnabled(mRunning);
+      findViewById(R.id.undo).setEnabled(mHistoryPosition > 0);
+      findViewById(R.id.redo).setEnabled(mHistory != null && mHistoryPosition < mHistory.size());
       mReplayLocation.setEnabled(!mRunning);
       mTimer.setTextColor(Color.BLACK);
       mMoveNumber.setTextColor(Color.BLACK);

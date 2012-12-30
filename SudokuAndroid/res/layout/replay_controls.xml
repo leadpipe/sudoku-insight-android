@@ -5,7 +5,17 @@
     android:layout_height="wrap_content"
     >
 
-    <!-- Top line: buttons, 2nd progress indicator -->
+    <!-- Top line: buttonsr -->
+    <ImageButton
+        android:id="@+id/undo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/menu_undo"
+        style="@android:style/Widget.Button.Small"
+        android:src="@drawable/menu_undo"
+        android:layout_toLeftOf="@+id/back"
+        />
+
     <ImageButton
         android:id="@+id/back"
         android:layout_width="wrap_content"
@@ -38,20 +48,15 @@
         android:layout_toRightOf="@+id/pause"
         />
 
-    <ProgressBar
-        android:id="@+id/progress2"
+    <ImageButton
+        android:id="@+id/redo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@id/pause"
-        android:layout_alignBottom="@id/pause"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="4dp"
-        android:visibility="gone"
-        android:animationResolution="300"
+        android:contentDescription="@string/menu_redo"
+        style="@android:style/Widget.Button.Small"
+        android:src="@drawable/menu_redo"
+        android:layout_toRightOf="@+id/play"
         />
-<!-- 	        style="@android:style/Widget.ProgressBar.Small"
-  This style doesn't honor the animation resolution, so is unusable.
--->
 
     <!-- Middle line: seek bar -->
     <SeekBar
@@ -61,7 +66,21 @@
         android:layout_below="@+id/pause"
         />
 
-    <!-- Bottom line: info text -->
+    <!-- Bottom line: 2nd progress indicator, info text -->
+    <ProgressBar
+        android:id="@+id/progress2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/move_number"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="4dp"
+        android:visibility="gone"
+        android:animationResolution="300"
+        />
+<!-- 	        style="@android:style/Widget.ProgressBar.Small"
+  This style doesn't honor the animation resolution, so is unusable.
+-->
+
     <TextView
         android:id="@+id/move_number"
         android:layout_width="wrap_content"

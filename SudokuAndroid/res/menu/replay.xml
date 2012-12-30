@@ -1,38 +1,24 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:id="@+id/menu_undo"
-        android:title="@string/menu_undo"
-        android:icon="@drawable/menu_undo"
-        android:showAsAction="always"
-        android:orderInCategory="10"
-        />
-
-    <item android:id="@+id/menu_redo"
-        android:title="@string/menu_redo"
-        android:icon="@drawable/menu_redo"
-        android:showAsAction="always"
-        android:orderInCategory="11"
-        />
-
     <item android:id="@+id/menu_clear"
         android:title="@string/menu_clear"
         android:icon="@drawable/menu_clear"
         android:showAsAction="always"
-        android:orderInCategory="12"
+        android:orderInCategory="10"
         />
 
     <item android:id="@+id/menu_apply"
         android:title="@string/menu_apply"
         android:icon="@drawable/menu_apply"
         android:showAsAction="always"
-        android:orderInCategory="13"
+        android:orderInCategory="11"
         />
 
     <item android:id="@+id/menu_resume_replay"
         android:title="@string/menu_resume_replay"
         android:icon="@drawable/menu_resume"
-        android:showAsAction="always"
-        android:orderInCategory="14"
+        android:showAsAction="ifRoom"
+        android:orderInCategory="12"
         />
 
 </menu>

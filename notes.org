@@ -25,7 +25,9 @@ END
       - google account
       - improper puzzles OK
 *** TODO Show user ID settings page at installation time?
-*** TODO Clean up puzzle name/number usage, and info view
+*** TODO Revamp info view
+    - Just use an html table
+    - Use javascript for voting
 *** TODO Add Help activity
     - Add to standard action overflow
     - Make sure it's available from every other activity, even prefs
@@ -71,8 +73,11 @@ END
     - by asking whether it was unique (?)
 
 ** Cross-installation work
-*** TODO Add puzzle properties to the database, remove from element
+*** DONE Add puzzle properties to the database, remove from element
     - Kill the distinction between source and generator params, and just have puzzle properties
+*** TODO Update db schema to handle attempts from other installations
+*** TODO Add Recommended Puzzles to the list of built-in collections
+*** TODO Consider adding an installation name to prefs, default to Build.PLATFORM or whatever it's called
 *** TODO Use backup service to keep basic prefs, like generation params
     - What would we use this for?  The user ID?
 *** TODO Write an appengine app that gathers data from the android app
@@ -82,11 +87,12 @@ END
     - when the app is slightly off the ground, sign up for Cloud Endpoints at http://endpoints-trusted-tester.appspot.com/
 
 ** Replay cleanups
-*** TODO Fix replay layout on squarish screens
+*** DONE Fix replay layout on squarish screens
     - controls are being pushed below the bottom
     - hmm, today it isn't happening?
     - and then a day later it is again
-*** TODO Move undo/redo back into the controls ribbon for replay
+    - one fix: move the actions back up top
+*** DONE Move undo/redo back into the controls ribbon for replay
 *** TODO Try making selection color darker
 *** TODO Try not minimizing disproofs until they're selected
 *** TODO Why does the first trail in puzzle 14 switch errors?

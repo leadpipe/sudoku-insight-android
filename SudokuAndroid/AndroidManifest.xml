@@ -54,7 +54,6 @@ limitations under the License.
         <activity
             android:name=".ReplayActivity"
             android:label="@string/app_short_name"
-            android:uiOptions="splitActionBarWhenNarrow"
             />
         <activity
             android:name=".SettingsActivity"
