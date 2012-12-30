@@ -112,8 +112,7 @@ public class Generator {
    * object with the properties {@link #PUZZLE_KEY}, {@link #NAME_KEY}, and
    * either {@link #SYMMETRY_KEY} or {@link #BROKEN_SYMMETRY_KEY}.
    */
-  public static JSONObject generateBasicPuzzle(int stream, int year, int month, int counter)
-      throws JSONException {
+  public static JSONObject generateBasicPuzzle(int stream, int year, int month, int counter) {
     return generatePuzzle(BASIC_VERSION, stream, year, month, counter);
   }
 
@@ -122,7 +121,7 @@ public class Generator {
    * constituent properties {@link #VERSION_KEY}, {@link #STREAM_KEY},
    * {@link #YEAR_KEY}, {@link #MONTH_KEY}, and {@link #COUNTER_KEY}.
    */
-  public static JSONObject parsePuzzleName(String name) throws JSONException {
+  public static JSONObject parsePuzzleName(String name) {
     Iterator<String> it = Splitter.on(':').split(name).iterator();
     String version = it.next();
     String stream = it.next();
@@ -133,39 +132,51 @@ public class Generator {
     String year = it.next();
     String month = it.next();
     checkArgument(!it.hasNext());
-    return new JSONObject()
-        .put(VERSION_KEY, Integer.parseInt(version))
-        .put(STREAM_KEY, Integer.parseInt(stream))
-        .put(YEAR_KEY, Integer.parseInt(year))
-        .put(MONTH_KEY, Integer.parseInt(month))
-        .put(COUNTER_KEY, Integer.parseInt(counter));
+    try {
+      return new JSONObject()
+          .put(VERSION_KEY, Integer.parseInt(version))
+          .put(STREAM_KEY, Integer.parseInt(stream))
+          .put(YEAR_KEY, Integer.parseInt(year))
+          .put(MONTH_KEY, Integer.parseInt(month))
+          .put(COUNTER_KEY, Integer.parseInt(counter));
+    } catch (JSONException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**
    * Generates the puzzle implied by the name in the given puzzle descriptor.
    */
-  public static JSONObject regeneratePuzzle(JSONObject puzzleDesc) throws JSONException {
-    return regeneratePuzzle(puzzleDesc.getString(NAME_KEY));
+  public static JSONObject regeneratePuzzle(JSONObject puzzleDesc) {
+    try {
+      return regeneratePuzzle(puzzleDesc.getString(NAME_KEY));
+    } catch (JSONException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**
    * Generates the puzzle whose generated name is as given.
    */
-  public static JSONObject regeneratePuzzle(String name) throws JSONException {
+  public static JSONObject regeneratePuzzle(String name) {
     JSONObject parts = parsePuzzleName(name);
-    return generatePuzzle(
-        parts.getInt(VERSION_KEY),
-        parts.getInt(STREAM_KEY),
-        parts.getInt(YEAR_KEY),
-        parts.getInt(MONTH_KEY),
-        parts.getInt(COUNTER_KEY));
+    try {
+      return generatePuzzle(
+          parts.getInt(VERSION_KEY),
+          parts.getInt(STREAM_KEY),
+          parts.getInt(YEAR_KEY),
+          parts.getInt(MONTH_KEY),
+          parts.getInt(COUNTER_KEY));
+    } catch (JSONException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**
    * Generates the puzzle with the given parameters.
    */
   public static JSONObject generatePuzzle(
-      int version, int stream, int year, int month, int counter) throws JSONException {
+      int version, int stream, int year, int month, int counter) {
     String name = version + ":" + stream + ":" + year + "-" + month + ":" + counter;
     HashCode hash = Hashing.murmur3_128().hashString(name, Charsets.UTF_8);
     Random random = new Random(hash.asLong());
@@ -179,13 +190,17 @@ public class Generator {
     }
   }
 
-  private static JSONObject generateBasicPuzzle(String name, Random random) throws JSONException {
+  private static JSONObject generateBasicPuzzle(String name, Random random) {
     Symmetry symmetry = Symmetry.choose(random);
     Grid puzzle = GenerationStrategy.SUBTRACTIVE_RANDOM.generate(random, symmetry);
     String symKey = symmetry.describes(puzzle) ? SYMMETRY_KEY : BROKEN_SYMMETRY_KEY;
-    return new JSONObject()
-        .put(PUZZLE_KEY, puzzle.toFlatString())
-        .put(NAME_KEY, name)
-        .put(symKey, symmetry.getName());
+    try {
+      return new JSONObject()
+          .put(PUZZLE_KEY, puzzle.toFlatString())
+          .put(NAME_KEY, name)
+          .put(symKey, symmetry.getName());
+    } catch (JSONException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
