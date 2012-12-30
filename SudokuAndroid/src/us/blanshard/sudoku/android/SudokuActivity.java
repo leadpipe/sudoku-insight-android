@@ -23,8 +23,6 @@ import android.view.MenuItem;
 import android.view.WindowManager;
 
 public class SudokuActivity extends ActivityBase {
-  private static final boolean STRICT = true;
-
   private SudokuFragment mBoardFragment;
 
   @Override public void onCreate(Bundle savedInstanceState) {
@@ -34,16 +32,17 @@ public class SudokuActivity extends ActivityBase {
     setTitle(R.string.app_short_name);
     mBoardFragment = (SudokuFragment) getFragmentManager().findFragmentById(R.id.board_fragment);
 
-    if (STRICT) {
+    if (BuildConfig.DEBUG) {
       StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
           .detectAll()
           .penaltyLog()
           .penaltyDialog()
           .build());
       StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-          .detectAll()
+          .detectLeakedClosableObjects()
+          .detectLeakedSqlLiteObjects()
           .penaltyLog()
-          //.penaltyDeath()
+          .penaltyDropBox()
           .build());
     }
   }
