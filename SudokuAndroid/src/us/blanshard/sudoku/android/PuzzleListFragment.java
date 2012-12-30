@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import static us.blanshard.sudoku.gen.Generator.NAME_KEY;
+
 import us.blanshard.sudoku.android.Database.Attempt;
 
 import android.os.Bundle;
@@ -36,6 +38,9 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Iterables;
 import com.google.common.primitives.Longs;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Comparator;
 import java.util.List;
@@ -297,7 +302,15 @@ public class PuzzleListFragment extends FragmentBase {
 
     private String puzzleDescriptionHtml(Database.Puzzle puzzle) {
       StringBuilder sb = new StringBuilder();
-      sb.append(getString(R.string.text_puzzle_number_start, puzzle._id));
+      try {
+        JSONObject props = new JSONObject(puzzle.properties);
+        if (props.has(NAME_KEY))
+          sb.append(getString(R.string.text_puzzle_name_start, props.getString(NAME_KEY), puzzle._id));
+        else
+          sb.append(getString(R.string.text_puzzle_number_start, puzzle._id));
+      } catch (JSONException e) {
+        throw new RuntimeException(e);
+      }
       if (puzzle.vote != 0) {
         int resId = puzzle.vote < 0 ? R.string.text_vote_down : R.string.text_vote_up;
         sb.append(TextUtils.htmlEncode(getString(resId))).append("  ");

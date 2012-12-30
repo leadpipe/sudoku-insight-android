@@ -46,7 +46,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -169,7 +168,11 @@ public class SudokuFragment
     try {
       Sudoku game = new Sudoku(
           attempt.clues, mRegistry, GameJson.toHistory(attempt.history), attempt.elapsedMillis);
-      getActivity().setTitle(getString(R.string.text_puzzle_number, attempt.puzzleId));
+      JSONObject props = new JSONObject(attempt.properties);
+      String title = props.has(Generator.NAME_KEY)
+          ? getString(R.string.text_puzzle_name, props.getString(Generator.NAME_KEY), attempt.puzzleId)
+          : getString(R.string.text_puzzle_number, attempt.puzzleId);
+      getActivity().setTitle(title);
       setGame(game);
       if (attempt.uiState != null) {
         JSONObject uiState = new JSONObject(attempt.uiState);
@@ -183,8 +186,7 @@ public class SudokuFragment
         mPrefs.setCurrentAttemptIdAsync(attempt._id);
       }
     } catch (JSONException e) {
-      Log.e("SudokuFragment", "Unable to restore state from puzzle #" + attempt.puzzleId, e);
-      setGame(null);
+      throw new RuntimeException(e);
     }
     if (attempt.elements != null && !attempt.elements.isEmpty()) {
       String colls = Joiner.on(getString(R.string.text_collection_separator)).join(
@@ -348,7 +350,7 @@ public class SudokuFragment
       try {
         mAttempt.uiState = makeUiState().toString();
       } catch (JSONException e) {
-        Log.e("SudokuFragment", "Unable to save UI state", e);
+        throw new RuntimeException(e);
       }
     } else {
       mAttempt.uiState = null;
@@ -378,7 +380,7 @@ public class SudokuFragment
     JSONObject props;
     try {
       props = Generator.generateBasicPuzzle(
-          prefs.getStream(), cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), prefs.getNextCounterSync(cal));
+          prefs.getStream(), cal.get(Calendar.YEAR), 1 + cal.get(Calendar.MONTH), prefs.getNextCounterSync(cal));
     } catch (JSONException e) {
       throw new RuntimeException(e);
     }

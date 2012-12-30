@@ -36,7 +36,7 @@ limitations under the License.
         >
         <activity
             android:name=".SudokuActivity"
-            android:label="@string/app_short_name"
+            android:label="@string/app_full_name"
             >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -64,7 +64,6 @@ limitations under the License.
             android:name=".CapturePuzzleActivity"
             android:label="@string/app_short_name"
             android:windowSoftInputMode="stateVisible|adjustPan"
-            android:permission=""
             >
             <intent-filter 
                 android:label="@string/app_full_name"

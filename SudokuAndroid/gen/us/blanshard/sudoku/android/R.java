@@ -190,16 +190,18 @@ public final class R {
         public static final int text_move_number=0x7f070037;
         public static final int text_no_vote=0x7f070038;
         public static final int text_oops=0x7f070039;
-        public static final int text_puzzle_number=0x7f07003a;
-        public static final int text_puzzle_number_start=0x7f07003b;
-        public static final int text_replay_title=0x7f07003c;
-        public static final int text_sentence_end=0x7f07003d;
-        public static final int text_source=0x7f07003e;
-        public static final int text_symmetry=0x7f07003f;
-        public static final int text_synced_puzzles=0x7f070040;
-        public static final int text_vote_down=0x7f070041;
-        public static final int text_vote_question=0x7f070042;
-        public static final int text_vote_up=0x7f070043;
+        public static final int text_puzzle_name=0x7f07003a;
+        public static final int text_puzzle_name_start=0x7f07003c;
+        public static final int text_puzzle_number=0x7f07003b;
+        public static final int text_puzzle_number_start=0x7f07003d;
+        public static final int text_replay_title=0x7f07003e;
+        public static final int text_sentence_end=0x7f07003f;
+        public static final int text_source=0x7f070040;
+        public static final int text_symmetry=0x7f070041;
+        public static final int text_synced_puzzles=0x7f070042;
+        public static final int text_vote_down=0x7f070043;
+        public static final int text_vote_question=0x7f070044;
+        public static final int text_vote_up=0x7f070045;
     }
     public static final class xml {
         public static final int preferences=0x7f040000;

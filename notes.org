@@ -25,8 +25,7 @@ END
       - google account
       - improper puzzles OK
 *** TODO Show user ID settings page at installation time?
-*** DONE Rename Game to Attempt
-*** TODO Show puzzle properties in list, info, solution
+*** TODO Clean up puzzle name/number usage, and info view
 *** TODO Add Help activity
     - Add to standard action overflow
     - Make sure it's available from every other activity, even prefs
@@ -51,6 +50,8 @@ END
       32; 60% opacity for enabled, 30% for disabled
 *** TODO Figure out why the progress indicator stops
     - Profile
+    - Note it runs fine on installation, while we're generating the first
+      puzzle; but then stops as we go to display it.
 *** TODO Give visual indication when try to set an unsettable location
 *** TODO Evaluate captured puzzles' symmetries, if found store in properties
 *** TODO Make translation of symmetry names possible
@@ -84,6 +85,7 @@ END
 *** TODO Fix replay layout on squarish screens
     - controls are being pushed below the bottom
     - hmm, today it isn't happening?
+    - and then a day later it is again
 *** TODO Move undo/redo back into the controls ribbon for replay
 *** TODO Try making selection color darker
 *** TODO Try not minimizing disproofs until they're selected

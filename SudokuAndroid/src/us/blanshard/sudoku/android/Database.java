@@ -44,7 +44,7 @@ import java.util.Map;
 public class Database {
 
   private static final String ATTEMPT_SELECT_AND_FROM_CLAUSE =
-      "SELECT g.*, clues FROM [Attempt] a JOIN [Puzzle] p ON a.puzzleId = p._id ";
+      "SELECT a.*, clues, properties FROM [Attempt] a JOIN [Puzzle] p ON a.puzzleId = p._id ";
 
   public static final int ALL_PSEUDO_COLLECTION_ID = 0;
   public static final int GENERATED_COLLECTION_ID = 1;
@@ -113,6 +113,7 @@ public class Database {
 
     // Optional other stuff
     public Grid clues;
+    public String properties;
     public List<Element> elements;
 
     @Override public Attempt clone() {
@@ -209,17 +210,17 @@ public class Database {
   /**
    * Adds the puzzle with the given clues, properties, and source to the
    * database, or updates it by merging the properties and source with what's
-   * already there.  If not already present creates an attempt row for it as well.
-   * Returns the puzzle's ID.
+   * already there. If not already present creates an attempt row for it as
+   * well. Returns the puzzle's ID.
    */
   private long addOrUpdatePuzzle(String clues, JSONObject properties, String source) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
     db.beginTransaction();
     try {
+      if (properties == null) properties = new JSONObject();
       ContentValues values = new ContentValues();
       values.put("clues", clues);
-      if (properties != null)
-        values.put("properties", properties.toString());
+      values.put("properties", properties.toString());
       if (source != null)
         values.put("source", source);
 
@@ -229,14 +230,12 @@ public class Database {
         putUnstartedAttempt(db, puzzleId);
       } else {
         Puzzle puzzle = getFullPuzzle(puzzleId);
-        if (puzzle.properties != null && properties != null) {
-          JSONObject replacement = new JSONObject(puzzle.properties);
-          for (Iterator<?> keys = properties.keys(); keys.hasNext(); ) {
-            String key = (String) keys.next();
-            replacement.put(key, properties.get(key));
-          }
-          values.put("properties", replacement.toString());
+        JSONObject replacement = new JSONObject(puzzle.properties);
+        for (Iterator<?> keys = properties.keys(); keys.hasNext(); ) {
+          String key = (String) keys.next();
+          replacement.put(key, properties.get(key));
         }
+        values.put("properties", replacement.toString());
         // source: no further logic required to replace or leave an existing value.
         db.update("Puzzle", values, "[_id] = ?", new String[]{ Long.toString(puzzleId) });
       }
@@ -299,6 +298,7 @@ public class Database {
       if (cursor.moveToFirst()) {
         Attempt answer = attemptFromCursor(cursor);
         answer.clues = Grid.fromString(cursor.getString(cursor.getColumnIndexOrThrow("clues")));
+        answer.properties = cursor.getString(cursor.getColumnIndexOrThrow("properties"));
         answer.elements = getPuzzleElements(db, answer.puzzleId);
         return answer;
       }

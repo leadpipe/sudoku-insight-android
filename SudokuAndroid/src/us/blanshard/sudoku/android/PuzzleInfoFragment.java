@@ -17,9 +17,9 @@ package us.blanshard.sudoku.android;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 
-import us.blanshard.sudoku.android.Database.Element;
 import us.blanshard.sudoku.android.Database.Attempt;
 import us.blanshard.sudoku.android.Database.AttemptState;
+import us.blanshard.sudoku.android.Database.Element;
 import us.blanshard.sudoku.android.Database.Puzzle;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
@@ -162,7 +162,7 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
     mPuzzle = puzzle;
     mGrid.setPuzzle(puzzle.clues);
     try {
-      mProperties = puzzle.properties == null ? new JSONObject() : new JSONObject(puzzle.properties);
+      mProperties = new JSONObject(puzzle.properties);
       if (mProperties.has(Generator.NAME_KEY))
         mCallback.showName(mProperties.getString(Generator.NAME_KEY));
     } catch (JSONException e) {

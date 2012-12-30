@@ -116,7 +116,7 @@ public class Prefs {
   }
 
   public int getNextCounterSync(Calendar cal) {
-    int month = cal.get(Calendar.YEAR) * 100 + cal.get(Calendar.MONTH);
+    int month = cal.get(Calendar.YEAR) * 100 + cal.get(Calendar.MONTH) + 1;
     int currentMonth = mPrefs.getInt(MONTH, 0);
     int counter = mPrefs.getInt(COUNTER, 0);
     SharedPreferences.Editor prefs = mPrefs.edit();

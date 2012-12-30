@@ -174,7 +174,6 @@ public class ReplayActivity extends ActivityBase
     mMoveNumber = (TextView) findViewById(R.id.move_number);
     mTimer = (TextView) findViewById(R.id.timer);
 
-    mReplayView.setKeepScreenOn(true);
     mReplayView.setOnSelectListener(this);
     mReplayView.setSelectableColorsFunction(selectableColors);
     mReplayLocation.setOnSeekBarChangeListener(this);

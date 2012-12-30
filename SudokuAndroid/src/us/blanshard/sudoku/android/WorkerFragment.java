@@ -27,6 +27,7 @@ import android.os.Process;
 import android.os.StrictMode;
 import android.util.Log;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -165,8 +166,12 @@ public class WorkerFragment extends Fragment {
     protected void onPostExecute(A anchor, O output) {
     }
 
-    /** Called on UI thread after the background thread blows up. */
+    /**
+     * Called on UI thread after the background thread blows up. Default
+     * behavior is to throw on foreground thread, ie kill the app.
+     */
     protected void onFailure(A anchor, Throwable t) {
+      throw Throwables.propagate(t);
     }
 
     // Implementation
