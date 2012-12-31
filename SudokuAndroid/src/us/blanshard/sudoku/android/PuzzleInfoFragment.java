@@ -16,17 +16,18 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static us.blanshard.sudoku.gen.Generator.NAME_KEY;
 
 import us.blanshard.sudoku.android.Database.Attempt;
 import us.blanshard.sudoku.android.Database.AttemptState;
 import us.blanshard.sudoku.android.Database.Element;
-import us.blanshard.sudoku.android.Database.Puzzle;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.gen.Generator;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -43,6 +44,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
+import android.widget.TextView;
 
 import com.google.common.collect.Lists;
 
@@ -54,14 +56,16 @@ import java.util.List;
 /**
  * @author Luke Blanshard
  */
+@SuppressLint("SetJavaScriptEnabled")
 public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeListener {
   private static final String TAG = "PuzzleInfoFragment";
   private ActivityCallback mCallback;
-  private SudokuView mGrid;
   private JSONObject mProperties;
+  private SudokuView mGrid;
+  private TextView mPuzzleId;
   private View mVoteLayout;
   private RadioGroup mVote;
-  private WebView mContent;
+  private WebView mDetails;
   private Database.Puzzle mPuzzle;
 
   /**
@@ -91,12 +95,13 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
     super.onActivityCreated(savedInstanceState);
     mCallback = (ActivityCallback) getActivity();
     mGrid = (SudokuView) getActivity().findViewById(R.id.info_grid);
+    mPuzzleId = (TextView) getActivity().findViewById(R.id.info_puzzle_id);
     mVoteLayout = getActivity().findViewById(R.id.vote_layout);
     mVote = (RadioGroup) getActivity().findViewById(R.id.vote_group);
     mVote.setOnCheckedChangeListener(this);
-    mContent = (WebView) getActivity().findViewById(R.id.info_content);
-    mContent.setBackgroundColor(0);  // Makes the background transparent
-    mContent.setWebViewClient(new LinkHandler());
+    mDetails = (WebView) getActivity().findViewById(R.id.info_details);
+    mDetails.setBackgroundColor(0);  // Makes the background transparent
+    mDetails.setWebViewClient(new LinkHandler());
   }
 
   public void setPuzzleId(long puzzleId) {
@@ -157,43 +162,45 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
 
   private void setPuzzle(Database.Puzzle puzzle) {
     mPuzzle = puzzle;
-    mGrid.setPuzzle(puzzle.clues);
     try {
       mProperties = new JSONObject(puzzle.properties);
     } catch (JSONException e) {
       throw new RuntimeException(e);
     }
+    mGrid.setPuzzle(puzzle.clues);
+    mPuzzleId.setText(makeIdString());
     mVoteLayout.setVisibility(canVote() ? View.VISIBLE : View.GONE);
     mVote.check(puzzle.vote == 0 ? R.id.radio_no_vote
         : puzzle.vote < 0 ? R.id.radio_vote_down : R.id.radio_vote_up);
-    mContent.loadData(makeContentHtml(puzzle), "text/html; charset=UTF-8", null);
-    mContent.setBackgroundColor(0);  // Make the background transparent
+    mDetails.loadData(makeContentHtml(), "text/html; charset=UTF-8", null);
+    mDetails.setBackgroundColor(0);  // Make the background transparent
     getActivity().invalidateOptionsMenu();
   }
 
-  private String makeContentHtml(Puzzle puzzle) {
+  private String makeIdString() {
+    StringBuilder sb = new StringBuilder();
+    if (mProperties.has(NAME_KEY))
+      try {
+        sb.append(getString(R.string.text_puzzle_full_name, mProperties.get(NAME_KEY), mPuzzle._id));
+      } catch (JSONException e) {
+        throw new RuntimeException(e);
+      }
+    else
+      sb.append(getString(R.string.text_puzzle_full_number, mPuzzle._id));
+    if (mPuzzle.source != null)
+      sb.append("\n").append(getString(R.string.text_source, mPuzzle.source));
+    return sb.toString();
+  }
+
+  private String makeContentHtml() {
     StringBuilder sb = new StringBuilder("<ul>");
-    for (Database.Attempt attempt : Lists.reverse(puzzle.attempts))
+    for (Database.Attempt attempt : Lists.reverse(mPuzzle.attempts))
       appendAttemptHtml(attempt, sb.append("<li>"));
-    sb.append("</ul>");
-    if (puzzle.source != null)
-      sb.append(getString(R.string.text_source, TextUtils.htmlEncode(puzzle.source)))
-          .append("<br>");
-    try {
-      if (mProperties.has(Generator.SYMMETRY_KEY))
-        sb.append(getString(R.string.text_symmetry,
-            TextUtils.htmlEncode(mProperties.getString(Generator.SYMMETRY_KEY))))
-            .append("<br>");
-      if (mProperties.has(Generator.BROKEN_SYMMETRY_KEY))
-        sb.append(getString(R.string.text_broken_symmetry,
-            TextUtils.htmlEncode(mProperties.getString(Generator.BROKEN_SYMMETRY_KEY))))
-            .append("<br>");
-    } catch (JSONException e) {
-      throw new RuntimeException(e);
-    }
-    sb.append("<ul>");
-    for (Database.Element element : puzzle.elements)
+    sb.append("</ul><ul>");
+    for (Database.Element element : mPuzzle.elements)
       appendElementHtml(element, sb.append("<li>"));
+    sb.append("</ul><ul>");
+    appendOtherProperties(sb);
     sb.append("</ul>");
     return sb.toString();
   }
@@ -234,6 +241,19 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
   private void appendElementHtml(Element element, StringBuilder sb) {
     sb.append(ToText.collectionNameAndTimeHtml(getActivity(), element))
         .append(getString(R.string.text_sentence_end));
+  }
+
+  private void appendOtherProperties(StringBuilder sb) {
+    try {
+      if (mProperties.has(Generator.SYMMETRY_KEY))
+        sb.append("<li>").append(getString(R.string.text_symmetry,
+            TextUtils.htmlEncode(mProperties.getString(Generator.SYMMETRY_KEY))));
+      if (mProperties.has(Generator.BROKEN_SYMMETRY_KEY))
+        sb.append("<li>").append(getString(R.string.text_broken_symmetry,
+            TextUtils.htmlEncode(mProperties.getString(Generator.BROKEN_SYMMETRY_KEY))));
+    } catch (JSONException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static class FetchPuzzle extends WorkerFragment.Task<PuzzleInfoFragment, Long, Void, Database.Puzzle> {

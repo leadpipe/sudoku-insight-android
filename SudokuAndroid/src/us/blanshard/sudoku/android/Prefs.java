@@ -26,6 +26,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
+import com.google.common.math.LongMath;
 
 import java.util.Calendar;
 
@@ -103,7 +104,7 @@ public class Prefs {
     int stream = mPrefs.getInt(STREAM, 0);
     if (stream == 0) {
       HashCode code = Hashing.murmur3_128().hashString(mInstallationId, Charsets.UTF_8);
-      stream = 1 + Hashing.consistentHash(code, NUM_STREAMS);
+      stream = 1 + LongMath.mod(code.asLong(), NUM_STREAMS);
       setStreamAsync(stream);
     }
     return stream;

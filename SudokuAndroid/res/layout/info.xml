@@ -15,29 +15,43 @@
 	        android:layout_height="200dp"
 	        android:layout_gravity="center"
 	        android:padding="8dp"
+	        android:layout_marginTop="@dimen/info_view_top_margin"
 	        />
-	
+
+        <TextView
+            android:id="@+id/info_puzzle_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:paddingBottom="8dp"
+            />
+
 	    <LinearLayout
 	        android:id="@+id/vote_layout"
 	        android:layout_width="match_parent"
 	        android:layout_height="wrap_content"
-		    android:orientation="vertical"
-	        android:padding="8dp"
+		    android:orientation="horizontal"
+	        android:background="@drawable/vote_box"
+	        android:layout_marginLeft="8dp"
+	        android:layout_marginRight="8dp"
 	        android:visibility="gone"
 	        >
+
 	        <TextView
-	            android:layout_width="wrap_content"
+	            android:layout_width="0dp"
 	            android:layout_height="wrap_content"
+	            android:layout_weight="1"
 	            android:layout_gravity="center"
+	            android:gravity="center"
 	            android:text="@string/text_vote_question"
-	            style="@android:style/TextAppearance.Holo.Medium"
+	            style="@android:style/TextAppearance.Medium"
 	            />
 	
 		    <RadioGroup
 		        android:id="@+id/vote_group"
-		        android:layout_width="wrap_content"
+		        android:layout_width="0dp"
 		        android:layout_height="wrap_content"
-		        android:layout_gravity="center"
+	            android:layout_weight="1"
 		        >
 		        
 		        <RadioButton
@@ -46,6 +60,7 @@
 		            android:layout_height="wrap_content"
 		            android:checked="true"
 		            android:text="@string/text_no_vote"
+		            style="@android:style/TextAppearance.Small"
 		            />
 		
 		        <RadioButton
@@ -53,6 +68,7 @@
 		            android:layout_width="wrap_content"
 		            android:layout_height="wrap_content"
 		            android:text="@string/text_vote_up"
+		            style="@android:style/TextAppearance.Small"
 		            />
 		
 		        <RadioButton
@@ -60,15 +76,16 @@
 		            android:layout_width="wrap_content"
 		            android:layout_height="wrap_content"
 		            android:text="@string/text_vote_down"
+		            style="@android:style/TextAppearance.Small"
 		            />
 		    </RadioGroup>
 	    </LinearLayout>
-	
+  
 	    <WebView
-	        android:id="@+id/info_content"
+	        android:id="@+id/info_details"
 	        android:layout_width="match_parent"
 	        android:layout_height="wrap_content"
 	        />
-	
+
 	</LinearLayout>
 </ScrollView>

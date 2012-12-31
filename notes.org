@@ -23,11 +23,10 @@ END
 *** TODO Rewrite prefs activity to use new APIs
     - All the prefs we need:
       - google account
+      - installation ("device") name
       - improper puzzles OK
 *** TODO Show user ID settings page at installation time?
-*** TODO Revamp info view
-    - Just use an html table
-    - Use javascript for voting
+*** DONE Revamp info view
 *** TODO Add Help activity
     - Add to standard action overflow
     - Make sure it's available from every other activity, even prefs
@@ -57,6 +56,7 @@ END
 *** TODO Give visual indication when try to set an unsettable location
 *** TODO Evaluate captured puzzles' symmetries, if found store in properties
 *** TODO Make translation of symmetry names possible
+    - have symmetry names in info view be links to help page
 
 ** Publishing the app
 *** TODO Make other graphics for play store
@@ -77,9 +77,7 @@ END
     - Kill the distinction between source and generator params, and just have puzzle properties
 *** TODO Update db schema to handle attempts from other installations
 *** TODO Add Recommended Puzzles to the list of built-in collections
-*** TODO Consider adding an installation name to prefs, default to Build.PLATFORM or whatever it's called
-*** TODO Use backup service to keep basic prefs, like generation params
-    - What would we use this for?  The user ID?
+*** TODO Use backup service to keep the chosen user ID
 *** TODO Write an appengine app that gathers data from the android app
     - use GUID to identify the installation
     - allow login using Google ID to keep different installations from generating the same puzzles
