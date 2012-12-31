@@ -20,6 +20,7 @@ import static us.blanshard.sudoku.gen.Generator.NUM_STREAMS;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.preference.PreferenceManager;
 
 import com.google.common.base.Charsets;
@@ -36,21 +37,28 @@ import java.util.Calendar;
  * @author Luke Blanshard
  */
 public class Prefs {
+  public static final String DEVICE_NAME = "deviceName";
+  public static final String PROPER_ONLY = "properOnly";
+  public static final String USER_ID = "googleUserId";
+
   private static final String COUNTER = "counter";
   private static final String MONTH = "month";
-  private static final String PROPER_ONLY = "properOnly";
   private static final String SORT = "sort";
   private static final String STREAM = "stream";
-  private static final String USER_ID = "googleUserId";
 
   private final SharedPreferences mPrefs;
   private final String mInstallationId;
   private static Prefs sInstance;
 
   private Prefs(Context context) {
-    PreferenceManager.setDefaultValues(context, "prefs", 0, R.xml.preferences, false);
-    mPrefs = context.getSharedPreferences("prefs", 0);
+    mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
     mInstallationId = Installation.id(context);
+    if (!mPrefs.contains(PROPER_ONLY) || !mPrefs.contains(DEVICE_NAME)) {
+      SharedPreferences.Editor prefs = mPrefs.edit();
+      prefs.putBoolean(PROPER_ONLY, true);
+      prefs.putString(DEVICE_NAME, Build.MODEL);
+      prefs.apply();
+    }
   }
 
   public static synchronized Prefs instance(Context context) {
@@ -98,6 +106,10 @@ public class Prefs {
 
   public boolean getProperOnly() {
     return mPrefs.getBoolean(PROPER_ONLY, true);
+  }
+
+  public String getDeviceName() {
+    return mPrefs.getString(DEVICE_NAME, Build.MODEL);
   }
 
   public int getStream() {

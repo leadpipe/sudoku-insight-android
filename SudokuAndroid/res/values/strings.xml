@@ -32,6 +32,7 @@
     <string name="menu_sort_list">Sort</string>
     <string name="menu_undo">Undo</string>
     <string name="menu_undo_to_start">Undo to Start</string>
+    <string name="prefs_device_name">Device name</string>
     <string name="prefs_improper_desc">Puzzles may have more than one solution; makes solving harder</string>
     <string name="prefs_proper_desc">Every puzzle has just one solution; makes solving easier</string>
     <string name="prefs_proper_only">Proper sudokus only</string>
@@ -65,6 +66,7 @@
     <string name="text_puzzle_name_start">"Sudoku %1$s (#%2$d): "</string>
     <string name="text_puzzle_number">#%1$d</string>
     <string name="text_puzzle_number_start">"Sudoku #%1$d: "</string>
+    <string name="text_recommended_puzzles">Recommended puzzles</string>
     <string name="text_replay_title">Review #%1$d</string>
     <string name="text_sentence_end">.</string>
     <string name="text_source">Source: %1$s</string>

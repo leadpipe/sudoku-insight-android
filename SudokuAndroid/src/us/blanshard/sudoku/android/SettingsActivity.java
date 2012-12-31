@@ -18,6 +18,8 @@ package us.blanshard.sudoku.android;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
+import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceFragment;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -46,7 +48,7 @@ public class SettingsActivity extends ActivityBase {
     return super.onPrepareOptionsMenu(menu);
   }
 
-  public static class SettingsFragment extends PreferenceFragment {
+  public class SettingsFragment extends PreferenceFragment {
     @Override public void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
       ThreadPolicy prev = StrictMode.allowThreadDiskReads();
@@ -55,6 +57,14 @@ public class SettingsActivity extends ActivityBase {
       } finally {
         StrictMode.setThreadPolicy(prev);
       }
+      Preference pref = findPreference(Prefs.DEVICE_NAME);
+      pref.setSummary(mPrefs.getDeviceName());
+      pref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+        @Override public boolean onPreferenceChange(Preference preference, Object newValue) {
+          preference.setSummary(String.valueOf(newValue));
+          return true;
+        }
+      });
     }
   }
 }

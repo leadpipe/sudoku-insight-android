@@ -4,13 +4,16 @@
     <ListPreference
         android:key="googleUserId"
         android:title="@string/prefs_user_id"
-        android:defaultValue=""
+        />
+    
+    <EditTextPreference
+        android:key="deviceName"
+        android:title="@string/prefs_device_name"
         />
     
     <CheckBoxPreference
         android:key="properOnly"
         android:title="@string/prefs_proper_only"
-        android:defaultValue="true"
         android:summaryOn="@string/prefs_proper_desc"
         android:summaryOff="@string/prefs_improper_desc"
         />

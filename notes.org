@@ -75,9 +75,10 @@ END
 ** Cross-installation work
 *** DONE Add puzzle properties to the database, remove from element
     - Kill the distinction between source and generator params, and just have puzzle properties
-*** TODO Update db schema to handle attempts from other installations
-*** TODO Add Recommended Puzzles to the list of built-in collections
+*** DONE Update db schema to handle attempts from other installations
+*** DONE Add Recommended Puzzles to the list of built-in collections
 *** TODO Use backup service to keep the chosen user ID
+*** TODO Handle synced puzzles and attempts
 *** TODO Write an appengine app that gathers data from the android app
     - use GUID to identify the installation
     - allow login using Google ID to keep different installations from generating the same puzzles

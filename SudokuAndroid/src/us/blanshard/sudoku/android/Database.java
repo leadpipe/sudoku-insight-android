@@ -50,6 +50,9 @@ public class Database {
   public static final int GENERATED_COLLECTION_ID = 1;
   public static final int CAPTURED_COLLECTION_ID = 2;
   public static final int SYNCED_COLLECTION_ID = 3;
+  public static final int RECOMMENDED_COLLECTION_ID = 4;
+
+  public static final int THIS_INSTALLATION_ID = 1;
 
   private final OpenHelper mOpenHelper;
   private static Database sInstance;
@@ -101,6 +104,7 @@ public class Database {
   public static class Attempt implements Cloneable {
     public long _id;
     public long puzzleId;
+    public long installationId;
     public String history;
     public long elapsedMillis;
     public int numMoves;
@@ -113,6 +117,7 @@ public class Database {
 
     // Optional other stuff
     public Grid clues;
+    public InstallationInfo installation;
     public String properties;
     public List<Element> elements;
 
@@ -123,6 +128,12 @@ public class Database {
         throw new Error(e);
       }
     }
+  }
+
+  public static class InstallationInfo {
+    public long _id;
+    public String id;
+    public String name;
   }
 
   public static class CollectionInfo {
@@ -252,6 +263,7 @@ public class Database {
   private static long putUnstartedAttempt(SQLiteDatabase db, long puzzleId) throws SQLException {
     ContentValues values = new ContentValues();
     values.put("puzzleId", puzzleId);
+    values.put("installationId", THIS_INSTALLATION_ID);
     values.put("attemptState", AttemptState.UNSTARTED.getNumber());
     values.put("lastTime", System.currentTimeMillis());
     return db.insertOrThrow("Attempt", null, values);
@@ -322,6 +334,7 @@ public class Database {
     Attempt answer = new Attempt();
     answer._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
     answer.puzzleId = cursor.getLong(cursor.getColumnIndexOrThrow("puzzleId"));
+    answer.installationId = cursor.getLong(cursor.getColumnIndexOrThrow("installationId"));
     answer.history = cursor.getString(cursor.getColumnIndexOrThrow("history"));
     answer.elapsedMillis = getLong(cursor, "elapsedMillis", 0);
     answer.uiState = cursor.getString(cursor.getColumnIndexOrThrow("uiState"));
@@ -630,7 +643,7 @@ public class Database {
     private final Context mContext;
 
     OpenHelper(Context context) {
-      super(context, "db", null, 7);
+      super(context, "db", null, 8);
       mContext = context;
     }
 
@@ -642,6 +655,11 @@ public class Database {
           + "  [properties] TEXT,"
           + "  [source] TEXT,"
           + "  [vote] INTEGER  DEFAULT 0)");
+      db.execSQL(""
+          + "CREATE TABLE [Installation] ("
+          + "  [_id] INTEGER PRIMARY KEY,"
+          + "  [id] TEXT  NOT NULL  UNIQUE,"
+          + "  [name] TEXT  NOT NULL)");
       db.execSQL(""
           + "CREATE TABLE [Collection] ("
           + "  [_id] INTEGER PRIMARY KEY,"
@@ -668,6 +686,7 @@ public class Database {
           + "CREATE TABLE [Attempt] ("
           + "  [_id] INTEGER PRIMARY KEY,"
           + "  [puzzleId] INTEGER  REFERENCES [Puzzle] ON DELETE CASCADE,"
+          + "  [installationId] INTEGER  REFERENCES [Installation] ON DELETE CASCADE,"
           + "  [history] TEXT,"
           + "  [elapsedMillis] INTEGER,"
           + "  [numMoves] INTEGER,"
@@ -697,10 +716,19 @@ public class Database {
       values.put("_id", SYNCED_COLLECTION_ID);
       values.put("name", mContext.getString(R.string.text_synced_puzzles));
       db.insertOrThrow("Collection", null, values);
+      values.put("_id", RECOMMENDED_COLLECTION_ID);
+      values.put("name", mContext.getString(R.string.text_recommended_puzzles));
+      db.insertOrThrow("Collection", null, values);
+
+      values = new ContentValues();
+      values.put("_id", THIS_INSTALLATION_ID);
+      values.put("id", Installation.id(mContext));
+      values.put("name", Prefs.instance(mContext).getDeviceName());
+      db.insertOrThrow("Installation", null, values);
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-      if (oldVersion < 7)
+      if (oldVersion < 8)
         throw new AssertionError("Upgrades not supported, please reinstall");
     }
   }
