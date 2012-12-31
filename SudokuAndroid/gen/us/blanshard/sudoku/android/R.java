@@ -53,7 +53,7 @@ public final class R {
         public static final int menu_trail=0x7f02001f;
         public static final int menu_undo=0x7f020020;
         public static final int menu_undo_all=0x7f020021;
-        public static final int vote_box=0x7f020022;
+        public static final int vote_box5=0x7f020022;
     }
     public static final class id {
         public static final int already_have_notice=0x7f090000;
