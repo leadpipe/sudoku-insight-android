@@ -27,10 +27,11 @@ END
       - improper puzzles OK
 *** TODO Show user ID settings page at installation time?
 *** DONE Revamp info view
-*** TODO Add Help activity
+*** DONE Add Help activity
     - Add to standard action overflow
     - Make sure it's available from every other activity, even prefs
     - Make it contextual
+*** TODO Write help content
 *** DONE Nail down the hierarchy of activities
     - include List in the common menu
     - figure out the least confusing way to deal with chains of activities
