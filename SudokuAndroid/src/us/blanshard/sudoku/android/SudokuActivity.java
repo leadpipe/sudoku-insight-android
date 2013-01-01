@@ -46,6 +46,10 @@ public class SudokuActivity extends ActivityBase {
     }
   }
 
+  @Override protected String getHelpPage() {
+    return "sudoku";
+  }
+
   @Override public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
       case android.R.id.home:

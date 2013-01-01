@@ -41,6 +41,10 @@ public class SettingsActivity extends ActivityBase {
         .commit();
   }
 
+  @Override protected String getHelpPage() {
+    return "settings";
+  }
+
   @Override public boolean onPrepareOptionsMenu(Menu menu) {
     for (int i = 0; i < menu.size(); ++i) {
       MenuItem item = menu.getItem(i);

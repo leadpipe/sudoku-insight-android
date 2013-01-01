@@ -198,6 +198,10 @@ public class ReplayActivity extends ActivityBase
     return true;
   }
 
+  @Override protected String getHelpPage() {
+    return "replay";
+  }
+
   @Override public boolean onPrepareOptionsMenu(Menu menu) {
     for (int i = 0; i < menu.size(); ++i) {
       MenuItem item = menu.getItem(i);

@@ -66,6 +66,10 @@ public class PuzzleListActivity extends ActivityBase
     mListFragment.setOnItemClickListener(this);
   }
 
+  @Override protected String getHelpPage() {
+    return "list";
+  }
+
   @Override protected void onPostCreate(Bundle savedInstanceState) {
     super.onPostCreate(savedInstanceState);
     applyExtras();

@@ -21,8 +21,9 @@ package us.blanshard.sudoku.android;
  * @author Luke Blanshard
  */
 public class Extras {
-  public static final String COLLECTION_ID = "collectionId";
   public static final String ATTEMPT_ID = "attemptId";
+  public static final String COLLECTION_ID = "collectionId";
+  public static final String HELP_PAGE = "helpPage";
   public static final String PUZZLE_ID = "puzzleId";
   public static final String SHOW_INFO = "showInfo";
 }

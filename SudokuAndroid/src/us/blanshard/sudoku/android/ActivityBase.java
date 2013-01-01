@@ -69,6 +69,12 @@ public abstract class ActivityBase extends Activity {
         startActivity(intent);
         return true;
       }
+      case R.id.menu_help: {
+        Intent intent = new Intent(this, HelpActivity.class);
+        intent.putExtra(Extras.HELP_PAGE, getHelpPage());
+        startActivity(intent);
+        return true;
+      }
     }
     return super.onOptionsItemSelected(item);
   }
@@ -76,4 +82,6 @@ public abstract class ActivityBase extends Activity {
   protected Long getCurrentPuzzleId() {
     return null;
   }
+
+  abstract protected String getHelpPage();
 }

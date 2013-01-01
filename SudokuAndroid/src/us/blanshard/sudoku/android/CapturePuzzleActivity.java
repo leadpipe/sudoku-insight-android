@@ -86,6 +86,10 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
     new FetchAutocompletes(this).execute();
   }
 
+  @Override protected String getHelpPage() {
+    return "capture";
+  }
+
   @Override public void onClick(View v) {
     if (mIsPuzzle && (v == mPlay || v == mSave)) {
       new Save(this, v == mPlay).execute();

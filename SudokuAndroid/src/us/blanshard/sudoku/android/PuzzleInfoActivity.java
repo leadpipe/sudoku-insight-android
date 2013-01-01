@@ -17,8 +17,6 @@ package us.blanshard.sudoku.android;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 
 /**
@@ -35,15 +33,12 @@ public class PuzzleInfoActivity extends ActivityBase implements PuzzleInfoFragme
     getActionBar().setDisplayHomeAsUpEnabled(true);
   }
 
-  @Override protected void onNewIntent(Intent intent) {
-    setIntent(intent);
+  @Override protected String getHelpPage() {
+    return "info";
   }
 
-  @Override public boolean onCreateOptionsMenu(Menu menu) {
-    super.onCreateOptionsMenu(menu);
-    MenuInflater inflater = getMenuInflater();
-    inflater.inflate(R.menu.common, menu);
-    return true;
+  @Override protected void onNewIntent(Intent intent) {
+    setIntent(intent);
   }
 
   @Override protected void onResume() {
