@@ -18,6 +18,8 @@ package us.blanshard.sudoku.android;
 import static us.blanshard.sudoku.android.Extras.ATTEMPT_ID;
 import static us.blanshard.sudoku.gen.Generator.NUM_STREAMS;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -46,11 +48,13 @@ public class Prefs {
   private static final String SORT = "sort";
   private static final String STREAM = "stream";
 
+  private final Context mAppContext;
   private final SharedPreferences mPrefs;
   private final String mInstallationId;
   private static Prefs sInstance;
 
   private Prefs(Context context) {
+    mAppContext = context.getApplicationContext();
     mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
     mInstallationId = Installation.id(context);
     if (!mPrefs.contains(PROPER_ONLY) || !mPrefs.contains(DEVICE_NAME)) {
@@ -102,6 +106,15 @@ public class Prefs {
 
   public String getUserId() {
     return mPrefs.getString(USER_ID, "");
+  }
+
+  /** Returns null if one isn't set up or the one that is isn't available anymore. */
+  public Account getUserAccount() {
+    String id = getUserId();
+    if (Strings.isNullOrEmpty(id)) return null;
+    for (Account acct : AccountManager.get(mAppContext).getAccountsByType("com.google"))
+      if (id.equals(acct.name)) return acct;
+    return null;
   }
 
   public boolean getProperOnly() {

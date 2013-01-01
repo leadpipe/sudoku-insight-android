@@ -20,7 +20,7 @@ END
 * App
 
 ** App/UI cleanups
-*** TODO Rewrite prefs activity to use new APIs
+*** DONE Rewrite prefs activity to use new APIs
     - All the prefs we need:
       - google account
       - installation ("device") name

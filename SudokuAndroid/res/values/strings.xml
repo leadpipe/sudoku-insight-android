@@ -34,9 +34,10 @@
     <string name="menu_undo_to_start">Undo to Start</string>
     <string name="prefs_device_name">Device name</string>
     <string name="prefs_improper_desc">Puzzles may have more than one solution; makes solving harder</string>
+    <string name="prefs_no_user_id">None</string>
     <string name="prefs_proper_desc">Every puzzle has just one solution; makes solving easier</string>
     <string name="prefs_proper_only">Proper sudokus only</string>
-    <string name="prefs_user_id">Google user ID</string>
+    <string name="prefs_user_id">Account</string>
     <string name="text_all_puzzles">All puzzles</string>
     <string name="text_already_have_puzzle">You already have this puzzle!</string>
     <string name="text_attempt_gave_up">Gave up after %1$s; last played %2$s</string>

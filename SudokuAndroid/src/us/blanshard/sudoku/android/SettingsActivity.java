@@ -15,14 +15,19 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceFragment;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import com.google.common.base.Strings;
 
 /**
  * @author Luke Blanshard
@@ -48,7 +53,7 @@ public class SettingsActivity extends ActivityBase {
     return super.onPrepareOptionsMenu(menu);
   }
 
-  public class SettingsFragment extends PreferenceFragment {
+  public static class SettingsFragment extends PreferenceFragment {
     @Override public void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
       ThreadPolicy prev = StrictMode.allowThreadDiskReads();
@@ -57,14 +62,48 @@ public class SettingsActivity extends ActivityBase {
       } finally {
         StrictMode.setThreadPolicy(prev);
       }
+
+      setUpDeviceName();
+      setUpAccounts();
+    }
+
+    private void setUpDeviceName() {
       Preference pref = findPreference(Prefs.DEVICE_NAME);
-      pref.setSummary(mPrefs.getDeviceName());
       pref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
         @Override public boolean onPreferenceChange(Preference preference, Object newValue) {
           preference.setSummary(String.valueOf(newValue));
           return true;
         }
       });
+      applyChangeListener(pref);
+    }
+
+    private void setUpAccounts() {
+      ListPreference pref = (ListPreference) findPreference(Prefs.USER_ID);
+      AccountManager mgr = AccountManager.get(getActivity());
+      Account[] accts = mgr.getAccountsByType("com.google");
+      CharSequence[] values = new CharSequence[1 + accts.length];
+      final CharSequence[] names = new CharSequence[1 + accts.length];
+      values[0] = "";
+      names[0] = getString(R.string.prefs_no_user_id);
+      for (int i = 0; i < accts.length; ++i) {
+        values[i + 1] = names[i + 1] = accts[i].name;
+      }
+      pref.setEntries(names);
+      pref.setEntryValues(values);
+      pref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+        @Override public boolean onPreferenceChange(Preference preference, Object newValue) {
+          String s = String.valueOf(newValue);
+          preference.setSummary(Strings.isNullOrEmpty(s) ? names[0] : s);
+          return true;
+        }
+      });
+      applyChangeListener(pref);
+    }
+
+    private static void applyChangeListener(Preference pref) {
+      pref.getOnPreferenceChangeListener().onPreferenceChange(
+          pref, pref.getSharedPreferences().getAll().get(pref.getKey()));
     }
   }
 }
