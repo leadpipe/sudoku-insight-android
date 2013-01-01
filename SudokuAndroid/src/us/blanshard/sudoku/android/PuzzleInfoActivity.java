@@ -56,6 +56,7 @@ public class PuzzleInfoActivity extends ActivityBase implements PuzzleInfoFragme
   @Override public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
       case android.R.id.home:
+      case R.id.menu_list_puzzles:
         Intent upIntent = new Intent(this, PuzzleListActivity.class);
         upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         upIntent.putExtra(Extras.PUZZLE_ID, getPuzzleId());

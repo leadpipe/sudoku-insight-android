@@ -31,6 +31,7 @@ public abstract class ActivityBase extends Activity {
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    getActionBar().setDisplayHomeAsUpEnabled(true);
     mDb = Database.instance(this);
     mPrefs = Prefs.instance(this);
     mInstallationId = Installation.id(this);
@@ -44,6 +45,20 @@ public abstract class ActivityBase extends Activity {
 
   @Override public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
+      case android.R.id.home: {
+        Intent upIntent = new Intent(this, SudokuActivity.class);
+        upIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(upIntent);
+        return true;
+      }
+      case R.id.menu_list_puzzles: {
+        Intent intent = new Intent(this, PuzzleListActivity.class);
+        Long id = getCurrentPuzzleId();
+        if (id != null)
+          intent.putExtra(Extras.PUZZLE_ID, id);
+        startActivity(intent);
+        return true;
+      }
       case R.id.menu_capture_puzzle: {
         Intent intent = new Intent(this, CapturePuzzleActivity.class);
         startActivity(intent);
@@ -56,5 +71,9 @@ public abstract class ActivityBase extends Activity {
       }
     }
     return super.onOptionsItemSelected(item);
+  }
+
+  protected Long getCurrentPuzzleId() {
+    return null;
   }
 }

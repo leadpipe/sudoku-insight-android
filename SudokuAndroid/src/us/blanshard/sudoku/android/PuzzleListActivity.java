@@ -19,6 +19,7 @@ import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,9 +48,10 @@ public class PuzzleListActivity extends ActivityBase
     mListFragment = (PuzzleListFragment) getFragmentManager().findFragmentById(R.id.list_fragment);
     mInfoFragment = (PuzzleInfoFragment) getFragmentManager().findFragmentById(R.id.info_fragment);
 
-    if (mInfoFragment == null && getIntent().getExtras().getBoolean(Extras.SHOW_INFO, false)) {
+    Bundle extras = getIntent().getExtras();
+    if (mInfoFragment == null && extras != null && extras.getBoolean(Extras.SHOW_INFO, false)) {
       Intent infoIntent = new Intent(this, PuzzleInfoActivity.class);
-      infoIntent.putExtra(Extras.PUZZLE_ID, getIntent().getExtras().getLong(Extras.PUZZLE_ID));
+      infoIntent.putExtra(Extras.PUZZLE_ID, extras.getLong(Extras.PUZZLE_ID));
       infoIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_CLEAR_TOP);
       startActivity(infoIntent);
       finish();
@@ -74,6 +76,18 @@ public class PuzzleListActivity extends ActivityBase
     applyExtras();
   }
 
+  @Override public boolean onPrepareOptionsMenu(Menu menu) {
+    for (int i = 0; i < menu.size(); ++i) {
+      MenuItem item = menu.getItem(i);
+      switch (item.getItemId()) {
+        case R.id.menu_list_puzzles:
+          item.setVisible(false);
+          break;
+      }
+    }
+    return super.onPrepareOptionsMenu(menu);
+  }
+
   private void applyExtras() {
     if (getIntent().hasExtra(Extras.COLLECTION_ID)) {
       long collectionId = getIntent().getExtras().getLong(Extras.COLLECTION_ID);
@@ -84,18 +98,6 @@ public class PuzzleListActivity extends ActivityBase
       mListFragment.setPuzzleId(puzzleId);
       if (mInfoFragment != null) mInfoFragment.setPuzzleId(puzzleId);
     }
-  }
-
-  @Override public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case android.R.id.home:
-        Intent upIntent = new Intent(this, SudokuActivity.class);
-        upIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(upIntent);
-        finish();
-        return true;
-    }
-    return super.onOptionsItemSelected(item);
   }
 
   @Override public boolean onNavigationItemSelected(int itemPosition, long itemId) {

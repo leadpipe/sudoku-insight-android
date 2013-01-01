@@ -15,10 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
 
@@ -27,6 +25,7 @@ public class SudokuActivity extends ActivityBase {
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    getActionBar().setDisplayHomeAsUpEnabled(false);
     setContentView(R.layout.main);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     setTitle(R.string.app_short_name);
@@ -47,22 +46,16 @@ public class SudokuActivity extends ActivityBase {
     }
   }
 
-  @Override public boolean onCreateOptionsMenu(Menu menu) {
-    super.onCreateOptionsMenu(menu);
-    getMenuInflater().inflate(R.menu.list_item, menu);
-    return true;
-  }
-
   @Override public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
-      case R.id.menu_list_puzzles: {
-        Intent intent = new Intent(this, PuzzleListActivity.class);
-        intent.putExtra(Extras.PUZZLE_ID, mBoardFragment.getPuzzleId());
-        startActivity(intent);
-        return true;
-      }
+      case android.R.id.home:
+        return false;
     }
     return super.onOptionsItemSelected(item);
+  }
+
+  @Override protected Long getCurrentPuzzleId() {
+    return mBoardFragment.getPuzzleId();
   }
 
   @Override public void onWindowFocusChanged(boolean hasFocus) {

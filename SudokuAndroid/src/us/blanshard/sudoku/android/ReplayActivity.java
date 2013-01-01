@@ -87,6 +87,7 @@ public class ReplayActivity extends ActivityBase
   private SeekBar mReplayLocation;
   private TextView mMoveNumber;
   private TextView mTimer;
+  private Long mPuzzleId;
   private Sudoku mGame;
   private final Sudoku.Registry mRegistry = Sudoku.newRegistry();
   private List<Move> mHistory;
@@ -154,7 +155,6 @@ public class ReplayActivity extends ActivityBase
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    getActionBar().setDisplayHomeAsUpEnabled(true);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     if (!getIntent().hasExtra(Extras.ATTEMPT_ID)) {
@@ -249,6 +249,10 @@ public class ReplayActivity extends ActivityBase
     return super.onOptionsItemSelected(item);
   }
 
+  @Override protected Long getCurrentPuzzleId() {
+    return mPuzzleId;
+  }
+
   private void clearPending() {
     mPendingInsight = null;
     mPendingCommand = null;
@@ -331,6 +335,7 @@ public class ReplayActivity extends ActivityBase
   }
 
   void setAttempt(Database.Attempt attempt) {
+    mPuzzleId = attempt.puzzleId;
     mGame = new Sudoku(attempt.clues, mRegistry).resume();
     setTitle(getString(R.string.text_replay_title, attempt.puzzleId));
     mReplayView.setGame(mGame);

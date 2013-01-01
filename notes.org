@@ -31,6 +31,16 @@ END
     - Add to standard action overflow
     - Make sure it's available from every other activity, even prefs
     - Make it contextual
+*** DONE Nail down the hierarchy of activities
+    - include List in the common menu
+    - figure out the least confusing way to deal with chains of activities
+    - basic hierarchy: root is SudokuActivity
+      - List
+        - Info
+          - Replay
+      - Capture
+      - Settings
+      - Help
 *** TODO Acknowledge icons from the Noun Project in Help/About
     - <a href="http://thenounproject.com/noun/play/#icon-No6506" target="_blank">Play</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
       - for play and reverse

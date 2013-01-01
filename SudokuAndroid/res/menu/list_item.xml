@@ -1,9 +1,0 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <item android:id="@+id/menu_list_puzzles"
-        android:title="@string/menu_list_puzzles"
-        android:showAsAction="never|withText"
-        android:orderInCategory="20"
-        />
-
-</menu>
