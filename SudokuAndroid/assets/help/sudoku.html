@@ -1,7 +1,52 @@
 <!doctype html>
 <html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
 <body>
-<h1>Sudoku</h1>
-Some awesome help goes here.
+<h1>Solving Sudoku</h1>
+
+<ul>
+  <li><b>Learn the rules</b> of the game <a href="#rules">below</a>.
+
+  <li><b>Enter a number</b> by touching the square, then sliding in the
+    "clock-face" direction of that number.  For example, 3 is to the right.
+
+  <li><img class="float" src="file:///android_res/drawable/ic_menu_undo_enabled.png">
+    <b>Undo a mistake</b> using the <i>Undo</i> command.  Or simply enter the
+    correct number.
+
+  <li><b>Erase a number</b> by touching the square, then sliding toward 12 o'clock.
+
+  <li><img class="float" src="file:///android_res/drawable/ic_menu_undo_all_enabled.png">
+    <b>Start over</b> using the <i>Undo to Start</i> command.  Tip: use the Redo
+    command repeatedly after starting over until you find the mistake.
+
+  <li><b>If you get stuck,</b> try <a href="#trails">creating trails</a> (see
+    below).  Or use the <i>Give Up</i> command from the menu, then
+    <a href="info.html">review your attempt</a> to see what you missed.
+
+</ul>
+
+<a name=trails><h2>Trails</h2></a>
+<ul>
+  <li><img class="float" src="file:///android_res/drawable/ic_menu_trail_enabled.png">
+    A <b>trail</b> is a series of moves that follow from an initial guess.
+    The <i>New Trail</i> command starts one.
+
+</ul>
+
+<a name=rules><h2>The Rules of Sudoku</h2></a>
+<ul>
+  <li>Each number from 1 through 9 must appear once in every row, column, and
+    3-by-3 block of the board.
+
+  <li>A Sudoku puzzle is defined by its clue numbers, which are shown
+    in <b>bold</b>.  You can't change the clue numbers.
+
+  <li>All other squares on the board start out blank, and you can put any number
+    from 1 through 9 in any of them.
+</ul>
+
 </body>
 </html>

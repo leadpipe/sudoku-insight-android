@@ -42,7 +42,7 @@ END
       - Capture
       - Settings
       - Help
-*** TODO Acknowledge icons from the Noun Project in Help/About
+*** DONE Acknowledge icons from the Noun Project in Help/About
     - <a href="http://thenounproject.com/noun/play/#icon-No6506" target="_blank">Play</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
       - for play and reverse
     - <a href="http://thenounproject.com/noun/pause/#icon-No6413" target="_blank">Pause</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project

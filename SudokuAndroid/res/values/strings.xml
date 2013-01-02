@@ -13,6 +13,7 @@
     <string name="dialog_give_up_message">Give up on this puzzle?</string>
     <string name="dialog_skip_message">Skip this puzzle?</string>
     <string name="hint_capture_source">Where does this puzzle come from?</string>
+    <string name="menu_about">About</string>
     <string name="menu_apply">Apply Selected Insight</string>
     <string name="menu_capture_puzzle">Enter a Puzzle</string>
     <string name="menu_clear">Clear Insights</string>

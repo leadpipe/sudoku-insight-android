@@ -35,14 +35,24 @@ public class HelpActivity extends ActivityBase {
     // WebView reads and writes disk at create time.
     ThreadPolicy policy = StrictMode.allowThreadDiskWrites();
     try {
-      setContentView(R.layout.help);
+      mHelpView = new WebView(this);
     } finally {
       StrictMode.setThreadPolicy(policy);
     }
 
-    mHelpView = (WebView) findViewById(R.id.help_view);
+    setContentView(mHelpView);
     String page = getIntent().getExtras().getString(Extras.HELP_PAGE);
+    loadPage(page);
+  }
+
+  private void loadPage(String page) {
     mHelpView.loadUrl("file:///android_asset/help/" + page + ".html");
+  }
+
+  @Override public boolean onCreateOptionsMenu(Menu menu) {
+    super.onCreateOptionsMenu(menu);
+    getMenuInflater().inflate(R.menu.help, menu);
+    return true;
   }
 
   @Override public boolean onPrepareOptionsMenu(Menu menu) {
@@ -57,8 +67,24 @@ public class HelpActivity extends ActivityBase {
     return super.onPrepareOptionsMenu(menu);
   }
 
+  @Override public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case R.id.menu_about:
+        loadPage("about");
+        return true;
+    }
+    return super.onOptionsItemSelected(item);
+  }
+
   @Override protected String getHelpPage() {
     // Shouldn't be called.
     return null;
+  }
+
+  @Override public void onBackPressed() {
+    if (mHelpView.canGoBack())
+      mHelpView.goBack();
+    else
+      finish();
   }
 }
