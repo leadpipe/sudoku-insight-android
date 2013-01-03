@@ -15,6 +15,9 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import us.blanshard.sudoku.android.bricolsoft.WebViewClientEx;
+import us.blanshard.sudoku.android.bricolsoft.WebViewEx;
+
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
@@ -35,7 +38,10 @@ public class HelpActivity extends ActivityBase {
     // WebView reads and writes disk at create time.
     ThreadPolicy policy = StrictMode.allowThreadDiskWrites();
     try {
-      mHelpView = new WebView(this);
+      // We use Bricolsoft's fixes for WebView so we can use URI fragments to
+      // point to specific locations within help pages.
+      mHelpView = new WebViewEx(this);
+      mHelpView.setWebViewClient(new WebViewClientEx(this));
     } finally {
       StrictMode.setThreadPolicy(policy);
     }
