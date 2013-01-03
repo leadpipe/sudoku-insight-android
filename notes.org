@@ -32,6 +32,8 @@ END
     - Make sure it's available from every other activity, even prefs
     - Make it contextual
 *** TODO Write help content
+    - Add sub-menu giving access to all the help pages from any help page
+*** TODO Figure out what's breaking when you back out of replay while mRunning
 *** DONE Nail down the hierarchy of activities
     - include List in the common menu
     - figure out the least confusing way to deal with chains of activities
@@ -60,7 +62,7 @@ END
     - http://thenounproject.com/using-symbols/
     - for menu/action icons: 192px, 144px "optical square"; scale down to 64, 48,
       32; 60% opacity for enabled, 30% for disabled
-*** TODO Figure out why the progress indicator stops
+*** DONE Figure out why the progress indicator stops
     - Profile
     - Note it runs fine on installation, while we're generating the first
       puzzle; but then stops as we go to display it.

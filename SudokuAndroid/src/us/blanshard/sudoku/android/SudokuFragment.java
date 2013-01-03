@@ -39,6 +39,7 @@ import us.blanshard.sudoku.gen.Generator;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
@@ -155,7 +156,8 @@ public class SudokuFragment
     return mAttempt.puzzleId;
   }
 
-  private void setAttempt(Database.Attempt attempt) {
+  private void setAttempt(
+      Database.Attempt attempt, List<Move> history, String title, JSONObject uiState, String status) {
     mAttempt = attempt;
     if (attempt == null) {
       setGame(null);
@@ -166,12 +168,10 @@ public class SudokuFragment
     }
     new CheckNextAttempt(this).execute(attempt._id);
     try {
-      Sudoku game = new Sudoku(
-          attempt.clues, mRegistry, GameJson.toHistory(attempt.history), attempt.elapsedMillis);
-      getActivity().setTitle(getString(R.string.text_puzzle_number, attempt.puzzleId));
+      Sudoku game = new Sudoku(attempt.clues, mRegistry, history, attempt.elapsedMillis);
+      getActivity().setTitle(title);
       setGame(game);
-      if (attempt.uiState != null) {
-        JSONObject uiState = new JSONObject(attempt.uiState);
+      if (uiState != null) {
         mUndoStack = GameJson.toUndoStack(uiState.getJSONObject("undo"), new GameJson.CommandFactory(mGame));
         mSudokuView.setDefaultChoice(numeral(uiState.getInt("defaultChoice")));
         restoreTrails(uiState.getJSONArray("trailOrder"), uiState.getInt("numVisibleTrails"),
@@ -184,15 +184,8 @@ public class SudokuFragment
     } catch (JSONException e) {
       throw new RuntimeException(e);
     }
-    if (attempt.elements != null && !attempt.elements.isEmpty()) {
-      String colls = Joiner.on(getString(R.string.text_collection_separator)).join(
-          Iterables.transform(attempt.elements, new Function<Database.Element, String>() {
-              @Override public String apply(Database.Element element) {
-                return ToText.collectionNameAndTimeText(getActivity(), element);
-              }
-          }));
-      showStatus(colls);
-    }
+    if (status != null)
+      showStatus(status);
   }
 
   private void setGame(Sudoku game) {
@@ -383,11 +376,18 @@ public class SudokuFragment
   private static class FetchFindOrMakePuzzle extends WorkerFragment.Task<SudokuFragment, Long, Void, Database.Attempt> {
     private final Database mDb;
     private final Prefs mPrefs;
+    private final Context mAppContext;
+
+    private List<Move> mHistory;
+    private String mTitle;
+    private JSONObject mUiState;
+    private String mStatus;
 
     FetchFindOrMakePuzzle(SudokuFragment fragment) {
       super(fragment, Priority.FOREGROUND, Independence.DEPENDENT);
       mDb = fragment.mDb;
       mPrefs = fragment.mPrefs;
+      mAppContext = fragment.getActivity().getApplicationContext();
     }
 
     @Override protected Database.Attempt doInBackground(Long... params) {
@@ -396,11 +396,37 @@ public class SudokuFragment
         answer = mDb.getFirstOpenAttempt();
       if (answer == null)
         answer = generateAndStorePuzzle(mDb, mPrefs);
+      if (answer != null)
+        makeAdditionalArtifacts(answer);
       return answer;
     }
 
+    /**
+     * The purpose of this method is to get as many classes loaded by the
+     * background thread as possible, to reduce the work done on the UI thread.
+     */
+    private void makeAdditionalArtifacts(Database.Attempt attempt) {
+      try {
+        mHistory = GameJson.toHistory(attempt.history);
+        mTitle = mAppContext.getString(R.string.text_puzzle_number, attempt.puzzleId);
+        if (attempt.uiState != null)
+          mUiState = new JSONObject(attempt.uiState);
+
+        if (attempt.elements != null && !attempt.elements.isEmpty()) {
+          mStatus = Joiner.on(mAppContext.getString(R.string.text_collection_separator)).join(
+              Iterables.transform(attempt.elements, new Function<Database.Element, String>() {
+                  @Override public String apply(Database.Element element) {
+                    return ToText.collectionNameAndTimeText(mAppContext, element);
+                  }
+              }));
+        }
+      } catch (JSONException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
     @Override protected void onPostExecute(SudokuFragment fragment, Database.Attempt attempt) {
-      fragment.setAttempt(attempt);
+      fragment.setAttempt(attempt, mHistory, mTitle, mUiState, mStatus);
     }
   }
 
@@ -628,7 +654,7 @@ public class SudokuFragment
   private void skipToNextPuzzle() {
     mPrefs.removeCurrentAttemptIdAsync();
     if (updateAttempt(true)) new SaveAttempt(this).execute(mAttempt);
-    setAttempt(null);
+    setAttempt(null, null, null, null, null);
     new FetchFindOrMakePuzzle(this).execute(0L);
     mProgress.setVisibility(View.VISIBLE);
   }
