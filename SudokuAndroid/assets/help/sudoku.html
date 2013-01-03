@@ -9,8 +9,8 @@
 <ul>
   <li><b>Learn the rules</b> of the game <a href="#rules">below</a>.
 
-  <li><b>Enter a number</b> by touching the square, then sliding in the
-    "clock-face" direction of that number.  For example, 3 is to the right.
+  <li><b>Enter a number</b> by touching the square, then sliding toward where
+    that number would appear on a clock face.  For example, 3 is to the right.
 
   <li><img class="float" src="file:///android_res/drawable/ic_menu_undo_enabled.png">
     <b>Undo a mistake</b> using the <i>Undo</i> command.  Or simply enter the
@@ -39,14 +39,23 @@
 
 <a name=rules><h2>The Rules of Sudoku</h2></a>
 <ul>
-  <li>Each number from 1 through 9 must appear once in every row, column, and
-    3-by-3 block of the board.
+  <li><b>Fill in the blank squares</b> with numbers from 1 through 9.
 
-  <li>A Sudoku puzzle is defined by its clue numbers, which are shown
-    in <b>bold</b>.  You can't change the clue numbers.
+  <li>A solved Sudoku has <b>all 9 numbers</b> in every row, column, and 3-by-3
+    block of the board.
 
-  <li>All other squares on the board start out blank, and you can put any number
-    from 1 through 9 in any of them.
+  <li>A good place to start is to look for a block where some number can only be
+    in one of its squares.  Put the number in that square, then look for the
+    next forced move.
+
+  <li>A row or column may likewise have just one possible open spot for a given
+    number.  These are typically harder to see than block moves.
+
+  <li>There are several other ways to see that some number must go in some
+    square.  The <a href="replay.html">Review</a> screen shows several of these
+    &mdash; the only catch is, you have to either solve the puzzle first or give
+    up.
+
 </ul>
 
 </body>
