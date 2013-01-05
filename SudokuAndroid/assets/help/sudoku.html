@@ -10,7 +10,8 @@
   <li><b>Learn the rules</b> of the game <a href="#rules">below</a>.
 
   <li><b>Enter a number</b> by touching the square, then sliding toward where
-    that number would appear on a clock face.  For example, 3 is to the right.
+    that number would appear on a clock face.  For example, 3 is to the right
+    &mdash; 3 o'clock.
 
   <li><img class="float"
            src="file:///android_res/drawable/ic_menu_undo_enabled.png"><b>Undo
@@ -18,6 +19,11 @@
            the correct number.
 
   <li><b>Erase a number</b> by touching the square, then sliding toward 12 o'clock.
+
+  <li><b>If you see this</b> <img src="trail-entry.png"> instead of this
+    <img src="normal-entry.png"> when you enter a 1, you
+    have <a href="#trails">started a trail</a> (see below).  To turn the trail
+    display off, uncheck the trail's checkbox in the list below the grid.
 
   <li><img class="float"
            src="file:///android_res/drawable/ic_menu_undo_all_enabled.png"><b>Start
@@ -29,11 +35,6 @@
     below).  Or use the <i>Give Up</i> command from the menu, then
     <a href="info.html#review">review your attempt</a> to see what you missed.
 
-  <li><b>If your entered numbers are small, blue and in the corners of their
-      squares,</b> you have <a href="#trails">started a trail</a> (see below).
-      To turn the trail entry off, tap the ON button below the grid to OFF.  To
-      turn the trail display off, uncheck the trail's checkbox.
-
 </ul>
 
 <a name=trails><h2>Trails</h2></a>
@@ -43,7 +44,28 @@
            is a series of moves that follow from an initial guess.  The <i>New
            Trail</i> command starts one.
 
-  <li>The purpose of a trail is to <b>disprove that initial guess.</b>
+  <li><img class="float" src="trail-entry.png">A trail's moves are shown in a
+    color and in one corner of their squares.
+
+  <li>The purpose of a trail is to <b>disprove that initial guess.</b>  A
+    productive trail follows the consequences of the first move all the way to a
+    contradiction: a situation that breaks the rules of the game.
+
+  <li>When you have disproved a guess, turn off the trail and make any moves
+    that follow, given the new information.
+
+  <li><b>To turn off a trail</b> entirely, uncheck its checkbox in the list
+    below the solution grid.
+
+  <li><b>To just turn off the trail's entry</b> but leave the trail showing,
+    toggle the on/off button to the right of the trail list.
+
+  <li>You may show <b>up to 4 trails</b> simultaneously.
+
+  <li><b>To make an old trail active,</b> touch its row in the list somewhere
+    other than its checkbox.
+
+  <li><b>To gray out a trail</b> in the list, long-press its row.
 
 </ul>
 
@@ -60,9 +82,9 @@
 
     <img src="example1.png" class="example">
 
-    For example, examine this puzzle.  In block 2 (blocks are numbered left to
-    right, top to bottom), the number 1 can only be in its top right square.  In
-    block 8, 3 must be in <i>its</i> top right square.
+    For example, examine this puzzle.  In block 2 (top center), the number 1 can
+    only be in its top right square.  In block 5 (center), 6 must be in the top
+    left square.  In block 8 (bottom center), 3 must be in the top right square.
 
   <li>A row or column may likewise have just one possible open spot for a given
     number.  These are typically harder to see than block moves.  An example
