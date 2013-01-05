@@ -18,11 +18,14 @@ package us.blanshard.sudoku.android;
 import us.blanshard.sudoku.android.bricolsoft.WebViewClientEx;
 import us.blanshard.sudoku.android.bricolsoft.WebViewEx;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.webkit.URLUtil;
 import android.webkit.WebView;
 
 /**
@@ -41,7 +44,14 @@ public class HelpActivity extends ActivityBase {
       // We use Bricolsoft's fixes for WebView so we can use URI fragments to
       // point to specific locations within help pages.
       mHelpView = new WebViewEx(this);
-      mHelpView.setWebViewClient(new WebViewClientEx(this));
+      mHelpView.setWebViewClient(new WebViewClientEx(this) {
+        @Override public boolean shouldOverrideUrlLoadingEx(WebView view, String url) {
+          if (URLUtil.isFileUrl(url)) return false;
+          Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+          startActivity(intent);
+          return true;
+        }
+      });
     } finally {
       StrictMode.setThreadPolicy(policy);
     }
@@ -51,8 +61,9 @@ public class HelpActivity extends ActivityBase {
     loadPage(page);
   }
 
-  private void loadPage(String page) {
+  private boolean loadPage(String page) {
     mHelpView.loadUrl("file:///android_asset/help/" + page + ".html");
+    return true;
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {
@@ -75,9 +86,22 @@ public class HelpActivity extends ActivityBase {
 
   @Override public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
-      case R.id.menu_about:
-        loadPage("about");
-        return true;
+      case R.id.menu_help_about:
+        return loadPage("about");
+      case R.id.menu_help_capture:
+        return loadPage("capture");
+      case R.id.menu_help_info:
+        return loadPage("info");
+      case R.id.menu_help_list:
+        return loadPage("list");
+      case R.id.menu_help_overview:
+        return loadPage("overview");
+      case R.id.menu_help_replay:
+        return loadPage("replay");
+      case R.id.menu_help_settings:
+        return loadPage("settings");
+      case R.id.menu_help_sudoku:
+        return loadPage("sudoku");
     }
     return super.onOptionsItemSelected(item);
   }
