@@ -1,5 +1,15 @@
+body {
+    max-width: 30em;
+    margin-left: auto;
+    margin-right: auto;
+}
 li {
     margin: 1ex 0;
+}
+img.example {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 img.float {
     float: right;
