@@ -142,6 +142,18 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
       return this;
     }
 
+    /**
+     * Erases all locations where this builder's assignment does not equal that
+     * of the given grid.
+     */
+    public Builder intersect(Grid grid) {
+      byte[] squares = grid().squares;
+      for (int i = 0; i < squares.length; ++i)
+        if (squares[i] != grid.squares[i])
+          squares[i] = 0;
+      return this;
+    }
+
     /** Tells whether the grid has a mapping for the given location. */
     public boolean containsKey(Location loc) {
       return grid.containsKey(loc);

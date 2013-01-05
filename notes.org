@@ -20,13 +20,12 @@ END
 * App
 
 ** App/UI cleanups
-*** TODO Show user ID settings page at installation time?
 *** TODO Finish help content
+*** TODO Show user ID settings page at installation time?
 *** TODO Figure out what's breaking when you back out of replay while mRunning
 *** TODO Give visual indication when try to set an unsettable location
 *** TODO Evaluate captured puzzles' symmetries, if found store in properties
 *** TODO Make translation of symmetry names possible
-    - have symmetry names in info view be links to help page
 
 ** Publishing the app
 *** TODO Make other graphics for play store

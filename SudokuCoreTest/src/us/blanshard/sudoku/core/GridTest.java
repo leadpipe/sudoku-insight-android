@@ -105,6 +105,16 @@ public class GridTest {
     assertEquals(0, builder.size());
   }
 
+  @Test public void intersect() {
+    String s1 = "...8.9..6.23...9.....6.8...7....1..2...45...9......6......7......1.46.....3......";
+    String s2 = "...8.9..6.23.........6.8...6..3.1..2...45...9......6......7......1.46.....3......";
+    String s3 = "...8.9..6.23.........6.8........1..2...45...9......6......7......1.46.....3......";
+    Grid g1 = Grid.fromString(s1);
+    Grid g2 = Grid.fromString(s2);
+    Grid g3 = Grid.fromString(s3);
+    assertEquals(g3, g1.toBuilder().intersect(g2).build());
+  }
+
   @Test public void views() {
     Grid grid = Grid.builder()
         .put(Location.of(10), Numeral.of(1))
