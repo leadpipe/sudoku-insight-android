@@ -51,8 +51,22 @@ public final class Solver implements Iterable<Grid> {
   /**
    * Solves the given starting grid, returns a summary of the result.
    */
+  public static Result solve(Grid start, int maxSolutions) {
+    return solve(start, maxSolutions, new Random());
+  }
+
+  /**
+   * Solves the given starting grid, returns a summary of the result.
+   */
   public static Result solve(Grid start, Random random) {
     return solve(start, random, Strategy.FAST);
+  }
+
+  /**
+   * Solves the given starting grid, returns a summary of the result.
+   */
+  public static Result solve(Grid start, int maxSolutions, Random random) {
+    return solve(start, maxSolutions, random, Strategy.FAST);
   }
 
   /**
@@ -60,7 +74,15 @@ public final class Solver implements Iterable<Grid> {
    * of the result.
    */
   public static Result solve(Grid start, Random random, Strategy strategy) {
-    return new Solver(start, random, strategy).result();
+    return solve(start, 1, random, strategy);
+  }
+
+  /**
+   * Solves the given starting grid using the given strategy, returns a summary
+   * of the result.
+   */
+  public static Result solve(Grid start, int maxSolutions, Random random, Strategy strategy) {
+    return new Solver(start, random, strategy).result(maxSolutions);
   }
 
   /**
@@ -69,25 +91,30 @@ public final class Solver implements Iterable<Grid> {
   @Immutable
   public final class Result {
     public final Grid start;
-    public final int numSolutions;  // 0, 1, or 2 to mean >1
+    public final int numSolutions;  // maxSolutions + 1 if more than maxSolutions
     public final int numSteps;  // The total number
     public final int numStepsAfterSolution;
     @Nullable public final Grid solution;  // Not null when numSolutions == 1
+    @Nullable public final Grid intersection;  // Not null when numSolutions in 1..maxSolutions
 
-    public Result() {
+    public Result(int maxSolutions) {
       Iter iter = iterator();
       int count = 0;
       Grid grid = null;
+      Grid.Builder builder = null;
       int steps = 0;
-      while (iter.hasNext() && ++count <= 1) {
+      while (iter.hasNext() && ++count <= maxSolutions) {
         grid = iter.next();
         steps = iter.getStepCount();
+        if (builder == null) builder = grid.toBuilder();
+        else builder.intersect(grid);
       }
       this.start = Solver.this.start;
       this.numSolutions = count;
       this.numSteps = iter.getStepCount();
       this.numStepsAfterSolution = count == 0 ? 0 : iter.getStepCount() - steps;
       this.solution = count == 1 ? grid : null;
+      this.intersection = (count > 0 && count <= maxSolutions) ? builder.build() : null;
     }
   }
 
@@ -149,8 +176,8 @@ public final class Solver implements Iterable<Grid> {
     return strategy.getIterator(this);
   }
 
-  public Result result() {
-    return new Result();
+  public Result result(int maxSolutions) {
+    return new Result(maxSolutions);
   }
 
   /**

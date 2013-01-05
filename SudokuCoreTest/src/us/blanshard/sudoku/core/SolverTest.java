@@ -39,7 +39,8 @@ public class SolverTest {
         { "..9..87....65..3...............3..69.........23..7...............8..36....41..2..", 0 },  // No solution, slow
         { ".6.5.4.3.1...9...8.........9...5...6.4.6.2.7.7...4...5.........4...8...1.5.2.3.4.", 1 },  // Unique solution
         { ".9..74....2....6.375...........9..545.3.4.......58.....45....8....1.2.3.......92.", 1 },  // Unique solution, no steps
-        { ".....6....59.....82....8....45........3........6..3.54...325..6..................", 2 },  // Multiple solutions
+        { ".3....91.8.6.....2...8.4...5.2..7..........7.9..4.65.....7.3...3.8.....1.97...8..", 9 },  // Multiple solutions
+        { ".....6....59.....82....8....45........3........6..3.54...325..6..................", 13},  // Multiple solutions
       });
   }
 
@@ -53,16 +54,23 @@ public class SolverTest {
   @Test public void allPermutations() {
     Grid prev = null;
     for (Solver.Strategy strategy : Solver.Strategy.values()) {
-      Solver.Result result = Solver.solve(start, new Random(1), strategy);
+      Solver.Result result = Solver.solve(start, 12, new Random(1), strategy);
       assertEquals(numSolutions, result.numSolutions);
       if (prev != null)
         assertEquals(prev, result.solution);
-      if (numSolutions == 1) {
-        assertEquals(Grid.State.SOLVED, result.solution.getState());
-        assertEquals(true, result.solution.isSolved());
-        assertEquals(true, result.solution.entrySet().containsAll(start.entrySet()));
+      if (numSolutions > 0 && numSolutions <= 12) {
+        if (numSolutions == 1) {
+          assertEquals(Grid.State.SOLVED, result.solution.getState());
+          assertEquals(true, result.solution.isSolved());
+          assertEquals(true, result.solution.entrySet().containsAll(start.entrySet()));
+          assertEquals(result.solution, result.intersection);
+        } else {
+          assertNull(result.solution);
+        }
+        assertEquals(true, result.intersection.entrySet().containsAll(start.entrySet()));
       } else {
         assertNull(result.solution);
+        assertNull(result.intersection);
       }
       prev = result.solution;
     }

@@ -62,7 +62,7 @@
     <string name="text_attempt_solved">Solved in %1$s %2$s</string>
     <string name="text_attempt_start_time">Started %1$s.</string>
     <string name="text_captured_puzzles">Captured puzzles</string>
-    <string name="text_broken_symmetry">Symmetry (broken): %1$s</string>
+    <string name="text_broken_symmetry">Symmetry (broken): %1$s.</string>
     <string name="text_collection_date">%1$s, %2$s</string>
     <string name="text_collection_in_start">"In: "</string>
     <string name="text_collection_separator">"; "</string>
@@ -72,6 +72,7 @@
     <string name="text_move_and_trail_counts">Moves: %1$d; trails: %2$d.</string>
     <string name="text_move_number">%1$d of %2$d</string>
     <string name="text_no_vote">Normal fun.</string>
+    <string name="text_num_solutions">Solutions: %1$d.</string>
     <string name="text_oops">Oops!</string>
     <string name="text_puzzle_full_name">Sudoku %1$s (#%2$d on this device)</string>
     <string name="text_puzzle_full_number">Sudoku #%1$d on this device</string>
@@ -82,7 +83,7 @@
     <string name="text_replay_title">Review #%1$d</string>
     <string name="text_sentence_end">.</string>
     <string name="text_source">Source: %1$s</string>
-    <string name="text_symmetry">Symmetry: %1$s</string>
+    <string name="text_symmetry">Symmetry: %1$s.</string>
     <string name="text_synced_puzzles">Synced puzzles</string>
     <string name="text_vote_down">Not so fun.</string>
     <string name="text_vote_question">How fun was this puzzle?</string>

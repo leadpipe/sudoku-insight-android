@@ -222,21 +222,22 @@ public final class R {
         public static final int text_move_and_trail_counts=0x7f070042;
         public static final int text_move_number=0x7f070043;
         public static final int text_no_vote=0x7f070044;
-        public static final int text_oops=0x7f070045;
-        public static final int text_puzzle_full_name=0x7f070046;
-        public static final int text_puzzle_full_number=0x7f070047;
-        public static final int text_puzzle_name_start=0x7f070048;
-        public static final int text_puzzle_number=0x7f070049;
-        public static final int text_puzzle_number_start=0x7f07004a;
-        public static final int text_recommended_puzzles=0x7f07004b;
-        public static final int text_replay_title=0x7f07004c;
-        public static final int text_sentence_end=0x7f07004d;
-        public static final int text_source=0x7f07004e;
-        public static final int text_symmetry=0x7f07004f;
-        public static final int text_synced_puzzles=0x7f070050;
-        public static final int text_vote_down=0x7f070051;
-        public static final int text_vote_question=0x7f070052;
-        public static final int text_vote_up=0x7f070053;
+        public static final int text_num_solutions=0x7f070045;
+        public static final int text_oops=0x7f070046;
+        public static final int text_puzzle_full_name=0x7f070047;
+        public static final int text_puzzle_full_number=0x7f070048;
+        public static final int text_puzzle_name_start=0x7f070049;
+        public static final int text_puzzle_number=0x7f07004a;
+        public static final int text_puzzle_number_start=0x7f07004b;
+        public static final int text_recommended_puzzles=0x7f07004c;
+        public static final int text_replay_title=0x7f07004d;
+        public static final int text_sentence_end=0x7f07004e;
+        public static final int text_source=0x7f07004f;
+        public static final int text_symmetry=0x7f070050;
+        public static final int text_synced_puzzles=0x7f070051;
+        public static final int text_vote_down=0x7f070052;
+        public static final int text_vote_question=0x7f070053;
+        public static final int text_vote_up=0x7f070054;
     }
     public static final class xml {
         public static final int preferences=0x7f040000;

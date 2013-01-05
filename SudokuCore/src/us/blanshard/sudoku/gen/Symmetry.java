@@ -179,11 +179,4 @@ public enum Symmetry {
     }
     return true;
   }
-
-  /**
-   * Generates a simple puzzle.
-   */
-  public Grid generateSimple(Random random) {
-    return GenerationStrategy.SIMPLE.generate(random, this);
-  }
 }

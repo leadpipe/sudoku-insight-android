@@ -22,6 +22,7 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Solver;
+import us.blanshard.sudoku.core.Solver.Result;
 
 import com.google.common.collect.Sets;
 
@@ -33,12 +34,16 @@ public class GenerationStrategyTest {
 
   private final Random random = new Random(0);
 
+  private Grid generateSimple(Symmetry sym) {
+    return GenerationStrategy.SIMPLE.generate(random, sym);
+  }
+
   @Test public void random() {
-    ensureBasicProperties(Symmetry.RANDOM.generateSimple(random));
+    ensureBasicProperties(generateSimple(Symmetry.RANDOM));
   }
 
   @Test public void classic() {
-    Grid grid = Symmetry.CLASSIC.generateSimple(random);
+    Grid grid = generateSimple(Symmetry.CLASSIC);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(grid.containsKey(loc), grid.containsKey(Location.of(80 - loc.index)));
@@ -46,7 +51,7 @@ public class GenerationStrategyTest {
   }
 
   @Test public void mirror() {
-    Grid grid = Symmetry.MIRROR.generateSimple(random);
+    Grid grid = generateSimple(Symmetry.MIRROR);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -56,7 +61,7 @@ public class GenerationStrategyTest {
   }
 
   @Test public void doubleMirror() {
-    Grid grid = Symmetry.DOUBLE_MIRROR.generateSimple(random);
+    Grid grid = generateSimple(Symmetry.DOUBLE_MIRROR);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -69,7 +74,7 @@ public class GenerationStrategyTest {
   }
 
   @Test public void diagonal() {
-    Grid grid = Symmetry.DIAGONAL.generateSimple(random);
+    Grid grid = generateSimple(Symmetry.DIAGONAL);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -79,7 +84,7 @@ public class GenerationStrategyTest {
   }
 
   @Test public void rotational() {
-    Grid grid = Symmetry.ROTATIONAL.generateSimple(random);
+    Grid grid = generateSimple(Symmetry.ROTATIONAL);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -89,7 +94,7 @@ public class GenerationStrategyTest {
   }
 
   @Test public void blockwise() {
-    Grid grid = Symmetry.BLOCKWISE.generateSimple(random);
+    Grid grid = generateSimple(Symmetry.BLOCKWISE);
     ensureBasicProperties(grid);
     for (Location loc : Location.ALL) {
       assertEquals(
@@ -106,6 +111,16 @@ public class GenerationStrategyTest {
       ensureBasicProperties(grid);
       if (generator.honorsSymmetry())
         assertTrue(symmetry.describes(grid));
+    }
+  }
+
+  @Test public void improper() {
+    for (GenerationStrategy generator : GenerationStrategy.values()) {
+      Symmetry symmetry = Symmetry.choose(random);
+      Result result = generator.generate(random, symmetry, 12);
+      if (generator.honorsSymmetry())
+        assertTrue(symmetry.describes(result.start));
+      assertEquals(true, result.numSolutions >= 1 && result.numSolutions <= 12);
     }
   }
 

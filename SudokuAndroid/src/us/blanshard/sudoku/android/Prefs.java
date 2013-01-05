@@ -18,6 +18,8 @@ package us.blanshard.sudoku.android;
 import static us.blanshard.sudoku.android.Extras.ATTEMPT_ID;
 import static us.blanshard.sudoku.gen.Generator.NUM_STREAMS;
 
+import us.blanshard.sudoku.gen.Generator;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
@@ -119,6 +121,14 @@ public class Prefs {
 
   public boolean getProperOnly() {
     return mPrefs.getBoolean(PROPER_ONLY, true);
+  }
+
+  /**
+   * Returns the largest number of solutions permitted to any puzzle we generate
+   * or capture.
+   */
+  public int getMaxSolutions() {
+    return getProperOnly() ? 1 : Generator.MAX_SOLUTIONS;
   }
 
   public String getDeviceName() {
