@@ -35,6 +35,7 @@ import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.MoveCommand;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.UndoStack;
+import us.blanshard.sudoku.gen.Generator;
 import us.blanshard.sudoku.insight.Analyzer;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
 import us.blanshard.sudoku.insight.DisprovedAssignment;
@@ -62,6 +63,7 @@ import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -724,8 +726,16 @@ public class ReplayActivity extends ActivityBase
 
     @Override protected Database.Attempt doInBackground(Long... params) {
       Database.Attempt answer = mDb.getAttempt(params[0]);
-      Solver.Result result = Solver.solve(answer.clues);
-      mSolution = new GridMarks(result.solution);
+      int numSolutions = 1;
+      try {
+        JSONObject props = new JSONObject(answer.properties);
+        if (props.has(Generator.NUM_SOLUTIONS_KEY))
+          numSolutions = props.getInt(Generator.NUM_SOLUTIONS_KEY);
+      } catch (JSONException e) {
+        throw new RuntimeException(e);
+      }
+      Solver.Result result = Solver.solve(answer.clues, numSolutions);
+      mSolution = new GridMarks(result.intersection);
       mDb.noteReplay(answer._id);
       return answer;
     }
