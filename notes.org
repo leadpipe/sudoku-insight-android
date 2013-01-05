@@ -20,52 +20,9 @@ END
 * App
 
 ** App/UI cleanups
-*** DONE Rewrite prefs activity to use new APIs
-    - All the prefs we need:
-      - google account
-      - installation ("device") name
-      - improper puzzles OK
 *** TODO Show user ID settings page at installation time?
-*** DONE Revamp info view
-*** DONE Add Help activity
-    - Add to standard action overflow
-    - Make sure it's available from every other activity, even prefs
-    - Make it contextual
-*** TODO Write help content
-    - Add sub-menu giving access to all the help pages from any help page
+*** TODO Finish help content
 *** TODO Figure out what's breaking when you back out of replay while mRunning
-*** DONE Nail down the hierarchy of activities
-    - include List in the common menu
-    - figure out the least confusing way to deal with chains of activities
-    - basic hierarchy: root is SudokuActivity
-      - List
-        - Info
-          - Replay
-      - Capture
-      - Settings
-      - Help
-*** DONE Acknowledge icons from the Noun Project in Help/About
-    - <a href="http://thenounproject.com/noun/play/#icon-No6506" target="_blank">Play</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
-      - for play and reverse
-    - <a href="http://thenounproject.com/noun/pause/#icon-No6413" target="_blank">Pause</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
-      - for pause
-    - <a href="http://thenounproject.com/noun/arrow/#icon-No6489" target="_blank">Arrow</a> designed by <a href="http://thenounproject.com/mateozlatar" target="_blank">Mateo Zlatar</a> from The Noun Project
-      - for undo, redo, undo to start, redo to end
-    - <a href="http://thenounproject.com/noun/loop/#icon-No2840" target="_blank">Loop</a> designed by <a href="http://thenounproject.com/somerandomdude" target="_blank">P.J. Onori</a> from The Noun Project
-      - for resume replay
-    - http://thenounproject.com/noun/pin/#icon-No1490 by http://thenounproject.com/brokate KB
-      - pin: for apply
-    - http://thenounproject.com/noun/trail/#icon-No523 by unknown designer, 1982
-      - trail
-    - http://thenounproject.com/noun/wipe/#icon-No3626 by http://thenounproject.com/Gatada Johan H. W. Basberg
-      - wipe: for clear
-    - http://thenounproject.com/using-symbols/
-    - for menu/action icons: 192px, 144px "optical square"; scale down to 64, 48,
-      32; 60% opacity for enabled, 30% for disabled
-*** DONE Figure out why the progress indicator stops
-    - Profile
-    - Note it runs fine on installation, while we're generating the first
-      puzzle; but then stops as we go to display it.
 *** TODO Give visual indication when try to set an unsettable location
 *** TODO Evaluate captured puzzles' symmetries, if found store in properties
 *** TODO Make translation of symmetry names possible
@@ -80,17 +37,12 @@ END
     - beef up generator to return improper puzzles if asked
     - play a bunch of these puzzles and see how they are: what's a good max number of solutions?
 *** TODO Fix replay to handle improper puzzles
-*** DONE Add a preference for allowing improper puzzles to be shown
 *** TODO Return a flag for properness in generator's puzzle properties
 *** TODO Handle completion of potentially improper puzzles
     - by asking whether it was unique (?)
 
 ** Cross-installation work
-*** DONE Add puzzle properties to the database, remove from element
-    - Kill the distinction between source and generator params, and just have puzzle properties
-*** DONE Update db schema to handle attempts from other installations
-*** DONE Add Recommended Puzzles to the list of built-in collections
-*** TODO Use backup service to keep the chosen user ID
+*** TODO Use backup service to keep the chosen user ID & properness setting
 *** TODO Handle synced puzzles and attempts
 *** TODO Write an appengine app that gathers data from the android app
     - use GUID to identify the installation
@@ -99,12 +51,6 @@ END
     - when the app is slightly off the ground, sign up for Cloud Endpoints at http://endpoints-trusted-tester.appspot.com/
 
 ** Replay cleanups
-*** DONE Fix replay layout on squarish screens
-    - controls are being pushed below the bottom
-    - hmm, today it isn't happening?
-    - and then a day later it is again
-    - one fix: move the actions back up top
-*** DONE Move undo/redo back into the controls ribbon for replay
 *** TODO Try making selection color darker
 *** TODO Try not minimizing disproofs until they're selected
 *** TODO Why does the first trail in puzzle 14 switch errors?
