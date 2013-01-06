@@ -366,8 +366,15 @@ public class SudokuFragment
   private static Database.Attempt generateAndStorePuzzle(Database db, Prefs prefs) {
     Database.Attempt answer;
     Calendar cal = Calendar.getInstance();
-    JSONObject props = Generator.generateBasicPuzzle(
-          prefs.getStream(), cal.get(Calendar.YEAR), 1 + cal.get(Calendar.MONTH), prefs.getNextCounterSync(cal));
+    JSONObject props;
+    try {
+      do {
+        props = Generator.generateBasicPuzzle(
+            prefs.getStream(), cal.get(Calendar.YEAR), 1 + cal.get(Calendar.MONTH), prefs.getNextCounterSync(cal));
+      } while (prefs.getProperOnly() && props.getInt(Generator.NUM_SOLUTIONS_KEY) > 1);
+    } catch (JSONException e) {
+      throw new RuntimeException(e);
+    }
     long id = db.addGeneratedPuzzle(props);
     answer = db.getCurrentAttemptForPuzzle(id);
     return answer;

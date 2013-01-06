@@ -245,7 +245,7 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
 
   private void appendOtherProperties(StringBuilder sb) {
     try {
-      if (/*canVote() &&*/ mProperties.has(Generator.NUM_SOLUTIONS_KEY))
+      if (canVote() && mProperties.has(Generator.NUM_SOLUTIONS_KEY))
         sb.append("<li>").append(getString(R.string.text_num_solutions,
             mProperties.getInt(Generator.NUM_SOLUTIONS_KEY)));
       if (mProperties.has(Generator.SYMMETRY_KEY))

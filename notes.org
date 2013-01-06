@@ -31,8 +31,10 @@ END
 *** TODO Make other graphics for play store
 
 ** Improper (non-unique) puzzles
-*** TODO Add loop when generating: if improper, and only proper allowed, try next
-*** TODO Add canVote() check in to info display of #solutions
+*** TODO Allow improper puzzles in capture, up to maybe 10 solutions
+    - define a constant somewhere, use it there and in replay
+*** DONE Add loop when generating: if improper, and only proper allowed, try next
+*** DONE Add canVote() check in to info display of #solutions
 *** DONE Experiment with improper puzzles
     - beef up solver to return intersection of solutions
     - beef up generator to return improper puzzles if asked
