@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Improper Sudoku Generation Stats</title>
+<style>
+  h1, h2 {
+    text-align: center;
+  }
+  h3 {
+    margin: 2ex 3em;
+  }
+  hr {
+    width: 50%;
+    margin-top: 4ex;
+  }
+  table {
+    border-collapse: collapse;
+  }
+  td {
+    vertical-align: top;
+    text-align: center;
+    padding: 1ex 1em;
+  }
+  .tophead {
+    font-weight: bold;
+  }
+  .lefthead {
+    font-weight: bold;
+    text-align: left;
+    vertical-align: middle;
+  }
+  .bottomborder {
+    border-bottom: solid 2px #777;
+  }
+  .rightborder {
+    border-right: solid 2px #777;
+  }
+  .holes {
+    background: #f7f7f7;
+  }
+  .solns {
+    padding-top: 2ex;
+  }
+  .better {
+    color: #050;
+  }
+  .worse {
+    color: #600;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>Summary of Generating 10000 improper puzzles (5, 9) from seed 0x13c0de86539
+</h1>
+<h2>01/05/2013 9:31 p.m.</h2>
+
+<table>
+<tr>
+  <td>
+  <td><u># Solns:</u>
+  
+  <td class=tophead>1
+  
+  <td class=tophead>2
+  
+  <td class=tophead>3
+  
+  <td class=tophead>4
+  
+  <td class=tophead>5
+  
+<tr>
+  <td>
+  <td>
+  
+    <td class=solns>1,234
+  
+    <td class=solns>4,054
+  
+    <td class=solns>3,410
+  
+    <td class=solns>1,302
+  
+    <td class=solns>0
+  
+<tr>
+  <td><u>Symmetry</u>
+  <td>
+  
+    <td class="holes bottomborder">       0 holes
+        <div>σ:        0</div>
+  
+    <td class="holes bottomborder">  5.7679 holes
+        <div>σ:   1.6333</div>
+  
+    <td class="holes bottomborder">  7.9877 holes
+        <div>σ:   1.0001</div>
+  
+    <td class="holes bottomborder">  8.0307 holes
+        <div>σ:  0.17263</div>
+  
+    <td class="holes bottomborder">       0 holes
+        <div>σ:        0</div>
+  
+
+
+<tr>
+  <td rowspan=2 class=lefthead>blockwise
+    <div style="font-weight: normal">(1,381 puzzles)</div>
+  <td class="solns rightborder">
+    <div>  2.4388 solns</div>
+    <div>σ:  0.90252</div>
+  
+  <td class=solns>
+    <div>201</div>
+  
+  <td class=solns>
+    <div>564</div>
+  
+  <td class=solns>
+    <div>425</div>
+  
+  <td class=solns>
+    <div>191</div>
+  
+  <td class=solns>
+    <div>0</div>
+  
+
+<tr>
+  <td class="holes rightborder">
+    <div>   5.908 holes</div>
+    <div>σ:   2.9275</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+  <td class=holes>
+    <div>  5.6472 holes</div>
+    <div>σ:   1.6086</div>
+  
+  <td class=holes>
+    <div>  8.1012 holes</div>
+    <div>σ:  0.99604</div>
+  
+  <td class=holes>
+    <div>  8.0157 holes</div>
+    <div>σ:  0.12467</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+
+<tr>
+  <td rowspan=2 class=lefthead>classic
+    <div style="font-weight: normal">(1,400 puzzles)</div>
+  <td class="solns rightborder">
+    <div>  2.4571 solns</div>
+    <div>σ:  0.88083</div>
+  
+  <td class=solns>
+    <div>184</div>
+  
+  <td class=solns>
+    <div>577</div>
+  
+  <td class=solns>
+    <div>454</div>
+  
+  <td class=solns>
+    <div>185</div>
+  
+  <td class=solns>
+    <div>0</div>
+  
+
+<tr>
+  <td class="holes rightborder">
+    <div>    6.02 holes</div>
+    <div>σ:   2.8109</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+  <td class=holes>
+    <div>  5.8007 holes</div>
+    <div>σ:   1.6213</div>
+  
+  <td class=holes>
+    <div>  7.9163 holes</div>
+    <div>σ:  0.99759</div>
+  
+  <td class=holes>
+    <div>  8.0378 holes</div>
+    <div>σ:  0.19132</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+
+<tr>
+  <td rowspan=2 class=lefthead>diagonal
+    <div style="font-weight: normal">(1,444 puzzles)</div>
+  <td class="solns rightborder">
+    <div>  2.4474 solns</div>
+    <div>σ:  0.87191</div>
+  
+  <td class=solns>
+    <div>195</div>
+  
+  <td class=solns>
+    <div>583</div>
+  
+  <td class=solns>
+    <div>491</div>
+  
+  <td class=solns>
+    <div>175</div>
+  
+  <td class=solns>
+    <div>0</div>
+  
+
+<tr>
+  <td class="holes rightborder">
+    <div>  6.0256 holes</div>
+    <div>σ:    2.856</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+  <td class=holes>
+    <div>   5.825 holes</div>
+    <div>σ:    1.694</div>
+  
+  <td class=holes>
+    <div>  7.9532 holes</div>
+    <div>σ:  0.99992</div>
+  
+  <td class=holes>
+    <div>       8 holes</div>
+    <div>σ:        0</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+
+<tr>
+  <td rowspan=2 class=lefthead>double mirror
+    <div style="font-weight: normal">(1,400 puzzles)</div>
+  <td class="solns rightborder">
+    <div>  2.5621 solns</div>
+    <div>σ:  0.85662</div>
+  
+  <td class=solns>
+    <div>131</div>
+  
+  <td class=solns>
+    <div>561</div>
+  
+  <td class=solns>
+    <div>498</div>
+  
+  <td class=solns>
+    <div>210</div>
+  
+  <td class=solns>
+    <div>0</div>
+  
+
+<tr>
+  <td class="holes rightborder">
+    <div>  6.3986 holes</div>
+    <div>σ:   2.5652</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+  <td class=holes>
+    <div>  5.9091 holes</div>
+    <div>σ:   1.6071</div>
+  
+  <td class=holes>
+    <div>  7.9277 holes</div>
+    <div>σ:  0.99839</div>
+  
+  <td class=holes>
+    <div>  8.0714 holes</div>
+    <div>σ:  0.25815</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+
+<tr>
+  <td rowspan=2 class=lefthead>mirror
+    <div style="font-weight: normal">(1,449 puzzles)</div>
+  <td class="solns rightborder">
+    <div>  2.5066 solns</div>
+    <div>σ:  0.83855</div>
+  
+  <td class=solns>
+    <div>153</div>
+  
+  <td class=solns>
+    <div>584</div>
+  
+  <td class=solns>
+    <div>537</div>
+  
+  <td class=solns>
+    <div>175</div>
+  
+  <td class=solns>
+    <div>0</div>
+  
+
+<tr>
+  <td class="holes rightborder">
+    <div>  6.2905 holes</div>
+    <div>σ:     2.67</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+  <td class=holes>
+    <div>  5.8356 holes</div>
+    <div>σ:   1.5966</div>
+  
+  <td class=holes>
+    <div>  8.0093 holes</div>
+    <div>σ:   1.0009</div>
+  
+  <td class=holes>
+    <div>  8.0343 holes</div>
+    <div>σ:  0.18248</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+
+<tr>
+  <td rowspan=2 class=lefthead>none
+    <div style="font-weight: normal">(1,410 puzzles)</div>
+  <td class="solns rightborder">
+    <div>  2.4234 solns</div>
+    <div>σ:   0.8699</div>
+  
+  <td class=solns>
+    <div>198</div>
+  
+  <td class=solns>
+    <div>580</div>
+  
+  <td class=solns>
+    <div>469</div>
+  
+  <td class=solns>
+    <div>163</div>
+  
+  <td class=solns>
+    <div>0</div>
+  
+
+<tr>
+  <td class="holes rightborder">
+    <div>  5.9319 holes</div>
+    <div>σ:   2.9083</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+  <td class=holes>
+    <div>  5.6448 holes</div>
+    <div>σ:   1.6544</div>
+  
+  <td class=holes>
+    <div>  8.0618 holes</div>
+    <div>σ:  0.99915</div>
+  
+  <td class=holes>
+    <div>  8.0307 holes</div>
+    <div>σ:  0.17297</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+
+<tr>
+  <td rowspan=2 class=lefthead>rotational
+    <div style="font-weight: normal">(1,516 puzzles)</div>
+  <td class="solns rightborder">
+    <div>  2.5079 solns</div>
+    <div>σ:  0.86322</div>
+  
+  <td class=solns>
+    <div>172</div>
+  
+  <td class=solns>
+    <div>605</div>
+  
+  <td class=solns>
+    <div>536</div>
+  
+  <td class=solns>
+    <div>203</div>
+  
+  <td class=solns>
+    <div>0</div>
+  
+
+<tr>
+  <td class="holes rightborder">
+    <div>  6.1689 holes</div>
+    <div>σ:   2.7239</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+  <td class=holes>
+    <div>  5.7157 holes</div>
+    <div>σ:   1.6373</div>
+  
+  <td class=holes>
+    <div>   7.959 holes</div>
+    <div>σ:   1.0001</div>
+  
+  <td class=holes>
+    <div>  8.0197 holes</div>
+    <div>σ:  0.13933</div>
+  
+  <td class=holes>
+    <div>       0 holes</div>
+    <div>σ:        0</div>
+  
+
+
+</table>
+
+</body>
+</html>

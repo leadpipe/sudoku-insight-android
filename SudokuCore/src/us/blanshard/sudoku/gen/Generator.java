@@ -114,16 +114,25 @@ public class Generator {
   public static final int NUM_STREAMS = 5;
 
   /**
-   * How likely it is that a given puzzle will be improper. Changing this
-   * requires bumping the {@linkplain #BASIC_VERSION version number}.
+   * How likely it is that a given puzzle will be generated with parameters that
+   * allow it to be improper. (Around 20% of such generations end up with single
+   * solutions anyway.) Changing this requires bumping the
+   * {@linkplain #BASIC_VERSION version number}.
    */
-  public static final double CHANCE_OF_IMPROPER = 1.0;
+  private static final double CHANCE_OF_IMPROPER = 0.125;
 
   /**
    * The largest number of solutions for any puzzle generated. Changing this
    * requires bumping the {@linkplain #BASIC_VERSION version number}.
    */
-  public static final int MAX_SOLUTIONS = 12;
+  public static final int MAX_SOLUTIONS = 3;
+
+  /**
+   * The largest number of "holes" (unassigned locations) permitted in the
+   * intersection of solutions to generated improper puzzles. Changing this
+   * requires bumping the {@linkplain #BASIC_VERSION version number}.
+   */
+  public static final int MAX_HOLES = 7;
 
   /**
    * Generates a proper Sudoku with the given parameters, returns it as a JSON
@@ -210,8 +219,10 @@ public class Generator {
 
   private static JSONObject generateBasicPuzzle(String name, Random random) {
     int maxSolutions = random.nextDouble() < CHANCE_OF_IMPROPER ? MAX_SOLUTIONS : 1;
+    int maxHoles = maxSolutions == 1 ? 0 : MAX_HOLES;
     Symmetry symmetry = Symmetry.choose(random);
-    Result result = GenerationStrategy.SUBTRACTIVE_RANDOM.generate(random, symmetry, maxSolutions);
+    Result result = GenerationStrategy.SUBTRACTIVE_RANDOM.generate(
+        random, symmetry, maxSolutions, maxHoles);
     String symKey = symmetry.describes(result.start) ? SYMMETRY_KEY : BROKEN_SYMMETRY_KEY;
     try {
       return new JSONObject()

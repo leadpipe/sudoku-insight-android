@@ -117,10 +117,11 @@ public class GenerationStrategyTest {
   @Test public void improper() {
     for (GenerationStrategy generator : GenerationStrategy.values()) {
       Symmetry symmetry = Symmetry.choose(random);
-      Result result = generator.generate(random, symmetry, 12);
+      Result result = generator.generate(random, symmetry, 5, 7);
       if (generator.honorsSymmetry())
         assertTrue(symmetry.describes(result.start));
-      assertEquals(true, result.numSolutions >= 1 && result.numSolutions <= 12);
+      assertEquals(true, result.numSolutions >= 1 && result.numSolutions <= 5);
+      assertEquals(true, (Location.COUNT - result.intersection.size()) <= 7);
     }
   }
 

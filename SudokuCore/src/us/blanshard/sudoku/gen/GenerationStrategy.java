@@ -44,7 +44,7 @@ public enum GenerationStrategy {
    */
   SIMPLE {
     @Override public Solver.Result generate(
-        Random random, Symmetry symmetry, Grid target, int maxSolutions) {
+        Random random, Symmetry symmetry, Grid target, int maxSolutions, int maxHoles) {
       Grid start = buildToMaximal(random, symmetry, target, Lists.<Location>newArrayList()).build();
       return Solver.solve(start, maxSolutions, random);
     }
@@ -57,10 +57,10 @@ public enum GenerationStrategy {
    */
   SUBTRACTIVE {
     @Override public Solver.Result generate(
-        Random random, Symmetry symmetry, Grid target, int maxSolutions) {
+        Random random, Symmetry symmetry, Grid target, int maxSolutions, int maxHoles) {
       List<Location> used = Lists.newArrayList();
       Grid.Builder gridBuilder = buildToMaximal(random, symmetry, target, used);
-      return subtract(random, symmetry, maxSolutions, gridBuilder, used);
+      return subtract(random, symmetry, maxSolutions, maxHoles, gridBuilder, used);
     }
     @Override public boolean honorsSymmetry() { return true; }
   },
@@ -71,11 +71,11 @@ public enum GenerationStrategy {
    */
   SUBTRACTIVE_RANDOM {
     @Override public Solver.Result generate(
-        Random random, Symmetry symmetry, Grid target, int maxSolutions) {
-      Result result = SUBTRACTIVE.generate(random, symmetry, target, maxSolutions);
+        Random random, Symmetry symmetry, Grid target, int maxSolutions, int maxHoles) {
+      Result result = SUBTRACTIVE.generate(random, symmetry, target, maxSolutions, maxHoles);
       if (symmetry == Symmetry.RANDOM) return result;
       return subtract(
-          random, Symmetry.RANDOM, maxSolutions, result.start.toBuilder(),
+          random, Symmetry.RANDOM, maxSolutions, maxHoles, result.start.toBuilder(),
           Lists.newArrayList(result.start.keySet()));
     }
     @Override public boolean honorsSymmetry() { return false; }
@@ -84,10 +84,11 @@ public enum GenerationStrategy {
   /**
    * Generates a puzzle that is solvable as the given target grid (which must be
    * completely solved) and that has no more than the given maximum number of
-   * solutions total.
+   * solutions total and no more than the given number of "holes" (unassigned
+   * locations) in the intersection of solutions.
    */
   public abstract Solver.Result generate(
-      Random random, Symmetry symmetry, Grid target, int maxSolutions);
+      Random random, Symmetry symmetry, Grid target, int maxSolutions, int maxHoles);
 
   /**
    * Tells whether the given generator honors the symmetry it is given.  Those
@@ -100,14 +101,15 @@ public enum GenerationStrategy {
    * Generates a puzzle.
    */
   public final Grid generate(Random random, Symmetry symmetry) {
-    return generate(random, symmetry, makeTarget(random), 1).start;
+    return generate(random, symmetry, 1, 0).start;
   }
 
   /**
    * Generates a puzzle.
    */
-  public final Solver.Result generate(Random random, Symmetry symmetry, int maxSolutions) {
-    return generate(random, symmetry, makeTarget(random), maxSolutions);
+  public final Solver.Result generate(
+      Random random, Symmetry symmetry, int maxSolutions, int maxHoles) {
+    return generate(random, symmetry, makeTarget(random), maxSolutions, maxHoles);
   }
 
   /** Creates a completely solved grid. */
@@ -150,11 +152,11 @@ public enum GenerationStrategy {
   /**
    * Subtracts as many givens as possible from the given grid, according to the
    * given symmetry, while ensuring the grid remains solvable with at most the
-   * given number of solutions.
+   * given number of solutions and holes.
    */
   public static Solver.Result subtract(
-      Random random, Symmetry symmetry, int maxSolutions, Grid.Builder gridBuilder,
-      List<Location> used) {
+      Random random, Symmetry symmetry, int maxSolutions, int maxHoles,
+      Grid.Builder gridBuilder, List<Location> used) {
     Collections.shuffle(used, random);
     Solver.Result result = Solver.solve(gridBuilder.build(), maxSolutions, random);
     for (Location usedLoc : used) {
@@ -162,7 +164,8 @@ public enum GenerationStrategy {
       for (Location loc : symmetry.expand(usedLoc))
         gridBuilder.remove(loc);
       Solver.Result result2 = Solver.solve(gridBuilder.build(), maxSolutions, random);
-      if (result2.intersection == null)
+      if (result2.intersection == null
+          || (Location.COUNT - result2.intersection.size()) > maxHoles)
         gridBuilder = prev.toBuilder();
       else
         result = result2;

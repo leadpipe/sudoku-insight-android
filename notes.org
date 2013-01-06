@@ -33,14 +33,17 @@ END
 ** Improper (non-unique) puzzles
 *** TODO Add loop when generating: if improper, and only proper allowed, try next
 *** TODO Add canVote() check in to info display of #solutions
-*** TODO Experiment with improper puzzles
+*** DONE Experiment with improper puzzles
     - beef up solver to return intersection of solutions
     - beef up generator to return improper puzzles if asked
     - play a bunch of these puzzles and see how they are: what's a good max number of solutions?
-*** TODO Fix replay to handle improper puzzles
-*** TODO Return a flag for properness in generator's puzzle properties
+      - 12 is way too many
+      - also, I think we need a limit on the number of holes in the intersection
+*** DONE Fix replay to handle improper puzzles
+*** DONE Return a flag for properness in generator's puzzle properties
 *** TODO Handle completion of potentially improper puzzles
     - by asking whether it was unique (?)
+    - I think I don't like this idea
 
 ** Cross-installation work
 *** TODO Use backup service to keep the chosen user ID & properness setting
