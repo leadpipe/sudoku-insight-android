@@ -61,7 +61,7 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
     mCaptureSource = (AutoCompleteTextView) findViewById(R.id.capture_source);
     mPlay = (Button) findViewById(R.id.capture_play);
     mSave = (Button) findViewById(R.id.capture_save);
-    mNotice = (TextView) findViewById(R.id.already_have_notice);
+    mNotice = (TextView) findViewById(R.id.notice);
 
     mSudokuView.setOnMoveListener(this);
     mPlay.setOnClickListener(this);
@@ -114,17 +114,38 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
     return super.onPrepareOptionsMenu(menu);
   }
 
+  @Override protected void onResume() {
+    super.onResume();
+    updateState();
+  }
+
   private Grid getPuzzle() {
     return mSudokuView.getGame().getState().getGrid();
   }
 
   private void updateState() {
-    Solver.Result result = Solver.solve(getPuzzle());
-    mIsPuzzle = result.solution != null;
+    Solver.Result result = Solver.solve(getPuzzle(), Prefs.MAX_SOLUTIONS);
+    mIsPuzzle = result.intersection != null && result.numSolutions <= mPrefs.getMaxSolutions();
     mPlay.setEnabled(mIsPuzzle);
     mSave.setEnabled(mIsPuzzle);
     if (mIsPuzzle)
       new CheckExisting(this).execute();
+    else if (result.intersection != null)
+      showNotice(R.string.text_improper_puzzle);
+    else
+      hideNotice();
+  }
+
+  private void showNotice(int stringId) {
+    mNotice.setText(stringId);
+    mNotice.setVisibility(View.VISIBLE);
+    mCaptureSource.dismissDropDown();
+    mCaptureSource.setVisibility(View.GONE);
+  }
+
+  private void hideNotice() {
+    mNotice.setVisibility(View.GONE);
+    mCaptureSource.setVisibility(View.VISIBLE);
   }
 
   private static class FetchAutocompletes extends WorkerFragment.ActivityTask<CapturePuzzleActivity, Void, Void, List<String>> {
@@ -167,11 +188,8 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
 
     @Override protected void onPostExecute(CapturePuzzleActivity activity, Long puzzleId) {
       activity.mPuzzleId = puzzleId;
-      activity.mNotice.setVisibility(puzzleId == null ? View.GONE : View.VISIBLE);
-      activity.mCaptureSource.setVisibility(puzzleId == null ? View.VISIBLE : View.GONE);
-      if (puzzleId != null) {
-        activity.mCaptureSource.dismissDropDown();
-      }
+      if (puzzleId == null) activity.hideNotice();
+      else activity.showNotice(R.string.text_already_have_puzzle);
     }
   }
 

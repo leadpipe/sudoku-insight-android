@@ -68,6 +68,7 @@
     <string name="text_collection_separator">"; "</string>
     <string name="text_congrats">Congratulations!</string>
     <string name="text_generated_puzzles">Generated puzzles</string>
+    <string name="text_improper_puzzle">This puzzle has more than one solution.  You can allow puzzles like this in Settings.</string>
     <string name="text_info_title">#%1$d Details</string>
     <string name="text_move_and_trail_counts">Moves: %1$d; trails: %2$d.</string>
     <string name="text_move_number">%1$d of %2$d</string>

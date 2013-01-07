@@ -18,8 +18,6 @@ package us.blanshard.sudoku.android;
 import static us.blanshard.sudoku.android.Extras.ATTEMPT_ID;
 import static us.blanshard.sudoku.gen.Generator.NUM_STREAMS;
 
-import us.blanshard.sudoku.gen.Generator;
-
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
@@ -44,6 +42,9 @@ public class Prefs {
   public static final String DEVICE_NAME = "deviceName";
   public static final String PROPER_ONLY = "properOnly";
   public static final String USER_ID = "googleUserId";
+
+  /** The largest number of solutions this app will tolerate. */
+  public static final int MAX_SOLUTIONS = 10;
 
   private static final String COUNTER = "counter";
   private static final String MONTH = "month";
@@ -124,11 +125,10 @@ public class Prefs {
   }
 
   /**
-   * Returns the largest number of solutions permitted to any puzzle we generate
-   * or capture.
+   * Returns the largest number of solutions permitted to any puzzle we capture.
    */
   public int getMaxSolutions() {
-    return getProperOnly() ? 1 : Generator.MAX_SOLUTIONS;
+    return getProperOnly() ? 1 : MAX_SOLUTIONS;
   }
 
   public String getDeviceName() {
