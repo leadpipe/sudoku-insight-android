@@ -22,7 +22,7 @@ END
 ** App/UI cleanups
 *** TODO Finish help content
 *** TODO Show user ID settings page at installation time?
-*** TODO Figure out what's breaking when you back out of replay while mRunning
+*** DONE Figure out what's breaking when you back out of replay while mRunning
 *** TODO Give visual indication when try to set an unsettable location
 *** TODO Evaluate captured puzzles' symmetries, if found store in properties
 *** TODO Make translation of symmetry names possible

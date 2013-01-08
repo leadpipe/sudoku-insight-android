@@ -94,6 +94,7 @@ public class ReplayActivity extends ActivityBase
   private int mHistoryPosition = 0;
   private UndoStack mUndoStack = new UndoStack();
   private String mRestoredUndoJson;
+  private boolean mResumed;
   private boolean mRunning = true;
   private boolean mForward = true;
   private boolean mExploring;
@@ -126,7 +127,7 @@ public class ReplayActivity extends ActivityBase
 
   private final Runnable replayCycler = new Runnable() {
     @Override public void run() {
-      if (mGame != null) stepReplay(false);
+      if (mGame != null && mResumed) stepReplay(false);
     }
   };
 
@@ -190,6 +191,16 @@ public class ReplayActivity extends ActivityBase
         mReplayView.invalidateLocation(move.getLocation());
       }
     });
+  }
+
+  @Override protected void onPause() {
+    super.onPause();
+    mResumed = false;
+  }
+
+  @Override protected void onResume() {
+    super.onResume();
+    mResumed = true;
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {
