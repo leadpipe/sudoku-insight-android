@@ -196,11 +196,15 @@ public class ReplayActivity extends ActivityBase
   @Override protected void onPause() {
     super.onPause();
     mResumed = false;
+    mReplayView.removeCallbacks(replayCycler);
   }
 
   @Override protected void onResume() {
     super.onResume();
     mResumed = true;
+    if (mRunning) {
+      mReplayView.postDelayed(replayCycler, 0);
+    }
   }
 
   @Override public boolean onCreateOptionsMenu(Menu menu) {
