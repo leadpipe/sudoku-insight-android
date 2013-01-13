@@ -17,6 +17,8 @@ package us.blanshard.sudoku.stats;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static us.blanshard.sudoku.game.GameJson.GSON;
+import static us.blanshard.sudoku.game.GameJson.HISTORY_TYPE;
 import static us.blanshard.sudoku.insight.Analyzer.findErrors;
 import static us.blanshard.sudoku.insight.Analyzer.findOverlapsAndSets;
 import static us.blanshard.sudoku.insight.Analyzer.findSingletonLocations;
@@ -25,7 +27,6 @@ import static us.blanshard.sudoku.insight.Analyzer.findSingletonNumerals;
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Solver;
-import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.insight.Analyzer;
@@ -42,8 +43,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -73,7 +72,6 @@ public class InsightMeasurer implements Runnable {
 
   public static void main(String[] args) throws Exception {
     if (args.length == 0) exitWithUsage();
-    Gson gson = GameJson.registerHistory(new GsonBuilder()).create();
 
     for (String filename : args) {
       BufferedReader r;
@@ -95,7 +93,7 @@ public class InsightMeasurer implements Runnable {
       for (String line; (line = r.readLine()) != null; ) {
         String[] fields = line.split("\\t");
         Grid puzzle = Grid.fromString(fields[0]);
-        List<Move> history = gson.fromJson(fields[1], GameJson.HISTORY_TYPE);
+        List<Move> history = GSON.fromJson(fields[1], HISTORY_TYPE);
         new InsightMeasurer(puzzle, history, out).run();
         out.flush();
       }

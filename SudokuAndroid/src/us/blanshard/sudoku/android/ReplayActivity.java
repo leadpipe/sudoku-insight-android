@@ -17,7 +17,7 @@ package us.blanshard.sudoku.android;
 
 import static java.util.Collections.singleton;
 import static us.blanshard.sudoku.core.Numeral.numeral;
-import static us.blanshard.sudoku.game.GameJson.HISTORY_GSON;
+import static us.blanshard.sudoku.game.GameJson.GSON;
 import static us.blanshard.sudoku.game.GameJson.HISTORY_TYPE;
 import static us.blanshard.sudoku.game.GameJson.JOINER;
 
@@ -62,8 +62,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -336,8 +334,7 @@ public class ReplayActivity extends ActivityBase
   @Override public void onStopTrackingTouch(SeekBar seekBar) {}
 
   @Override protected void onSaveInstanceState(Bundle outState) {
-    Gson gson = GameJson.registerAll(new GsonBuilder(), mGame).create();
-    outState.putString("undo", gson.toJson(mUndoStack));
+    outState.putString("undo", GSON.toJson(mUndoStack));
     outState.putInt("historyPosition", mHistoryPosition);
     outState.putBoolean("running", mRunning);
     outState.putBoolean("forward", mForward);
@@ -359,7 +356,7 @@ public class ReplayActivity extends ActivityBase
     mReplayView.setGame(mGame);
     mReplayView.setEditable(false);
     try {
-      mHistory = HISTORY_GSON.fromJson(attempt.history, HISTORY_TYPE);
+      mHistory = GSON.fromJson(attempt.history, HISTORY_TYPE);
       if (mRestoredUndoJson != null) {
         GameJson.CommandFactory factory = new GameJson.CommandFactory(mGame) {
           @Override public Command toCommand(String type, Iterator<String> values) {
@@ -371,8 +368,9 @@ public class ReplayActivity extends ActivityBase
             return super.toCommand(type, values);
           }
         };
-        Gson gson = GameJson.registerAll(new GsonBuilder(), factory).create();
-        mUndoStack = gson.fromJson(mRestoredUndoJson, UndoStack.class);
+        GameJson.setFactory(factory);
+        mUndoStack = GSON.fromJson(mRestoredUndoJson, UndoStack.class);
+        GameJson.clearFactory();
         List<Command> commands = mUndoStack.getCommands();
         for (int i = 0; i < mUndoStack.getPosition(); ++i)
           commands.get(i).redo();

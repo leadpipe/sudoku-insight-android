@@ -21,17 +21,12 @@ import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -44,18 +39,22 @@ public class GameJson {
   public static final Splitter SPLITTER = Splitter.on(',');
   public static final Joiner JOINER = Joiner.on(',');
 
+  private static final ThreadLocal<CommandFactory> factorySlot = new ThreadLocal<GameJson.CommandFactory>();
+
   /** A Type to use with {@link Gson} for game histories. */
   @SuppressWarnings("serial")
   public static final Type HISTORY_TYPE = new TypeToken<List<Move>>(){}.getType();
 
-  /** A convenience for reading/writing history. */
-  public static final Gson HISTORY_GSON = registerHistory(new GsonBuilder()).create();
+  /** An instance with all of our type adapters registered. */
+  public static final Gson GSON = register(new GsonBuilder()).create();
 
   /**
-   * Registers type adapters in the given builder so that history lists can be
-   * serialized and deserialized.
+   * Registers type adapters in the given builder so that history lists and undo
+   * stacks can be serialized and deserialized.  Note that undo stacks require a
+   * CommandFactory be established before deserialization; see {@link #setFactory}.
    */
-  public static GsonBuilder registerHistory(GsonBuilder builder) {
+  public static GsonBuilder register(GsonBuilder builder) {
+
     builder.registerTypeHierarchyAdapter(Move.class, new TypeAdapter<Move>() {
       @Override public void write(JsonWriter out, Move value) throws IOException {
         out.value(value.toJsonValue());
@@ -64,24 +63,6 @@ public class GameJson {
         return Move.fromJsonValue(in.nextString());
       }
     });
-    return builder;
-  }
-
-  /**
-   * Registers type adapters in the given builder so that history lists and undo
-   * stacks can be serialized and deserialized.
-   */
-  public static GsonBuilder registerAll(GsonBuilder builder, Sudoku game) {
-    return registerAll(builder, new CommandFactory(game));
-  }
-
-  /**
-   * Registers type adapters in the given builder so that history lists and undo
-   * stacks can be serialized and deserialized.
-   */
-  public static GsonBuilder registerAll(GsonBuilder builder, final CommandFactory factory) {
-
-    registerHistory(builder);
 
     final TypeAdapter<Command> commandAdapter = new TypeAdapter<Command>() {
       @Override public void write(JsonWriter out, Command value) throws IOException {
@@ -90,7 +71,7 @@ public class GameJson {
       @Override public Command read(JsonReader in) throws IOException {
         Iterator<String> values = SPLITTER.split(in.nextString()).iterator();
         String type = values.next();
-        return factory.toCommand(type, values);
+        return factorySlot.get().toCommand(type, values);
       }
     };
     builder.registerTypeHierarchyAdapter(Command.class, commandAdapter);
@@ -131,38 +112,6 @@ public class GameJson {
     return builder;
   }
 
-  private static JsonArray fromHistory(List<Move> moves) {
-    JsonArray array = new JsonArray();
-    for (Move move : moves) {
-      array.add(new JsonPrimitive(move.toJsonValue()));
-    }
-    return array;
-  }
-
-  private static List<Move> toHistory(String json) {
-    if (json == null) return Collections.<Move>emptyList();
-    return toHistory(new JsonParser().parse(json).getAsJsonArray());
-  }
-
-  private static List<Move> toHistory(JsonArray array) {
-    List<Move> moves = Lists.newArrayList();
-    for (int i = 0; i < array.size(); ++i) {
-      moves.add(Move.fromJsonValue(array.get(i).getAsString()));
-    }
-    return moves;
-  }
-
-  private static JsonObject fromUndoStack(UndoStack stack) {
-    JsonObject object = new JsonObject();
-    object.addProperty("position", stack.getPosition());
-    JsonArray array = new JsonArray();
-    for (Command c : stack.commands) {
-      array.add(new JsonPrimitive(c.toJsonValue()));
-    }
-    object.add("commands", array);
-    return object;
-  }
-
   public static class CommandFactory {
     protected final Sudoku game;
 
@@ -177,21 +126,24 @@ public class GameJson {
     }
   }
 
-  private static UndoStack toUndoStack(String json, CommandFactory factory) {
-    if (json == null) return new UndoStack();
-    return toUndoStack(new JsonParser().parse(json).getAsJsonObject(), factory);
+  /**
+   * Establishes the command factory used by subsequent creation of UndoStacks
+   * in this thread.
+   */
+  public static void setFactory(CommandFactory factory) {
+    factorySlot.set(factory);
   }
 
-  private static UndoStack toUndoStack(JsonObject object, CommandFactory factory) {
-    int position = object.get("position").getAsInt();
-    List<Command> commands = Lists.newArrayList();
-    JsonArray array = object.get("commands").getAsJsonArray();
-    for (int i = 0; i < array.size(); ++i) {
-      Iterator<String> values = SPLITTER.split(array.get(i).getAsString()).iterator();
-      String type = values.next();
-      commands.add(factory.toCommand(type, values));
-    }
-    return new UndoStack(commands, position);
+  /**
+   * Establishes a default command factory for the given game.
+   */
+  public static void setFactory(Sudoku game) {
+    setFactory(new CommandFactory(game));
+  }
+
+  /** Removes the command factory. */
+  public static void clearFactory() {
+    setFactory((CommandFactory) null);
   }
 
   // Static methods only.

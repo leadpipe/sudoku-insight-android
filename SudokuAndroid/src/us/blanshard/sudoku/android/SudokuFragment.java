@@ -18,7 +18,7 @@ package us.blanshard.sudoku.android;
 import static us.blanshard.sudoku.android.SudokuView.MAX_VISIBLE_TRAILS;
 import static us.blanshard.sudoku.core.Numeral.number;
 import static us.blanshard.sudoku.core.Numeral.numeral;
-import static us.blanshard.sudoku.game.GameJson.HISTORY_GSON;
+import static us.blanshard.sudoku.game.GameJson.GSON;
 import static us.blanshard.sudoku.game.GameJson.HISTORY_TYPE;
 
 import us.blanshard.sudoku.android.Database.AttemptState;
@@ -70,8 +70,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -175,8 +173,9 @@ public class SudokuFragment
     getActivity().setTitle(title);
     setGame(game);
     if (uiState != null) {
-      Gson gson = GameJson.registerAll(new GsonBuilder(), game).create();
-      mUndoStack = gson.fromJson(uiState.get("undo"), UndoStack.class);
+      GameJson.setFactory(game);
+      mUndoStack = GSON.fromJson(uiState.get("undo"), UndoStack.class);
+      GameJson.clearFactory();
       mSudokuView.setDefaultChoice(numeral(uiState.get("defaultChoice").getAsInt()));
       restoreTrails(uiState.get("trailOrder").getAsJsonArray(), uiState.get("numVisibleTrails").getAsInt(),
           uiState.has("numOffTrails") ? uiState.get("numOffTrails").getAsInt() : 0);
@@ -332,7 +331,7 @@ public class SudokuFragment
     ++sUpdateAttemptCount;
     if (mGame == null) return false;
     if (suspend) mGame.suspend();
-    mAttempt.history = HISTORY_GSON.toJson(mGame.getHistory());
+    mAttempt.history = GSON.toJson(mGame.getHistory());
     mAttempt.elapsedMillis = mGame.elapsedMillis();
     mAttempt.numMoves = mGame.getHistory().size();
     mAttempt.numTrails = mGame.getNumTrails();
@@ -406,7 +405,7 @@ public class SudokuFragment
      * background thread as possible, to reduce the work done on the UI thread.
      */
     private void makeAdditionalArtifacts(Database.Attempt attempt) {
-      mHistory = HISTORY_GSON.fromJson(attempt.history, HISTORY_TYPE);
+      mHistory = GSON.fromJson(attempt.history, HISTORY_TYPE);
       mTitle = mAppContext.getString(R.string.text_puzzle_number, attempt.puzzleId);
       if (attempt.uiState != null)
         mUiState = new JsonParser().parse(attempt.uiState).getAsJsonObject();
@@ -727,8 +726,7 @@ public class SudokuFragment
 
   private JsonObject makeUiState() {
     JsonObject object = new JsonObject();
-    Gson gson = GameJson.registerAll(new GsonBuilder(), mGame).create();
-    object.add("undo", gson.toJsonTree(mUndoStack));
+    object.add("undo", GSON.toJsonTree(mUndoStack));
     object.addProperty("defaultChoice", number(mSudokuView.getDefaultChoice()));
     object.add("trailOrder", makeTrailOrder());
     object.addProperty("numVisibleTrails", countVisibleTrails());

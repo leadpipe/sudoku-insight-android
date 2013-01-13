@@ -16,7 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static us.blanshard.sudoku.game.GameJson.HISTORY_GSON;
+import static us.blanshard.sudoku.game.GameJson.GSON;
 import static us.blanshard.sudoku.game.GameJson.HISTORY_TYPE;
 import static us.blanshard.sudoku.gen.Generator.NAME_KEY;
 
@@ -210,7 +210,7 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
     sb.append(ToText.attemptSummaryHtml(getActivity(), attempt, true))
         .append(getString(R.string.text_sentence_end));
     if (attempt.attemptState != AttemptState.UNSTARTED) {
-      List<Move> history = HISTORY_GSON.fromJson(attempt.history, HISTORY_TYPE);
+      List<Move> history = GSON.fromJson(attempt.history, HISTORY_TYPE);
       int maxTrailId = -1;
       for (Move m : history)
         if (m.trailId > maxTrailId)
