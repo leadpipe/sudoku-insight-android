@@ -42,6 +42,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -71,6 +73,7 @@ public class InsightMeasurer implements Runnable {
 
   public static void main(String[] args) throws Exception {
     if (args.length == 0) exitWithUsage();
+    Gson gson = GameJson.registerHistory(new GsonBuilder()).create();
 
     for (String filename : args) {
       BufferedReader r;
@@ -92,7 +95,7 @@ public class InsightMeasurer implements Runnable {
       for (String line; (line = r.readLine()) != null; ) {
         String[] fields = line.split("\\t");
         Grid puzzle = Grid.fromString(fields[0]);
-        List<Move> history = GameJson.toHistory(fields[1]);
+        List<Move> history = gson.fromJson(fields[1], GameJson.HISTORY_TYPE);
         new InsightMeasurer(puzzle, history, out).run();
         out.flush();
       }

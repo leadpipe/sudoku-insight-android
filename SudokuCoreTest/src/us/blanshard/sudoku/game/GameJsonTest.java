@@ -20,11 +20,16 @@ import static org.junit.Assert.assertSame;
 import static us.blanshard.sudoku.game.Fixtures.makeGame;
 import static us.blanshard.sudoku.game.Fixtures.openLocation;
 import static us.blanshard.sudoku.game.Fixtures.puzzle;
+import static us.blanshard.sudoku.game.GameJson.HISTORY_GSON;
+import static us.blanshard.sudoku.game.GameJson.HISTORY_TYPE;
+import static us.blanshard.sudoku.game.GameJson.registerAll;
 
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -37,9 +42,10 @@ public class GameJsonTest {
   @Test public void fromHistory_noHistoryShouldGetEmptyArray() throws Exception {
     // given
     Sudoku game = makeGame(puzzle);
+    Gson gson = registerAll(new GsonBuilder(), game).create();
 
     // when
-    JsonArray array = GameJson.fromHistory(game.getHistory());
+    JsonArray array = gson.toJsonTree(game.getHistory()).getAsJsonArray();
 
     // then
     assertEquals(0, array.size());
@@ -48,11 +54,12 @@ public class GameJsonTest {
   @Test public void fromHistory_arrayContentsShouldMatchMainStateMoves() throws Exception {
     // given
     Sudoku game = makeGame(puzzle);
+    Gson gson = registerAll(new GsonBuilder(), game).create();
     game.getState().set(openLocation, Numeral.of(1));
     game.getState().set(openLocation, null);
 
     // when
-    JsonArray array = GameJson.fromHistory(game.getHistory());
+    JsonArray array = gson.toJsonTree(game.getHistory()).getAsJsonArray();
 
     // then
     assertEquals(2, array.size());
@@ -63,11 +70,12 @@ public class GameJsonTest {
   @Test public void fromHistory_arrayContentsShouldMatchTrailMoves() throws Exception {
     // given
     Sudoku game = makeGame(puzzle);
+    Gson gson = registerAll(new GsonBuilder(), game).create();
     game.getTrail(0).set(openLocation, Numeral.of(1));
     game.getTrail(0).set(openLocation, null);
 
     // when
-    JsonArray array = GameJson.fromHistory(game.getHistory());
+    JsonArray array = gson.toJsonTree(game.getHistory()).getAsJsonArray();
 
     // then
     assertEquals(2, array.size());
@@ -80,7 +88,7 @@ public class GameJsonTest {
     JsonArray array = new JsonArray();
 
     // when
-    List<Move> history = GameJson.toHistory(array);
+    List<Move> history = HISTORY_GSON.fromJson(array, HISTORY_TYPE);
 
     // then
     assertEquals(0, history.size());
@@ -93,7 +101,7 @@ public class GameJsonTest {
     array.add(new JsonPrimitive("2,3,45"));
 
     // when
-    List<Move> history = GameJson.toHistory(array);
+    List<Move> history = HISTORY_GSON.fromJson(array, HISTORY_TYPE);
 
     // then
     assertEquals(2, history.size());
@@ -113,9 +121,11 @@ public class GameJsonTest {
   @Test public void fromUndoStack_emptyStackShouldYieldEmptyCommandsArray() throws Exception {
     // given
     UndoStack stack = new UndoStack();
+    Sudoku game = makeGame(Grid.BLANK);
+    Gson gson = registerAll(new GsonBuilder(), game).create();
 
     // when
-    JsonObject object = GameJson.fromUndoStack(stack);
+    JsonObject object = gson.toJsonTree(stack).getAsJsonObject();
 
     // then
     assertEquals(0, object.get("position").getAsInt());
@@ -126,12 +136,13 @@ public class GameJsonTest {
     // given
     UndoStack stack = new UndoStack();
     Sudoku game = makeGame(Grid.BLANK);
+    Gson gson = registerAll(new GsonBuilder(), game).create();
     stack.doCommand(new MoveCommand(game.getState(), Location.of(0), Numeral.of(1)));
     stack.doCommand(new MoveCommand(game.getState(), Location.of(0), null));
     stack.undo();
 
     // when
-    JsonObject object = GameJson.fromUndoStack(stack);
+    JsonObject object = gson.toJsonTree(stack).getAsJsonObject();
 
     // then
     assertEquals(1, object.get("position").getAsInt());
@@ -146,9 +157,10 @@ public class GameJsonTest {
     object.addProperty("position", 0);
     object.add("commands", new JsonArray());
     Sudoku game = makeGame(Grid.BLANK);
+    Gson gson = registerAll(new GsonBuilder(), game).create();
 
     // when
-    UndoStack stack = GameJson.toUndoStack(object, new GameJson.CommandFactory(game));
+    UndoStack stack = gson.fromJson(object, UndoStack.class);
 
     // then
     assertEquals(0, stack.getPosition());
@@ -163,9 +175,10 @@ public class GameJsonTest {
     object.get("commands").getAsJsonArray().add(new JsonPrimitive("move,-1,0,1,0"));
     object.get("commands").getAsJsonArray().add(new JsonPrimitive("move,0,0,1,0"));
     Sudoku game = makeGame(Grid.BLANK);
+    Gson gson = registerAll(new GsonBuilder(), game).create();
 
     // when
-    UndoStack stack = GameJson.toUndoStack(object, new GameJson.CommandFactory(game));
+    UndoStack stack = gson.fromJson(object, UndoStack.class);
 
     // then
     assertEquals(1, stack.getPosition());
