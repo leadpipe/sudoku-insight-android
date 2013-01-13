@@ -31,6 +31,11 @@ SharedLibs/*.jar
 # Android copies of those jars
 SudokuAndroid/libs/*.jar
 
+# Java appserver stuff
+WEB-INF/lib/*.jar
+WEB-INF/*/*.xml
+WEB-INF/*.xml
+
 # Data files
 data/*.tsv
 stats/*.tsv
