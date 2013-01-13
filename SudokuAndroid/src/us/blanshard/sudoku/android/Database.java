@@ -27,9 +27,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.util.List;
 import java.util.Map;
@@ -240,7 +240,7 @@ public class Database {
         putUnstartedAttempt(db, puzzleId);
       } else {
         Puzzle puzzle = getFullPuzzle(puzzleId);
-        JsonObject replacement = new Gson().fromJson(puzzle.properties, JsonObject.class);
+        JsonObject replacement = new JsonParser().parse(puzzle.properties).getAsJsonObject();
         for (Map.Entry<String, JsonElement> e : properties.entrySet())
           replacement.add(e.getKey(), e.getValue());
         values.put("properties", replacement.toString());

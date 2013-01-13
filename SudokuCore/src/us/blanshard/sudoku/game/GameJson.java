@@ -18,9 +18,9 @@ package us.blanshard.sudoku.game;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
 import java.util.Collections;
@@ -46,7 +46,7 @@ public class GameJson {
 
   public static List<Move> toHistory(String json) {
     if (json == null) return Collections.<Move>emptyList();
-    return toHistory(new Gson().fromJson(json, JsonArray.class));
+    return toHistory(new JsonParser().parse(json).getAsJsonArray());
   }
 
   public static List<Move> toHistory(JsonArray array) {
@@ -84,7 +84,7 @@ public class GameJson {
 
   public static UndoStack toUndoStack(String json, CommandFactory factory) {
     if (json == null) return new UndoStack();
-    return toUndoStack(new Gson().fromJson(json, JsonObject.class), factory);
+    return toUndoStack(new JsonParser().parse(json).getAsJsonObject(), factory);
   }
 
   public static UndoStack toUndoStack(JsonObject object, CommandFactory factory) {

@@ -68,9 +68,9 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
 import java.util.Calendar;
@@ -171,7 +171,7 @@ public class SudokuFragment
     getActivity().setTitle(title);
     setGame(game);
     if (uiState != null) {
-      mUndoStack = GameJson.toUndoStack(uiState.get("undo").getAsString(), new GameJson.CommandFactory(mGame));
+      mUndoStack = GameJson.toUndoStack(uiState.get("undo").getAsJsonObject(), new GameJson.CommandFactory(mGame));
       mSudokuView.setDefaultChoice(numeral(uiState.get("defaultChoice").getAsInt()));
       restoreTrails(uiState.get("trailOrder").getAsJsonArray(), uiState.get("numVisibleTrails").getAsInt(),
           uiState.has("numOffTrails") ? uiState.get("numOffTrails").getAsInt() : 0);
@@ -404,7 +404,7 @@ public class SudokuFragment
       mHistory = GameJson.toHistory(attempt.history);
       mTitle = mAppContext.getString(R.string.text_puzzle_number, attempt.puzzleId);
       if (attempt.uiState != null)
-        mUiState = new Gson().fromJson(attempt.uiState, JsonObject.class);
+        mUiState = new JsonParser().parse(attempt.uiState).getAsJsonObject();
 
       if (attempt.elements != null && !attempt.elements.isEmpty()) {
         mStatus = Joiner.on(mAppContext.getString(R.string.text_collection_separator)).join(
