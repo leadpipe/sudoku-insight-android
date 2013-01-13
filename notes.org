@@ -64,7 +64,7 @@ END
 *** TODO Add a count to the list spinner: #puzzles in collection
 *** TODO Handle the importing of collections of puzzles
     - Add an activity that's triggered by .sdm files
-    - Change the way we set up new games: look for game-less puzzles and queue one
+    - Change the way we set up new attempts: look for attempt-less puzzles and queue one
     - Still want to generate new puzzles: add a pref for how often to do this, as
       a number between 0 and 1 (probably with 4-5 discrete choices: never,
       occasionally, etc)
@@ -78,20 +78,26 @@ END
      - phone model info
      - email address (opt)
      - generation stream number
-   -> return generation stream number (opt)
-   - Send game history:
+   - > return generation stream number (opt)
+     - and puzzles & attempts from other installations
+     - and other installations info
+     - and recommended puzzles?
+   - Send attempt:
      - installation ID
-     - game ID -- why not?
+     - attempt ID -- why not?
      - puzzle
-     - generation params
-     - source
+     - puzzle params
      - history -- log and drop if history's > say 50k
-     - stopTime
+     - startTime, stopTime
    - Send vote:
      - installation ID
      - puzzle
      - vote
    - Get puzzle stats
+
+** Push notifications to phone
+   - Recommended puzzle
+   - Other installation info updated
 
 ** Schema
    - Installation: root, key = installation ID
@@ -101,12 +107,11 @@ END
      - PuzzleHistory: child, key = puzzle string
        - index on puzzle string
        - source, generation params
-       - contains all game histories (up to 20 or something)
+       - contains all attempt histories (up to 20 or something)
          - each with history string, elapsed time, #moves, #trails,
-           solved/gave up flag, game ID from phone, stopTime
-         - also original installation ID, if not this one? if possible, we
-           should group all interactions with a puzzle under just one of the
-           user's installations, the one that solved it first
+           solved/gave up flag, attempt ID from phone, startTime, stopTime
+       - if not first installation for this user that tackled this puzzle,
+         pointer to the one that was first
    - Puzzle: root, key = puzzle string
      - contains generation params if applicable
      - contains puzzle sources and installation IDs they came from
