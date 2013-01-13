@@ -18,7 +18,6 @@ package us.blanshard.sudoku.android;
 import static java.util.Collections.singleton;
 import static us.blanshard.sudoku.core.Numeral.numeral;
 import static us.blanshard.sudoku.game.GameJson.GSON;
-import static us.blanshard.sudoku.game.GameJson.HISTORY_TYPE;
 import static us.blanshard.sudoku.game.GameJson.JOINER;
 
 import us.blanshard.sudoku.core.Assignment;
@@ -356,7 +355,7 @@ public class ReplayActivity extends ActivityBase
     mReplayView.setGame(mGame);
     mReplayView.setEditable(false);
     try {
-      mHistory = GSON.fromJson(attempt.history, HISTORY_TYPE);
+      mHistory = GameJson.toHistory(attempt.history);
       if (mRestoredUndoJson != null) {
         GameJson.CommandFactory factory = new GameJson.CommandFactory(mGame) {
           @Override public Command toCommand(String type, Iterator<String> values) {

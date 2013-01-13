@@ -30,6 +30,8 @@ import java.lang.reflect.Type;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * Static methods that convert various parts of Sudokus to and from json.
  *
@@ -110,6 +112,15 @@ public class GameJson {
     });
 
     return builder;
+  }
+
+  /**
+   * Parses the given JSON as a list of moves, or returns the empty list if the
+   * JSON is null.
+   */
+  public static List<Move> toHistory(@Nullable String json) {
+    if (json == null) return Lists.newArrayList();
+    return GSON.fromJson(json, HISTORY_TYPE);
   }
 
   public static class CommandFactory {

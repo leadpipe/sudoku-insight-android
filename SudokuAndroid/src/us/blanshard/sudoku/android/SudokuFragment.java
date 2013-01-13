@@ -19,7 +19,6 @@ import static us.blanshard.sudoku.android.SudokuView.MAX_VISIBLE_TRAILS;
 import static us.blanshard.sudoku.core.Numeral.number;
 import static us.blanshard.sudoku.core.Numeral.numeral;
 import static us.blanshard.sudoku.game.GameJson.GSON;
-import static us.blanshard.sudoku.game.GameJson.HISTORY_TYPE;
 
 import us.blanshard.sudoku.android.Database.AttemptState;
 import us.blanshard.sudoku.android.SudokuView.OnMoveListener;
@@ -405,7 +404,7 @@ public class SudokuFragment
      * background thread as possible, to reduce the work done on the UI thread.
      */
     private void makeAdditionalArtifacts(Database.Attempt attempt) {
-      mHistory = GSON.fromJson(attempt.history, HISTORY_TYPE);
+      mHistory = GameJson.toHistory(attempt.history);
       mTitle = mAppContext.getString(R.string.text_puzzle_number, attempt.puzzleId);
       if (attempt.uiState != null)
         mUiState = new JsonParser().parse(attempt.uiState).getAsJsonObject();
