@@ -209,17 +209,13 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
     sb.append(ToText.attemptSummaryHtml(getActivity(), attempt, true))
         .append(getString(R.string.text_sentence_end));
     if (attempt.attemptState != AttemptState.UNSTARTED) {
-      try {
-        List<Move> history = GameJson.toHistory(attempt.history);
-        int maxTrailId = -1;
-        for (Move m : history)
-          if (m.trailId > maxTrailId)
-            maxTrailId = m.trailId;
-        sb.append("<br>").append(TextUtils.htmlEncode(
-            getString(R.string.text_move_and_trail_counts, history.size(), maxTrailId + 1)));
-      } catch (JSONException e) {
-        Log.e(TAG, "Unexpected json problem", e);
-      }
+      List<Move> history = GameJson.toHistory(attempt.history);
+      int maxTrailId = -1;
+      for (Move m : history)
+        if (m.trailId > maxTrailId)
+          maxTrailId = m.trailId;
+      sb.append("<br>").append(TextUtils.htmlEncode(
+          getString(R.string.text_move_and_trail_counts, history.size(), maxTrailId + 1)));
       if (attempt.lastTime - attempt.startTime > attempt.elapsedMillis + MINUTES.toMillis(5)) {
         sb.append("<br>")
             .append(TextUtils.htmlEncode(getString(

@@ -27,11 +27,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -173,11 +172,11 @@ public class Database {
    * database, and also to the generated-puzzles collection.  Returns the
    * puzzle's ID.  Modifies the given properties object.
    */
-  public long addGeneratedPuzzle(JSONObject properties) throws SQLException {
+  public long addGeneratedPuzzle(JsonObject properties) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
     db.beginTransaction();
     try {
-      String clues = (String) properties.remove(Generator.PUZZLE_KEY);
+      String clues = properties.remove(Generator.PUZZLE_KEY).getAsString();
       long puzzleId = addOrUpdatePuzzle(clues, properties, null);
 
       if (getElementId(db, puzzleId, GENERATED_COLLECTION_ID) == null) {
@@ -224,11 +223,11 @@ public class Database {
    * already there. If not already present creates an attempt row for it as
    * well. Returns the puzzle's ID.
    */
-  private long addOrUpdatePuzzle(String clues, JSONObject properties, String source) throws SQLException {
+  private long addOrUpdatePuzzle(String clues, JsonObject properties, String source) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
     db.beginTransaction();
     try {
-      if (properties == null) properties = new JSONObject();
+      if (properties == null) properties = new JsonObject();
       ContentValues values = new ContentValues();
       values.put("clues", clues);
       values.put("properties", properties.toString());
@@ -241,11 +240,9 @@ public class Database {
         putUnstartedAttempt(db, puzzleId);
       } else {
         Puzzle puzzle = getFullPuzzle(puzzleId);
-        JSONObject replacement = new JSONObject(puzzle.properties);
-        for (Iterator<?> keys = properties.keys(); keys.hasNext(); ) {
-          String key = (String) keys.next();
-          replacement.put(key, properties.get(key));
-        }
+        JsonObject replacement = new Gson().fromJson(puzzle.properties, JsonObject.class);
+        for (Map.Entry<String, JsonElement> e : properties.entrySet())
+          replacement.add(e.getKey(), e.getValue());
         values.put("properties", replacement.toString());
         // source: no further logic required to replace or leave an existing value.
         db.update("Puzzle", values, "[_id] = ?", new String[]{ Long.toString(puzzleId) });
@@ -253,8 +250,6 @@ public class Database {
 
       db.setTransactionSuccessful();
       return puzzleId;
-    } catch (JSONException e) {
-      throw new RuntimeException(e);
     } finally {
       db.endTransaction();
     }

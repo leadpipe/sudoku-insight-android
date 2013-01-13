@@ -68,10 +68,10 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 import java.util.Calendar;
 import java.util.Collection;
@@ -157,7 +157,7 @@ public class SudokuFragment
   }
 
   private void setAttempt(
-      Database.Attempt attempt, List<Move> history, String title, JSONObject uiState, String status) {
+      Database.Attempt attempt, List<Move> history, String title, JsonObject uiState, String status) {
     mAttempt = attempt;
     if (attempt == null) {
       setGame(null);
@@ -167,22 +167,18 @@ public class SudokuFragment
       Database.startUnstartedAttempt(attempt);
     }
     new CheckNextAttempt(this).execute(attempt._id);
-    try {
-      Sudoku game = new Sudoku(attempt.clues, mRegistry, history, attempt.elapsedMillis);
-      getActivity().setTitle(title);
-      setGame(game);
-      if (uiState != null) {
-        mUndoStack = GameJson.toUndoStack(uiState.getJSONObject("undo"), new GameJson.CommandFactory(mGame));
-        mSudokuView.setDefaultChoice(numeral(uiState.getInt("defaultChoice")));
-        restoreTrails(uiState.getJSONArray("trailOrder"), uiState.getInt("numVisibleTrails"),
-            uiState.optInt("numOffTrails"));
-        mEditTrailToggle.setChecked(uiState.getBoolean("trailActive"));
-      }
-      if (attempt.attemptState.isInPlay()) {
-        mPrefs.setCurrentAttemptIdAsync(attempt._id);
-      }
-    } catch (JSONException e) {
-      throw new RuntimeException(e);
+    Sudoku game = new Sudoku(attempt.clues, mRegistry, history, attempt.elapsedMillis);
+    getActivity().setTitle(title);
+    setGame(game);
+    if (uiState != null) {
+      mUndoStack = GameJson.toUndoStack(uiState.get("undo").getAsString(), new GameJson.CommandFactory(mGame));
+      mSudokuView.setDefaultChoice(numeral(uiState.get("defaultChoice").getAsInt()));
+      restoreTrails(uiState.get("trailOrder").getAsJsonArray(), uiState.get("numVisibleTrails").getAsInt(),
+          uiState.has("numOffTrails") ? uiState.get("numOffTrails").getAsInt() : 0);
+      mEditTrailToggle.setChecked(uiState.get("trailActive").getAsBoolean());
+    }
+    if (attempt.attemptState.isInPlay()) {
+      mPrefs.setCurrentAttemptIdAsync(attempt._id);
     }
     if (status != null)
       showStatus(status);
@@ -336,11 +332,7 @@ public class SudokuFragment
     mAttempt.numMoves = mGame.getHistory().size();
     mAttempt.numTrails = mGame.getNumTrails();
     if (mAttempt.attemptState.isInPlay()) {
-      try {
-        mAttempt.uiState = makeUiState().toString();
-      } catch (JSONException e) {
-        throw new RuntimeException(e);
-      }
+      mAttempt.uiState = makeUiState().toString();
     } else {
       mAttempt.uiState = null;
     }
@@ -366,15 +358,11 @@ public class SudokuFragment
   private static Database.Attempt generateAndStorePuzzle(Database db, Prefs prefs) {
     Database.Attempt answer;
     Calendar cal = Calendar.getInstance();
-    JSONObject props;
-    try {
-      do {
-        props = Generator.generateBasicPuzzle(
-            prefs.getStream(), cal.get(Calendar.YEAR), 1 + cal.get(Calendar.MONTH), prefs.getNextCounterSync(cal));
-      } while (prefs.getProperOnly() && props.getInt(Generator.NUM_SOLUTIONS_KEY) > 1);
-    } catch (JSONException e) {
-      throw new RuntimeException(e);
-    }
+    JsonObject props;
+    do {
+      props = Generator.generateBasicPuzzle(
+          prefs.getStream(), cal.get(Calendar.YEAR), 1 + cal.get(Calendar.MONTH), prefs.getNextCounterSync(cal));
+    } while (prefs.getProperOnly() && props.get(Generator.NUM_SOLUTIONS_KEY).getAsInt() > 1);
     long id = db.addGeneratedPuzzle(props);
     answer = db.getCurrentAttemptForPuzzle(id);
     return answer;
@@ -387,7 +375,7 @@ public class SudokuFragment
 
     private List<Move> mHistory;
     private String mTitle;
-    private JSONObject mUiState;
+    private JsonObject mUiState;
     private String mStatus;
 
     FetchFindOrMakePuzzle(SudokuFragment fragment) {
@@ -413,22 +401,18 @@ public class SudokuFragment
      * background thread as possible, to reduce the work done on the UI thread.
      */
     private void makeAdditionalArtifacts(Database.Attempt attempt) {
-      try {
-        mHistory = GameJson.toHistory(attempt.history);
-        mTitle = mAppContext.getString(R.string.text_puzzle_number, attempt.puzzleId);
-        if (attempt.uiState != null)
-          mUiState = new JSONObject(attempt.uiState);
+      mHistory = GameJson.toHistory(attempt.history);
+      mTitle = mAppContext.getString(R.string.text_puzzle_number, attempt.puzzleId);
+      if (attempt.uiState != null)
+        mUiState = new Gson().fromJson(attempt.uiState, JsonObject.class);
 
-        if (attempt.elements != null && !attempt.elements.isEmpty()) {
-          mStatus = Joiner.on(mAppContext.getString(R.string.text_collection_separator)).join(
-              Iterables.transform(attempt.elements, new Function<Database.Element, String>() {
-                  @Override public String apply(Database.Element element) {
-                    return ToText.collectionNameAndTimeText(mAppContext, element);
-                  }
-              }));
-        }
-      } catch (JSONException e) {
-        throw new RuntimeException(e);
+      if (attempt.elements != null && !attempt.elements.isEmpty()) {
+        mStatus = Joiner.on(mAppContext.getString(R.string.text_collection_separator)).join(
+            Iterables.transform(attempt.elements, new Function<Database.Element, String>() {
+                @Override public String apply(Database.Element element) {
+                  return ToText.collectionNameAndTimeText(mAppContext, element);
+                }
+            }));
       }
     }
 
@@ -736,21 +720,21 @@ public class SudokuFragment
     getActivity().invalidateOptionsMenu();
   }
 
-  private JSONObject makeUiState() throws JSONException {
-    JSONObject object = new JSONObject();
-    object.put("undo", GameJson.fromUndoStack(mUndoStack));
-    object.put("defaultChoice", number(mSudokuView.getDefaultChoice()));
-    object.put("trailOrder", makeTrailOrder());
-    object.put("numVisibleTrails", countVisibleTrails());
-    object.put("numOffTrails", countOffTrails());
-    object.put("trailActive", mEditTrailToggle.isChecked());
+  private JsonObject makeUiState() {
+    JsonObject object = new JsonObject();
+    object.add("undo", GameJson.fromUndoStack(mUndoStack));
+    object.addProperty("defaultChoice", number(mSudokuView.getDefaultChoice()));
+    object.add("trailOrder", makeTrailOrder());
+    object.addProperty("numVisibleTrails", countVisibleTrails());
+    object.addProperty("numOffTrails", countOffTrails());
+    object.addProperty("trailActive", mEditTrailToggle.isChecked());
     return object;
   }
 
-  private JSONArray makeTrailOrder() {
-    JSONArray array = new JSONArray();
+  private JsonArray makeTrailOrder() {
+    JsonArray array = new JsonArray();
     for (int i = 0; i < mTrailAdapter.getCount(); ++i) {
-      array.put(mTrailAdapter.getItemId(i));
+      array.add(new JsonPrimitive(mTrailAdapter.getItemId(i)));
     }
     return array;
   }
@@ -771,12 +755,11 @@ public class SudokuFragment
     return count;
   }
 
-  private void restoreTrails(JSONArray trailOrder, int numVisibleTrails, int numOffTrails)
-      throws JSONException {
+  private void restoreTrails(JsonArray trailOrder, int numVisibleTrails, int numOffTrails) {
     List<TrailItem> vis = Lists.newArrayList(), invis = Lists.newArrayList();
-    int offIndex = trailOrder.length() - numOffTrails;
-    for (int i = 0; i < trailOrder.length(); ++i) {
-      TrailItem item = makeTrailItem(trailOrder.getInt(i), i < numVisibleTrails, i >= offIndex);
+    int offIndex = trailOrder.size() - numOffTrails;
+    for (int i = 0; i < trailOrder.size(); ++i) {
+      TrailItem item = makeTrailItem(trailOrder.get(i).getAsInt(), i < numVisibleTrails, i >= offIndex);
       (item.shown ? vis : invis).add(item);
     }
     updateTrails(vis, invis);

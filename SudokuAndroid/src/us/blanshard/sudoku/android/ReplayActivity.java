@@ -61,8 +61,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 
-import org.json.JSONException;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -334,11 +332,7 @@ public class ReplayActivity extends ActivityBase
   @Override public void onStopTrackingTouch(SeekBar seekBar) {}
 
   @Override protected void onSaveInstanceState(Bundle outState) {
-    try {
-      outState.putString("undo", GameJson.fromUndoStack(mUndoStack).toString());
-    } catch (JSONException e) {
-      Log.e(TAG, "Error saving instance state", e);
-    }
+    outState.putString("undo", GameJson.fromUndoStack(mUndoStack).toString());
     outState.putInt("historyPosition", mHistoryPosition);
     outState.putBoolean("running", mRunning);
     outState.putBoolean("forward", mForward);
@@ -377,10 +371,6 @@ public class ReplayActivity extends ActivityBase
         for (int i = 0; i < mUndoStack.getPosition(); ++i)
           commands.get(i).redo();
       }
-    } catch (JSONException e) {
-      Log.e(TAG, "Unable to restore state for attempt #" + attempt._id, e);
-      mHistory = Lists.newArrayList();
-      mHistoryPosition = 0;
     } catch (CommandException e) {
       Log.e(TAG, "Unable to restore undo state", e);
     }
