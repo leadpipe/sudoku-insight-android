@@ -18,10 +18,10 @@ package us.blanshard.sudoku.game;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -36,35 +36,35 @@ public class GameJson {
   public static final Splitter SPLITTER = Splitter.on(',');
   public static final Joiner JOINER = Joiner.on(',');
 
-  public static JSONArray fromHistory(List<Move> moves) {
-    JSONArray array = new JSONArray();
+  public static JsonArray fromHistory(List<Move> moves) {
+    JsonArray array = new JsonArray();
     for (Move move : moves) {
-      array.put(move.toJsonValue());
+      array.add(new JsonPrimitive(move.toJsonValue()));
     }
     return array;
   }
 
-  public static List<Move> toHistory(String json) throws JSONException {
+  public static List<Move> toHistory(String json) {
     if (json == null) return Collections.<Move>emptyList();
-    return toHistory(new JSONArray(json));
+    return toHistory(new Gson().fromJson(json, JsonArray.class));
   }
 
-  public static List<Move> toHistory(JSONArray array) throws JSONException {
+  public static List<Move> toHistory(JsonArray array) {
     List<Move> moves = Lists.newArrayList();
-    for (int i = 0; i < array.length(); ++i) {
-      moves.add(Move.fromJsonValue(array.getString(i)));
+    for (int i = 0; i < array.size(); ++i) {
+      moves.add(Move.fromJsonValue(array.get(i).getAsString()));
     }
     return moves;
   }
 
-  public static JSONObject fromUndoStack(UndoStack stack) throws JSONException {
-    JSONObject object = new JSONObject();
-    object.put("position", stack.getPosition());
-    JSONArray array = new JSONArray();
+  public static JsonObject fromUndoStack(UndoStack stack) {
+    JsonObject object = new JsonObject();
+    object.addProperty("position", stack.getPosition());
+    JsonArray array = new JsonArray();
     for (Command c : stack.commands) {
-      array.put(c.toJsonValue());
+      array.add(new JsonPrimitive(c.toJsonValue()));
     }
-    object.put("commands", array);
+    object.add("commands", array);
     return object;
   }
 
@@ -82,17 +82,17 @@ public class GameJson {
     }
   }
 
-  public static UndoStack toUndoStack(String json, CommandFactory factory) throws JSONException {
+  public static UndoStack toUndoStack(String json, CommandFactory factory) {
     if (json == null) return new UndoStack();
-    return toUndoStack(new JSONObject(json), factory);
+    return toUndoStack(new Gson().fromJson(json, JsonObject.class), factory);
   }
 
-  public static UndoStack toUndoStack(JSONObject object, CommandFactory factory) throws JSONException {
-    int position = object.getInt("position");
+  public static UndoStack toUndoStack(JsonObject object, CommandFactory factory) {
+    int position = object.get("position").getAsInt();
     List<Command> commands = Lists.newArrayList();
-    JSONArray array = object.getJSONArray("commands");
-    for (int i = 0; i < array.length(); ++i) {
-      Iterator<String> values = SPLITTER.split(array.getString(i)).iterator();
+    JsonArray array = object.get("commands").getAsJsonArray();
+    for (int i = 0; i < array.size(); ++i) {
+      Iterator<String> values = SPLITTER.split(array.get(i).getAsString()).iterator();
       String type = values.next();
       commands.add(factory.toCommand(type, values));
     }

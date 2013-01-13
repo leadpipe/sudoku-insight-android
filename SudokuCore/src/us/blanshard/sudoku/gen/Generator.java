@@ -23,9 +23,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.JsonObject;
 
 import java.util.Iterator;
 import java.util.Random;
@@ -139,7 +137,7 @@ public class Generator {
    * object with the properties {@link #PUZZLE_KEY}, {@link #NAME_KEY}, and
    * either {@link #SYMMETRY_KEY} or {@link #BROKEN_SYMMETRY_KEY}.
    */
-  public static JSONObject generateBasicPuzzle(int stream, int year, int month, int counter) {
+  public static JsonObject generateBasicPuzzle(int stream, int year, int month, int counter) {
     return generatePuzzle(BASIC_VERSION, stream, year, month, counter);
   }
 
@@ -148,7 +146,7 @@ public class Generator {
    * constituent properties {@link #VERSION_KEY}, {@link #STREAM_KEY},
    * {@link #YEAR_KEY}, {@link #MONTH_KEY}, and {@link #COUNTER_KEY}.
    */
-  public static JSONObject parsePuzzleName(String name) {
+  public static JsonObject parsePuzzleName(String name) {
     Iterator<String> it = Splitter.on(':').split(name).iterator();
     String version = it.next();
     String stream = it.next();
@@ -159,50 +157,40 @@ public class Generator {
     String year = it.next();
     String month = it.next();
     checkArgument(!it.hasNext());
-    try {
-      return new JSONObject()
-          .put(VERSION_KEY, Integer.parseInt(version))
-          .put(STREAM_KEY, Integer.parseInt(stream))
-          .put(YEAR_KEY, Integer.parseInt(year))
-          .put(MONTH_KEY, Integer.parseInt(month))
-          .put(COUNTER_KEY, Integer.parseInt(counter));
-    } catch (JSONException e) {
-      throw new RuntimeException(e);
-    }
+
+    JsonObject answer = new JsonObject();
+    answer.addProperty(VERSION_KEY, Integer.parseInt(version));
+    answer.addProperty(STREAM_KEY, Integer.parseInt(stream));
+    answer.addProperty(YEAR_KEY, Integer.parseInt(year));
+    answer.addProperty(MONTH_KEY, Integer.parseInt(month));
+    answer.addProperty(COUNTER_KEY, Integer.parseInt(counter));
+    return answer;
   }
 
   /**
    * Generates the puzzle implied by the name in the given puzzle descriptor.
    */
-  public static JSONObject regeneratePuzzle(JSONObject puzzleDesc) {
-    try {
-      return regeneratePuzzle(puzzleDesc.getString(NAME_KEY));
-    } catch (JSONException e) {
-      throw new RuntimeException(e);
-    }
+  public static JsonObject regeneratePuzzle(JsonObject puzzleDesc) {
+    return regeneratePuzzle(puzzleDesc.get(NAME_KEY).getAsString());
   }
 
   /**
    * Generates the puzzle whose generated name is as given.
    */
-  public static JSONObject regeneratePuzzle(String name) {
-    JSONObject parts = parsePuzzleName(name);
-    try {
-      return generatePuzzle(
-          parts.getInt(VERSION_KEY),
-          parts.getInt(STREAM_KEY),
-          parts.getInt(YEAR_KEY),
-          parts.getInt(MONTH_KEY),
-          parts.getInt(COUNTER_KEY));
-    } catch (JSONException e) {
-      throw new RuntimeException(e);
-    }
+  public static JsonObject regeneratePuzzle(String name) {
+    JsonObject parts = parsePuzzleName(name);
+    return generatePuzzle(
+        parts.get(VERSION_KEY).getAsInt(),
+        parts.get(STREAM_KEY).getAsInt(),
+        parts.get(YEAR_KEY).getAsInt(),
+        parts.get(MONTH_KEY).getAsInt(),
+        parts.get(COUNTER_KEY).getAsInt());
   }
 
   /**
    * Generates the puzzle with the given parameters.
    */
-  public static JSONObject generatePuzzle(
+  public static JsonObject generatePuzzle(
       int version, int stream, int year, int month, int counter) {
     String name = version + ":" + stream + ":" + year + "-" + month + ":" + counter;
     HashCode hash = Hashing.murmur3_128().hashString(name, Charsets.UTF_8);
@@ -217,21 +205,19 @@ public class Generator {
     }
   }
 
-  private static JSONObject generateBasicPuzzle(String name, Random random) {
+  private static JsonObject generateBasicPuzzle(String name, Random random) {
     int maxSolutions = random.nextDouble() < CHANCE_OF_IMPROPER ? MAX_SOLUTIONS : 1;
     int maxHoles = maxSolutions == 1 ? 0 : MAX_HOLES;
     Symmetry symmetry = Symmetry.choose(random);
     Result result = GenerationStrategy.SUBTRACTIVE_RANDOM.generate(
         random, symmetry, maxSolutions, maxHoles);
     String symKey = symmetry.describes(result.start) ? SYMMETRY_KEY : BROKEN_SYMMETRY_KEY;
-    try {
-      return new JSONObject()
-          .put(PUZZLE_KEY, result.start.toFlatString())
-          .put(NAME_KEY, name)
-          .put(symKey, symmetry.getName())
-          .put(NUM_SOLUTIONS_KEY, result.numSolutions);
-    } catch (JSONException e) {
-      throw new RuntimeException(e);
-    }
+
+    JsonObject answer = new JsonObject();
+    answer.addProperty(PUZZLE_KEY, result.start.toFlatString());
+    answer.addProperty(NAME_KEY, name);
+    answer.addProperty(symKey, symmetry.getName());
+    answer.addProperty(NUM_SOLUTIONS_KEY, result.numSolutions);
+    return answer;
   }
 }

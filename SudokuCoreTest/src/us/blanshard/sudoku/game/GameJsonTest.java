@@ -25,8 +25,10 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
 import org.junit.Test;
 
 import java.util.List;
@@ -37,10 +39,10 @@ public class GameJsonTest {
     Sudoku game = makeGame(puzzle);
 
     // when
-    JSONArray array = GameJson.fromHistory(game.getHistory());
+    JsonArray array = GameJson.fromHistory(game.getHistory());
 
     // then
-    assertEquals(0, array.length());
+    assertEquals(0, array.size());
   }
 
   @Test public void fromHistory_arrayContentsShouldMatchMainStateMoves() throws Exception {
@@ -50,12 +52,12 @@ public class GameJsonTest {
     game.getState().set(openLocation, null);
 
     // when
-    JSONArray array = GameJson.fromHistory(game.getHistory());
+    JsonArray array = GameJson.fromHistory(game.getHistory());
 
     // then
-    assertEquals(2, array.length());
-    assertEquals(new Move.Set(1, openLocation, Numeral.of(1)).toJsonValue(), array.getString(0));
-    assertEquals(new Move.Clear(2, openLocation).toJsonValue(), array.getString(1));
+    assertEquals(2, array.size());
+    assertEquals(new Move.Set(1, openLocation, Numeral.of(1)).toJsonValue(), array.get(0).getAsString());
+    assertEquals(new Move.Clear(2, openLocation).toJsonValue(), array.get(1).getAsString());
   }
 
   @Test public void fromHistory_arrayContentsShouldMatchTrailMoves() throws Exception {
@@ -65,17 +67,17 @@ public class GameJsonTest {
     game.getTrail(0).set(openLocation, null);
 
     // when
-    JSONArray array = GameJson.fromHistory(game.getHistory());
+    JsonArray array = GameJson.fromHistory(game.getHistory());
 
     // then
-    assertEquals(2, array.length());
-    assertEquals(new Move.Set(1, 0, openLocation, Numeral.of(1)).toJsonValue(), array.getString(0));
-    assertEquals(new Move.Clear(2, 0, openLocation).toJsonValue(), array.getString(1));
+    assertEquals(2, array.size());
+    assertEquals(new Move.Set(1, 0, openLocation, Numeral.of(1)).toJsonValue(), array.get(0).getAsString());
+    assertEquals(new Move.Clear(2, 0, openLocation).toJsonValue(), array.get(1).getAsString());
   }
 
   @Test public void toHistory_emptyArrayShouldYieldEmptyHistory() throws Exception {
     // given
-    JSONArray array = new JSONArray();
+    JsonArray array = new JsonArray();
 
     // when
     List<Move> history = GameJson.toHistory(array);
@@ -86,9 +88,9 @@ public class GameJsonTest {
 
   @Test public void toHistory_movesShouldMatchArray() throws Exception {
     // given
-    JSONArray array = new JSONArray();
-    array.put("1,-1,22,1");
-    array.put("2,3,45");
+    JsonArray array = new JsonArray();
+    array.add(new JsonPrimitive("1,-1,22,1"));
+    array.add(new JsonPrimitive("2,3,45"));
 
     // when
     List<Move> history = GameJson.toHistory(array);
@@ -113,11 +115,11 @@ public class GameJsonTest {
     UndoStack stack = new UndoStack();
 
     // when
-    JSONObject object = GameJson.fromUndoStack(stack);
+    JsonObject object = GameJson.fromUndoStack(stack);
 
     // then
-    assertEquals(0, object.getInt("position"));
-    assertEquals(0, object.getJSONArray("commands").length());
+    assertEquals(0, object.get("position").getAsInt());
+    assertEquals(0, object.get("commands").getAsJsonArray().size());
   }
 
   @Test public void fromUndoStack_commandsShouldMatchArray() throws Exception {
@@ -129,20 +131,20 @@ public class GameJsonTest {
     stack.undo();
 
     // when
-    JSONObject object = GameJson.fromUndoStack(stack);
+    JsonObject object = GameJson.fromUndoStack(stack);
 
     // then
-    assertEquals(1, object.getInt("position"));
-    assertEquals(2, object.getJSONArray("commands").length());
-    assertEquals("move,-1,0,1,0", object.getJSONArray("commands").getString(0));
-    assertEquals("move,-1,0,0,1", object.getJSONArray("commands").getString(1));
+    assertEquals(1, object.get("position").getAsInt());
+    assertEquals(2, object.get("commands").getAsJsonArray().size());
+    assertEquals("move,-1,0,1,0", object.get("commands").getAsJsonArray().get(0).getAsString());
+    assertEquals("move,-1,0,0,1", object.get("commands").getAsJsonArray().get(1).getAsString());
   }
 
   @Test public void toUndoStack_emptyArrayShouldYieldEmptyStack() throws Exception {
     // given
-    JSONObject object = new JSONObject();
-    object.put("position", 0);
-    object.put("commands", new JSONArray());
+    JsonObject object = new JsonObject();
+    object.addProperty("position", 0);
+    object.add("commands", new JsonArray());
     Sudoku game = makeGame(Grid.BLANK);
 
     // when
@@ -155,11 +157,11 @@ public class GameJsonTest {
 
   @Test public void toUndoStack_serializedCommandsShouldYieldWorkingStack() throws Exception {
     // given
-    JSONObject object = new JSONObject();
-    object.put("position", 1);
-    object.put("commands", new JSONArray());
-    object.getJSONArray("commands").put("move,-1,0,1,0");
-    object.getJSONArray("commands").put("move,0,0,1,0");
+    JsonObject object = new JsonObject();
+    object.addProperty("position", 1);
+    object.add("commands", new JsonArray());
+    object.get("commands").getAsJsonArray().add(new JsonPrimitive("move,-1,0,1,0"));
+    object.get("commands").getAsJsonArray().add(new JsonPrimitive("move,0,0,1,0"));
     Sudoku game = makeGame(Grid.BLANK);
 
     // when
