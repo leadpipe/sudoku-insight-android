@@ -69,10 +69,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 
 import java.util.Calendar;
 import java.util.Collection;
@@ -157,8 +154,7 @@ public class SudokuFragment
     return mAttempt.puzzleId;
   }
 
-  private void setAttempt(
-      Database.Attempt attempt, List<Move> history, String title, JsonObject uiState, String status) {
+  private void setAttempt(Database.Attempt attempt, List<Move> history, String title, String status) {
     mAttempt = attempt;
     if (attempt == null) {
       setGame(null);
@@ -171,14 +167,14 @@ public class SudokuFragment
     Sudoku game = new Sudoku(attempt.clues, mRegistry, history, attempt.elapsedMillis);
     getActivity().setTitle(title);
     setGame(game);
-    if (uiState != null) {
+    if (attempt.uiState != null) {
       GameJson.setFactory(game);
-      mUndoStack = GSON.fromJson(uiState.get("undo"), UndoStack.class);
+      UiState uiState = GSON.fromJson(attempt.uiState, UiState.class);
       GameJson.clearFactory();
-      mSudokuView.setDefaultChoice(numeral(uiState.get("defaultChoice").getAsInt()));
-      restoreTrails(uiState.get("trailOrder").getAsJsonArray(), uiState.get("numVisibleTrails").getAsInt(),
-          uiState.has("numOffTrails") ? uiState.get("numOffTrails").getAsInt() : 0);
-      mEditTrailToggle.setChecked(uiState.get("trailActive").getAsBoolean());
+      mUndoStack = uiState.undo;
+      mSudokuView.setDefaultChoice(numeral(uiState.defaultChoice));
+      restoreTrails(uiState.trailOrder, uiState.numVisibleTrails, uiState.numOffTrails);
+      mEditTrailToggle.setChecked(uiState.trailActive);
     }
     if (attempt.attemptState.isInPlay()) {
       mPrefs.setCurrentAttemptIdAsync(attempt._id);
@@ -335,7 +331,7 @@ public class SudokuFragment
     mAttempt.numMoves = mGame.getHistory().size();
     mAttempt.numTrails = mGame.getNumTrails();
     if (mAttempt.attemptState.isInPlay()) {
-      mAttempt.uiState = makeUiState().toString();
+      mAttempt.uiState = GSON.toJson(makeUiState());
     } else {
       mAttempt.uiState = null;
     }
@@ -378,7 +374,6 @@ public class SudokuFragment
 
     private List<Move> mHistory;
     private String mTitle;
-    private JsonObject mUiState;
     private String mStatus;
 
     FetchFindOrMakePuzzle(SudokuFragment fragment) {
@@ -406,9 +401,6 @@ public class SudokuFragment
     private void makeAdditionalArtifacts(Database.Attempt attempt) {
       mHistory = GameJson.toHistory(attempt.history);
       mTitle = mAppContext.getString(R.string.text_puzzle_number, attempt.puzzleId);
-      if (attempt.uiState != null)
-        mUiState = new JsonParser().parse(attempt.uiState).getAsJsonObject();
-
       if (attempt.elements != null && !attempt.elements.isEmpty()) {
         mStatus = Joiner.on(mAppContext.getString(R.string.text_collection_separator)).join(
             Iterables.transform(attempt.elements, new Function<Database.Element, String>() {
@@ -420,7 +412,7 @@ public class SudokuFragment
     }
 
     @Override protected void onPostExecute(SudokuFragment fragment, Database.Attempt attempt) {
-      fragment.setAttempt(attempt, mHistory, mTitle, mUiState, mStatus);
+      fragment.setAttempt(attempt, mHistory, mTitle, mStatus);
     }
   }
 
@@ -648,7 +640,7 @@ public class SudokuFragment
   private void skipToNextPuzzle() {
     mPrefs.removeCurrentAttemptIdAsync();
     if (updateAttempt(true)) new SaveAttempt(this).execute(mAttempt);
-    setAttempt(null, null, null, null, null);
+    setAttempt(null, null, null, null);
     new FetchFindOrMakePuzzle(this).execute(0L);
     mProgress.setVisibility(View.VISIBLE);
   }
@@ -723,22 +715,30 @@ public class SudokuFragment
     getActivity().invalidateOptionsMenu();
   }
 
-  private JsonObject makeUiState() {
-    JsonObject object = new JsonObject();
-    object.add("undo", GSON.toJsonTree(mUndoStack));
-    object.addProperty("defaultChoice", number(mSudokuView.getDefaultChoice()));
-    object.add("trailOrder", makeTrailOrder());
-    object.addProperty("numVisibleTrails", countVisibleTrails());
-    object.addProperty("numOffTrails", countOffTrails());
-    object.addProperty("trailActive", mEditTrailToggle.isChecked());
+  private static class UiState {
+    UndoStack undo;
+    int defaultChoice;
+    int[] trailOrder;
+    int numVisibleTrails;
+    int numOffTrails;
+    boolean trailActive;
+  }
+
+  private UiState makeUiState() {
+    UiState object = new UiState();
+    object.undo = mUndoStack;
+    object.defaultChoice = number(mSudokuView.getDefaultChoice());
+    object.trailOrder = makeTrailOrder();
+    object.numVisibleTrails = countVisibleTrails();
+    object.numOffTrails = countOffTrails();
+    object.trailActive = mEditTrailToggle.isChecked();
     return object;
   }
 
-  private JsonArray makeTrailOrder() {
-    JsonArray array = new JsonArray();
-    for (int i = 0; i < mTrailAdapter.getCount(); ++i) {
-      array.add(new JsonPrimitive(mTrailAdapter.getItemId(i)));
-    }
+  private int[] makeTrailOrder() {
+    int[] array = new int[mTrailAdapter.getCount()];
+    for (int i = 0; i < array.length; ++i)
+      array[i] = (int) mTrailAdapter.getItemId(i);
     return array;
   }
 
@@ -758,11 +758,11 @@ public class SudokuFragment
     return count;
   }
 
-  private void restoreTrails(JsonArray trailOrder, int numVisibleTrails, int numOffTrails) {
+  private void restoreTrails(int[] trailOrder, int numVisibleTrails, int numOffTrails) {
     List<TrailItem> vis = Lists.newArrayList(), invis = Lists.newArrayList();
-    int offIndex = trailOrder.size() - numOffTrails;
-    for (int i = 0; i < trailOrder.size(); ++i) {
-      TrailItem item = makeTrailItem(trailOrder.get(i).getAsInt(), i < numVisibleTrails, i >= offIndex);
+    int offIndex = trailOrder.length - numOffTrails;
+    for (int i = 0; i < trailOrder.length; ++i) {
+      TrailItem item = makeTrailItem(trailOrder[i], i < numVisibleTrails, i >= offIndex);
       (item.shown ? vis : invis).add(item);
     }
     updateTrails(vis, invis);
