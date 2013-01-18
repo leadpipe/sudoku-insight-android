@@ -20,10 +20,15 @@ END
 * App
 
 ** App/UI cleanups
+*** TODO Kill Skip command, just have it be Give Up
+*** TODO Go ahead and generate improper puzzles, but mark them as skipped if proper only
+*** TODO Allow the playing and capture of improper puzzles, just warn before showing
 *** TODO Finish help content
 *** TODO Show user ID settings page at installation time?
 *** TODO Give visual indication when try to set an unsettable location
 *** TODO Evaluate captured puzzles' symmetries, if found store in properties
+    - why not do this for generated puzzles too, if they don't match the original symmetry
+    - had a puzzle today that started life as double mirror but ended up (almost) matching single mirror
 *** TODO Make translation of symmetry names possible
 *** TODO Make capture reasonably sized on tablets
     - consider wrapping in a scroll view too, for when an improper puzzle is detected
