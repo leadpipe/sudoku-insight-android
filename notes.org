@@ -20,7 +20,7 @@ END
 * App
 
 ** App/UI cleanups
-*** TODO Kill Skip command, just have it be Give Up
+*** DONE Kill Skip command, just have it be Give Up
 *** TODO Go ahead and generate improper puzzles, but mark them as skipped if proper only
 *** TODO Allow the playing and capture of improper puzzles, just warn before showing
 *** TODO Finish help content

@@ -35,16 +35,10 @@
         android:orderInCategory="14"
         />
 
-    <item android:id="@+id/menu_skip"
-        android:title="@string/menu_skip"
-        android:showAsAction="never"
-        android:orderInCategory="15"
-        />
-
     <item android:id="@+id/menu_give_up"
         android:title="@string/menu_give_up"
         android:showAsAction="never"
-        android:orderInCategory="16"
+        android:orderInCategory="15"
         />
 
 </menu>
