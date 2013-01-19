@@ -172,3 +172,57 @@ END
 ** J. F. Crook: A Pencil-and-Paper Algorithm for Solving Sudoku Puzzles
    - http://www.ams.org/notices/200904/tx090400460p.pdf
    - The trails approach, essentially, including different colors
+** George A. Miller:
+   - http://en.wikipedia.org/wiki/The_Magical_Number_Seven,_Plus_or_Minus_Two
+   - 7 chunks of information in working memory
+   - 7 levels of "absolute judgement" along 1 dimension
+   - Sudoku at outer boundary of both
+
+* Talk
+** What is Sudoku?
+   - a logic puzzle; more precisely, a (large) family of logic puzzles
+   - 9x9 grid; each empty square must be filled with a numeral between 1 and 9
+   - the finished puzzle has all 9 numerals in every row, column, and 3x3 block
+   - a given puzzle usually has a single solution
+** How Large a Family of Logic Puzzles?
+   - 5e9 distinct canonical solution grids
+   - for each one, 9! x 6^8 x 2 = 1.2e12 permutations
+   - total: 6e21
+   - each solution grid represents lots of different puzzles -- on the order of 81! = 5.8e120
+   - in human terms: an infinite supply of sudoku
+   - astonishingly: a huge variety of puzzles
+   - (best canonicalization scheme: first in lexicographical order)
+** Why is Sudoku Fun?
+   - My theory: 7 +/- 2
+** The Pessimistic View
+   - Sudoku is "a denial of service attack on human intellect" -- Ben Laurie,
+     quoted by Peter Norvig
+** Solving via Computer
+   - Constraint propagation & search
+   - Norvig has a one-page Python program, done supposedly to free mankind of
+     the scourge of Sudoku addiction
+   - (turns out it can be used to spread the addiction as well)
+   - It's super fast for a computer to solve a Sudoku
+   - Measured in microseconds on my old MBP (~300us avg)
+*** Constraint propagation
+    - assign(loc, num):
+      for each other numeral that could be in loc:
+        eliminate(loc, other)
+    - eliminate(loc, num):
+      remove num as a possibility in loc
+      if loc ends up with just 1 possibility:
+        for each peer location of loc:
+          eliminate(peer, poss)
+      for each unit loc is in:
+        if num is now in just 1 of that unit's locations:
+          assign(there, num)
+*** Search
+    - search(possibilities):
+      - if all locations have 1 possibility: success
+      - if any location has 0 possibilities: failure
+      - choose a location from among those with the fewest number of possibilities
+      - for each possible numeral:
+          try assign(loc, num); if search with those possibilities succeeds, success
+      - failure
+** Solving via Intellect
+
