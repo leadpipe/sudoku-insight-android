@@ -28,8 +28,6 @@ public class SetInstallation {
     @Nullable public String accountId;
     /** The user's name for the installation. */
     public String name;
-    /** Whether this installation should only see single-solution puzzles. */
-    public boolean properOnly;
     /** The manufacturer of the device where the installation lives. */
     public String manufacturer;
     /** The public model name of the device. */
