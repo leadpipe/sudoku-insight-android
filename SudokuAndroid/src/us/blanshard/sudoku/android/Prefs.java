@@ -32,6 +32,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.math.LongMath;
 
 import java.util.Calendar;
+import java.util.Locale;
 
 /**
  * Wrapper around shared preferences providing a more convenient API.
@@ -41,6 +42,7 @@ import java.util.Calendar;
 public class Prefs {
   public static final String DEVICE_NAME = "deviceName";
   public static final String PROPER_ONLY = "properOnly";
+  public static final String SHARE_DATA = "shareData";
   public static final String USER_ID = "googleUserId";
 
   /** The largest number of solutions this app will tolerate. */
@@ -62,8 +64,10 @@ public class Prefs {
     mInstallationId = Installation.id(context);
     if (!mPrefs.contains(PROPER_ONLY) || !mPrefs.contains(DEVICE_NAME)) {
       SharedPreferences.Editor prefs = mPrefs.edit();
+      prefs.putString(DEVICE_NAME, defaultDeviceName());
       prefs.putBoolean(PROPER_ONLY, true);
-      prefs.putString(DEVICE_NAME, Build.MODEL);
+      prefs.putBoolean(SHARE_DATA, false);
+      prefs.putString(USER_ID, "");
       prefs.apply();
     }
   }
@@ -71,6 +75,13 @@ public class Prefs {
   public static synchronized Prefs instance(Context context) {
     if (sInstance == null) sInstance = new Prefs(context);
     return sInstance;
+  }
+
+  public static String defaultDeviceName() {
+    String answer = Build.MODEL;
+    if (!answer.toLowerCase(Locale.US).startsWith(Build.MANUFACTURER.toLowerCase(Locale.US)))
+      answer = Build.MANUFACTURER + " " + answer;
+    return answer;
   }
 
   public boolean hasCurrentAttemptId() {
