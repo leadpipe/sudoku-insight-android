@@ -44,6 +44,7 @@
     <string name="prefs_improper_desc">Puzzles may have more than one solution; makes solving harder</string>
     <string name="prefs_no_share_desc">Please consider allowing Sudoku scientists to see your moves.  See Help for details.</string>
     <string name="prefs_no_user_id">None</string>
+    <string name="prefs_no_user_id_desc">None: You may see the same puzzles on other devices.</string>
     <string name="prefs_proper_desc">Every puzzle has just one solution; makes solving easier</string>
     <string name="prefs_proper_only">Proper sudokus only</string>
     <string name="prefs_share_data">Share anonymous data</string>

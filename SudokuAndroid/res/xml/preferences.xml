@@ -16,6 +16,7 @@
     <EditTextPreference
         android:key="deviceName"
         android:title="@string/prefs_device_name"
+        android:dependency="googleUserId"
         />
     
     <CheckBoxPreference

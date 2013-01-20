@@ -27,8 +27,6 @@ import android.preference.PreferenceFragment;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.google.common.base.Strings;
-
 /**
  * @author Luke Blanshard
  */
@@ -66,6 +64,10 @@ public class SettingsActivity extends ActivityBase {
       } finally {
         StrictMode.setThreadPolicy(prev);
       }
+    }
+
+    @Override public void onActivityCreated(Bundle savedInstanceState) {
+      super.onActivityCreated(savedInstanceState);
 
       setUpDeviceName();
       setUpAccounts();
@@ -87,7 +89,7 @@ public class SettingsActivity extends ActivityBase {
       AccountManager mgr = AccountManager.get(getActivity());
       Account[] accts = mgr.getAccountsByType("com.google");
       CharSequence[] values = new CharSequence[1 + accts.length];
-      final CharSequence[] names = new CharSequence[1 + accts.length];
+      CharSequence[] names = new CharSequence[1 + accts.length];
       values[0] = "";
       names[0] = getString(R.string.prefs_no_user_id);
       for (int i = 0; i < accts.length; ++i) {
@@ -97,8 +99,9 @@ public class SettingsActivity extends ActivityBase {
       pref.setEntryValues(values);
       pref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
         @Override public boolean onPreferenceChange(Preference preference, Object newValue) {
-          String s = String.valueOf(newValue);
-          preference.setSummary(Strings.isNullOrEmpty(s) ? names[0] : s);
+          String s = newValue == null ? "" : newValue.toString();
+          preference.setSummary(s.isEmpty() ? getString(R.string.prefs_no_user_id_desc) : s);
+          preference.notifyDependencyChange(s.isEmpty());
           return true;
         }
       });
