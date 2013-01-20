@@ -1,11 +1,10 @@
 * Solver
 
 * Generator
-** TODO Non-unique puzzles
+** DONE Non-unique puzzles
 
 * Hints
 ** TODO Figure out how to turn game histories into pattern times
-** TODO Fix analyzer to not apply sets & overlaps until they're the cheapest insight available
 
 ** Getting games with history from a sqlite db into a tsv file:
 sqlite3 phone-2012-07-08.db <<END
@@ -22,6 +21,7 @@ END
 ** App/UI cleanups
 *** DONE Kill Skip command, just have it be Give Up
 *** TODO Go ahead and generate improper puzzles, but mark them as skipped if proper only
+*** TODO Separate getting next puzzle counter from updating the pref
 *** TODO Allow the playing and capture of improper puzzles, just warn before showing
 *** TODO Finish help content
 *** TODO Show user ID settings page at installation time?
@@ -43,7 +43,7 @@ END
     - I think I don't like this idea
 
 ** Cross-installation work
-*** TODO Use backup service to keep the chosen user ID & properness setting
+*** DONE Use backup service to keep the chosen user ID & properness setting
 *** TODO Handle synced puzzles and attempts
 *** TODO Write an appengine app that gathers data from the android app
     - use GUID to identify the installation

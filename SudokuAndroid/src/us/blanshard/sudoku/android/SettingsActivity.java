@@ -58,6 +58,7 @@ public class SettingsActivity extends ActivityBase {
   public static class SettingsFragment extends PreferenceFragment {
     @Override public void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
+      getPreferenceManager().setSharedPreferencesName(Prefs.BACKED_UP_PREFS);
       ThreadPolicy prev = StrictMode.allowThreadDiskReads();
       try {
         addPreferencesFromResource(R.xml.preferences);

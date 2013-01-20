@@ -20,10 +20,11 @@ import static us.blanshard.sudoku.gen.Generator.NUM_STREAMS;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.backup.BackupManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Build;
-import android.preference.PreferenceManager;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
@@ -40,6 +41,9 @@ import java.util.Locale;
  * @author Luke Blanshard
  */
 public class Prefs {
+  public static final String BACKED_UP_PREFS = "prefs";
+  public static final String LOCAL_PREFS = "localPrefs";
+
   public static final String DEVICE_NAME = "deviceName";
   public static final String PROPER_ONLY = "properOnly";
   public static final String SHARE_DATA = "shareData";
@@ -49,22 +53,35 @@ public class Prefs {
   public static final int MAX_SOLUTIONS = 10;
 
   private static final String COUNTER = "counter";
+  private static final String DEFAULT_DEVICE_NAME = "defaultDeviceName";
   private static final String MONTH = "month";
   private static final String SORT = "sort";
   private static final String STREAM = "stream";
+  private static final String STREAM_COUNT = "streamCount";
 
   private final Context mAppContext;
+  private final BackupManager mBackupManager;
+  private final SharedPreferences mLocalPrefs;
   private final SharedPreferences mPrefs;
   private final String mInstallationId;
   private static Prefs sInstance;
 
   private Prefs(Context context) {
     mAppContext = context.getApplicationContext();
-    mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+    mBackupManager = new BackupManager(context);
+    mPrefs = context.getSharedPreferences(BACKED_UP_PREFS, 0);
+    mLocalPrefs = context.getSharedPreferences(LOCAL_PREFS, 0);
     mInstallationId = Installation.id(context);
+    mPrefs.registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
+      @Override public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        mBackupManager.dataChanged();
+      }
+    });
     if (!mPrefs.contains(PROPER_ONLY) || !mPrefs.contains(DEVICE_NAME)) {
       SharedPreferences.Editor prefs = mPrefs.edit();
-      prefs.putString(DEVICE_NAME, defaultDeviceName());
+      String defaultDeviceName = defaultDeviceName();
+      prefs.putString(DEVICE_NAME, defaultDeviceName);
+      prefs.putString(DEFAULT_DEVICE_NAME, defaultDeviceName);
       prefs.putBoolean(PROPER_ONLY, true);
       prefs.putBoolean(SHARE_DATA, false);
       prefs.putString(USER_ID, "");
@@ -85,21 +102,21 @@ public class Prefs {
   }
 
   public boolean hasCurrentAttemptId() {
-    return mPrefs.contains(ATTEMPT_ID);
+    return mLocalPrefs.contains(ATTEMPT_ID);
   }
 
   public long getCurrentAttemptId() {
-    return mPrefs.getLong(ATTEMPT_ID, -1);
+    return mLocalPrefs.getLong(ATTEMPT_ID, -1);
   }
 
   public void setCurrentAttemptIdAsync(long attemptId) {
-    SharedPreferences.Editor prefs = mPrefs.edit();
+    SharedPreferences.Editor prefs = mLocalPrefs.edit();
     prefs.putLong(ATTEMPT_ID, attemptId);
     prefs.apply();
   }
 
   public void removeCurrentAttemptIdAsync() {
-    SharedPreferences.Editor prefs = mPrefs.edit();
+    SharedPreferences.Editor prefs = mLocalPrefs.edit();
     prefs.remove(ATTEMPT_ID);
     prefs.apply();
   }
@@ -143,17 +160,33 @@ public class Prefs {
   }
 
   public String getDeviceName() {
-    return mPrefs.getString(DEVICE_NAME, Build.MODEL);
+    return mPrefs.getString(DEVICE_NAME, null);
+  }
+
+  public void resetDeviceNameIfNeeded() {
+    String defaultDeviceName = defaultDeviceName();
+    // If we're restored to a different device, reset the device name. If it's
+    // to the same device, leave the device name alone.
+    if (!defaultDeviceName.equals(mPrefs.getString(DEFAULT_DEVICE_NAME, null))) {
+      SharedPreferences.Editor prefs = mPrefs.edit();
+      prefs.putString(DEVICE_NAME, defaultDeviceName);
+      prefs.putString(DEFAULT_DEVICE_NAME, defaultDeviceName);
+      prefs.apply();
+    }
   }
 
   public int getStream() {
-    int stream = mPrefs.getInt(STREAM, 0);
+    int stream = mLocalPrefs.getInt(STREAM, 0);
     if (stream == 0) {
       HashCode code = Hashing.murmur3_128().hashString(mInstallationId, Charsets.UTF_8);
-      stream = 1 + LongMath.mod(code.asLong(), NUM_STREAMS);
+      stream = 1 + LongMath.mod(code.asLong(), getStreamCount());
       setStreamAsync(stream);
     }
     return stream;
+  }
+
+  public int getStreamCount() {
+    return mPrefs.getInt(STREAM_COUNT, NUM_STREAMS);
   }
 
   public void setStreamAsync(int stream) {

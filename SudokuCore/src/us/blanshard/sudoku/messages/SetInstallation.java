@@ -41,6 +41,11 @@ public class SetInstallation {
   }
 
   public static class Response {
+    /**
+     * The name to use for the installation, in case it clashes with another
+     * installation.
+     */
+    @Nullable public String name;
     /** The number of puzzle streams being tracked by the back end. */
     public int streamCount;
     /** The stream number this installation should be using. */
