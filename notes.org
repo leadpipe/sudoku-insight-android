@@ -52,6 +52,8 @@ END
     - when the app is slightly off the ground, sign up for Cloud Endpoints at http://endpoints-trusted-tester.appspot.com/
 
 ** Replay cleanups
+*** TODO Wrong-numeral mistakes show without the error during single-step playback
+    - the error appears while running forward
 *** TODO Try making selection color darker
 *** TODO Try not minimizing disproofs until they're selected
 *** TODO Why does the first trail in puzzle 14 switch errors?
