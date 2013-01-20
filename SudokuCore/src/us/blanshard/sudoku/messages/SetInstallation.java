@@ -27,7 +27,9 @@ public class SetInstallation {
     /** The optional account to use for linking installations. */
     @Nullable public String accountId;
     /** The user's name for the installation. */
-    public String name;
+    @Nullable public String name;
+    /** Whether to make this installation's anonymous data public. */
+    public boolean shareData;
     /** The manufacturer of the device where the installation lives. */
     public String manufacturer;
     /** The public model name of the device. */

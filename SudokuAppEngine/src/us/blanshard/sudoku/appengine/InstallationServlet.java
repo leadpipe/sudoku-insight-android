@@ -26,7 +26,18 @@ import javax.servlet.http.HttpServletResponse;
 @SuppressWarnings("serial")
 public class InstallationServlet extends HttpServlet {
 
-  private static Iterator<Key> numbers;
+  private static final String INSTALLATION_KIND = "Installation";
+
+  // Property names for Installation entities:
+  private static final String OPAQUE_ID = "opaqueId";
+  private static final String ACCOUNT_ID = "accountId";
+  private static final String NAME = "name";
+  private static final String MANUFACTURER = "manufacturer";
+  private static final String MODEL = "model";
+  private static final String STREAM_COUNT = "streamCount";
+  private static final String STREAM = "stream";
+
+  private static Iterator<Key> opaqueIds;
 
   @Override public void doGet(HttpServletRequest req, HttpServletResponse resp)
       throws IOException {
@@ -43,26 +54,34 @@ public class InstallationServlet extends HttpServlet {
     DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
     Transaction tx = ds.beginTransaction();
     try {
-      Key key = KeyFactory.createKey("Installation", body.id);
+      Key key = KeyFactory.createKey(INSTALLATION_KIND, body.id);
       Entity entity;
       try {
         entity = ds.get(key);
       } catch (EntityNotFoundException e) {
         entity = new Entity(key);
-        entity.setProperty("number", nextNumber(ds));
+        entity.setProperty(OPAQUE_ID, nextOpaqueId(ds));
       }
       if (body.accountId == null)
-        entity.removeProperty("accountId");
+        entity.removeProperty(ACCOUNT_ID);
       else
-        entity.setProperty("accountId", new User(body.accountId, "gmail.com"));
+        entity.setProperty(ACCOUNT_ID, new User(body.accountId, "gmail.com"));
       if (body.name == null)
-        entity.removeProperty("name");
+        entity.removeProperty(NAME);
       else
-        entity.setUnindexedProperty("name", body.name);
-      entity.setUnindexedProperty("manufacturer", body.manufacturer);
-      entity.setUnindexedProperty("model", body.model);
-      entity.setUnindexedProperty("streamCount", body.streamCount);
-      entity.setUnindexedProperty("stream", body.stream);
+        entity.setUnindexedProperty(NAME, body.name);
+
+      // If sharing is acceptable, include this installation in the opaque ID
+      // index.
+      if (body.shareData)
+        entity.setProperty(OPAQUE_ID, entity.getProperty(OPAQUE_ID));
+      else
+        entity.setUnindexedProperty(OPAQUE_ID, entity.getProperty(OPAQUE_ID));
+
+      entity.setUnindexedProperty(MANUFACTURER, body.manufacturer);
+      entity.setUnindexedProperty(MODEL, body.model);
+      entity.setUnindexedProperty(STREAM_COUNT, body.streamCount);
+      entity.setUnindexedProperty(STREAM, body.stream);
 
       tx.commit();
     } finally {
@@ -76,10 +95,10 @@ public class InstallationServlet extends HttpServlet {
     resp.getWriter().write(gson.toJson(answer));
   }
 
-  private static synchronized Long nextNumber(DatastoreService ds) {
-    if (numbers == null || !numbers.hasNext()) {
-      numbers = ds.allocateIds("Installation", 20).iterator();
+  private static synchronized Long nextOpaqueId(DatastoreService ds) {
+    if (opaqueIds == null || !opaqueIds.hasNext()) {
+      opaqueIds = ds.allocateIds(INSTALLATION_KIND, 20).iterator();
     }
-    return numbers.next().getId();
+    return opaqueIds.next().getId();
   }
 }
