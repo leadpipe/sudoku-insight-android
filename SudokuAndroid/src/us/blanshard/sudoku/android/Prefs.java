@@ -54,6 +54,7 @@ public class Prefs {
 
   private static final String COUNTER = "counter";
   private static final String DEFAULT_DEVICE_NAME = "defaultDeviceName";
+  private static final String INSTALL_DATA = "installData";
   private static final String MONTH = "month";
   private static final String SORT = "sort";
   private static final String STREAM = "stream";
@@ -64,6 +65,9 @@ public class Prefs {
   private final SharedPreferences mLocalPrefs;
   private final SharedPreferences mPrefs;
   private final String mInstallationId;
+  // These will be gc'ed if not retained here:
+  private final OnSharedPreferenceChangeListener mPrefsListener;
+  private final OnSharedPreferenceChangeListener mLocalPrefsListener;
   private static Prefs sInstance;
 
   private Prefs(Context context) {
@@ -72,11 +76,19 @@ public class Prefs {
     mPrefs = context.getSharedPreferences(BACKED_UP_PREFS, 0);
     mLocalPrefs = context.getSharedPreferences(LOCAL_PREFS, 0);
     mInstallationId = Installation.id(context);
-    mPrefs.registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
+    mPrefsListener = new OnSharedPreferenceChangeListener() {
       @Override public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         mBackupManager.dataChanged();
+        NetworkService.syncInstallationInfo(mAppContext);
       }
-    });
+    };
+    mPrefs.registerOnSharedPreferenceChangeListener(mPrefsListener);
+    mLocalPrefsListener = new OnSharedPreferenceChangeListener() {
+      @Override public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        NetworkService.syncInstallationInfo(mAppContext);
+      }
+    };
+    mLocalPrefs.registerOnSharedPreferenceChangeListener(mLocalPrefsListener);
     if (!mPrefs.contains(PROPER_ONLY) || !mPrefs.contains(DEVICE_NAME)) {
       SharedPreferences.Editor prefs = mPrefs.edit();
       String defaultDeviceName = defaultDeviceName();
@@ -87,6 +99,8 @@ public class Prefs {
       prefs.putString(USER_ID, "");
       prefs.apply();
     }
+    // Always sync installation info at startup time (if required).
+    NetworkService.syncInstallationInfo(mAppContext);
   }
 
   public static synchronized Prefs instance(Context context) {
@@ -131,6 +145,10 @@ public class Prefs {
     prefs.apply();
   }
 
+  public boolean getShareData() {
+    return mPrefs.getBoolean(SHARE_DATA, false);
+  }
+
   public boolean hasUserId() {
     return !Strings.isNullOrEmpty(getUserId());
   }
@@ -163,6 +181,12 @@ public class Prefs {
     return mPrefs.getString(DEVICE_NAME, null);
   }
 
+  public void setDeviceNameAsync(String name) {
+    SharedPreferences.Editor prefs = mPrefs.edit();
+    prefs.putString(DEVICE_NAME, name);
+    prefs.apply();
+  }
+
   public void resetDeviceNameIfNeeded() {
     String defaultDeviceName = defaultDeviceName();
     // If we're restored to a different device, reset the device name. If it's
@@ -186,12 +210,18 @@ public class Prefs {
   }
 
   public int getStreamCount() {
-    return mPrefs.getInt(STREAM_COUNT, NUM_STREAMS);
+    return mLocalPrefs.getInt(STREAM_COUNT, NUM_STREAMS);
   }
 
   public void setStreamAsync(int stream) {
-    SharedPreferences.Editor prefs = mPrefs.edit();
+    SharedPreferences.Editor prefs = mLocalPrefs.edit();
     prefs.putInt(STREAM, stream);
+    prefs.apply();
+  }
+
+  public void setStreamCountAsync(int streamCount) {
+    SharedPreferences.Editor prefs = mLocalPrefs.edit();
+    prefs.putInt(STREAM_COUNT, streamCount);
     prefs.apply();
   }
 
@@ -209,5 +239,15 @@ public class Prefs {
     prefs.putInt(COUNTER, counter);
     prefs.commit();
     return counter;
+  }
+
+  public String getInstallData() {
+    return mLocalPrefs.getString(INSTALL_DATA, "");
+  }
+
+  public void setInstallDataSync(String data) {
+    SharedPreferences.Editor prefs = mLocalPrefs.edit();
+    prefs.putString(INSTALL_DATA, data);
+    prefs.commit();
   }
 }

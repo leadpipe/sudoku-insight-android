@@ -25,3 +25,8 @@ handlers:
 - url: /
   secure: optional
   servlet: us.blanshard.sudoku.appengine.TopServlet
+
+
+system_properties:
+  java.util.logging.config.file: WEB-INF/logging.properties
+

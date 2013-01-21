@@ -35,6 +35,7 @@ SudokuAndroid/libs/*.jar
 WEB-INF/lib/*.jar
 WEB-INF/*/*.xml
 WEB-INF/*.xml
+WEB-INF/appengine-generated/*
 
 # Data files
 data/*.tsv
