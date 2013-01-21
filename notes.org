@@ -19,7 +19,6 @@ END
 * App
 
 ** App/UI cleanups
-*** DONE Kill Skip command, just have it be Give Up
 *** TODO Go ahead and generate improper puzzles, but mark them as skipped if proper only
 *** TODO Separate getting next puzzle counter from updating the pref
 *** TODO Allow the playing and capture of improper puzzles, just warn before showing
@@ -37,15 +36,13 @@ END
 ** Publishing the app
 *** TODO Make other graphics for play store
 
-** Improper (non-unique) puzzles
-*** TODO Handle completion of potentially improper puzzles
-    - by asking whether it was unique (?)
-    - I think I don't like this idea
-
 ** Cross-installation work
-*** DONE Use backup service to keep the chosen user ID & properness setting
-*** TODO Handle synced puzzles and attempts
-*** TODO Write an appengine app that gathers data from the android app
+*** TODO Add pref for whether to sync from other devices
+    - dependent on selecting an account
+*** TODO Write both ends of uploading attempts on completion
+*** TODO Add auth for any update of installation info that has an account included
+    - http://endpoints-trusted-tester.appspot.com/
+*** DONE Write an appengine app that gathers data from the android app
     - use GUID to identify the installation
     - allow login using Google ID to keep different installations from generating the same puzzles
     - will android tell us which Google ID installed the app?
@@ -59,6 +56,7 @@ END
 *** TODO Why does the first trail in puzzle 14 switch errors?
 *** TODO Automatically pause the replay on switch of trail, just after the move
     - Or, rethink this.  Not clear it would be helpful.
+    - It would be nice to be able to jump past trail switches
 *** TODO Bug: analysis not being interrupted
     - No longer seeing this?
 *** TODO Clearing the present insight should clear the selected location too
