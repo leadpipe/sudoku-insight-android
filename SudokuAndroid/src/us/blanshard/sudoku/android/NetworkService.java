@@ -60,7 +60,8 @@ public class NetworkService extends IntentService {
   private static final String CALL = "us.blanshard.sudoku.android.Call";
   private static final int INSTALLATION = 1;
 
-  private static final String BASE_URL = "http://10.0.2.2:8888/";
+  private static final String BASE_URL = "https://sudoku-insight.appspot.com/";
+  // "http://10.0.2.2:8888/";  // <-- reaches localhost
   private static final String SET_INSTALL_URL = BASE_URL + "installation";
 
   private static final String TAG = "NetworkService";
