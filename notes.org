@@ -19,7 +19,12 @@ END
 * App
 
 ** App/UI cleanups
-*** TODO Go ahead and generate improper puzzles, but mark them as skipped if proper only
+*** TODO bug: somehow wound up getting shown completed puzzles
+    - each time I started the app it advanced 3-4 in the history
+*** TODO The puzzles coming out of the generator seem too hard
+    - that is, the ratio of easier to harder seems too low
+    - and there are bunches of super hard ones
+*** TODO Go ahead and store improper puzzles, but mark them as skipped if proper only
 *** TODO Separate getting next puzzle counter from updating the pref
 *** TODO Allow the playing and capture of improper puzzles, just warn before showing
 *** TODO Finish help content
