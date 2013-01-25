@@ -16,7 +16,15 @@ limitations under the License.
 package us.blanshard.sudoku.gen;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static us.blanshard.sudoku.gen.Symmetry.BLOCKWISE;
+import static us.blanshard.sudoku.gen.Symmetry.CLASSIC;
+import static us.blanshard.sudoku.gen.Symmetry.DIAGONAL;
+import static us.blanshard.sudoku.gen.Symmetry.DOUBLE_MIRROR;
+import static us.blanshard.sudoku.gen.Symmetry.MIRROR;
+import static us.blanshard.sudoku.gen.Symmetry.RANDOM;
+import static us.blanshard.sudoku.gen.Symmetry.ROTATIONAL;
 
+import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Solver.Result;
 
 import com.google.common.base.Charsets;
@@ -59,7 +67,7 @@ public class Generator {
 
   /**
    * The JSON property key whose value is the symmetry underlying the puzzle's
-   * clues, when that symmetry has been broken.
+   * clues, when that symmetry matches only approximately.
    */
   public static final String BROKEN_SYMMETRY_KEY = "brokenSymmetry";
 
@@ -118,6 +126,19 @@ public class Generator {
    * {@linkplain #BASIC_VERSION version number}.
    */
   private static final double CHANCE_OF_IMPROPER = 0.125;
+
+  /**
+   * How likely it is that a given puzzle will be generated in a way that honors
+   * the symmetry chosen. Changing this requires bumping the
+   * {@linkplain #BASIC_VERSION version number}.
+   */
+  private static final double CHANCE_OF_SYMMETRIC = 0.3;
+
+  /**
+   * The minimum measure returned by {@link Symmetry#measure} in order for the
+   * symmetry to be considered close enough to be broken.
+   */
+  private static final double BROKEN_CUTOFF = 0.9;
 
   /**
    * The largest number of solutions for any puzzle generated. Changing this
@@ -205,19 +226,50 @@ public class Generator {
     }
   }
 
+  /**
+   * Creates a JSON object with {@link #PUZZLE_KEY} set to the given result's
+   * starting grid, {@link #NUM_SOLUTIONS_KEY} set to the number of solutions,
+   * and either {@link #SYMMETRY_KEY} or {@link #BROKEN_SYMMETRY_KEY} set to the
+   * name of the symmetry that best describes the clues.
+   */
+  public static JsonObject makePuzzle(Result result) {
+    JsonObject answer = new JsonObject();
+    answer.addProperty(PUZZLE_KEY, result.start.toFlatString());
+    answer.addProperty(NUM_SOLUTIONS_KEY, result.numSolutions);
+    findSymmetry(result.start, answer);
+    return answer;
+  }
+
   private static JsonObject generateBasicPuzzle(String name, Random random) {
+    GenerationStrategy strategy = random.nextDouble() < CHANCE_OF_SYMMETRIC
+        ? GenerationStrategy.SUBTRACTIVE : GenerationStrategy.SUBTRACTIVE_RANDOM;
     int maxSolutions = random.nextDouble() < CHANCE_OF_IMPROPER ? MAX_SOLUTIONS : 1;
     int maxHoles = maxSolutions == 1 ? 0 : MAX_HOLES;
     Symmetry symmetry = Symmetry.choose(random);
-    Result result = GenerationStrategy.SUBTRACTIVE_RANDOM.generate(
-        random, symmetry, maxSolutions, maxHoles);
-    String symKey = symmetry.describes(result.start) ? SYMMETRY_KEY : BROKEN_SYMMETRY_KEY;
+    Result result = strategy.generate(random, symmetry, maxSolutions, maxHoles);
 
-    JsonObject answer = new JsonObject();
-    answer.addProperty(PUZZLE_KEY, result.start.toFlatString());
+    JsonObject answer = makePuzzle(result);
     answer.addProperty(NAME_KEY, name);
-    answer.addProperty(symKey, symmetry.getName());
-    answer.addProperty(NUM_SOLUTIONS_KEY, result.numSolutions);
     return answer;
+  }
+
+  // Order matters: all double-mirrors are also mirrors, all rotational and
+  // double-mirror are also classic.
+  private static final Symmetry[] symmetries =
+      { ROTATIONAL, DOUBLE_MIRROR, MIRROR, CLASSIC, BLOCKWISE, DIAGONAL };
+
+  private static void findSymmetry(Grid grid, JsonObject object) {
+    String key = SYMMETRY_KEY;
+    Symmetry found = RANDOM;
+    double bestMeasure = 0;
+    for (Symmetry s : symmetries) {
+      double m = s.measure(grid);
+      if (m > BROKEN_CUTOFF && m > bestMeasure) {
+        found = s;
+        bestMeasure = m;
+      }
+    }
+    if (found != RANDOM && bestMeasure < 1) key = BROKEN_SYMMETRY_KEY;
+    object.addProperty(key, found.getName());
   }
 }

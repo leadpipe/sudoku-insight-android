@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import us.blanshard.sudoku.core.Block;
 import us.blanshard.sudoku.core.Column;
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.LocSet;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Row;
 import us.blanshard.sudoku.core.Unit;
@@ -172,11 +173,30 @@ public enum Symmetry {
    */
   public boolean describes(Grid grid) {
     for (Location loc : Location.ALL) {
-      boolean hasClue = grid.get(loc) != null;
+      boolean hasClue = grid.containsKey(loc);
       for (Location exp : expand(loc))
-        if (hasClue != (grid.get(exp) != null))
+        if (hasClue != grid.containsKey(exp))
           return false;
     }
     return true;
+  }
+
+  /**
+   * Tells to what degree this symmetry describes the layout of clues in the
+   * given grid, with 0 meaning not at all and 1 meaning completely.
+   */
+  public double measure(Grid grid) {
+    int matchingCount = 0;
+    LocSet seen = new LocSet();
+    for (Location loc : Location.ALL) {
+      if (seen.contains(loc)) continue;
+      int nClues = 0, nBlanks = 0;
+      for (Location exp : expand(loc)) {
+        seen.add(exp);
+        if (grid.containsKey(exp)) ++nClues; else ++nBlanks;
+      }
+      matchingCount += Math.max(nClues, nBlanks);
+    }
+    return (double) matchingCount / Location.COUNT;
   }
 }
