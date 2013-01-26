@@ -194,14 +194,14 @@ public class SudokuFragment
         invis.add(makeTrailItem(i, false, false));
     updateTrails(vis, invis);
     mSudokuView.setDefaultChoice(Numeral.of(1));
-    if (game != null) {
+    if (game != null && mAttempt.attemptState.isInPlay()) {
       updateState();
       if (mState != Grid.State.SOLVED && mResumed)
         game.resume();
+      mSudokuView.postDelayed(attemptSaver, DB_UPDATE_MILLIS);
     }
     stateChanged();
     mProgress.setVisibility(View.GONE);
-    mSudokuView.postDelayed(attemptSaver, DB_UPDATE_MILLIS);
   }
 
   public void showError(String s) {
@@ -386,7 +386,7 @@ public class SudokuFragment
       Database.Attempt answer = mDb.getAttempt(params[0]);
       if (answer == null || !answer.attemptState.isInPlay())
         answer = mDb.getFirstOpenAttempt();
-      if (answer == null)
+      if (answer == null || !answer.attemptState.isInPlay())
         answer = generateAndStorePuzzle(mDb, mPrefs);
       if (answer != null)
         makeAdditionalArtifacts(answer);

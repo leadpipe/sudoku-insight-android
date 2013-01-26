@@ -18,6 +18,7 @@ END
     - each time I started the app it advanced 3-4 in the history
     - find and fix the bug; but also harden the fragment against future similar
       bugs, by _not_ updating the DB when it gets a complete attempt
+    - no idea, but did try to make sure the fragment doesn't write these back to the db
 *** TODO Go ahead and store improper puzzles, but mark them as skipped if proper only
 *** TODO Separate getting next puzzle counter from updating the pref
 *** DONE Allow the playing and capture of improper puzzles, just warn before showing
