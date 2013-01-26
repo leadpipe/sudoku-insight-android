@@ -354,16 +354,23 @@ public class SudokuFragment
   }
 
   private static Database.Attempt generateAndStorePuzzle(Database db, Prefs prefs) {
-    Database.Attempt answer;
     Calendar cal = Calendar.getInstance();
-    JsonObject props;
-    do {
-      props = Generator.generateBasicPuzzle(
-          prefs.getStream(), cal.get(Calendar.YEAR), 1 + cal.get(Calendar.MONTH), prefs.getNextCounterSync(cal));
-    } while (prefs.getProperOnly() && props.get(Generator.NUM_SOLUTIONS_KEY).getAsInt() > 1);
-    long id = db.addGeneratedPuzzle(props);
-    answer = db.getCurrentAttemptForPuzzle(id);
-    return answer;
+
+    while (true) {
+      JsonObject props = Generator.generateBasicPuzzle(
+          prefs.getStream(), cal.get(Calendar.YEAR),
+          1 + cal.get(Calendar.MONTH), prefs.getNextCounterSync(cal));
+      long id = db.addGeneratedPuzzle(props);
+      Database.Attempt attempt = db.getCurrentAttemptForPuzzle(id);
+      if (prefs.getProperOnly() && props.get(Generator.NUM_SOLUTIONS_KEY).getAsInt() > 1) {
+        // Skip improper puzzles if the settings say so.
+        Database.startUnstartedAttempt(attempt);
+        attempt.attemptState = AttemptState.SKIPPED;
+        db.updateAttempt(attempt);
+      } else {
+        return attempt;
+      }
+    }
   }
 
   private static class FetchFindOrMakePuzzle extends WorkerFragment.Task<SudokuFragment, Long, Void, Database.Attempt> {

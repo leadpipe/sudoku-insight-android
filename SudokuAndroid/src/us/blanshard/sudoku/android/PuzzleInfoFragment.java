@@ -223,7 +223,7 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
                 ToText.relativeDateTime(getActivity(), attempt.startTime))));
       }
     }
-    if (!attempt.attemptState.isInPlay())
+    if (attempt.attemptState.isComplete())
       sb.append("<br><a href='" + Uris.REPLAY_URI_PREFIX).append(attempt._id).append("'>")
           .append(TextUtils.htmlEncode(getString(R.string.text_attempt_replay)))
           .append("</a>");
@@ -240,7 +240,7 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
   }
 
   private void appendOtherProperties(StringBuilder sb) {
-    if (/*canVote() &&*/ mProperties.has(Generator.NUM_SOLUTIONS_KEY))
+    if (canVote() && mProperties.has(Generator.NUM_SOLUTIONS_KEY))
       sb.append("<li>").append(getString(R.string.text_num_solutions,
           mProperties.get(Generator.NUM_SOLUTIONS_KEY).getAsInt()));
     if (mProperties.has(Generator.SYMMETRY_KEY))

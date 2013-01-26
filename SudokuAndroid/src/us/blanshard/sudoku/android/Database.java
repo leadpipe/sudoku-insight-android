@@ -95,6 +95,10 @@ public class Database {
       return this.number < GAVE_UP.number;
     }
 
+    public boolean isComplete() {
+      return this == GAVE_UP || this == FINISHED;
+    }
+
     public static AttemptState fromNumber(int number) {
       return numbersToValues[number];
     }
