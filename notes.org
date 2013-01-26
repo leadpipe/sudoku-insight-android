@@ -1,9 +1,4 @@
-* Solver
-
-* Generator
-** DONE Non-unique puzzles
-
-* Hints
+* Insights
 ** TODO Figure out how to turn game histories into pattern times
 
 ** Getting games with history from a sqlite db into a tsv file:
@@ -48,11 +43,6 @@ END
 *** TODO Write both ends of uploading attempts on completion
 *** TODO Add auth for any update of installation info that has an account included
     - http://endpoints-trusted-tester.appspot.com/
-*** DONE Write an appengine app that gathers data from the android app
-    - use GUID to identify the installation
-    - allow login using Google ID to keep different installations from generating the same puzzles
-    - will android tell us which Google ID installed the app?
-    - when the app is slightly off the ground, sign up for Cloud Endpoints at http://endpoints-trusted-tester.appspot.com/
 
 ** Replay cleanups
 *** TODO Wrong-numeral mistakes show without the error during single-step playback
@@ -180,9 +170,10 @@ END
    - The trails approach, essentially, including different colors
 ** George A. Miller:
    - http://en.wikipedia.org/wiki/The_Magical_Number_Seven,_Plus_or_Minus_Two
-   - 7 chunks of information in working memory
-   - 7 levels of "absolute judgement" along 1 dimension
-   - Sudoku at outer boundary of both
+   - ~7 chunks of information in working memory
+   - The other dimension where 7 appears is ~7 levels of absolute judgement, eg
+     loudness of a sound, or pitch, or location along a line.  This really
+     _doesn't_ apply to Sudoku.  It's all working memory.
 
 * Talk
 ** What is Sudoku?
