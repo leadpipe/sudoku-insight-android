@@ -26,13 +26,12 @@ END
 *** TODO Finish help content
 *** TODO Show user ID settings page at installation time?
 *** TODO Give visual indication when try to set an unsettable location
-*** TODO Evaluate captured puzzles' symmetries, if found store in properties
+*** DONE Evaluate captured puzzles' symmetries, if found store in properties
     - why not do this for generated puzzles too, if they don't match the original symmetry
     - had a puzzle today that started life as double mirror but ended up (almost) matching single mirror
 *** TODO Make translation of symmetry names possible
 *** TODO Make capture reasonably sized on tablets
-    - consider wrapping in a scroll view too, for when an improper puzzle is detected
-    - for whatever reason, this messes with SudokuView: the input radius becomes tiny
+*** TODO Look into sending crash info to the app engine
 
 ** Publishing the app
 *** TODO Make other graphics for play store
