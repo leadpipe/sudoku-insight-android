@@ -3,13 +3,17 @@
 
     <string name="app_full_name">Sudoku Insight</string>
     <string name="app_short_name">Insight</string>
+    <string name="button_always">Always</string>
     <string name="button_back">Reverse</string>
     <string name="button_capture_play">Play Now</string>
     <string name="button_capture_save">Save for Later</string>
     <string name="button_give_up">Give Up</string>
+    <string name="button_once">Just Once</string>
     <string name="button_pause">Pause</string>
     <string name="button_play">Play</string>
     <string name="dialog_give_up_message">Give up on this puzzle?</string>
+    <string name="dialog_improper_message">This Sudoku has more than one solution.  Play it anyway?</string>
+    <string name="dialog_improper_title">"\"Improper\" Puzzle"</string>
     <string name="hint_capture_source">Where does this puzzle come from?</string>
     <string name="menu_about">About</string>
     <string name="menu_apply">Apply Selected Insight</string>
@@ -69,7 +73,6 @@
     <string name="text_collection_separator">"; "</string>
     <string name="text_congrats">Congratulations!</string>
     <string name="text_generated_puzzles">Generated puzzles</string>
-    <string name="text_improper_puzzle">This puzzle has more than one solution.  You can allow puzzles like this in Settings.</string>
     <string name="text_info_title">#%1$d Details</string>
     <string name="text_move_and_trail_counts">Moves: %1$d; trails: %2$d.</string>
     <string name="text_move_number">%1$d of %2$d</string>

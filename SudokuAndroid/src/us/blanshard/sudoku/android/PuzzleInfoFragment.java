@@ -47,9 +47,8 @@ import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 
 import com.google.common.collect.Lists;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.util.List;
 
@@ -60,7 +59,7 @@ import java.util.List;
 public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeListener {
   private static final String TAG = "PuzzleInfoFragment";
   private ActivityCallback mCallback;
-  private JSONObject mProperties;
+  private JsonObject mProperties;
   private SudokuView mGrid;
   private TextView mPuzzleId;
   private View mVoteLayout;
@@ -127,7 +126,15 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
   @Override public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
       case R.id.menu_play:
-        new Play(this).execute();
+        if (ImproperDialog.isNeeded(mPrefs, mProperties)) {
+          new ImproperDialog() {
+            @Override protected void okayed() {
+              new Play(PuzzleInfoFragment.this).execute();
+            }
+          }.show(getFragmentManager());
+        } else {
+          new Play(this).execute();
+        }
         return true;
 
       default:
@@ -162,11 +169,7 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
 
   private void setPuzzle(Database.Puzzle puzzle) {
     mPuzzle = puzzle;
-    try {
-      mProperties = new JSONObject(puzzle.properties);
-    } catch (JSONException e) {
-      throw new RuntimeException(e);
-    }
+    mProperties = new JsonParser().parse(puzzle.properties).getAsJsonObject();
     mGrid.setPuzzle(puzzle.clues);
     mPuzzleId.setText(makeIdString());
     mVoteLayout.setVisibility(canVote() ? View.VISIBLE : View.GONE);
@@ -180,11 +183,8 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
   private String makeIdString() {
     StringBuilder sb = new StringBuilder();
     if (mProperties.has(NAME_KEY))
-      try {
-        sb.append(getString(R.string.text_puzzle_full_name, mProperties.get(NAME_KEY), mPuzzle._id));
-      } catch (JSONException e) {
-        throw new RuntimeException(e);
-      }
+      sb.append(getString(R.string.text_puzzle_full_name,
+          mProperties.get(NAME_KEY).getAsString(), mPuzzle._id));
     else
       sb.append(getString(R.string.text_puzzle_full_number, mPuzzle._id));
     if (mPuzzle.source != null)
@@ -240,19 +240,15 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
   }
 
   private void appendOtherProperties(StringBuilder sb) {
-    try {
-      if (canVote() && mProperties.has(Generator.NUM_SOLUTIONS_KEY))
-        sb.append("<li>").append(getString(R.string.text_num_solutions,
-            mProperties.getInt(Generator.NUM_SOLUTIONS_KEY)));
-      if (mProperties.has(Generator.SYMMETRY_KEY))
-        sb.append("<li>").append(getString(R.string.text_symmetry,
-            TextUtils.htmlEncode(mProperties.getString(Generator.SYMMETRY_KEY))));
-      if (mProperties.has(Generator.BROKEN_SYMMETRY_KEY))
-        sb.append("<li>").append(getString(R.string.text_broken_symmetry,
-            TextUtils.htmlEncode(mProperties.getString(Generator.BROKEN_SYMMETRY_KEY))));
-    } catch (JSONException e) {
-      throw new RuntimeException(e);
-    }
+    if (/*canVote() &&*/ mProperties.has(Generator.NUM_SOLUTIONS_KEY))
+      sb.append("<li>").append(getString(R.string.text_num_solutions,
+          mProperties.get(Generator.NUM_SOLUTIONS_KEY).getAsInt()));
+    if (mProperties.has(Generator.SYMMETRY_KEY))
+      sb.append("<li>").append(getString(R.string.text_symmetry,
+          TextUtils.htmlEncode(mProperties.get(Generator.SYMMETRY_KEY).getAsString())));
+    if (mProperties.has(Generator.BROKEN_SYMMETRY_KEY))
+      sb.append("<li>").append(getString(R.string.text_broken_symmetry,
+          TextUtils.htmlEncode(mProperties.get(Generator.BROKEN_SYMMETRY_KEY).getAsString())));
   }
 
   private static class FetchPuzzle extends WorkerFragment.Task<PuzzleInfoFragment, Long, Void, Database.Puzzle> {

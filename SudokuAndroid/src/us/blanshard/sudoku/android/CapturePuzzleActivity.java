@@ -23,6 +23,7 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.game.Sudoku.State;
+import us.blanshard.sudoku.gen.Generator;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -35,6 +36,8 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.google.gson.JsonObject;
 
 import java.util.List;
 
@@ -49,7 +52,7 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
   private Button mPlay;
   private Button mSave;
   private TextView mNotice;
-  private boolean mIsPuzzle;
+  private JsonObject mPuzzleProperties;
   private Long mPuzzleId;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
@@ -91,8 +94,17 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
   }
 
   @Override public void onClick(View v) {
-    if (mIsPuzzle && (v == mPlay || v == mSave)) {
-      new Save(this, v == mPlay).execute();
+    if (mPuzzleProperties != null && (v == mPlay || v == mSave)) {
+      final Save save = new Save(this, v == mPlay);
+      if (ImproperDialog.isNeeded(mPrefs, mPuzzleProperties)) {
+        new ImproperDialog() {
+          @Override protected void okayed() {
+            save.execute();
+          }
+        }.show(getFragmentManager());
+      } else {
+        save.execute();
+      }
     }
   }
 
@@ -125,15 +137,15 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
 
   private void updateState() {
     Solver.Result result = Solver.solve(getPuzzle(), Prefs.MAX_SOLUTIONS);
-    mIsPuzzle = result.intersection != null && result.numSolutions <= mPrefs.getMaxSolutions();
-    mPlay.setEnabled(mIsPuzzle);
-    mSave.setEnabled(mIsPuzzle);
-    if (mIsPuzzle)
+    boolean isPuzzle = result.intersection != null;
+    mPlay.setEnabled(isPuzzle);
+    mSave.setEnabled(isPuzzle);
+    if (isPuzzle) {
+      mPuzzleProperties = Generator.makePuzzleProperties(result);
       new CheckExisting(this).execute();
-    else if (result.intersection != null)
-      showNotice(R.string.text_improper_puzzle);
-    else
-      hideNotice();
+    } else {
+      mPuzzleProperties = null;
+    }
   }
 
   private void showNotice(int stringId) {
@@ -196,7 +208,7 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
   private static class Save extends WorkerFragment.ActivityTask<CapturePuzzleActivity, Void, Void, Long> {
     private final Database mDb;
     private final Long mPuzzleId;
-    private final Grid mPuzzle;
+    private final JsonObject mPuzzleProperties;
     private final String mSource;
     private final boolean mPlay;
 
@@ -204,15 +216,15 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
       super(activity, Priority.FOREGROUND, Independence.DEPENDENT);
       this.mDb = activity.mDb;
       this.mPuzzleId = activity.mPuzzleId;
-      this.mPuzzle = activity.getPuzzle();
+      this.mPuzzleProperties = activity.mPuzzleProperties;
       String source = activity.mCaptureSource.getText().toString();
-      this.mSource = source.isEmpty() ? null : source;
+      this.mSource = source.trim().isEmpty() ? null : source;
       this.mPlay = play;
     }
 
     @Override protected Long doInBackground(Void... params) {
       if (mPuzzleId == null) {
-        long puzzleId = mDb.addCapturedPuzzle(mPuzzle, mSource);
+        long puzzleId = mDb.addCapturedPuzzle(mPuzzleProperties, mSource);
         return mDb.getCurrentAttemptForPuzzle(puzzleId)._id;
       } else {
         return mDb.getOpenAttemptForPuzzle(mPuzzleId)._id;

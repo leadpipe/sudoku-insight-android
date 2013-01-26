@@ -232,7 +232,7 @@ public class Generator {
    * and either {@link #SYMMETRY_KEY} or {@link #BROKEN_SYMMETRY_KEY} set to the
    * name of the symmetry that best describes the clues.
    */
-  public static JsonObject makePuzzle(Result result) {
+  public static JsonObject makePuzzleProperties(Result result) {
     JsonObject answer = new JsonObject();
     answer.addProperty(PUZZLE_KEY, result.start.toFlatString());
     answer.addProperty(NUM_SOLUTIONS_KEY, result.numSolutions);
@@ -248,7 +248,7 @@ public class Generator {
     Symmetry symmetry = Symmetry.choose(random);
     Result result = strategy.generate(random, symmetry, maxSolutions, maxHoles);
 
-    JsonObject answer = makePuzzle(result);
+    JsonObject answer = makePuzzleProperties(result);
     answer.addProperty(NAME_KEY, name);
     return answer;
   }

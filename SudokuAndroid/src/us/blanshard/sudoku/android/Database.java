@@ -176,8 +176,7 @@ public class Database {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
     db.beginTransaction();
     try {
-      String clues = properties.remove(Generator.PUZZLE_KEY).getAsString();
-      long puzzleId = addOrUpdatePuzzle(clues, properties, null);
+      long puzzleId = addOrUpdatePuzzle(properties, null);
 
       if (getElementId(db, puzzleId, GENERATED_COLLECTION_ID) == null) {
         ContentValues values = new ContentValues();
@@ -194,14 +193,14 @@ public class Database {
   }
 
   /**
-   * Adds the puzzle puzzle with the given clues to the database, and also to
-   * the captured-puzzles collection.  Returns the puzzle's ID.
+   * Adds the puzzle with the given properties to the database, and also to the
+   * captured-puzzles collection. Returns the puzzle's ID.
    */
-  public long addCapturedPuzzle(Grid clues, String source) throws SQLException {
+  public long addCapturedPuzzle(JsonObject properties, String source) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
     db.beginTransaction();
     try {
-      long puzzleId = addOrUpdatePuzzle(clues.toFlatString(), null, source);
+      long puzzleId = addOrUpdatePuzzle(properties, source);
 
       if (getElementId(db, puzzleId, CAPTURED_COLLECTION_ID) == null) {
         ContentValues values = new ContentValues();
@@ -223,11 +222,11 @@ public class Database {
    * already there. If not already present creates an attempt row for it as
    * well. Returns the puzzle's ID.
    */
-  private long addOrUpdatePuzzle(String clues, JsonObject properties, String source) throws SQLException {
+  private long addOrUpdatePuzzle(JsonObject properties, String source) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
     db.beginTransaction();
     try {
-      if (properties == null) properties = new JsonObject();
+      String clues = properties.remove(Generator.PUZZLE_KEY).getAsString();
       ContentValues values = new ContentValues();
       values.put("clues", clues);
       values.put("properties", properties.toString());

@@ -170,11 +170,10 @@ public class Prefs {
     return mPrefs.getBoolean(PROPER_ONLY, true);
   }
 
-  /**
-   * Returns the largest number of solutions permitted to any puzzle we capture.
-   */
-  public int getMaxSolutions() {
-    return getProperOnly() ? 1 : MAX_SOLUTIONS;
+  public void setProperOnlyAsync(boolean flag) {
+    SharedPreferences.Editor prefs = mPrefs.edit();
+    prefs.putBoolean(PROPER_ONLY, flag);
+    prefs.apply();
   }
 
   public String getDeviceName() {

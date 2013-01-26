@@ -20,7 +20,7 @@ END
       bugs, by _not_ updating the DB when it gets a complete attempt
 *** TODO Go ahead and store improper puzzles, but mark them as skipped if proper only
 *** TODO Separate getting next puzzle counter from updating the pref
-*** TODO Allow the playing and capture of improper puzzles, just warn before showing
+*** DONE Allow the playing and capture of improper puzzles, just warn before showing
 *** TODO Change behavior of capture when we already have the puzzle
     - Include a link to the puzzle details
 *** TODO Finish help content
