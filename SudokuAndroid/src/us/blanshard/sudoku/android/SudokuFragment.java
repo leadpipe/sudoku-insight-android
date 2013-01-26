@@ -355,11 +355,12 @@ public class SudokuFragment
 
   private static Database.Attempt generateAndStorePuzzle(Database db, Prefs prefs) {
     Calendar cal = Calendar.getInstance();
+    int counter = prefs.getNextCounter(cal);
 
     while (true) {
       JsonObject props = Generator.generateBasicPuzzle(
           prefs.getStream(), cal.get(Calendar.YEAR),
-          1 + cal.get(Calendar.MONTH), prefs.getNextCounterSync(cal));
+          1 + cal.get(Calendar.MONTH), counter);
       long id = db.addGeneratedPuzzle(props);
       Database.Attempt attempt = db.getCurrentAttemptForPuzzle(id);
       if (prefs.getProperOnly() && props.get(Generator.NUM_SOLUTIONS_KEY).getAsInt() > 1) {
@@ -367,7 +368,9 @@ public class SudokuFragment
         Database.startUnstartedAttempt(attempt);
         attempt.attemptState = AttemptState.SKIPPED;
         db.updateAttempt(attempt);
+        ++counter;
       } else {
+        prefs.setNextCounterSync(cal, counter);
         return attempt;
       }
     }

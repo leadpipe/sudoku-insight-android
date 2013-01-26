@@ -224,20 +224,28 @@ public class Prefs {
     prefs.apply();
   }
 
-  public int getNextCounterSync(Calendar cal) {
-    int month = cal.get(Calendar.YEAR) * 100 + cal.get(Calendar.MONTH) + 1;
+  public int getNextCounter(Calendar cal) {
+    int month = monthNumber(cal);
     int currentMonth = mPrefs.getInt(MONTH, 0);
     int counter = mPrefs.getInt(COUNTER, 0);
-    SharedPreferences.Editor prefs = mPrefs.edit();
     if (month == currentMonth) {
       ++counter;
     } else {
       counter = 1;
-      prefs.putInt(MONTH, month);
     }
+    return counter;
+  }
+
+  private int monthNumber(Calendar cal) {
+    return cal.get(Calendar.YEAR) * 100 + cal.get(Calendar.MONTH) + 1;
+  }
+
+  public void setNextCounterSync(Calendar cal, int counter) {
+    int month = monthNumber(cal);
+    SharedPreferences.Editor prefs = mPrefs.edit();
+    prefs.putInt(MONTH, month);
     prefs.putInt(COUNTER, counter);
     prefs.commit();
-    return counter;
   }
 
   public String getInstallData() {
