@@ -31,7 +31,7 @@ END
     - why not do this for generated puzzles too, if they don't match the original symmetry
     - had a puzzle today that started life as double mirror but ended up (almost) matching single mirror
 *** TODO Make translation of symmetry names possible
-*** TODO Make capture reasonably sized on tablets
+*** DONE Make capture reasonably sized on tablets
 *** TODO Look into sending crash info to the app engine
 
 ** Publishing the app
