@@ -19,7 +19,7 @@ import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static us.blanshard.sudoku.game.GameJson.GSON;
 
-import us.blanshard.sudoku.messages.SetInstallation;
+import us.blanshard.sudoku.messages.InstallationInfo;
 
 import android.accounts.Account;
 import android.app.IntentService;
@@ -150,8 +150,8 @@ public class NetworkService extends IntentService {
     return true;
   }
 
-  private SetInstallation.Request makeInstallationRequest() {
-    SetInstallation.Request req = new SetInstallation.Request();
+  private InstallationInfo.Request makeInstallationRequest() {
+    InstallationInfo.Request req = new InstallationInfo.Request();
     req.id = Installation.id(this);
     Account account = mPrefs.getUserAccount();
     if (account != null) {
@@ -192,7 +192,7 @@ public class NetworkService extends IntentService {
         if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
           mPrefs.setInstallDataSync(json);
           Reader in = new InputStreamReader(conn.getInputStream(), Charsets.UTF_8);
-          SetInstallation.Response resp = GSON.fromJson(in, SetInstallation.Response.class);
+          InstallationInfo.Response resp = GSON.fromJson(in, InstallationInfo.Response.class);
           if (resp.name != null) mPrefs.setDeviceNameAsync(resp.name);
           mPrefs.setStreamAsync(resp.stream);
           mPrefs.setStreamCountAsync(resp.streamCount);

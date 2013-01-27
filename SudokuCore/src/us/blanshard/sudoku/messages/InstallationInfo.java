@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 /**
  * The request/response for updating installation details.
  */
-public class SetInstallation {
+public class InstallationInfo {
   public static class Request {
     /** The installation ID, a UUID string. */
     public String id;
