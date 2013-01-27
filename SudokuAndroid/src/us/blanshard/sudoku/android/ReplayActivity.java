@@ -430,7 +430,7 @@ public class ReplayActivity extends ActivityBase
   void disproofComplete(Disprove instance) {
     if (instance == mDisprove) {
       mDisprove = null;
-      if (mMinimize == null) mProgress2.setVisibility(View.GONE);
+      if (mMinimize == null) mProgress2.setVisibility(View.INVISIBLE);
     }
   }
 
@@ -464,7 +464,7 @@ public class ReplayActivity extends ActivityBase
         mDisprove = new Disprove(this);
         mDisprove.execute();
       } else {
-        mProgress2.setVisibility(View.GONE);
+        mProgress2.setVisibility(View.INVISIBLE);
       }
     }
   }
@@ -687,7 +687,7 @@ public class ReplayActivity extends ActivityBase
       if (mDisprove != null) mDisprove.cancel();
       if (!mRunning || mForward) {
         mAnalyze = new Analyze(this);
-        mProgress2.setVisibility(View.GONE);
+        mProgress2.setVisibility(View.INVISIBLE);
         Location toClear = null;
         if (!mExploring) {
           Assignment asmt = nextAssignment();
