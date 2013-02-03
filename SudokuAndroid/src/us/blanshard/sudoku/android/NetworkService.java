@@ -21,7 +21,6 @@ import static us.blanshard.sudoku.game.GameJson.GSON;
 
 import us.blanshard.sudoku.messages.InstallationInfo;
 
-import android.accounts.Account;
 import android.app.IntentService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -153,11 +152,11 @@ public class NetworkService extends IntentService {
   private InstallationInfo.UpdateRequest makeInstallationRequest() {
     InstallationInfo.UpdateRequest req = new InstallationInfo.UpdateRequest();
     req.id = Installation.id(this);
-    Account account = mPrefs.getUserAccount();
+    /*Account account = mPrefs.getUserAccount();
     if (account != null) {
       req.accountId = account.name;
       req.name = mPrefs.getDeviceName();
-    }
+    }*/
     req.shareData = mPrefs.getShareData();
     req.manufacturer = Build.MANUFACTURER;
     req.model = Build.MODEL;
@@ -193,7 +192,7 @@ public class NetworkService extends IntentService {
           mPrefs.setInstallDataSync(json);
           Reader in = new InputStreamReader(conn.getInputStream(), Charsets.UTF_8);
           InstallationInfo.UpdateResponse resp = GSON.fromJson(in, InstallationInfo.UpdateResponse.class);
-          if (resp.name != null) mPrefs.setDeviceNameAsync(resp.name);
+          //if (resp.name != null) mPrefs.setDeviceNameAsync(resp.name);
           mPrefs.setStreamAsync(resp.stream);
           mPrefs.setStreamCountAsync(resp.streamCount);
           Log.d(TAG, "SetInstallation completed");
