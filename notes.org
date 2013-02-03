@@ -14,25 +14,18 @@ END
 * App
 
 ** App/UI cleanups
-*** DONE layout bug: replay landscape has its controls jiggle when the 2nd progress circle goes
+*** TODO bug: jumping to a replay location is crashing
 *** TODO bug: somehow wound up getting shown completed puzzles
     - each time I started the app it advanced 3-4 in the history
     - find and fix the bug; but also harden the fragment against future similar
       bugs, by _not_ updating the DB when it gets a complete attempt
     - no idea, but did try to make sure the fragment doesn't write these back to the db
-*** DONE Go ahead and store improper puzzles, but mark them as skipped if proper only
-*** DONE Separate getting next puzzle counter from updating the pref
-*** DONE Allow the playing and capture of improper puzzles, just warn before showing
 *** TODO Change behavior of capture when we already have the puzzle
     - Include a link to the puzzle details
 *** TODO Finish help content
 *** TODO Show user ID settings page at installation time?
 *** TODO Give visual indication when try to set an unsettable location
-*** DONE Evaluate captured puzzles' symmetries, if found store in properties
-    - why not do this for generated puzzles too, if they don't match the original symmetry
-    - had a puzzle today that started life as double mirror but ended up (almost) matching single mirror
 *** TODO Make translation of symmetry names possible
-*** DONE Make capture reasonably sized on tablets
 *** TODO Look into sending crash info to the app engine
 
 ** Publishing the app
@@ -42,7 +35,7 @@ END
 *** TODO Add pref for whether to sync from other devices
     - dependent on selecting an account
 *** TODO Write both ends of uploading attempts on completion
-*** TODO Add auth for any update of installation info that has an account included
+*** TODO Add auth for the link-account RPC
     - http://endpoints-trusted-tester.appspot.com/
 
 ** Replay cleanups
