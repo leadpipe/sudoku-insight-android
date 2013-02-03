@@ -15,19 +15,16 @@ limitations under the License.
 */
 package us.blanshard.sudoku.messages;
 
-import javax.annotation.Nullable;
-
 /**
- * The request/response for updating installation details.
+ * RPC messages for installation details.
  */
 public class InstallationInfo {
+  /** The RPC tag for update. */
+  public static final String UPDATE_TAG = "installation.update";
+
   public static class UpdateRequest {
     /** The installation ID, a UUID string. */
     public String id;
-    /** The optional account to use for linking installations. */
-    @Nullable public String accountId;
-    /** The user's name for the installation. */
-    @Nullable public String name;
     /** Whether to make this installation's anonymous data public. */
     public boolean shareData;
     /** The manufacturer of the device where the installation lives. */
@@ -41,14 +38,29 @@ public class InstallationInfo {
   }
 
   public static class UpdateResponse {
-    /**
-     * The name to use for the installation, in case it clashes with another
-     * installation.
-     */
-    @Nullable public String name;
     /** The number of puzzle streams being tracked by the back end. */
     public int streamCount;
     /** The stream number this installation should be using. */
     public int stream;
+  }
+
+  /** The RPC tag for linking an account to an installation. */
+  public static final String LINK_ACCOUNT_TAG = "installation.link";
+
+  public static class LinkAccountRequest {
+    /** The installation ID. */
+    public String id;
+    /** The account to link. */
+    public String accountId;
+    /** The user's name for the installation. */
+    public String name;
+  }
+
+  public static class LinkAccountResponse {
+    /**
+     * The name to use for the installation, in case it clashes with another
+     * installation.
+     */
+    public String name;
   }
 }

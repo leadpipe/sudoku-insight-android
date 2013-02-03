@@ -10,7 +10,6 @@ import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Transaction;
-import com.google.appengine.api.users.User;
 import com.google.common.base.Charsets;
 import com.google.gson.Gson;
 
@@ -74,6 +73,8 @@ public class InstallationServlet extends HttpServlet {
         opaqueId = nextOpaqueId(ds);
         entity.setUnindexedProperty(OPAQUE_ID, opaqueId);
       }
+
+      /*
       if (body.accountId == null)
         entity.removeProperty(ACCOUNT_ID);
       else
@@ -82,6 +83,7 @@ public class InstallationServlet extends HttpServlet {
         entity.removeProperty(NAME);
       else
         entity.setUnindexedProperty(NAME, body.name);
+      */
 
       // If sharing is acceptable, include this installation in the opaque ID
       // index.
