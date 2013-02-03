@@ -983,7 +983,8 @@ public class ReplayActivity extends ActivityBase
 
     @Override protected void onProgressUpdate(ReplayActivity activity, DisprovedAssignment... disproofs) {
       mInsights.disproofsSetSize = mSetSize;
-      activity.addDisproof(disproofs[0], true);
+      if (mInsights == activity.mInsights)
+        activity.addDisproof(disproofs[0], true);
     }
 
     @Override protected void onPostExecute(ReplayActivity activity, Void result) {

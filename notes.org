@@ -14,7 +14,7 @@ END
 * App
 
 ** App/UI cleanups
-*** TODO bug: jumping to a replay location is crashing
+*** DONE bug: jumping to a replay location is crashing
 *** TODO bug: somehow wound up getting shown completed puzzles
     - each time I started the app it advanced 3-4 in the history
     - find and fix the bug; but also harden the fragment against future similar
