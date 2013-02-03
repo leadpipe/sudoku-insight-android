@@ -21,10 +21,10 @@ import javax.annotation.Nullable;
  * RPC messages for attempts to solve puzzles.
  */
 public class AttemptInfo {
-  /** The RPC tag for update. */
-  public static final String UPDATE_TAG = "attempt.update";
+  /** The RPC method for update. */
+  public static final String UPDATE_METHOD = "attempt.update";
 
-  public static class UpdateRequest {
+  public static class UpdateParams {
     /** The installation ID. */
     public String installationId;
     /** The identifier of the attempt within the given installation. */
@@ -50,7 +50,7 @@ public class AttemptInfo {
     public long stopTime;
   }
 
-  public static class UpdateResponse {
+  public static class UpdateResult {
 
   }
 }

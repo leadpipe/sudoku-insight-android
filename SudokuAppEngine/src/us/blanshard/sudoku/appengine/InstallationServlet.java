@@ -1,7 +1,7 @@
 package us.blanshard.sudoku.appengine;
 
-import us.blanshard.sudoku.messages.InstallationInfo.UpdateRequest;
-import us.blanshard.sudoku.messages.InstallationInfo.UpdateResponse;
+import us.blanshard.sudoku.messages.InstallationInfo.UpdateParams;
+import us.blanshard.sudoku.messages.InstallationInfo.UpdateResult;
 
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
@@ -55,7 +55,7 @@ public class InstallationServlet extends HttpServlet {
       throws ServletException, IOException {
     Gson gson = new Gson();
     Reader in = new InputStreamReader(req.getInputStream(), Charsets.UTF_8);
-    UpdateRequest body = gson.fromJson(in, UpdateRequest.class);
+    UpdateParams body = gson.fromJson(in, UpdateParams.class);
 
     DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
     Transaction tx = ds.beginTransaction();
@@ -106,7 +106,7 @@ public class InstallationServlet extends HttpServlet {
     logger.info((update ? "Updated" : "Inserted") + " installation " + opaqueId);
 
     resp.setContentType("application/json");
-    UpdateResponse answer = new UpdateResponse();
+    UpdateResult answer = new UpdateResult();
     answer.streamCount = body.streamCount;
     answer.stream = body.stream;
     Writer out = new OutputStreamWriter(resp.getOutputStream(), Charsets.UTF_8);

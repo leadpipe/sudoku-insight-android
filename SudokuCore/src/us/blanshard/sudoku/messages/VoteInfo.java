@@ -19,10 +19,10 @@ package us.blanshard.sudoku.messages;
  * RPC messages for a puzzle's vote.
  */
 public class VoteInfo {
-  /** The RPC tag for update. */
-  public static final String UPDATE_TAG = "vote.update";
+  /** The RPC method for update. */
+  public static final String UPDATE_METHOD = "vote.update";
 
-  public static class UpdateRequest {
+  public static class UpdateParams {
     /** The installation ID. */
     public String installationId;
     /** The flattened string of the puzzle's starting grid. */
@@ -31,7 +31,7 @@ public class VoteInfo {
     public int vote;
   }
 
-  public static class UpdateResponse {
+  public static class UpdateResult {
 
   }
 }
