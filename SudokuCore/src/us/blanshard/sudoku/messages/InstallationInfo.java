@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
  * The request/response for updating installation details.
  */
 public class InstallationInfo {
-  public static class Request {
+  public static class UpdateRequest {
     /** The installation ID, a UUID string. */
     public String id;
     /** The optional account to use for linking installations. */
@@ -40,7 +40,7 @@ public class InstallationInfo {
     public int stream;
   }
 
-  public static class Response {
+  public static class UpdateResponse {
     /**
      * The name to use for the installation, in case it clashes with another
      * installation.

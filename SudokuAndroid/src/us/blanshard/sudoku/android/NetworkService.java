@@ -150,8 +150,8 @@ public class NetworkService extends IntentService {
     return true;
   }
 
-  private InstallationInfo.Request makeInstallationRequest() {
-    InstallationInfo.Request req = new InstallationInfo.Request();
+  private InstallationInfo.UpdateRequest makeInstallationRequest() {
+    InstallationInfo.UpdateRequest req = new InstallationInfo.UpdateRequest();
     req.id = Installation.id(this);
     Account account = mPrefs.getUserAccount();
     if (account != null) {
@@ -192,7 +192,7 @@ public class NetworkService extends IntentService {
         if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
           mPrefs.setInstallDataSync(json);
           Reader in = new InputStreamReader(conn.getInputStream(), Charsets.UTF_8);
-          InstallationInfo.Response resp = GSON.fromJson(in, InstallationInfo.Response.class);
+          InstallationInfo.UpdateResponse resp = GSON.fromJson(in, InstallationInfo.UpdateResponse.class);
           if (resp.name != null) mPrefs.setDeviceNameAsync(resp.name);
           mPrefs.setStreamAsync(resp.stream);
           mPrefs.setStreamCountAsync(resp.streamCount);
