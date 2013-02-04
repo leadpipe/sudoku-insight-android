@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 /**
  * RPC messages for attempts to solve puzzles.
  */
-public class AttemptInfo {
+public class AttemptRpcs {
   /** The RPC method for update. */
   public static final String UPDATE_METHOD = "attempt.update";
 

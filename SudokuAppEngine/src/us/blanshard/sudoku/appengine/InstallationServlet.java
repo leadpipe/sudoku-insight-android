@@ -1,7 +1,7 @@
 package us.blanshard.sudoku.appengine;
 
-import us.blanshard.sudoku.messages.InstallationInfo.UpdateParams;
-import us.blanshard.sudoku.messages.InstallationInfo.UpdateResult;
+import us.blanshard.sudoku.messages.InstallationRpcs.UpdateParams;
+import us.blanshard.sudoku.messages.InstallationRpcs.UpdateResult;
 
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;

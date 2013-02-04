@@ -18,7 +18,7 @@ package us.blanshard.sudoku.messages;
 /**
  * RPC messages for a puzzle's vote.
  */
-public class VoteInfo {
+public class VoteRpcs {
   /** The RPC method for update. */
   public static final String UPDATE_METHOD = "vote.update";
 

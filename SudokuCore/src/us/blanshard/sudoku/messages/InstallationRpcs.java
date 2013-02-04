@@ -18,7 +18,7 @@ package us.blanshard.sudoku.messages;
 /**
  * RPC messages for installation details.
  */
-public class InstallationInfo {
+public class InstallationRpcs {
   /** The RPC method for update. */
   public static final String UPDATE_METHOD = "installation.update";
 
