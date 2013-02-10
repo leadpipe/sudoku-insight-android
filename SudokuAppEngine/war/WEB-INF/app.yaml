@@ -5,6 +5,11 @@ threadsafe: true
 
 handlers:
 
+- url: /rpc
+  secure: always
+  servlet: us.blanshard.sudoku.appengine.RpcServlet
+  login: required
+
 - url: /profile
   secure: always
   servlet: us.blanshard.sudoku.appengine.ProfileServlet

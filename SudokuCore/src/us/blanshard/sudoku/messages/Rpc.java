@@ -15,6 +15,19 @@ limitations under the License.
 */
 package us.blanshard.sudoku.messages;
 
+import com.google.common.base.Function;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.TypeAdapter;
+import com.google.gson.TypeAdapterFactory;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
+import java.io.IOException;
+import java.lang.reflect.Type;
+
 import javax.annotation.Nullable;
 
 /**
@@ -24,11 +37,11 @@ import javax.annotation.Nullable;
 public class Rpc {
   public static final String VERSION = "2.0";
 
-  public static class Request<T> {
+  public static class Request {
     public String jsonrpc = VERSION;
-    public String method;
-    @Nullable public T params;
-    @Nullable public Integer id;
+    public String method;  // Must precede params in the serialized form
+    @Nullable public Object params;
+    @Nullable public Integer id;  // We don't accept strings for IDs
   }
 
   public static class Response<T> {
@@ -70,5 +83,143 @@ public class Rpc {
 
   public static Error internalError(@Nullable Object data) {
     return error(-32603, "Internal error", data);
+  }
+
+  public abstract static class ProblemException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
+    protected ProblemException(String message) {
+      super(message);
+    }
+
+    public abstract Error toError();
+  }
+
+  private static class InvalidRequestException extends ProblemException {
+    private static final long serialVersionUID = 1L;
+
+    public InvalidRequestException(String message) {
+      super(message);
+    }
+
+    @Override public Error toError() {
+      return invalidRequest(getMessage());
+    }
+  }
+
+  private static class MethodNotFoundException extends ProblemException {
+    private static final long serialVersionUID = 1L;
+
+    public MethodNotFoundException(String message) {
+      super(message);
+    }
+
+    @Override public Error toError() {
+      return methodNotFound(getMessage());
+    }
+  }
+
+  private static class InternalErrorException extends ProblemException {
+    private static final long serialVersionUID = 1L;
+
+    public InternalErrorException(String message) {
+      super(message);
+    }
+
+    @Override public Error toError() {
+      return internalError(getMessage());
+    }
+  }
+
+  private static class InvalidParamsException extends ProblemException {
+    private static final long serialVersionUID = 1L;
+
+    public InvalidParamsException(String message) {
+      super(message);
+    }
+
+    @Override public Error toError() {
+      return invalidParams(getMessage());
+    }
+  }
+
+  /**
+   * Registers type adapters in the given builder so that {@link Request}
+   * objects can be serialized and deserialized in a symmetric way. The
+   * deserializer requires the "method" field of the request to come before the
+   * "params" field, which requirement is not strictly conformant with JSON. The
+   * serializer ensures that they are in that order.
+   */
+  public static GsonBuilder register(
+      GsonBuilder builder, final Function<String, Type> methodToParamsType) {
+
+    builder.registerTypeAdapterFactory(new TypeAdapterFactory() {
+
+      @SuppressWarnings("unchecked")
+      @Override public <T> TypeAdapter<T> create(final Gson gson, TypeToken<T> type) {
+        if (type.getRawType() != Request.class) {
+          return null;
+        }
+        TypeAdapter<Request> typeAdapter = new TypeAdapter<Request>() {
+          @Override public void write(JsonWriter out, Request value) throws IOException {
+            out.beginObject();
+            out.name("jsonrpc").value(value.jsonrpc);
+            out.name("method").value(value.method);
+            if (value.params != null) {
+              out.name("params");
+              gson.toJson(value.params, value.params.getClass(), out);
+            }
+            if (value.id != null) {
+              out.name("id").value(value.id);
+            }
+            out.endObject();
+          }
+
+          @Override public Request read(JsonReader in) throws IOException {
+            Request answer = new Request();
+            boolean versionFound = false;
+            in.beginObject();
+            while (in.hasNext()) {
+              String name = in.nextName();
+              if (name.equals("jsonrpc")) {
+                final String version = in.nextString();
+                if (version.equals(VERSION))
+                  versionFound = true;
+                else
+                  throw new InvalidRequestException("Unrecognized JSON-RPC version " + version);
+              } else if (name.equals("method")) {
+                answer.method = in.nextString();
+              } else if (name.equals("id")) {
+                answer.id = in.nextInt();
+              } else if (name.equals("params")) {
+                if (answer.method == null)
+                  throw new InvalidRequestException("Method must precede params");
+                if (methodToParamsType == null)
+                  throw new InternalErrorException("No mapping from method to params type provided");
+                final Type paramsType = methodToParamsType.apply(answer.method);
+                if (paramsType == null)
+                  throw new MethodNotFoundException("No such method " + answer.method);
+                try {
+                  answer.params = gson.fromJson(in, paramsType);
+                } catch (JsonSyntaxException e) {
+                  throw new InvalidParamsException(e.getMessage());
+                }
+              } else {
+                throw new InvalidRequestException("Unrecognized JSON-RPC request component " + name);
+              }
+            }
+            in.endObject();
+            if (!versionFound)
+              throw new InvalidRequestException("No JSON-RPC version found");
+            if (answer.method == null)
+              throw new InvalidRequestException("No JSON-RPC method found");
+            return answer;
+          }
+        };
+        return (TypeAdapter<T>) typeAdapter.nullSafe();
+      }
+    });
+
+    return builder;
   }
 }
