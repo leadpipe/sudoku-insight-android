@@ -14,7 +14,11 @@ END
 * App
 
 ** App/UI cleanups
-*** DONE bug: jumping to a replay location is crashing
+*** TODO Improve layout on tablets
+    - make play grid larger, replay grid smaller; max ~30% differential
+    - ensure capture grid matches play grid
+*** TODO Increase escape radius for input
+    - really annoyingly small on tablet
 *** TODO bug: somehow wound up getting shown completed puzzles
     - each time I started the app it advanced 3-4 in the history
     - find and fix the bug; but also harden the fragment against future similar
@@ -32,6 +36,11 @@ END
 *** TODO Make other graphics for play store
 
 ** Cross-installation work
+*** TODO Copy beeminder's authentication approach
+    - we don't care about authorization, just authentication
+*** TODO At startup on new installation, show settings page
+    - with account selection popup showing?
+    - need to trigger login if an account is selected
 *** TODO Add pref for whether to sync from other devices
     - dependent on selecting an account
 *** TODO Write both ends of uploading attempts on completion
@@ -39,6 +48,17 @@ END
     - http://endpoints-trusted-tester.appspot.com/
 
 ** Replay cleanups
+*** TODO Revise calculation and display of disproofs
+    - find all disproofs (not just one per open location)
+    - don't minimize them right away
+    - add a new phase to calculate the efficacy of each disproof: the proportion
+      of open locations that get assignments when insights are gathered after
+      the disproof is applied
+    - show the efficacy as hue between purple (least) and blue (most)
+    - for locations with disproofs not yet evaluated for efficacy, use orange
+    - for a given location, display the most effective disproof
+    - use saturation/value to show length of disproof; so will get brighter
+      after minimization
 *** TODO Wrong-numeral mistakes show without the error during single-step playback
     - the error appears while running forward
 *** TODO Try making selection color darker
