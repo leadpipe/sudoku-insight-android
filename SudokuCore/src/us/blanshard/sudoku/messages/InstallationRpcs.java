@@ -53,7 +53,12 @@ public class InstallationRpcs {
     /** The account to link. */
     public String accountId;
     /** The user's name for the installation. */
-    public String name;
+    public String installationName;
+    /**
+     * An authentication token proving that this account belongs to this
+     * installation.
+     */
+    public String authToken;
   }
 
   public static class LinkAccountResult {

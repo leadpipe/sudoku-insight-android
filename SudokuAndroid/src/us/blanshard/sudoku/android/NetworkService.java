@@ -21,6 +21,7 @@ import static us.blanshard.sudoku.game.GameJson.GSON;
 
 import us.blanshard.sudoku.messages.InstallationRpcs;
 
+import android.accounts.Account;
 import android.app.IntentService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -31,6 +32,8 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.util.Log;
 
+import com.google.android.gms.auth.GoogleAuthException;
+import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.common.base.Charsets;
 
 import java.io.IOException;
@@ -49,11 +52,29 @@ import java.net.URL;
  */
 public class NetworkService extends IntentService {
 
+  /** The auth scope that lets the web app verify it's really the given user. */
+  private static final String SCOPE = //"audience:server:client_id:826990774749.apps.googleusercontent.com " +
+      "https://www.googleapis.com/auth/userinfo.email"
+      ;
+
   public static void syncInstallationInfo(Context context) {
-    Intent intent = new Intent(context, NetworkService.class);
-    intent.putExtra(CALL, INSTALLATION);
+    Intent intent = makeSyncInstallationIntent(context);
     context.startService(intent);
     Log.d(TAG, "Sync installation started");
+  }
+
+  private static Intent makeSyncInstallationIntent(Context context) {
+    Intent intent = new Intent(context, NetworkService.class);
+    intent.putExtra(CALL, INSTALLATION);
+    return intent;
+  }
+
+  private static class GiveUpException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
+    public GiveUpException(Throwable cause) {
+      super(cause);
+    }
   }
 
   private static final String CALL = "us.blanshard.sudoku.android.Call";
@@ -69,6 +90,7 @@ public class NetworkService extends IntentService {
   private final Object mConnectivityLock = new Object();
   private boolean mConnected;
   private BroadcastReceiver mConnectivityMonitor;
+  private String mAuthToken;
 
   public NetworkService() {
     super(TAG);
@@ -98,12 +120,16 @@ public class NetworkService extends IntentService {
   }
 
   @Override protected void onHandleIntent(Intent intent) {
-    switch (intent.getIntExtra(CALL, -1)) {
-      case INSTALLATION:
-        callSetInstallation();
-        break;
-      default:
-        break;
+    try {
+      switch (intent.getIntExtra(CALL, -1)) {
+        case INSTALLATION:
+          callUpdateInstallation();
+          break;
+        default:
+          break;
+      }
+    } catch (GiveUpException e) {
+      Log.d(TAG, "giving up", e);
     }
   }
 
@@ -117,14 +143,15 @@ public class NetworkService extends IntentService {
     }
   }
 
-  private void callSetInstallation() {
+  private void callUpdateInstallation() {
     long timeoutMs = SECONDS.toMillis(10);
     while (waitUntilConnected()) {
-      String json = GSON.toJson(makeInstallationRequest());
+      String json = GSON.toJson(makeInstallationParams());
       String prev = mPrefs.getInstallData();
 
-      if (json.equals(prev) || sendSetInstallation(json)) {
-        break;
+      if (json.equals(prev) || sendUpdateInstallation(json)) {
+        if (callUpdateLink())
+          break;
       }
 
       try {
@@ -149,23 +176,18 @@ public class NetworkService extends IntentService {
     return true;
   }
 
-  private InstallationRpcs.UpdateParams makeInstallationRequest() {
-    InstallationRpcs.UpdateParams req = new InstallationRpcs.UpdateParams();
-    req.id = Installation.id(this);
-    /*Account account = mPrefs.getUserAccount();
-    if (account != null) {
-      req.accountId = account.name;
-      req.name = mPrefs.getDeviceName();
-    }*/
-    req.shareData = mPrefs.getShareData();
-    req.manufacturer = Build.MANUFACTURER;
-    req.model = Build.MODEL;
-    req.streamCount = mPrefs.getStreamCount();
-    req.stream = mPrefs.getStream();
-    return req;
+  private InstallationRpcs.UpdateParams makeInstallationParams() {
+    InstallationRpcs.UpdateParams params = new InstallationRpcs.UpdateParams();
+    params.id = Installation.id(this);
+    params.shareData = mPrefs.getShareData();
+    params.manufacturer = Build.MANUFACTURER;
+    params.model = Build.MODEL;
+    params.streamCount = mPrefs.getStreamCount();
+    params.stream = mPrefs.getStream();
+    return params;
   }
 
-  private boolean sendSetInstallation(String json) {
+  private boolean sendUpdateInstallation(String json) {
     boolean done = false;
     HttpURLConnection conn = null;
     try {
@@ -211,5 +233,49 @@ public class NetworkService extends IntentService {
       if (conn != null) conn.disconnect();
     }
     return done;
+  }
+
+  private boolean callUpdateLink() {
+    InstallationRpcs.LinkAccountParams params = makeLinkParams();
+    String json = GSON.toJson(params);
+    String prev = mPrefs.getLinkData();
+    if (json.equals(prev)) return true;
+    mPrefs.setLinkDataSync("");
+    if (sendUpdateLink(params)) {
+      mPrefs.setLinkDataSync(json);
+      return true;
+    }
+    return false;
+  }
+
+  private InstallationRpcs.LinkAccountParams makeLinkParams() {
+    InstallationRpcs.LinkAccountParams params = new InstallationRpcs.LinkAccountParams();
+    Account account = mPrefs.getUserAccount();
+    if (account != null) {
+      params.accountId = account.name;
+      params.installationName = mPrefs.getDeviceName();
+    }
+    return params;
+  }
+
+  private boolean sendUpdateLink(InstallationRpcs.LinkAccountParams params) {
+    params.id = Installation.id(this);
+    try {
+      if (mAuthToken != null) {
+        GoogleAuthUtil.invalidateToken(getApplicationContext(), mAuthToken);
+        mAuthToken = null;
+      }
+      if (params.accountId != null) {
+        params.authToken = mAuthToken = GoogleAuthUtil.getTokenWithNotification(
+            getApplicationContext(), params.accountId, SCOPE, null, makeSyncInstallationIntent(this));
+      }
+    } catch (IOException e) {
+      return false;
+    } catch (GoogleAuthException e) {
+      throw new GiveUpException(e);
+    }
+    // TODO: actually send the RPC
+    Log.d(TAG, GSON.toJson(params));
+    return true;
   }
 }

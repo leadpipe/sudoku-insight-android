@@ -36,8 +36,9 @@ END
 *** TODO Make other graphics for play store
 
 ** Cross-installation work
-*** TODO Copy beeminder's authentication approach
-    - we don't care about authorization, just authentication
+*** TODO Finish auth setup
+    - see http://android-developers.blogspot.pt/2013/01/verifying-back-end-calls-from-android.html
+    - GoogleIdTokenVerifier
 *** TODO At startup on new installation, show settings page
     - with account selection popup showing?
     - need to trigger login if an account is selected
