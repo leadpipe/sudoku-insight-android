@@ -20,6 +20,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static us.blanshard.sudoku.game.GameJson.GSON;
 
 import us.blanshard.sudoku.messages.InstallationRpcs;
+import us.blanshard.sudoku.messages.InstallationRpcs.UpdateParams;
 
 import android.accounts.Account;
 import android.app.IntentService;
@@ -90,7 +91,6 @@ public class NetworkService extends IntentService {
   private final Object mConnectivityLock = new Object();
   private boolean mConnected;
   private BroadcastReceiver mConnectivityMonitor;
-  private String mAuthToken;
 
   public NetworkService() {
     super(TAG);
@@ -146,12 +146,12 @@ public class NetworkService extends IntentService {
   private void callUpdateInstallation() {
     long timeoutMs = SECONDS.toMillis(10);
     while (waitUntilConnected()) {
-      String json = GSON.toJson(makeInstallationParams());
+      UpdateParams params = makeInstallationParams();
+      String json = GSON.toJson(params);
       String prev = mPrefs.getInstallData();
 
-      if (json.equals(prev) || sendUpdateInstallation(json)) {
-        if (callUpdateLink())
-          break;
+      if (json.equals(prev) || sendUpdateInstallation(json, params)) {
+        break;
       }
 
       try {
@@ -184,10 +184,28 @@ public class NetworkService extends IntentService {
     params.model = Build.MODEL;
     params.streamCount = mPrefs.getStreamCount();
     params.stream = mPrefs.getStream();
+    Account account = mPrefs.getUserAccount();
+    if (account != null) {
+      params.account = new InstallationRpcs.AccountInfo();
+      params.account.id = account.name;
+      params.account.installationName = mPrefs.getDeviceName();
+    }
     return params;
   }
 
-  private boolean sendUpdateInstallation(String json) {
+  private boolean sendUpdateInstallation(String storedJson, UpdateParams params) {
+    String json = storedJson;
+    try {
+      if (params.account != null) {
+        params.account.authToken = GoogleAuthUtil.getTokenWithNotification(
+            this, params.account.id, SCOPE, null, makeSyncInstallationIntent(this));
+        json = GSON.toJson(params);
+      }
+    } catch (IOException e) {
+      return false;
+    } catch (GoogleAuthException e) {
+      throw new GiveUpException(e);
+    }
     boolean done = false;
     HttpURLConnection conn = null;
     try {
@@ -211,7 +229,7 @@ public class NetworkService extends IntentService {
         // We got through, so we won't try again, even if it failed.
         done = true;
         if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-          mPrefs.setInstallDataSync(json);
+          mPrefs.setInstallDataSync(storedJson);
           Reader in = new InputStreamReader(conn.getInputStream(), Charsets.UTF_8);
           InstallationRpcs.UpdateResult resp = GSON.fromJson(in, InstallationRpcs.UpdateResult.class);
           //if (resp.name != null) mPrefs.setDeviceNameAsync(resp.name);
@@ -233,49 +251,5 @@ public class NetworkService extends IntentService {
       if (conn != null) conn.disconnect();
     }
     return done;
-  }
-
-  private boolean callUpdateLink() {
-    InstallationRpcs.LinkAccountParams params = makeLinkParams();
-    String json = GSON.toJson(params);
-    String prev = mPrefs.getLinkData();
-    if (json.equals(prev)) return true;
-    mPrefs.setLinkDataSync("");
-    if (sendUpdateLink(params)) {
-      mPrefs.setLinkDataSync(json);
-      return true;
-    }
-    return false;
-  }
-
-  private InstallationRpcs.LinkAccountParams makeLinkParams() {
-    InstallationRpcs.LinkAccountParams params = new InstallationRpcs.LinkAccountParams();
-    Account account = mPrefs.getUserAccount();
-    if (account != null) {
-      params.accountId = account.name;
-      params.installationName = mPrefs.getDeviceName();
-    }
-    return params;
-  }
-
-  private boolean sendUpdateLink(InstallationRpcs.LinkAccountParams params) {
-    params.id = Installation.id(this);
-    try {
-      if (mAuthToken != null) {
-        GoogleAuthUtil.invalidateToken(getApplicationContext(), mAuthToken);
-        mAuthToken = null;
-      }
-      if (params.accountId != null) {
-        params.authToken = mAuthToken = GoogleAuthUtil.getTokenWithNotification(
-            getApplicationContext(), params.accountId, SCOPE, null, makeSyncInstallationIntent(this));
-      }
-    } catch (IOException e) {
-      return false;
-    } catch (GoogleAuthException e) {
-      throw new GiveUpException(e);
-    }
-    // TODO: actually send the RPC
-    Log.d(TAG, GSON.toJson(params));
-    return true;
   }
 }

@@ -55,7 +55,6 @@ public class Prefs {
   private static final String COUNTER = "counter";
   private static final String DEFAULT_DEVICE_NAME = "defaultDeviceName";
   private static final String INSTALL_DATA = "installData";
-  private static final String LINK_DATA = "linkData";
   private static final String MONTH = "month";
   private static final String SORT = "sort";
   private static final String STREAM = "stream";
@@ -256,16 +255,6 @@ public class Prefs {
   public void setInstallDataSync(String data) {
     SharedPreferences.Editor prefs = mLocalPrefs.edit();
     prefs.putString(INSTALL_DATA, data);
-    prefs.commit();
-  }
-
-  public String getLinkData() {
-    return mLocalPrefs.getString(LINK_DATA, "");
-  }
-
-  public void setLinkDataSync(String data) {
-    SharedPreferences.Editor prefs = mLocalPrefs.edit();
-    prefs.putString(LINK_DATA, data);
     prefs.commit();
   }
 }

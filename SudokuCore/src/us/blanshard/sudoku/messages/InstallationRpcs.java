@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.messages;
 
+import javax.annotation.Nullable;
+
 /**
  * RPC messages for installation details.
  */
@@ -35,6 +37,17 @@ public class InstallationRpcs {
     public int streamCount;
     /** The stream number that this installation generates puzzles from. */
     public int stream;
+    /** The account to link with this installation, if any. */
+    @Nullable public AccountInfo account;
+  }
+
+  public static class AccountInfo {
+    /** The account to link. */
+    public String id;
+    /** The user's name for the installation. */
+    public String installationName;
+    /** A JSON web token proving that this account belongs to this installation. */
+    public String authToken;
   }
 
   public static class UpdateResult {
@@ -42,30 +55,10 @@ public class InstallationRpcs {
     public int streamCount;
     /** The stream number this installation should be using. */
     public int stream;
-  }
-
-  /** The RPC method for linking an account to an installation. */
-  public static final String LINK_ACCOUNT_METHOD = "installation.link";
-
-  public static class LinkAccountParams {
-    /** The installation ID. */
-    public String id;
-    /** The account to link. */
-    public String accountId;
-    /** The user's name for the installation. */
-    public String installationName;
-    /**
-     * An authentication token proving that this account belongs to this
-     * installation.
-     */
-    public String authToken;
-  }
-
-  public static class LinkAccountResult {
     /**
      * The name to use for the installation, in case it clashes with another
      * installation.
      */
-    public String name;
+    @Nullable public String installationName;
   }
 }
