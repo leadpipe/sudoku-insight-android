@@ -17,7 +17,6 @@ package us.blanshard.sudoku.stats;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static us.blanshard.sudoku.game.GameJson.GSON;
 import static us.blanshard.sudoku.game.GameJson.HISTORY_TYPE;
 import static us.blanshard.sudoku.insight.Analyzer.findErrors;
 import static us.blanshard.sudoku.insight.Analyzer.findOverlapsAndSets;
@@ -27,6 +26,7 @@ import static us.blanshard.sudoku.insight.Analyzer.findSingletonNumerals;
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Solver;
+import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.insight.Analyzer;
@@ -43,6 +43,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -69,6 +71,7 @@ import javax.annotation.Nullable;
  * @author Luke Blanshard
  */
 public class InsightMeasurer implements Runnable {
+  public static final Gson GSON = GameJson.register(new GsonBuilder()).create();
 
   public static void main(String[] args) throws Exception {
     if (args.length == 0) exitWithUsage();

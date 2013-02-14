@@ -20,13 +20,14 @@ import static org.junit.Assert.assertSame;
 import static us.blanshard.sudoku.game.Fixtures.makeGame;
 import static us.blanshard.sudoku.game.Fixtures.openLocation;
 import static us.blanshard.sudoku.game.Fixtures.puzzle;
-import static us.blanshard.sudoku.game.GameJson.GSON;
 import static us.blanshard.sudoku.game.GameJson.HISTORY_TYPE;
 
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -36,6 +37,8 @@ import org.junit.Test;
 import java.util.List;
 
 public class GameJsonTest {
+  public static final Gson GSON = GameJson.register(new GsonBuilder()).create();
+
   @Test public void fromHistory_noHistoryShouldGetEmptyArray() throws Exception {
     // given
     Sudoku game = makeGame(puzzle);

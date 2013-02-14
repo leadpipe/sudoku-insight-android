@@ -47,9 +47,6 @@ public class GameJson {
   @SuppressWarnings("serial")
   public static final Type HISTORY_TYPE = new TypeToken<List<Move>>(){}.getType();
 
-  /** An instance with all of our type adapters registered. */
-  public static final Gson GSON = register(new GsonBuilder()).create();
-
   /**
    * Registers type adapters in the given builder so that history lists and undo
    * stacks can be serialized and deserialized.  Note that undo stacks require a
@@ -118,9 +115,9 @@ public class GameJson {
    * Parses the given JSON as a list of moves, or returns the empty list if the
    * JSON is null.
    */
-  public static List<Move> toHistory(@Nullable String json) {
+  public static List<Move> toHistory(Gson gson, @Nullable String json) {
     if (json == null) return Lists.newArrayList();
-    return GSON.fromJson(json, HISTORY_TYPE);
+    return gson.fromJson(json, HISTORY_TYPE);
   }
 
   public static class CommandFactory {

@@ -17,10 +17,11 @@ package us.blanshard.sudoku.android;
 
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static us.blanshard.sudoku.game.GameJson.GSON;
+import static us.blanshard.sudoku.android.Json.GSON;
 
 import us.blanshard.sudoku.messages.InstallationRpcs;
 import us.blanshard.sudoku.messages.InstallationRpcs.UpdateParams;
+import us.blanshard.sudoku.messages.Rpc;
 
 import android.accounts.Account;
 import android.app.IntentService;
@@ -36,6 +37,7 @@ import android.util.Log;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.common.base.Charsets;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -44,6 +46,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The "started service" that interacts with our AppEngine server over the
@@ -52,11 +55,6 @@ import java.net.URL;
  * @author Luke Blanshard
  */
 public class NetworkService extends IntentService {
-
-  /** The auth scope that lets the web app verify it's really the given user. */
-  private static final String SCOPE = //"audience:server:client_id:826990774749.apps.googleusercontent.com " +
-      "https://www.googleapis.com/auth/userinfo.email"
-      ;
 
   public static void syncInstallationInfo(Context context) {
     Intent intent = makeSyncInstallationIntent(context);
@@ -78,12 +76,15 @@ public class NetworkService extends IntentService {
     }
   }
 
+  /** The auth scope that lets the web app verify it's really the given user. */
+  private static final String SCOPE = "audience:server:client_id:826990774749.apps.googleusercontent.com";
+
   private static final String CALL = "us.blanshard.sudoku.android.Call";
   private static final int INSTALLATION = 1;
 
   private static final String BASE_URL = "https://sudoku-insight.appspot.com/";
   // "http://10.0.2.2:8888/";  // <-- reaches localhost
-  private static final String SET_INSTALL_URL = BASE_URL + "installation";
+  private static final String RPC_URL = BASE_URL + "rpc";
 
   private static final String TAG = "NetworkService";
 
@@ -91,6 +92,8 @@ public class NetworkService extends IntentService {
   private final Object mConnectivityLock = new Object();
   private boolean mConnected;
   private BroadcastReceiver mConnectivityMonitor;
+
+  private static final AtomicInteger sId = new AtomicInteger();
 
   public NetworkService() {
     super(TAG);
@@ -209,7 +212,7 @@ public class NetworkService extends IntentService {
     boolean done = false;
     HttpURLConnection conn = null;
     try {
-      URL url = new URL(SET_INSTALL_URL);
+      URL url = new URL(RPC_URL);
       conn = (HttpURLConnection) url.openConnection();
       conn.setDoOutput(true);
       conn.setDoInput(true);
@@ -251,5 +254,55 @@ public class NetworkService extends IntentService {
       if (conn != null) conn.disconnect();
     }
     return done;
+  }
+
+  private <T> Rpc.Response<T> sendRpc(Object params, TypeToken<Rpc.Response<T>> token) {
+    Rpc.Request req = new Rpc.Request();
+    req.method = InstallationRpcs.UPDATE_METHOD;
+    req.params = params;
+    req.id = sId.incrementAndGet();
+
+    String json = GSON.toJson(req);
+    HttpURLConnection conn = null;
+    Rpc.Response<T> res = null;
+    try {
+      URL url = new URL(RPC_URL);
+      conn = (HttpURLConnection) url.openConnection();
+      conn.setDoOutput(true);
+      conn.setDoInput(true);
+      conn.setConnectTimeout((int) SECONDS.toMillis(15));
+      conn.setReadTimeout((int) SECONDS.toMillis(10));
+      Writer out = new OutputStreamWriter(conn.getOutputStream(), Charsets.UTF_8);
+      out.write(json);
+      out.flush();
+      conn.connect();
+
+      conn.getHeaderFields();  // Waits for the response
+      if (url.getHost().equals(conn.getURL().getHost())) {
+        if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+          Reader in = new InputStreamReader(conn.getInputStream(), Charsets.UTF_8);
+          res = GSON.fromJson(in, token.getType());
+          if (req.id.equals(res.id))
+            Log.d(TAG, "RPC completed");
+          else
+            Log.d(TAG, "RPC completed with wrong req ID: " + res.id + ", s/b " + req.id);
+        } else {
+          // Unexpected error from the server. Make a response object, so we
+          // don't retry.
+          res = new Rpc.Response<T>();
+          res.error = Rpc.error(conn.getResponseCode(), "bad response code", null);
+          Log.e(TAG, "RPC returned code " + conn.getResponseCode());
+        }
+      } else {
+        // Whoops, we were redirected unexpectedly. Possibly there's a
+        // network sign-on page.
+        Log.e(TAG, "redirected trying to send RPC: " + conn.getURL());
+      }
+    } catch (IOException e) {
+      Log.e(TAG, "send RPC", e);
+    } finally {
+      if (conn != null) conn.disconnect();
+    }
+    return res;
   }
 }
