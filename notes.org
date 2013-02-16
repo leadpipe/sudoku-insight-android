@@ -100,6 +100,9 @@ END
       - send new json
       - if get reply, set pref with new json; then update prefs sent back
 
+** RPC mechanism
+*** TODO Implement batch
+
 ** API from phone
    - Send installation info:
      - installation ID
