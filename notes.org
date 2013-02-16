@@ -19,6 +19,9 @@ END
     - ensure capture grid matches play grid
 *** TODO Increase escape radius for input
     - really annoyingly small on tablet
+*** TODO Show stats on puzzle detail page
+    - make new RPC
+    - show always?  or only if completed?
 *** TODO bug: somehow wound up getting shown completed puzzles
     - each time I started the app it advanced 3-4 in the history
     - find and fix the bug; but also harden the fragment against future similar
@@ -36,7 +39,7 @@ END
 *** TODO Make other graphics for play store
 
 ** Cross-installation work
-*** TODO Finish auth setup
+*** DONE Finish auth setup
     - see http://android-developers.blogspot.pt/2013/01/verifying-back-end-calls-from-android.html
     - GoogleIdTokenVerifier
 *** TODO At startup on new installation, show settings page
@@ -45,8 +48,6 @@ END
 *** TODO Add pref for whether to sync from other devices
     - dependent on selecting an account
 *** TODO Write both ends of uploading attempts on completion
-*** TODO Add auth for the link-account RPC
-    - http://endpoints-trusted-tester.appspot.com/
 
 ** Replay cleanups
 *** TODO Revise calculation and display of disproofs
