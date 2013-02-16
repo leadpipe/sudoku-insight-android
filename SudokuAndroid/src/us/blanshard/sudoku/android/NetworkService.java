@@ -268,7 +268,7 @@ public class NetworkService extends IntentService {
         // network sign-on page.
         Log.e(TAG, "redirected trying to send RPC: " + conn.getURL());
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       Log.e(TAG, "send RPC", e);
     } finally {
       if (conn != null) conn.disconnect();
