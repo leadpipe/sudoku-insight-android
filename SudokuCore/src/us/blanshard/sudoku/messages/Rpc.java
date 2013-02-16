@@ -57,6 +57,16 @@ public class Rpc {
     @Nullable Object data;
   }
 
+  // Standard error codes:
+  public static final int INTERNAL_ERROR = -32603;
+  public static final int INVALID_PARAMS = -32602;
+  public static final int INVALID_REQUEST = -32600;
+  public static final int METHOD_NOT_FOUND = -32601;
+  public static final int PARSE_ERROR = -32700;
+
+  // Extended error codes:
+  public static final int AUTH_VERIFICATION_FAILED = -32000;
+
   public static Error error(int code, String message, @Nullable Object data) {
     Error answer = new Error();
     answer.code = code;
@@ -66,23 +76,23 @@ public class Rpc {
   }
 
   public static Error parseError(@Nullable Object data) {
-    return error(-32700, "Parse error", data);
+    return error(PARSE_ERROR, "Parse error", data);
   }
 
   public static Error invalidRequest(@Nullable Object data) {
-    return error(-32600, "Invalid Request", data);
+    return error(INVALID_REQUEST, "Invalid Request", data);
   }
 
   public static Error methodNotFound(@Nullable Object data) {
-    return error(-32601, "Method not found", data);
+    return error(METHOD_NOT_FOUND, "Method not found", data);
   }
 
   public static Error invalidParams(@Nullable Object data) {
-    return error(-32602, "Invalid params", data);
+    return error(INVALID_PARAMS, "Invalid params", data);
   }
 
   public static Error internalError(@Nullable Object data) {
-    return error(-32603, "Internal error", data);
+    return error(INTERNAL_ERROR, "Internal error", data);
   }
 
   public abstract static class ProblemException extends RuntimeException {

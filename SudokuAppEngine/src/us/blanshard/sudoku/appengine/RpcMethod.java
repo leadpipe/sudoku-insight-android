@@ -15,6 +15,10 @@ limitations under the License.
 */
 package us.blanshard.sudoku.appengine;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import us.blanshard.sudoku.messages.Rpc;
+
 import com.google.gson.reflect.TypeToken;
 
 /**
@@ -23,10 +27,36 @@ import com.google.gson.reflect.TypeToken;
  */
 public abstract class RpcMethod<P, R> {
   /** How to call this method. */
-  public abstract R call(P params);
+  public abstract R call(P params) throws MethodException;
 
   public TypeToken<P> getParamsTypeToken() {
     return paramsTypeToken;
+  }
+
+  public static class MethodException extends Exception {
+    private static final long serialVersionUID = 1L;
+    private final Rpc.Error error;
+
+    public MethodException(Rpc.Error error) {
+      this("", null, error);
+    }
+
+    public MethodException(String message, Rpc.Error error) {
+      this(message, null, error);
+    }
+
+    public MethodException(Throwable cause, Rpc.Error error) {
+      this(cause.getMessage(), cause, error);
+    }
+
+    public MethodException(String message, Throwable cause, Rpc.Error error) {
+      super(message, cause);
+      this.error = checkNotNull(error);
+    }
+
+    public Rpc.Error getError() {
+      return error;
+    }
   }
 
   protected final TypeToken<P> paramsTypeToken;

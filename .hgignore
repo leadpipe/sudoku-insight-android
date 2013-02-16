@@ -36,6 +36,7 @@ WEB-INF/lib/*.jar
 WEB-INF/*/*.xml
 WEB-INF/*.xml
 WEB-INF/appengine-generated/*
+.google_apis/*
 
 # Data files
 data/*.tsv

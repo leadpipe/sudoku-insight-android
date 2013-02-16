@@ -83,10 +83,13 @@ public class NetworkService extends IntentService {
   private static final int INSTALLATION = 1;
 
   private static final String BASE_URL = "https://sudoku-insight.appspot.com/";
-  // "http://10.0.2.2:8888/";  // <-- reaches localhost
+//      "http://10.0.2.2:8888/";  // <-- reaches localhost
   private static final String RPC_URL = BASE_URL + "rpc";
 
   private static final String TAG = "NetworkService";
+
+  private static final TypeToken<Rpc.Response<InstallationRpcs.UpdateResult>> SET_INSTALLATION_TOKEN =
+      new TypeToken<Rpc.Response<InstallationRpcs.UpdateResult>>() {};
 
   private Prefs mPrefs;
   private final Object mConnectivityLock = new Object();
@@ -197,68 +200,35 @@ public class NetworkService extends IntentService {
   }
 
   private boolean sendUpdateInstallation(String storedJson, UpdateParams params) {
-    String json = storedJson;
     try {
       if (params.account != null) {
         params.account.authToken = GoogleAuthUtil.getTokenWithNotification(
             this, params.account.id, SCOPE, null, makeSyncInstallationIntent(this));
-        json = GSON.toJson(params);
       }
     } catch (IOException e) {
       return false;
     } catch (GoogleAuthException e) {
       throw new GiveUpException(e);
     }
-    boolean done = false;
-    HttpURLConnection conn = null;
-    try {
-      URL url = new URL(RPC_URL);
-      conn = (HttpURLConnection) url.openConnection();
-      conn.setDoOutput(true);
-      conn.setDoInput(true);
-      conn.setConnectTimeout((int) SECONDS.toMillis(15));
-      conn.setReadTimeout((int) SECONDS.toMillis(10));
-      Writer out = new OutputStreamWriter(conn.getOutputStream(), Charsets.UTF_8);
-      out.write(json);
-      out.flush();
-      conn.connect();
 
-      // Clear out our notion of what's been synced with the server.  It
-      // could be old or new at this point.
-      mPrefs.setInstallDataSync("");
+    // Clear out our notion of what's been synced with the server.
+    mPrefs.setInstallDataSync("");
+    Rpc.Response<InstallationRpcs.UpdateResult> res =
+        sendRpc(InstallationRpcs.UPDATE_METHOD, params, SET_INSTALLATION_TOKEN);
 
-      conn.getHeaderFields();  // Waits for the response
-      if (url.getHost().equals(conn.getURL().getHost())) {
-        // We got through, so we won't try again, even if it failed.
-        done = true;
-        if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-          mPrefs.setInstallDataSync(storedJson);
-          Reader in = new InputStreamReader(conn.getInputStream(), Charsets.UTF_8);
-          InstallationRpcs.UpdateResult resp = GSON.fromJson(in, InstallationRpcs.UpdateResult.class);
-          //if (resp.name != null) mPrefs.setDeviceNameAsync(resp.name);
-          mPrefs.setStreamAsync(resp.stream);
-          mPrefs.setStreamCountAsync(resp.streamCount);
-          Log.d(TAG, "SetInstallation completed");
-        } else {
-          // Unexpected error from the server.
-          Log.e(TAG, "SetInstallation returned code " + conn.getResponseCode());
-        }
-      } else {
-        // Whoops, we were redirected unexpectedly. Possibly there's a
-        // network sign-on page.
-        Log.e(TAG, "redirected trying to set installation info: " + conn.getURL());
-      }
-    } catch (IOException e) {
-      Log.e(TAG, "set installation", e);
-    } finally {
-      if (conn != null) conn.disconnect();
+    if (res != null && res.result != null) {
+      mPrefs.setInstallDataSync(storedJson);
+      if (res.result.installationName != null)
+        mPrefs.setDeviceNameAsync(res.result.installationName);
+      mPrefs.setStreamAsync(res.result.stream);
+      mPrefs.setStreamCountAsync(res.result.streamCount);
     }
-    return done;
+    return res != null;
   }
 
-  private <T> Rpc.Response<T> sendRpc(Object params, TypeToken<Rpc.Response<T>> token) {
+  private <T> Rpc.Response<T> sendRpc(String method, Object params, TypeToken<Rpc.Response<T>> token) {
     Rpc.Request req = new Rpc.Request();
-    req.method = InstallationRpcs.UPDATE_METHOD;
+    req.method = method;
     req.params = params;
     req.id = sId.incrementAndGet();
 
@@ -282,16 +252,16 @@ public class NetworkService extends IntentService {
         if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
           Reader in = new InputStreamReader(conn.getInputStream(), Charsets.UTF_8);
           res = GSON.fromJson(in, token.getType());
-          if (req.id.equals(res.id))
-            Log.d(TAG, "RPC completed");
-          else
+          if (!req.id.equals(res.id))
             Log.d(TAG, "RPC completed with wrong req ID: " + res.id + ", s/b " + req.id);
         } else {
           // Unexpected error from the server. Make a response object, so we
           // don't retry.
           res = new Rpc.Response<T>();
-          res.error = Rpc.error(conn.getResponseCode(), "bad response code", null);
-          Log.e(TAG, "RPC returned code " + conn.getResponseCode());
+          res.error = Rpc.error(conn.getResponseCode(), conn.getResponseMessage(), null);
+        }
+        if (res.result == null) {
+          Log.w(TAG, "RPC " + method + " failed: " + GSON.toJson(res.error));
         }
       } else {
         // Whoops, we were redirected unexpectedly. Possibly there's a

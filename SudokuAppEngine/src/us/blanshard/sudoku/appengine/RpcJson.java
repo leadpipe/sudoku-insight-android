@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.appengine;
 
 import us.blanshard.sudoku.game.GameJson;
+import us.blanshard.sudoku.messages.InstallationRpcs;
 import us.blanshard.sudoku.messages.Rpc;
 
 import com.google.common.base.Function;
@@ -48,6 +49,8 @@ public class RpcJson {
 
   static {
     ImmutableMap.Builder<String, RpcMethod<?, ?>> builder = ImmutableMap.builder();
-    METHODS = builder.build();
+    METHODS = builder
+        .put(InstallationRpcs.UPDATE_METHOD, new SetInstallationMethod())
+        .build();
   }
 }
