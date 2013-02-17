@@ -59,7 +59,7 @@ public class Schema {
     public static final String MOVES = "moves";  // json string
     public static final String NUM_MOVES = "numMoves";
     public static final String NUM_TRAILS = "numTrails";
-    public static final String STOP_TIME = "stopTime";
+    public static final String STOP_TIME = "stopTime";  // when completed
     public static final String WON = "won";
   }
 
@@ -69,9 +69,23 @@ public class Schema {
   public static class Puzzle {
     public static final String KIND = "Puzzle";
 
+    public static final String ELAPSED_MS_STAT = "elapsedMsStat";
     public static final String NAME = "name";  // from Generator
     public static final String NUM_ATTEMPTS = "numAttempts";
-    public static final String NUM_WON = "numWon";
+    public static final String NUM_MOVES_STAT = "numMovesStat";
+    public static final String NUM_TRAILS_STAT = "numTrailsStat";
     public static final String SOURCES = "sources";
+  }
+
+  /**
+   * An embedded entity used within Puzzle to describe various statistical
+   * summaries.
+   */
+  public static class Stat {
+    public static final String COUNT = "count";
+    public static final String MAX = "max";
+    public static final String MEAN = "mean";
+    public static final String MIN = "min";
+    public static final String STD_DEV = "stdDev";
   }
 }
