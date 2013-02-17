@@ -48,7 +48,7 @@ public class Rpc {
     public String jsonrpc = VERSION;
     @Nullable public T result;
     @Nullable public Error error;
-    public Object id;  // JsonNull or Integer
+    @Nullable public Integer id;
   }
 
   public static class Error {

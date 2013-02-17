@@ -6,7 +6,6 @@ import us.blanshard.sudoku.messages.Rpc;
 
 import com.google.common.base.Charsets;
 import com.google.gson.JsonIOException;
-import com.google.gson.JsonNull;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -59,9 +58,8 @@ public class RpcServlet extends HttpServlet {
       rpcResponse.error = Rpc.parseError(t.getMessage());
     }
 
-    rpcResponse.id = rpcRequest == null || rpcRequest.id == null
-        ? JsonNull.INSTANCE
-        : rpcRequest.id;
+    if (rpcRequest != null)
+      rpcResponse.id = rpcRequest.id;
     resp.setContentType("application/json");
     Writer out = new OutputStreamWriter(resp.getOutputStream(), Charsets.UTF_8);
     RpcJson.GSON.toJson(rpcResponse, out);
