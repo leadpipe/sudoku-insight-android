@@ -20,7 +20,10 @@ package us.blanshard.sudoku.appengine;
  */
 public class Schema {
   /**
-   * A root entity that describes a single installation of the app on a device.
+   * A root entity that describes a single installation of Sudoku Insight on a
+   * device. Its key is the installation's UUID; there is also an opaque numeric
+   * ID, which is optionally indexed (as INDEXED_ID) if the user wishes to make
+   * their data public.
    */
   public static class Installation {
     public static final String KIND = "Installation";
@@ -29,6 +32,7 @@ public class Schema {
     public static final String INDEXED_ID = "indexedId";
     public static final String MANUFACTURER = "manufacturer";
     public static final String MODEL = "model";
+    public static final String MONTH_NUMBER = "monthNumber";
     public static final String NAME = "name";  // installation name
     public static final String OPAQUE_ID = "opaqueId";
     public static final String STREAM_COUNT = "streamCount";
@@ -37,7 +41,8 @@ public class Schema {
 
   /**
    * A child entity of Installation that describes all the attempts on a single
-   * puzzle that have occurred in that installation.
+   * puzzle that have occurred in that installation. Its key is the puzzle
+   * string, and it is also indexed on the puzzle string.
    */
   public static class Attempts {
     public static final String KIND = "Attempts";
@@ -48,6 +53,7 @@ public class Schema {
     public static final String PUZZLE = "puzzle";
     public static final String PUZZLE_ID = "puzzleId";
     public static final String SOURCE = "source";  // user text
+    public static final String VOTE = "vote";
   }
 
   /**
@@ -64,7 +70,10 @@ public class Schema {
   }
 
   /**
-   * A root entity that describes a single puzzle.
+   * A root entity that describes a single puzzle. Its key is the puzzle string,
+   * ie the row-major string of the initial clues with periods standing in for
+   * the blank locations. The stats are over successful first attempts only. The
+   * number of attempts is actually the number of first attempts.
    */
   public static class Puzzle {
     public static final String KIND = "Puzzle";
@@ -72,20 +81,39 @@ public class Schema {
     public static final String ELAPSED_MS_STAT = "elapsedMsStat";
     public static final String NAME = "name";  // from Generator
     public static final String NUM_ATTEMPTS = "numAttempts";
+    public static final String NUM_DOWN_VOTES = "numDownVotes";
     public static final String NUM_MOVES_STAT = "numMovesStat";
     public static final String NUM_TRAILS_STAT = "numTrailsStat";
+    public static final String NUM_UP_VOTES = "numUpVotes";
     public static final String SOURCES = "sources";
   }
 
   /**
    * An embedded entity used within Puzzle to describe various statistical
-   * summaries.
+   * summaries. The quartiles and median may or may not be present, we only
+   * calculate them if the count is sufficiently small.
    */
   public static class Stat {
     public static final String COUNT = "count";
     public static final String MAX = "max";
     public static final String MEAN = "mean";
+    public static final String MEDIAN = "median";
     public static final String MIN = "min";
+    public static final String Q1 = "q1";  // first quartile
+    public static final String Q3 = "q3";  // third quartile
     public static final String STD_DEV = "stdDev";
+    public static final String VAR = "var";
+  }
+
+  /**
+   * A root entity that correlates all the installations that are associated
+   * with one Google account. The key is the account's email address; there is
+   * also an opaque numeric ID which is indexed.
+   */
+  public static class Account {
+    public static final String KIND = "Account";
+
+    public static final String INSTALLATION_IDS = "installationIds";
+    public static final String OPAQUE_ID = "opaqueId";
   }
 }
