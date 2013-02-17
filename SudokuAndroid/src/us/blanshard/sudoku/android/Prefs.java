@@ -17,6 +17,7 @@ package us.blanshard.sudoku.android;
 
 import static us.blanshard.sudoku.android.Extras.ATTEMPT_ID;
 import static us.blanshard.sudoku.gen.Generator.NUM_STREAMS;
+import static us.blanshard.sudoku.messages.InstallationRpcs.monthNumber;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -236,8 +237,8 @@ public class Prefs {
     return counter;
   }
 
-  private int monthNumber(Calendar cal) {
-    return cal.get(Calendar.YEAR) * 100 + cal.get(Calendar.MONTH) + 1;
+  public int getMonthNumber() {
+    return mPrefs.getInt(MONTH, 0);
   }
 
   public void setNextCounterSync(Calendar cal, int counter) {
@@ -248,6 +249,10 @@ public class Prefs {
     prefs.commit();
   }
 
+  /**
+   * The install data is the data that describes this installation that has been
+   * synced to the central service.
+   */
   public String getInstallData() {
     return mLocalPrefs.getString(INSTALL_DATA, "");
   }

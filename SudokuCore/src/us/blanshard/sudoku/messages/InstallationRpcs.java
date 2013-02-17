@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.messages;
 
+import java.util.Calendar;
+
 import javax.annotation.Nullable;
 
 /**
@@ -23,6 +25,14 @@ import javax.annotation.Nullable;
 public class InstallationRpcs {
   /** The RPC method for update. */
   public static final String UPDATE_METHOD = "installation.update";
+
+  /**
+   * Calculates an integer representing a month within a year, such that a later
+   * month's number is greater than all earlier months' numbers.
+   */
+  public static int monthNumber(Calendar cal) {
+    return cal.get(Calendar.YEAR) * 100 + cal.get(Calendar.MONTH) + 1;
+  }
 
   public static class UpdateParams {
     /** The installation ID, a UUID string. */
@@ -37,6 +47,8 @@ public class InstallationRpcs {
     public int streamCount;
     /** The stream number that this installation generates puzzles from. */
     public int stream;
+    /** The current month number as used for generating puzzles. */
+    public int monthNumber;
     /** The account to link with this installation, if any. */
     @Nullable public AccountInfo account;
   }
@@ -56,8 +68,8 @@ public class InstallationRpcs {
     /** The stream number this installation should be using. */
     public int stream;
     /**
-     * The name to use for the installation, in case it clashes with another
-     * installation.
+     * An alternative name to use for the installation, in case the one sent
+     * clashes with another installation in use by the same account.
      */
     @Nullable public String installationName;
   }

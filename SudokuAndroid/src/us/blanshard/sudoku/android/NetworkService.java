@@ -190,6 +190,7 @@ public class NetworkService extends IntentService {
     params.model = Build.MODEL;
     params.streamCount = mPrefs.getStreamCount();
     params.stream = mPrefs.getStream();
+    params.monthNumber = mPrefs.getMonthNumber();
     Account account = mPrefs.getUserAccount();
     if (account != null) {
       params.account = new InstallationRpcs.AccountInfo();
