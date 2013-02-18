@@ -46,7 +46,7 @@ import java.util.logging.Logger;
  */
 public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult> {
 
-  public static final TypeToken<AttemptParams> TOKEN = new TypeToken<AttemptParams>() {};
+  private static final TypeToken<AttemptParams> TOKEN = new TypeToken<AttemptParams>() {};
   private static final Logger logger = Logger.getLogger(AttemptUpdateMethod.class.getName());
 
   public AttemptUpdateMethod() {
