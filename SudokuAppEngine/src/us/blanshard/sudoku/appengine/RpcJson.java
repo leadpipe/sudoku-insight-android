@@ -17,6 +17,7 @@ package us.blanshard.sudoku.appengine;
 
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.messages.InstallationRpcs;
+import us.blanshard.sudoku.messages.PuzzleRpcs;
 import us.blanshard.sudoku.messages.Rpc;
 
 import com.google.common.base.Function;
@@ -51,6 +52,7 @@ public class RpcJson {
     ImmutableMap.Builder<String, RpcMethod<?, ?>> builder = ImmutableMap.builder();
     METHODS = builder
         .put(InstallationRpcs.UPDATE_METHOD, new InstallationUpdateMethod())
+        .put(PuzzleRpcs.ATTEMPT_UPDATE_METHOD, new AttemptUpdateMethod())
         .build();
   }
 }
