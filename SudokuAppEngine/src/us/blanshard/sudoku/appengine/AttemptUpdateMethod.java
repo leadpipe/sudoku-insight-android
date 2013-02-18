@@ -15,8 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.appengine;
 
-import static java.util.logging.Level.WARNING;
-
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.messages.PuzzleRpcs.AttemptParams;
@@ -43,7 +41,8 @@ import java.util.Locale;
 import java.util.logging.Logger;
 
 /**
- * @author Luke Blanshard
+ * Saves an attempt to solve a puzzle, optionally creating an entity for the
+ * puzzle as well.
  */
 public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult> {
 
@@ -65,8 +64,7 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
       won = game.getState().getGrid().getState() == Grid.State.SOLVED;
       numTrails = game.getNumTrails();
     } catch (RuntimeException e) {
-      logger.log(WARNING, "Bad attempt info", e);
-      throw new MethodException(Rpc.invalidParams(null));
+      throw new MethodException(e, Rpc.invalidParams(params));
     }
     DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
     savePuzzle(ds, puzzleString, params.name, params.source);

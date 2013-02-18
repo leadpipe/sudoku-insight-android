@@ -64,7 +64,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @author Luke Blanshard
+ * Saves information about an installation, and optionally an account (if the user
+ * has asked to correlate installations using a Google account).
  */
 public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResult> {
 

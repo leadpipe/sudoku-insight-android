@@ -29,7 +29,7 @@ import com.google.appengine.api.datastore.Transaction;
 import com.google.gson.reflect.TypeToken;
 
 /**
- * @author Luke Blanshard
+ * Modifies the vote associated with a puzzle for a given installation.
  */
 public class VoteUpdateMethod extends RpcMethod<VoteParams, VoteResult> {
 
