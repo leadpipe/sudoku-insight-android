@@ -18,13 +18,16 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * RPC messages for attempts to solve puzzles.
+ * RPC messages related to puzzles.
  */
-public class AttemptRpcs {
-  /** The RPC method for update. */
-  public static final String UPDATE_METHOD = "attempt.update";
+public class PuzzleRpcs {
+  /**
+   * The RPC method for updating a solution attempt. The word "attempt" is a
+   * noun in this context, apologies for the confusion.
+   */
+  public static final String ATTEMPT_UPDATE_METHOD = "attempt.update";
 
-  public static class UpdateParams {
+  public static class AttemptParams {
     /** The installation ID. */
     public String installationId;
     /** The identifier of the attempt within the given installation. */
@@ -52,7 +55,57 @@ public class AttemptRpcs {
     public long stopTime;
   }
 
-  public static class UpdateResult {
+  public static class AttemptResult {
+    /**
+     * Whether this attempt counts as the first attempt for the puzzle by this
+     * installation.
+     */
+    public boolean wasFirst;
+  }
 
+  /** The RPC method for updating a puzzle's vote. */
+  public static final String VOTE_UPDATE_METHOD = "vote.update";
+
+  public static class VoteParams {
+    /** The installation ID. */
+    public String installationId;
+    /** The flattened string of the puzzle's starting grid. */
+    public String puzzle;
+    /** The vote for the puzzle: 1, 0, or -1. */
+    public int vote;
+  }
+
+  public static class VoteResult {
+
+  }
+
+  /** The RPC method for fetching information about a puzzle. */
+  public static final String PUZZLE_GET_METHOD = "puzzle.get";
+
+  public static class PuzzleParams {
+    public String puzzle;
+  }
+
+  public static class PuzzleResult {
+    @Nullable public String name;
+    @Nullable public List<String> sources;
+    public int numAttempts;
+    public int numUpVotes;
+    public int numDownVotes;
+    @Nullable public Stat elapsedMsStat;
+    @Nullable public Stat numMovesStat;
+    @Nullable public Stat numTrailsStat;
+  }
+
+  public static class Stat {
+    public int count;
+    public double min;
+    public double max;
+    public double mean;
+    public double stdDev;
+    public double var;
+    @Nullable public Double median;
+    @Nullable public Double q1;
+    @Nullable public Double q3;
   }
 }
