@@ -9,23 +9,6 @@ handlers:
   secure: always
   servlet: us.blanshard.sudoku.appengine.RpcServlet
 
-- url: /profile
-  secure: always
-  servlet: us.blanshard.sudoku.appengine.ProfileServlet
-  login: required
-
-- url: /installation
-  secure: always
-  servlet: us.blanshard.sudoku.appengine.InstallationServlet
-
-- url: /attempt
-  secure: always
-  servlet: us.blanshard.sudoku.appengine.AttemptServlet
-
-- url: /vote
-  secure: always
-  servlet: us.blanshard.sudoku.appengine.VoteServlet
-
 - url: /
   secure: optional
   servlet: us.blanshard.sudoku.appengine.TopServlet
