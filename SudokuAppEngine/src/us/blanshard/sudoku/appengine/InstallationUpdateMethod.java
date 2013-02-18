@@ -68,8 +68,8 @@ import java.util.regex.Pattern;
  */
 public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResult> {
 
-  private static final TypeToken<UpdateParams> PARAMS_TYPE_TOKEN = new TypeToken<UpdateParams>() {};
-  private static final Logger logger = Logger.getLogger(InstallationServlet.class.getName());
+  private static final TypeToken<UpdateParams> TOKEN = new TypeToken<UpdateParams>() {};
+  private static final Logger logger = Logger.getLogger(InstallationUpdateMethod.class.getName());
   private static final ImmutableSet<String> CLIENT_IDS = ImmutableSet.of(
       "826990774749.apps.googleusercontent.com",
       "826990774749-258fl53lo3h8t964408sftsog11em9ij.apps.googleusercontent.com");
@@ -81,11 +81,10 @@ public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResu
 
 
   public InstallationUpdateMethod() {
-    super(PARAMS_TYPE_TOKEN);
+    super(TOKEN);
   }
 
   @Override public UpdateResult call(UpdateParams params) throws MethodException {
-
     DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
     TransactionOptions options = TransactionOptions.Builder.withXG(true);
     Transaction tx = ds.beginTransaction(options);
