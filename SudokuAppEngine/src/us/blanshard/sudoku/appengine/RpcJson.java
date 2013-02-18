@@ -53,6 +53,7 @@ public class RpcJson {
     METHODS = builder
         .put(InstallationRpcs.UPDATE_METHOD, new InstallationUpdateMethod())
         .put(PuzzleRpcs.ATTEMPT_UPDATE_METHOD, new AttemptUpdateMethod())
+        .put(PuzzleRpcs.VOTE_UPDATE_METHOD, new VoteUpdateMethod())
         .build();
   }
 }
