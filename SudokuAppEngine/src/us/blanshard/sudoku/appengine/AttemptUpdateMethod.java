@@ -183,12 +183,12 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
       attempt.setUnindexedProperty(Schema.Attempt.STOP_TIME, new Date(params.stopTime));
       attempt.setUnindexedProperty(Schema.Attempt.WON, won);
 
-      boolean alreadyThere = false;
       if (attempts.hasProperty(Schema.Attempts.FIRST_ATTEMPT)) {
         if (isSameAttempt(attempt, (EmbeddedEntity) attempts.getProperty(Schema.Attempts.FIRST_ATTEMPT))) {
           wasFirst = true;
           logger.info("First attempt already present for " + puzzleString);
         } else {
+          boolean alreadyThere = false;
           List<EmbeddedEntity> later = Lists.newArrayList();
           if (attempts.hasProperty(Schema.Attempts.LATER_ATTEMPTS)) {
             @SuppressWarnings("unchecked")
@@ -214,7 +214,7 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
       ds.put(tx, attempts);
       tx.commit();
 
-      if (wasFirst && !alreadyThere)
+      if (wasFirst)
         queuePuzzleStatsTask(puzzleString);
     } finally {
       if (tx.isActive()) tx.rollback();
