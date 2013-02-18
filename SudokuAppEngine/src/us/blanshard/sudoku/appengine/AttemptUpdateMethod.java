@@ -50,7 +50,7 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
   public static final TypeToken<AttemptParams> TOKEN = new TypeToken<AttemptParams>() {};
   private static final Logger logger = Logger.getLogger(AttemptUpdateMethod.class.getName());
 
-  protected AttemptUpdateMethod() {
+  public AttemptUpdateMethod() {
     super(TOKEN);
   }
 
@@ -181,6 +181,7 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
       if (attempts.hasProperty(Schema.Attempts.FIRST_ATTEMPT)) {
         if (isSameAttempt(attempt, (EmbeddedEntity) attempts.getProperty(Schema.Attempts.FIRST_ATTEMPT))) {
           wasFirst = true;
+          logger.info("First attempt already present for " + puzzleString);
         } else {
           boolean alreadyThere = false;
           List<EmbeddedEntity> later = Lists.newArrayList();
@@ -193,7 +194,9 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
                 alreadyThere = true;
             }
           }
-          if (!alreadyThere) {
+          if (alreadyThere) {
+            logger.info("Later attempt already present for " + puzzleString);
+          } else {
             later.add(attempt);
             attempts.setUnindexedProperty(Schema.Attempts.LATER_ATTEMPTS, later);
           }
