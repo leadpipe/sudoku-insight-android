@@ -66,7 +66,7 @@ import java.util.regex.Pattern;
 /**
  * @author Luke Blanshard
  */
-public class SetInstallationMethod extends RpcMethod<UpdateParams, UpdateResult> {
+public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResult> {
 
   private static final TypeToken<UpdateParams> PARAMS_TYPE_TOKEN = new TypeToken<UpdateParams>() {};
   private static final Logger logger = Logger.getLogger(InstallationServlet.class.getName());
@@ -80,7 +80,7 @@ public class SetInstallationMethod extends RpcMethod<UpdateParams, UpdateResult>
   private Iterator<Key> opaqueAccountIds;
 
 
-  public SetInstallationMethod() {
+  public InstallationUpdateMethod() {
     super(PARAMS_TYPE_TOKEN);
   }
 

@@ -50,7 +50,7 @@ public class RpcJson {
   static {
     ImmutableMap.Builder<String, RpcMethod<?, ?>> builder = ImmutableMap.builder();
     METHODS = builder
-        .put(InstallationRpcs.UPDATE_METHOD, new SetInstallationMethod())
+        .put(InstallationRpcs.UPDATE_METHOD, new InstallationUpdateMethod())
         .build();
   }
 }
