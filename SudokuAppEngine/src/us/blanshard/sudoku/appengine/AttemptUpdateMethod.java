@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.appengine;
 
+import static java.util.logging.Level.SEVERE;
+
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.messages.PuzzleRpcs.AttemptParams;
@@ -30,6 +32,10 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Text;
 import com.google.appengine.api.datastore.Transaction;
+import com.google.appengine.api.taskqueue.Queue;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskAlreadyExistsException;
+import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.gson.reflect.TypeToken;
@@ -38,6 +44,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -176,12 +183,12 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
       attempt.setUnindexedProperty(Schema.Attempt.STOP_TIME, new Date(params.stopTime));
       attempt.setUnindexedProperty(Schema.Attempt.WON, won);
 
+      boolean alreadyThere = false;
       if (attempts.hasProperty(Schema.Attempts.FIRST_ATTEMPT)) {
         if (isSameAttempt(attempt, (EmbeddedEntity) attempts.getProperty(Schema.Attempts.FIRST_ATTEMPT))) {
           wasFirst = true;
           logger.info("First attempt already present for " + puzzleString);
         } else {
-          boolean alreadyThere = false;
           List<EmbeddedEntity> later = Lists.newArrayList();
           if (attempts.hasProperty(Schema.Attempts.LATER_ATTEMPTS)) {
             @SuppressWarnings("unchecked")
@@ -206,6 +213,9 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
 
       ds.put(tx, attempts);
       tx.commit();
+
+      if (wasFirst && !alreadyThere)
+        queuePuzzleStatsTask(puzzleString);
     } finally {
       if (tx.isActive()) tx.rollback();
     }
@@ -218,5 +228,20 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
   private boolean isSameAttempt(EmbeddedEntity a, EmbeddedEntity b) {
     return Objects.equal(
         a.getProperty(Schema.Attempt.ATTEMPT_ID), b.getProperty(Schema.Attempt.ATTEMPT_ID));
+  }
+
+  private void queuePuzzleStatsTask(String puzzle) {
+    Queue queue = QueueFactory.getDefaultQueue();
+    PuzzleStatsTask task = new PuzzleStatsTask(puzzle);
+    try {
+      queue.add(TaskOptions.Builder
+          .withCountdownMillis(TimeUnit.SECONDS.toMillis(30))
+          .payload(task)
+          .taskName(task.getTaskName()));
+    } catch (TaskAlreadyExistsException e) {
+      logger.info("puzzle stats task already exists for " + puzzle);
+    } catch (Exception e) {
+      logger.log(SEVERE, "Unable to queue puzzle stats task for " + puzzle, e);
+    }
   }
 }
