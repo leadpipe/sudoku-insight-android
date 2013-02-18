@@ -2,6 +2,7 @@ package us.blanshard.sudoku.appengine;
 
 import static java.util.logging.Level.INFO;
 
+import us.blanshard.sudoku.appengine.RpcMethod.MethodException;
 import us.blanshard.sudoku.messages.Rpc;
 
 import com.google.common.base.Charsets;
@@ -39,6 +40,9 @@ public class RpcServlet extends HttpServlet {
         RpcMethod<Object, Object> rpcMethod =
             (RpcMethod<Object, Object>) RpcJson.METHODS.get(rpcRequest.method);
         rpcResponse.result = rpcMethod.call(rpcRequest.params);
+      } catch (MethodException e) {
+        logger.log(INFO, "Anticipated RPC error", e);
+        rpcResponse.error = e.getError();
       } catch (Throwable t) {
         logger.log(INFO, "RPC method problem", t);
         rpcResponse.error = Rpc.internalError(t.getMessage());
