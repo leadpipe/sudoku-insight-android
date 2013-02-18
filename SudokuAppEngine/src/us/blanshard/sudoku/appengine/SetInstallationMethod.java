@@ -27,6 +27,7 @@ import static us.blanshard.sudoku.appengine.Schema.Installation.NAME;
 import static us.blanshard.sudoku.appengine.Schema.Installation.OPAQUE_ID;
 import static us.blanshard.sudoku.appengine.Schema.Installation.STREAM;
 import static us.blanshard.sudoku.appengine.Schema.Installation.STREAM_COUNT;
+import static us.blanshard.sudoku.messages.InstallationRpcs.monthNumber;
 
 import us.blanshard.sudoku.messages.InstallationRpcs.UpdateParams;
 import us.blanshard.sudoku.messages.InstallationRpcs.UpdateResult;
@@ -52,11 +53,15 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Luke Blanshard
@@ -68,6 +73,7 @@ public class SetInstallationMethod extends RpcMethod<UpdateParams, UpdateResult>
   private static final ImmutableSet<String> CLIENT_IDS = ImmutableSet.of(
       "826990774749.apps.googleusercontent.com",
       "826990774749-258fl53lo3h8t964408sftsog11em9ij.apps.googleusercontent.com");
+  private static final Pattern BASE_NAME_PATTERN = Pattern.compile("(.*)\\s+\\d+");
   private final JsonFactory jsonFactory = new GsonFactory();
   private final GoogleIdTokenVerifier tokenVerifier = new GoogleIdTokenVerifier(new NetHttpTransport(), jsonFactory);
   private Iterator<Key> opaqueIds;
@@ -144,16 +150,14 @@ public class SetInstallationMethod extends RpcMethod<UpdateParams, UpdateResult>
 
     logger.info((update ? "Updated" : "Inserted") + " installation " + opaqueId);
 
-    UpdateResult answer = new UpdateResult();
-    // TODO: look for clashing installation names, rectify
-    // TODO: look for clashing streams, choose a different one
-    // only look in active installations, ie ones used within the past couple of months
-    // TODO: if implied stream count > given, send email?  or log so I'll notice
-    answer.streamCount = params.streamCount;
-    answer.stream = params.stream;
-    if (params.account != null)
-      answer.installationName = params.account.installationName;
-    return answer;
+    UpdateResult result = new UpdateResult();
+    result.streamCount = params.streamCount;
+    result.stream = params.stream;
+    if (params.account != null) {
+      result.installationName = params.account.installationName;
+      resolveClashes(ds, params, result, opaqueId);
+    }
+    return result;
   }
 
   private static boolean isValidInstallationId(String id) {
@@ -244,5 +248,66 @@ public class SetInstallationMethod extends RpcMethod<UpdateParams, UpdateResult>
   private Set<String> getInstallationIds(Entity account) {
     return Sets.newLinkedHashSet(
         (Collection<String>) account.getProperty(Schema.Account.INSTALLATION_IDS));
+  }
+
+  /**
+   * Checks all the installations for the account mentioned in the update
+   * parameters, and looks for clashing streams and installation names. If it
+   * finds any, it alters the given result such that if the installation makes
+   * the recommended changes its clashes with other installations will go away.
+   */
+  private void resolveClashes(
+      DatastoreService ds, UpdateParams params, UpdateResult result, Long opaqueId) {
+    Key accountKey = KeyFactory.createKey(Schema.Account.KIND, params.account.id);
+    try {
+      Entity account = ds.get(accountKey);
+      Set<String> otherNames = Sets.newHashSet();
+      Set<Integer> otherStreams = Sets.newHashSet();
+      Calendar cal = new GregorianCalendar();
+      cal.add(Calendar.MONTH, -1);
+      int activeMonthNumber = monthNumber(cal);
+
+      for (String id : getInstallationIds(account)) {
+        if (id.equals(params.account.id)) continue;
+        Entity other = ds.get(KeyFactory.createKey(KIND, id));
+        String name = (String) other.getProperty(NAME);
+        if (name != null) otherNames.add(name);
+        if ((Integer) other.getProperty(MONTH_NUMBER) >= activeMonthNumber) {
+          otherStreams.add((Integer) other.getProperty(STREAM));
+        }
+      }
+
+      if (otherNames.contains(result.installationName)) {
+        // Tweak the installation name by appending 2, 3, etc. Note it's
+        // possible for 2 installations to ping-pong names with this approach,
+        // eg both going to "asdf", then "asdf 2", then "asdf". I don't expect
+        // that to ever happen in practice, and I'd be hugely surprised if it
+        // didn't settle out in a single iteration.
+        String base = result.installationName;
+        Matcher m = BASE_NAME_PATTERN.matcher(base);
+        if (m.matches()) base = m.group(1);
+        for (int counter = 2; true; ++counter) {
+          String name = base + " " + counter;
+          if (!otherNames.contains(name)) {
+            result.installationName = name;
+            break;
+          }
+        }
+        logger.info("Updated installation name of " + opaqueId + " to " + result.installationName);
+      }
+
+      if (otherStreams.contains(result.stream)) {
+        for (int s = 1; true; ++s)
+          if (!otherStreams.contains(s)) {
+            result.stream = s;
+            break;
+          }
+        logger.info("Updated stream of " + opaqueId + " to " + result.stream);
+      }
+
+    } catch (EntityNotFoundException e) {
+      logger.log(WARNING, "Account or linked installation not found after update: "
+          + params.account.id + ", for " + opaqueId, e);
+    }
   }
 }

@@ -89,19 +89,12 @@ END
 
 
 * App engine app
-** Protocols
-*** Installation data
-    - listen for prefs updates, queue an update
-    - queue an update at app start too
-    - keep a pref containing last json confirmed rec'd by server
-    - on update: prepare json describing installation, compare against that pref
-    - if different, and have an internet connection:
-      - clear out pref
-      - send new json
-      - if get reply, set pref with new json; then update prefs sent back
 
-** RPC mechanism
-*** TODO Implement batch
+** Missing pieces
+*** TODO Implement batch RPC
+*** TODO Have a config object containing, eg, num streams?
+
+** Protocols
 
 ** API from phone
    - Send installation info:
