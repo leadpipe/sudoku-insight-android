@@ -222,6 +222,7 @@ public class NetworkService extends IntentService {
       if (res.result.installationName != null)
         mPrefs.setDeviceNameAsync(res.result.installationName);
       mPrefs.setStreamAsync(res.result.stream);
+      // Setting the stream count has to come after the stream itself:
       mPrefs.setStreamCountAsync(res.result.streamCount);
     }
     return res != null;

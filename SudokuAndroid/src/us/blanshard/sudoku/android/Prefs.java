@@ -220,8 +220,10 @@ public class Prefs {
   }
 
   public void setStreamCountAsync(int streamCount) {
+    if (streamCount == getStreamCount()) return;
     SharedPreferences.Editor prefs = mLocalPrefs.edit();
     prefs.putInt(STREAM_COUNT, streamCount);
+    prefs.remove(STREAM);  // recalculate the stream next time
     prefs.apply();
   }
 
