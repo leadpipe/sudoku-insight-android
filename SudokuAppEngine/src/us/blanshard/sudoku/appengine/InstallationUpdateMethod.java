@@ -29,6 +29,7 @@ import static us.blanshard.sudoku.appengine.Schema.Installation.STREAM;
 import static us.blanshard.sudoku.appengine.Schema.Installation.STREAM_COUNT;
 import static us.blanshard.sudoku.messages.InstallationRpcs.monthNumber;
 
+import us.blanshard.sudoku.gen.Generator;
 import us.blanshard.sudoku.messages.InstallationRpcs.UpdateParams;
 import us.blanshard.sudoku.messages.InstallationRpcs.UpdateResult;
 import us.blanshard.sudoku.messages.Rpc;
@@ -48,6 +49,7 @@ import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.gson.reflect.TypeToken;
 
@@ -57,6 +59,8 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -96,7 +100,7 @@ public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResu
       Entity entity;
       try {
         entity = ds.get(key);
-        opaqueId = (Long) entity.getProperty(OPAQUE_ID);
+        opaqueId = ((Number) entity.getProperty(OPAQUE_ID)).longValue();
         if (!Objects.equal(params.manufacturer, entity.getProperty(MANUFACTURER))
             || !Objects.equal(params.model, entity.getProperty(MODEL))) {
           logger.warning(
@@ -151,7 +155,7 @@ public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResu
     logger.info((update ? "Updated" : "Inserted") + " installation " + opaqueId);
 
     UpdateResult result = new UpdateResult();
-    result.streamCount = params.streamCount;
+    result.streamCount = getConfigStreamCount(ds);
     result.stream = params.stream;
     if (params.account != null) {
       result.installationName = params.account.installationName;
@@ -272,8 +276,8 @@ public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResu
         Entity other = ds.get(KeyFactory.createKey(KIND, id));
         String name = (String) other.getProperty(NAME);
         if (name != null) otherNames.add(name);
-        if ((Integer) other.getProperty(MONTH_NUMBER) >= activeMonthNumber) {
-          otherStreams.add((Integer) other.getProperty(STREAM));
+        if (((Number) other.getProperty(MONTH_NUMBER)).intValue() >= activeMonthNumber) {
+          otherStreams.add(((Number) other.getProperty(STREAM)).intValue());
         }
       }
 
@@ -297,11 +301,19 @@ public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResu
       }
 
       if (otherStreams.contains(result.stream)) {
-        for (int s = 1; true; ++s)
-          if (!otherStreams.contains(s)) {
-            result.stream = s;
-            break;
-          }
+        List<Integer> available = Lists.newArrayList();
+        for (int s = 1; s <= result.streamCount; ++s)
+          if (!otherStreams.contains(s))
+            available.add(s);
+        if (available.isEmpty()) {
+          for (int s = result.streamCount + 1; true; ++s)
+            if (!otherStreams.contains(s)) {
+              result.stream = s;
+              break;
+            }
+        } else {
+          result.stream = available.get(new Random().nextInt(available.size()));
+        }
         logger.info("Updated stream of " + opaqueId + " to " + result.stream);
       }
 
@@ -309,5 +321,24 @@ public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResu
       logger.log(WARNING, "Account or linked installation not found after update: "
           + params.account.id + ", for " + opaqueId, e);
     }
+  }
+
+  private int getConfigStreamCount(DatastoreService ds) {
+    Key configKey = KeyFactory.createKey(Schema.Config.KIND, Schema.Config.ID);
+    Entity config;
+    try {
+      config = ds.get(configKey);
+    } catch (EntityNotFoundException e) {
+      config = new Entity(configKey);
+      config.setUnindexedProperty(Schema.Config.STREAM_COUNT, Generator.NUM_STREAMS);
+      Transaction tx = ds.beginTransaction();
+      try {
+        ds.put(tx, config);
+        tx.commit();
+      } finally {
+        if (tx.isActive()) tx.rollback();
+      }
+    }
+    return ((Number) config.getProperty(Schema.Config.STREAM_COUNT)).intValue();
   }
 }

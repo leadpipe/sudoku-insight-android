@@ -20,6 +20,16 @@ package us.blanshard.sudoku.appengine;
  */
 public class Schema {
   /**
+   * A root entity containing global configuration data for the app.
+   */
+  public static class Config {
+    public static final String KIND = "Config";
+    public static final String ID = "config";
+
+    public static final String STREAM_COUNT = "streamCount";
+  }
+
+  /**
    * A root entity that describes a single installation of Sudoku Insight on a
    * device. Its key is the installation's UUID; there is also an opaque numeric
    * ID, which is optionally indexed (as INDEXED_ID) if the user wishes to make
