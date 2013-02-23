@@ -117,6 +117,7 @@ public class Database {
     public long lastTime;
     public AttemptState attemptState;
     public long replayTime;
+    public boolean saved;
 
     // Optional other stuff
     public Grid clues;
@@ -159,6 +160,9 @@ public class Database {
     public String properties;
     public String source;
     public int vote;
+    public boolean voteSaved;
+    public String stats;
+    public long statsTime;
     public List<Attempt> attempts;
     public List<Element> elements;
   }
@@ -325,6 +329,9 @@ public class Database {
     answer.properties = cursor.getString(cursor.getColumnIndexOrThrow("properties"));
     answer.source = cursor.getString(cursor.getColumnIndexOrThrow("source"));
     answer.vote = cursor.getInt(cursor.getColumnIndexOrThrow("vote"));
+    answer.voteSaved = getLong(cursor, "voteSaved", 0) != 0;
+    answer.stats = cursor.getString(cursor.getColumnIndexOrThrow("stats"));
+    answer.statsTime = getLong(cursor, "statsTime", 0);
     return answer;
   }
 
@@ -340,6 +347,7 @@ public class Database {
     answer.lastTime = cursor.getLong(cursor.getColumnIndexOrThrow("lastTime"));
     answer.attemptState = AttemptState.fromNumber(cursor.getInt(cursor.getColumnIndexOrThrow("attemptState")));
     answer.replayTime = getLong(cursor, "replayTime", 0);
+    answer.saved = getLong(cursor, "saved", 0) != 0;
     return answer;
   }
 
@@ -641,7 +649,7 @@ public class Database {
     private final Context mContext;
 
     OpenHelper(Context context) {
-      super(context, "db", null, 8);
+      super(context, "db", null, 9);
       mContext = context;
     }
 
@@ -652,7 +660,10 @@ public class Database {
           + "  [clues] TEXT  NOT NULL  UNIQUE,"
           + "  [properties] TEXT,"
           + "  [source] TEXT,"
-          + "  [vote] INTEGER  DEFAULT 0)");
+          + "  [vote] INTEGER  DEFAULT 0,"
+          + "  [voteSaved] INTEGER,"  // boolean
+          + "  [stats] TEXT,"
+          + "  [statsTime] INTEGER)");
       db.execSQL(""
           + "CREATE TABLE [Installation] ("
           + "  [_id] INTEGER PRIMARY KEY,"
@@ -693,7 +704,8 @@ public class Database {
           + "  [startTime] INTEGER,"
           + "  [lastTime] INTEGER  NOT NULL,"
           + "  [attemptState] INTEGER  NOT NULL,"
-          + "  [replayTime] INTEGER)");
+          + "  [replayTime] INTEGER,"
+          + "  [saved] INTEGER)");  // boolean
       db.execSQL(""
           + "CREATE INDEX [AttemptByPuzzleIdAndLastTime] ON [Attempt] ("
           + "  [puzzleId],"
@@ -728,6 +740,12 @@ public class Database {
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
       if (oldVersion < 8)
         throw new AssertionError("Upgrades not supported, please reinstall");
+      if (oldVersion < 9) {
+        db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [voteSaved] INTEGER");
+        db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [stats] TEXT");
+        db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [statsTime] INTEGER");
+        db.execSQL("ALTER TABLE [Attempt] ADD COLUMN [saved] INTEGER");
+      }
     }
   }
 }
