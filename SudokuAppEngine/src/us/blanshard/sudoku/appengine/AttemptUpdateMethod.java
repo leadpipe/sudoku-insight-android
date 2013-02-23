@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.appengine;
 
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.SEVERE;
 
 import us.blanshard.sudoku.core.Grid;
@@ -44,7 +46,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -55,6 +56,9 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
 
   private static final TypeToken<AttemptParams> TOKEN = new TypeToken<AttemptParams>() {};
   private static final Logger logger = Logger.getLogger(AttemptUpdateMethod.class.getName());
+
+  private static final long PRIMARY_STATS_TASK_COUNTDOWN = SECONDS.toMillis(30);
+  private static final long BACKUP_STATS_TASK_COUNTDOWN = HOURS.toMillis(1);
 
   public AttemptUpdateMethod() {
     super(TOKEN);
@@ -235,11 +239,21 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
     PuzzleStatsTask task = new PuzzleStatsTask(puzzle);
     try {
       queue.add(TaskOptions.Builder
-          .withCountdownMillis(TimeUnit.SECONDS.toMillis(30))
+          .withCountdownMillis(PRIMARY_STATS_TASK_COUNTDOWN)
           .payload(task)
           .taskName(task.getTaskName()));
+      queue.deleteTask(task.getBackupTaskName());
     } catch (TaskAlreadyExistsException e) {
       logger.info("puzzle stats task already exists for " + puzzle);
+      try {
+        queue.add(TaskOptions.Builder
+            .withCountdownMillis(BACKUP_STATS_TASK_COUNTDOWN)
+            .payload(task)
+            .taskName(task.getBackupTaskName()));
+      } catch (TaskAlreadyExistsException ignored) {
+      } catch (Exception e2) {
+        logger.log(SEVERE, "Unable to queue backup stats task for " + puzzle, e2);
+      }
     } catch (Exception e) {
       logger.log(SEVERE, "Unable to queue puzzle stats task for " + puzzle, e);
     }

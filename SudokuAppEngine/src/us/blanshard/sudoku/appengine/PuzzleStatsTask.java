@@ -62,6 +62,16 @@ public class PuzzleStatsTask implements DeferredTask {
     return "puzzle-stats-" + puzzle.replace('.', '0');
   }
 
+  /**
+   * A second legal task name, to work around the race condition inherent in the
+   * task API. We create a backup task when the primary task is already queued,
+   * so that if that primary task has already passed the point of including our
+   * new data in its calculation, the backup task will eventually get to it.
+   */
+  public String getBackupTaskName() {
+    return "backup-" + getTaskName();
+  }
+
   @Override public void run() {
     DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
 
