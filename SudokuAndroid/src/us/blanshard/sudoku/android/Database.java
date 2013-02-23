@@ -280,6 +280,40 @@ public class Database {
     try {
       ContentValues values = new ContentValues();
       values.put("vote", vote);
+      values.put("voteSaved", 0);
+      db.update("Puzzle", values, "[_id] = ?", new String[]{ Long.toString(puzzleId) });
+      db.setTransactionSuccessful();
+    } finally {
+      db.endTransaction();
+    }
+  }
+
+  /**
+   * Marks a puzzle's vote as saved.
+   */
+  public void markVoteSaved(long puzzleId) {
+    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+    db.beginTransaction();
+    try {
+      ContentValues values = new ContentValues();
+      values.put("voteSaved", 1);
+      db.update("Puzzle", values, "[_id] = ?", new String[]{ Long.toString(puzzleId) });
+      db.setTransactionSuccessful();
+    } finally {
+      db.endTransaction();
+    }
+  }
+
+  /**
+   * Sets a puzzle's stats string, marking it with the current time.
+   */
+  public void setPuzzleStats(long puzzleId, String stats) {
+    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+    db.beginTransaction();
+    try {
+      ContentValues values = new ContentValues();
+      values.put("stats", stats);
+      values.put("statsTime", System.currentTimeMillis());
       db.update("Puzzle", values, "[_id] = ?", new String[]{ Long.toString(puzzleId) });
       db.setTransactionSuccessful();
     } finally {
@@ -450,6 +484,27 @@ public class Database {
   }
 
   /**
+   * Finds all attempts that have not yet been marked as saved. Fills in the
+   * puzzle's properties as well as the attempt's basic info.
+   */
+  public List<Attempt> getUnsavedAttempts() throws SQLException {
+    List<Attempt> answer = Lists.newArrayList();
+    SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+    String sql = ATTEMPT_SELECT_AND_FROM_CLAUSE + "WHERE NOT [saved] ORDER BY [lastTime] ASC";
+    Cursor cursor = db.rawQuery(sql, null);
+    try {
+      while (cursor.moveToNext()) {
+        Attempt attempt = attemptFromCursor(cursor);
+        attempt.properties = cursor.getString(cursor.getColumnIndexOrThrow("properties"));
+        answer.add(attempt);
+      }
+    } finally {
+      cursor.close();
+    }
+    return answer;
+  }
+
+  /**
    * Saves the given attempt, modifying its last update time to now.
    */
   public void updateAttempt(Attempt attempt) throws SQLException {
@@ -465,6 +520,7 @@ public class Database {
       values.put("startTime", attempt.startTime);
       values.put("lastTime", attempt.lastTime = System.currentTimeMillis());
       values.put("attemptState", attempt.attemptState.getNumber());
+      values.put("saved", 0);
 
       db.update("Attempt", values, "[_id] = ?", new String[]{ Long.toString(attempt._id) });
 
@@ -481,6 +537,20 @@ public class Database {
     try {
       ContentValues values = new ContentValues();
       values.put("replayTime", System.currentTimeMillis());
+      db.update("Attempt", values, "[_id] = ?", new String[]{ Long.toString(attemptId) });
+      db.setTransactionSuccessful();
+    } finally {
+      db.endTransaction();
+    }
+  }
+
+  /** Marks an attempt as having been saved to the server. */
+  public void markAttemptSaved(long attemptId) {
+    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+    db.beginTransaction();
+    try {
+      ContentValues values = new ContentValues();
+      values.put("saved", 1);
       db.update("Attempt", values, "[_id] = ?", new String[]{ Long.toString(attemptId) });
       db.setTransactionSuccessful();
     } finally {
