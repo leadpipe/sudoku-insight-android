@@ -129,10 +129,11 @@ public class Generator {
 
   /**
    * How likely it is that a given puzzle will be generated in a way that honors
-   * the symmetry chosen. Changing this requires bumping the
-   * {@linkplain #BASIC_VERSION version number}.
+   * the symmetry chosen. Such puzzles are typically (though not always) pretty
+   * trivial. Changing this requires bumping the {@linkplain #BASIC_VERSION
+   * version number}.
    */
-  private static final double CHANCE_OF_SYMMETRIC = 0.3;
+  private static final double CHANCE_OF_SYMMETRIC = 0.15;
 
   /**
    * The minimum measure returned by {@link Symmetry#measure} in order for the
