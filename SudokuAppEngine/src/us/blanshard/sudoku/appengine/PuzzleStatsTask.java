@@ -119,6 +119,8 @@ public class PuzzleStatsTask implements DeferredTask {
         return;  // Throwing would be bad, because it would re-queue the task.
       }
 
+      entity.setUnindexedProperty(Schema.Puzzle.STATS_TIMESTAMP, System.currentTimeMillis());
+
       entity.setUnindexedProperty(Schema.Puzzle.NUM_ATTEMPTS, numAttempts);
       entity.setUnindexedProperty(Schema.Puzzle.NUM_DOWN_VOTES, numDownVotes);
       entity.setUnindexedProperty(Schema.Puzzle.NUM_UP_VOTES, numUpVotes);

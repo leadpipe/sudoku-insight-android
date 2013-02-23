@@ -24,6 +24,7 @@ import static us.blanshard.sudoku.appengine.Schema.Puzzle.NUM_MOVES_STAT;
 import static us.blanshard.sudoku.appengine.Schema.Puzzle.NUM_TRAILS_STAT;
 import static us.blanshard.sudoku.appengine.Schema.Puzzle.NUM_UP_VOTES;
 import static us.blanshard.sudoku.appengine.Schema.Puzzle.SOURCES;
+import static us.blanshard.sudoku.appengine.Schema.Puzzle.STATS_TIMESTAMP;
 
 import us.blanshard.sudoku.messages.PuzzleRpcs.PuzzleParams;
 import us.blanshard.sudoku.messages.PuzzleRpcs.PuzzleResult;
@@ -60,10 +61,15 @@ public class PuzzleGetMethod extends RpcMethod<PuzzleParams, PuzzleResult> {
     try {
       entity = ds.get(key);
     } catch (EntityNotFoundException e) {
-      throw new MethodException(e, Rpc.invalidParams(params));
+      throw new MethodException(e, Rpc.error(Rpc.OBJECT_NOT_FOUND, "no such puzzle", params));
     }
     PuzzleResult result = new PuzzleResult();
     result.name = (String) entity.getProperty(NAME);
+    if (entity.hasProperty(STATS_TIMESTAMP)) {
+      result.statsTimestamp = ((Number) entity.getProperty(STATS_TIMESTAMP)).longValue();
+      if (result.statsTimestamp.equals(params.previousStatsTimestamp))
+        throw new MethodException(Rpc.error(Rpc.OBJECT_UNCHANGED, "stats not updated", params));
+    }
 
     if (entity.hasProperty(SOURCES)) {
       @SuppressWarnings("unchecked")

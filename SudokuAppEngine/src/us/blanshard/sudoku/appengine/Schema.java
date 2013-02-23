@@ -96,6 +96,7 @@ public class Schema {
     public static final String NUM_TRAILS_STAT = "numTrailsStat";
     public static final String NUM_UP_VOTES = "numUpVotes";
     public static final String SOURCES = "sources";
+    public static final String STATS_TIMESTAMP = "statsTimestamp";
   }
 
   /**

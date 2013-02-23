@@ -66,6 +66,8 @@ public class Rpc {
 
   // Extended error codes:
   public static final int AUTH_VERIFICATION_FAILED = -32000;
+  public static final int OBJECT_NOT_FOUND = -32001;
+  public static final int OBJECT_UNCHANGED = -32002;
 
   public static Error error(int code, String message, @Nullable Object data) {
     Error answer = new Error();

@@ -84,11 +84,13 @@ public class PuzzleRpcs {
 
   public static class PuzzleParams {
     public String puzzle;
+    @Nullable public Long previousStatsTimestamp;
   }
 
   public static class PuzzleResult {
     @Nullable public String name;
     @Nullable public List<String> sources;
+    @Nullable public Long statsTimestamp;
     public int numAttempts;
     public int numUpVotes;
     public int numDownVotes;
