@@ -614,22 +614,48 @@ public class Database {
     return answer;
   }
 
+  public List<Puzzle> getPuzzlesWithUnsavedVotes() throws SQLException {
+    List<Puzzle> answer = Lists.newArrayList();
+    SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+    Cursor cursor = db.rawQuery(
+        "SELECT * FROM [Puzzle] WHERE NOT [voteSaved] ORDER BY [_id]", null);
+    try {
+      while (cursor.moveToNext()) {
+        answer.add(puzzleFromCursor(cursor));
+      }
+    } finally {
+      cursor.close();
+    }
+    return answer;
+  }
+
+  public List<Puzzle> getPuzzlesWithOldStats(long cutoff) throws SQLException {
+    List<Puzzle> answer = Lists.newArrayList();
+    SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+    Cursor cursor = db.rawQuery(
+        "SELECT * FROM [Puzzle] WHERE [statsTime] < ? ORDER BY [_id]",
+        new String[] {Long.toString(cutoff)});
+    try {
+      while (cursor.moveToNext()) {
+        answer.add(puzzleFromCursor(cursor));
+      }
+    } finally {
+      cursor.close();
+    }
+    return answer;
+  }
+
   public List<CollectionInfo> getAllCollections() throws SQLException {
     List<CollectionInfo> answer = Lists.newArrayList();
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    db.beginTransaction();
+    Cursor cursor = db.rawQuery("SELECT * FROM [Collection]", null);
     try {
-      Cursor cursor = db.rawQuery("SELECT * FROM [Collection]", null);
-      try {
-        while (cursor.moveToNext()) {
-          CollectionInfo collection = collectionFromCursor(cursor);
-          answer.add(collection);
-        }
-      } finally {
-        cursor.close();
+      while (cursor.moveToNext()) {
+        CollectionInfo collection = collectionFromCursor(cursor);
+        answer.add(collection);
       }
     } finally {
-      db.endTransaction();
+      cursor.close();
     }
     return answer;
   }
@@ -731,9 +757,9 @@ public class Database {
           + "  [properties] TEXT,"
           + "  [source] TEXT,"
           + "  [vote] INTEGER  DEFAULT 0,"
-          + "  [voteSaved] INTEGER,"  // boolean
+          + "  [voteSaved] INTEGER  DEFAULT 1,"  // boolean
           + "  [stats] TEXT,"
-          + "  [statsTime] INTEGER)");
+          + "  [statsTime] INTEGER  DEFAULT 0)");
       db.execSQL(""
           + "CREATE TABLE [Installation] ("
           + "  [_id] INTEGER PRIMARY KEY,"
@@ -811,9 +837,10 @@ public class Database {
       if (oldVersion < 8)
         throw new AssertionError("Upgrades not supported, please reinstall");
       if (oldVersion < 9) {
+        // Deliberately not setting a default for voteSaved:
         db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [voteSaved] INTEGER");
         db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [stats] TEXT");
-        db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [statsTime] INTEGER");
+        db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [statsTime] INTEGER DEFAULT 0");
         db.execSQL("ALTER TABLE [Attempt] ADD COLUMN [saved] INTEGER");
       }
     }
