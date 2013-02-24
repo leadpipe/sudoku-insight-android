@@ -291,13 +291,14 @@ public class Database {
   /**
    * Marks a puzzle's vote as saved.
    */
-  public void markVoteSaved(long puzzleId) {
+  public void markVoteSaved(long puzzleId, int vote) {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
     db.beginTransaction();
     try {
       ContentValues values = new ContentValues();
       values.put("voteSaved", 1);
-      db.update("Puzzle", values, "[_id] = ?", new String[]{ Long.toString(puzzleId) });
+      db.update("Puzzle", values, "[_id] = ? AND [vote] = ?",
+          new String[]{ Long.toString(puzzleId), Integer.toString(vote) });
       db.setTransactionSuccessful();
     } finally {
       db.endTransaction();
@@ -545,13 +546,14 @@ public class Database {
   }
 
   /** Marks an attempt as having been saved to the server. */
-  public void markAttemptSaved(long attemptId) {
+  public void markAttemptSaved(long attemptId, long lastTime) {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
     db.beginTransaction();
     try {
       ContentValues values = new ContentValues();
       values.put("saved", 1);
-      db.update("Attempt", values, "[_id] = ?", new String[]{ Long.toString(attemptId) });
+      db.update("Attempt", values, "[_id] = ? AND [lastTime] = ?",
+          new String[]{ Long.toString(attemptId), Long.toString(lastTime) });
       db.setTransactionSuccessful();
     } finally {
       db.endTransaction();
