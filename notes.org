@@ -39,15 +39,30 @@ END
 *** TODO Make other graphics for play store
 
 ** Cross-installation work
-*** DONE Finish auth setup
-    - see http://android-developers.blogspot.pt/2013/01/verifying-back-end-calls-from-android.html
-    - GoogleIdTokenVerifier
 *** TODO At startup on new installation, show settings page
     - with account selection popup showing?
     - need to trigger login if an account is selected
 *** TODO Add pref for whether to sync from other devices
     - dependent on selecting an account
-*** TODO Write both ends of uploading attempts on completion
+*** TODO Update NetworkService to handle saving of attempts & votes, fetching of stats
+    - static collection of operations
+      - save installation info
+      - save all unsaved attempts & votes
+      - save specific attempt or vote
+      - fetch all stats last fetched before specific time
+      - fetch stats for specific puzzle
+    - loop while there are operations in the static set or there are pending RPCs:
+      - wait until the network is available
+    - translate any operations into pending RPCs
+      - installation info, if different from what's already saved
+      - save attempt
+      - save vote
+      - fetch stats
+    - Q: try to prioritize these?  or just go in order?
+    - send next RPC, handle response
+      - future: send them in batches
+    - if transient error, put RPC(s) back in pending collection and sleep awhile
+    - back to loop
 
 ** Replay cleanups
 *** TODO Revise calculation and display of disproofs
