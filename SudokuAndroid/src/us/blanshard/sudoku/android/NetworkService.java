@@ -20,7 +20,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static us.blanshard.sudoku.android.Json.GSON;
 
 import us.blanshard.sudoku.messages.InstallationRpcs;
-import us.blanshard.sudoku.messages.InstallationRpcs.UpdateParams;
 import us.blanshard.sudoku.messages.Rpc;
 
 import android.accounts.Account;
@@ -34,19 +33,23 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.util.Log;
 
-import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.Nullable;
 
 /**
  * The "started service" that interacts with our AppEngine server over the
@@ -57,33 +60,63 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class NetworkService extends IntentService {
 
   public static void syncInstallationInfo(Context context) {
-    Intent intent = makeSyncInstallationIntent(context);
-    context.startService(intent);
+    pendingOps.add(new SaveInstallationOp());
+    context.startService(new Intent(context, NetworkService.class));
     Log.d(TAG, "Sync installation started");
   }
 
-  private static Intent makeSyncInstallationIntent(Context context) {
-    Intent intent = new Intent(context, NetworkService.class);
-    intent.putExtra(CALL, INSTALLATION);
-    return intent;
+  /**
+   * A high-level operation enqueued by the user-facing app for the network
+   * service to handle at the appropriate time.
+   */
+  private interface Op {
+    /**
+     * Calculates the RPCs required to perform this operation, adds them to the
+     * given set.  There may be nothing to do.
+     */
+    void addRpcs(NetworkService svc, Set<RpcOp<?>> rpcs);
   }
 
-  private static class GiveUpException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
+  /**
+   * An operation corresponding to a single RPC to send and process.
+   */
+  private interface RpcOp<T> {
+    /**
+     * Converts this object to the RPC request parameters it corresponds to, if
+     * it is still needed.
+     */
+    @Nullable Object asRequestParams();
 
-    public GiveUpException(Throwable cause) {
-      super(cause);
-    }
+    /**
+     * Exposes an object to guide the JSON parsing of the RPC response.
+     */
+    TypeToken<Rpc.Response<T>> getResponseTypeToken();
+
+    /**
+     * Returns the RPC method name.
+     */
+    String getMethod();
+
+    /**
+     * Processes the given response from the server. Returns true if the RPC is
+     * complete (whether successful or not), false if it should be retried.
+     */
+    boolean process(Rpc.Response<T> response);
   }
+
+  private static final Queue<Op> pendingOps = Queues.newConcurrentLinkedQueue();
 
   /** The auth scope that lets the web app verify it's really the given user. */
   private static final String SCOPE = "audience:server:client_id:826990774749.apps.googleusercontent.com";
 
-  private static final String CALL = "us.blanshard.sudoku.android.Call";
-  private static final int INSTALLATION = 1;
+  private static final String ADD_OP = "us.blanshard.sudoku.android.AddOp";
+  private static final int SAVE_INSTALLATION = 1;
 
-  private static final String BASE_URL = "https://sudoku-insight.appspot.com/";
-//      "http://10.0.2.2:8888/";  // <-- reaches localhost
+  private static final long DEFAULT_RETRY_TIME_MS = SECONDS.toMillis(10);
+  private static final long MAX_RETRY_TIME_MS = HOURS.toMillis(1);
+
+  private static final String BASE_URL = //"https://sudoku-insight.appspot.com/";
+      "http://10.0.2.2:8888/";  // <-- reaches localhost
   private static final String RPC_URL = BASE_URL + "rpc";
 
   private static final String TAG = "NetworkService";
@@ -126,16 +159,17 @@ public class NetworkService extends IntentService {
   }
 
   @Override protected void onHandleIntent(Intent intent) {
+    switch (intent.getIntExtra(ADD_OP, -1)) {
+      case SAVE_INSTALLATION:
+        pendingOps.add(new SaveInstallationOp());
+        break;
+      default:
+        break;
+    }
     try {
-      switch (intent.getIntExtra(CALL, -1)) {
-        case INSTALLATION:
-          callUpdateInstallation();
-          break;
-        default:
-          break;
-      }
-    } catch (GiveUpException e) {
-      Log.d(TAG, "giving up", e);
+      processOps();
+    } catch (Throwable t) {
+      Log.d(TAG, "uncaught processing network ops", t);
     }
   }
 
@@ -149,20 +183,35 @@ public class NetworkService extends IntentService {
     }
   }
 
-  private void callUpdateInstallation() {
-    long timeoutMs = SECONDS.toMillis(10);
-    while (waitUntilConnected()) {
-      UpdateParams params = makeInstallationParams();
-      String json = GSON.toJson(params);
-      String prev = mPrefs.getInstallData();
+  private void processOps() {
+    long timeoutMs = DEFAULT_RETRY_TIME_MS;
+    Set<RpcOp<?>> rpcOps = Sets.newLinkedHashSet();
 
-      if (json.equals(prev) || sendUpdateInstallation(json, params)) {
+    while (!pendingOps.isEmpty() || !rpcOps.isEmpty()) {
+      if (!waitUntilConnected())
         break;
+
+      for (Op op; (op = pendingOps.poll()) != null; )
+        op.addRpcs(this, rpcOps);
+
+      if (rpcOps.isEmpty())
+        break;
+
+      RpcOp<?> rpcOp = rpcOps.iterator().next();
+      rpcOps.remove(rpcOp);
+
+      Object params = rpcOp.asRequestParams();
+      if (params == null)
+        continue;
+
+      if (processRpc(rpcOp, params)) {
+        timeoutMs = DEFAULT_RETRY_TIME_MS;
+        continue;
       }
 
       try {
         Thread.sleep(timeoutMs);
-        timeoutMs = Math.min(HOURS.toMillis(1), timeoutMs * 3);
+        timeoutMs = Math.min(MAX_RETRY_TIME_MS, timeoutMs * 3);
       } catch (InterruptedException e) {
         // Just stop if we're interrupted.
         break;
@@ -182,50 +231,11 @@ public class NetworkService extends IntentService {
     return true;
   }
 
-  private InstallationRpcs.UpdateParams makeInstallationParams() {
-    InstallationRpcs.UpdateParams params = new InstallationRpcs.UpdateParams();
-    params.id = Installation.id(this);
-    params.shareData = mPrefs.getShareData();
-    params.manufacturer = Build.MANUFACTURER;
-    params.model = Build.MODEL;
-    params.streamCount = mPrefs.getStreamCount();
-    params.stream = mPrefs.getStream();
-    params.monthNumber = mPrefs.getMonthNumber();
-    Account account = mPrefs.getUserAccount();
-    if (account != null) {
-      params.account = new InstallationRpcs.AccountInfo();
-      params.account.id = account.name;
-      params.account.installationName = mPrefs.getDeviceName();
-    }
-    return params;
-  }
-
-  private boolean sendUpdateInstallation(String storedJson, UpdateParams params) {
-    try {
-      if (params.account != null) {
-        params.account.authToken = GoogleAuthUtil.getTokenWithNotification(
-            this, params.account.id, SCOPE, null, makeSyncInstallationIntent(this));
-      }
-    } catch (IOException e) {
+  private <T> boolean processRpc(RpcOp<T> rpcOp, Object params) {
+    Rpc.Response<T> response = sendRpc(rpcOp.getMethod(), params, rpcOp.getResponseTypeToken());
+    if (response == null)
       return false;
-    } catch (GoogleAuthException e) {
-      throw new GiveUpException(e);
-    }
-
-    // Clear out our notion of what's been synced with the server.
-    mPrefs.setInstallDataSync("");
-    Rpc.Response<InstallationRpcs.UpdateResult> res =
-        sendRpc(InstallationRpcs.UPDATE_METHOD, params, SET_INSTALLATION_TOKEN);
-
-    if (res != null && res.result != null) {
-      mPrefs.setInstallDataSync(storedJson);
-      if (res.result.installationName != null)
-        mPrefs.setDeviceNameAsync(res.result.installationName);
-      mPrefs.setStreamAsync(res.result.stream);
-      // Setting the stream count has to come after the stream itself:
-      mPrefs.setStreamCountAsync(res.result.streamCount);
-    }
-    return res != null;
+    return rpcOp.process(response);
   }
 
   private <T> Rpc.Response<T> sendRpc(String method, Object params, TypeToken<Rpc.Response<T>> token) {
@@ -243,7 +253,7 @@ public class NetworkService extends IntentService {
       conn.setDoOutput(true);
       conn.setDoInput(true);
       conn.setConnectTimeout((int) SECONDS.toMillis(15));
-      conn.setReadTimeout((int) SECONDS.toMillis(10));
+      conn.setReadTimeout((int) DEFAULT_RETRY_TIME_MS);
       Writer out = new OutputStreamWriter(conn.getOutputStream(), Charsets.UTF_8);
       out.write(json);
       out.flush();
@@ -276,5 +286,93 @@ public class NetworkService extends IntentService {
       if (conn != null) conn.disconnect();
     }
     return res;
+  }
+
+  // Op and RpcOp classes
+
+  /**
+   * The high-level operation for saving this installation's info to the server.
+   */
+  private static class SaveInstallationOp implements Op {
+
+    @Override public void addRpcs(NetworkService svc, Set<RpcOp<?>> rpcs) {
+      // We always add the RpcOp, and figure out whether it needs sending only
+      // when about to send it.
+      rpcs.add(svc.new SaveInstallationRpcOp());
+    }
+  }
+
+  private class SaveInstallationRpcOp implements RpcOp<InstallationRpcs.UpdateResult> {
+    private String savedJson;
+
+    @Override public InstallationRpcs.UpdateParams asRequestParams() {
+      InstallationRpcs.UpdateParams params = makeInstallationParams();
+      savedJson = GSON.toJson(params);
+      String prev = mPrefs.getInstallData();
+      if (savedJson.equals(prev))
+        return null;
+
+      try {
+        if (params.account != null) {
+          Intent intent = new Intent(NetworkService.this, NetworkService.class);
+          intent.putExtra(ADD_OP, SAVE_INSTALLATION);
+          params.account.authToken = GoogleAuthUtil.getTokenWithNotification(
+              NetworkService.this, params.account.id, SCOPE, null, intent);
+        }
+      } catch (Exception e) {
+        Log.e(TAG, "problem getting auth token", e);
+        return null;
+      }
+
+      // Clear out our notion of what's been synced with the server.
+      mPrefs.setInstallDataSync("");
+      return params;
+    }
+
+    @Override public TypeToken<Rpc.Response<InstallationRpcs.UpdateResult>> getResponseTypeToken() {
+      return SET_INSTALLATION_TOKEN;
+    }
+
+    @Override public String getMethod() {
+      return InstallationRpcs.UPDATE_METHOD;
+    }
+
+    @Override public boolean process(Rpc.Response<InstallationRpcs.UpdateResult> res) {
+      if (res.result != null) {
+        mPrefs.setInstallDataSync(savedJson);
+        if (res.result.installationName != null)
+          mPrefs.setDeviceNameAsync(res.result.installationName);
+        mPrefs.setStreamAsync(res.result.stream);
+        // Setting the stream count has to come after the stream itself:
+        mPrefs.setStreamCountAsync(res.result.streamCount);
+      }
+      return true;
+    }
+
+    @Override public boolean equals(Object o) {
+      return o instanceof SaveInstallationRpcOp;
+    }
+
+    @Override public int hashCode() {
+      return SaveInstallationRpcOp.class.hashCode();
+    }
+
+    private InstallationRpcs.UpdateParams makeInstallationParams() {
+      InstallationRpcs.UpdateParams params = new InstallationRpcs.UpdateParams();
+      params.id = Installation.id(NetworkService.this);
+      params.shareData = mPrefs.getShareData();
+      params.manufacturer = Build.MANUFACTURER;
+      params.model = Build.MODEL;
+      params.streamCount = mPrefs.getStreamCount();
+      params.stream = mPrefs.getStream();
+      params.monthNumber = mPrefs.getMonthNumber();
+      Account account = mPrefs.getUserAccount();
+      if (account != null) {
+        params.account = new InstallationRpcs.AccountInfo();
+        params.account.id = account.name;
+        params.account.installationName = mPrefs.getDeviceName();
+      }
+      return params;
+    }
   }
 }
