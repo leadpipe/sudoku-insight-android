@@ -133,7 +133,7 @@ public class Generator {
    * trivial. Changing this requires bumping the {@linkplain #BASIC_VERSION
    * version number}.
    */
-  private static final double CHANCE_OF_SYMMETRIC = 0.15;
+  private static final double CHANCE_OF_SYMMETRIC = 0.1;
 
   /**
    * The minimum measure returned by {@link Symmetry#measure} in order for the
