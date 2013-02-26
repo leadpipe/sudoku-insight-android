@@ -19,7 +19,10 @@ import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static us.blanshard.sudoku.android.Json.GSON;
 
+import us.blanshard.sudoku.game.GameJson;
+import us.blanshard.sudoku.gen.Generator;
 import us.blanshard.sudoku.messages.InstallationRpcs;
+import us.blanshard.sudoku.messages.PuzzleRpcs;
 import us.blanshard.sudoku.messages.Rpc;
 
 import android.accounts.Account;
@@ -37,6 +40,8 @@ import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.InputStreamReader;
@@ -123,8 +128,13 @@ public class NetworkService extends IntentService {
 
   private static final TypeToken<Rpc.Response<InstallationRpcs.UpdateResult>> SET_INSTALLATION_TOKEN =
       new TypeToken<Rpc.Response<InstallationRpcs.UpdateResult>>() {};
+  private static final TypeToken<Rpc.Response<PuzzleRpcs.AttemptResult>> SAVE_ATTEMPT_TOKEN =
+      new TypeToken<Rpc.Response<PuzzleRpcs.AttemptResult>>() {};
+  private static final TypeToken<Rpc.Response<PuzzleRpcs.VoteResult>> SAVE_VOTE_TOKEN =
+      new TypeToken<Rpc.Response<PuzzleRpcs.VoteResult>>() {};
 
   private Prefs mPrefs;
+  private Database mDb;
   private final Object mConnectivityLock = new Object();
   private boolean mConnected;
   private BroadcastReceiver mConnectivityMonitor;
@@ -139,6 +149,7 @@ public class NetworkService extends IntentService {
     super.onCreate();
 
     mPrefs = Prefs.instance(this);
+    mDb = Database.instance(this);
 
     // Set up our connectivity monitoring.
     IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -304,6 +315,12 @@ public class NetworkService extends IntentService {
     }
   }
 
+  /**
+   * The RPC op for saving the installation's info. All instances compare equal,
+   * to fold multiple requests to save into a single RPC. In addition, this
+   * class verifies that there is some difference between what is currently
+   * saved and the new data, before actually sending an RPC.
+   */
   private class SaveInstallationRpcOp implements RpcOp<InstallationRpcs.UpdateResult> {
     private String savedJson;
 
@@ -375,6 +392,150 @@ public class NetworkService extends IntentService {
         params.account.installationName = mPrefs.getDeviceName();
       }
       return params;
+    }
+  }
+
+  /**
+   * An Op for the startup-time task of bringing all attempts and votes up to
+   * date in the server.
+   */
+  private static class SaveAllUnsavedAttemptsAndVotesOp implements Op {
+    @Override public void addRpcs(NetworkService svc, Set<RpcOp<?>> rpcs) {
+      for (Database.Attempt attempt : svc.mDb.getUnsavedAttempts())
+        rpcs.add(svc.new SaveAttemptRpcOp(attempt));
+      for (Database.Puzzle puzzle : svc.mDb.getPuzzlesWithUnsavedVotes())
+        rpcs.add(svc.new SaveVoteRpcOp(puzzle));
+    }
+  }
+
+  /**
+   * An Op for saving a particular attempt.
+   */
+  private static class SaveAttemptOp implements Op {
+    private final Database.Attempt attempt;
+
+    public SaveAttemptOp(Database.Attempt attempt) {
+      this.attempt = attempt;
+    }
+
+    @Override public void addRpcs(NetworkService svc, Set<RpcOp<?>> rpcs) {
+      rpcs.add(svc.new SaveAttemptRpcOp(attempt));
+    }
+  }
+
+  /**
+   * An Op for saving a particular vote.
+   */
+  private static class SaveVoteOp implements Op {
+    private final Database.Puzzle puzzle;
+
+    public SaveVoteOp(Database.Puzzle puzzle) {
+      this.puzzle = puzzle;
+    }
+
+    @Override public void addRpcs(NetworkService svc, Set<RpcOp<?>> rpcs) {
+      rpcs.add(svc.new SaveVoteRpcOp(puzzle));
+    }
+  }
+
+  /**
+   * The RPC op that saves an attempt.
+   */
+  private class SaveAttemptRpcOp implements RpcOp<PuzzleRpcs.AttemptResult> {
+    private final Database.Attempt attempt;
+
+    public SaveAttemptRpcOp(Database.Attempt attempt) {
+      this.attempt = attempt;
+    }
+
+    @Override public PuzzleRpcs.AttemptParams asRequestParams() {
+      PuzzleRpcs.AttemptParams params = new PuzzleRpcs.AttemptParams();
+      params.installationId = Installation.id(getApplicationContext());
+      params.attemptId = attempt._id;
+      params.puzzle = attempt.clues.toFlatString();
+      params.puzzleId = attempt.puzzleId;
+      JsonObject props = new JsonParser().parse(attempt.properties).getAsJsonObject();
+      if (props.has(Generator.NAME_KEY))
+        params.name = props.get(Generator.NAME_KEY).getAsString();
+      if (props.has(Generator.SOURCE_KEY))
+        params.source = props.get(Generator.SOURCE_KEY).getAsString();
+      params.history = GameJson.toHistory(Json.GSON, attempt.history);
+      params.elapsedMs = attempt.elapsedMillis;
+      params.stopTime = attempt.lastTime;
+      return params;
+    }
+
+    @Override public TypeToken<Rpc.Response<PuzzleRpcs.AttemptResult>> getResponseTypeToken() {
+      return SAVE_ATTEMPT_TOKEN;
+    }
+
+    @Override public String getMethod() {
+      return PuzzleRpcs.ATTEMPT_UPDATE_METHOD;
+    }
+
+    @Override public boolean process(Rpc.Response<PuzzleRpcs.AttemptResult> res) {
+      if (res.result != null) {
+        mDb.markAttemptSaved(attempt._id, attempt.lastTime);
+      }
+      return true;
+    }
+
+    @Override public boolean equals(Object o) {
+      if (o instanceof SaveAttemptRpcOp) {
+        SaveAttemptRpcOp that = (SaveAttemptRpcOp) o;
+        return this.attempt._id == that.attempt._id;
+      }
+      return false;
+    }
+
+    @Override public int hashCode() {
+      return (int) (attempt._id * 3278521983482875L);
+    }
+  }
+
+  /**
+   * The RPC op that saves a vote.
+   */
+  private class SaveVoteRpcOp implements RpcOp<PuzzleRpcs.VoteResult> {
+    private final Database.Puzzle puzzle;
+
+    public SaveVoteRpcOp(Database.Puzzle puzzle) {
+      this.puzzle = puzzle;
+    }
+
+    @Override public PuzzleRpcs.VoteParams asRequestParams() {
+      PuzzleRpcs.VoteParams params = new PuzzleRpcs.VoteParams();
+      params.installationId = Installation.id(getApplicationContext());
+      params.puzzle = puzzle.clues.toFlatString();
+      params.vote = puzzle.vote;
+      return params;
+    }
+
+    @Override public TypeToken<Rpc.Response<PuzzleRpcs.VoteResult>> getResponseTypeToken() {
+      return SAVE_VOTE_TOKEN;
+    }
+
+    @Override public String getMethod() {
+      return PuzzleRpcs.ATTEMPT_UPDATE_METHOD;
+    }
+
+    @Override public boolean process(Rpc.Response<PuzzleRpcs.VoteResult> res) {
+      if (res.result != null) {
+        mDb.markVoteSaved(puzzle._id, puzzle.vote);
+      }
+      return true;
+    }
+
+    @Override public boolean equals(Object o) {
+      if (o instanceof SaveVoteRpcOp) {
+        SaveVoteRpcOp that = (SaveVoteRpcOp) o;
+        return this.puzzle._id == that.puzzle._id;
+      }
+      return false;
+    }
+
+    @Override public int hashCode() {
+      return (int) (puzzle._id * 8726345876234875677L);
     }
   }
 }
