@@ -491,8 +491,12 @@ public class Database {
   public List<Attempt> getUnsavedAttempts() throws SQLException {
     List<Attempt> answer = Lists.newArrayList();
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    String sql = ATTEMPT_SELECT_AND_FROM_CLAUSE + "WHERE NOT [saved] ORDER BY [lastTime] ASC";
-    Cursor cursor = db.rawQuery(sql, null);
+    String sql = ATTEMPT_SELECT_AND_FROM_CLAUSE
+        + "WHERE [attemptState] IN (?, ?) AND NOT [saved] ORDER BY [lastTime] ASC";
+    Cursor cursor = db.rawQuery(sql, new String[] {
+        Integer.toString(AttemptState.FINISHED.getNumber()),
+        Integer.toString(AttemptState.GAVE_UP.getNumber()),
+    });
     try {
       while (cursor.moveToNext()) {
         Attempt attempt = attemptFromCursor(cursor);
@@ -839,8 +843,7 @@ public class Database {
       if (oldVersion < 8)
         throw new AssertionError("Upgrades not supported, please reinstall");
       if (oldVersion < 9) {
-        // Deliberately not setting a default for voteSaved:
-        db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [voteSaved] INTEGER");
+        db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [voteSaved] INTEGER DEFAULT 1");
         db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [stats] TEXT");
         db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [statsTime] INTEGER DEFAULT 0");
         db.execSQL("ALTER TABLE [Attempt] ADD COLUMN [saved] INTEGER");
