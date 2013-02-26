@@ -209,6 +209,8 @@ public class NetworkService extends IntentService {
         continue;
       }
 
+      // Add the RPC back and wait awhile before retrying.
+      rpcOps.add(rpcOp);
       try {
         Thread.sleep(timeoutMs);
         timeoutMs = Math.min(MAX_RETRY_TIME_MS, timeoutMs * 3);
