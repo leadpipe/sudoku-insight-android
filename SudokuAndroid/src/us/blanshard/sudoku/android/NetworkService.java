@@ -132,6 +132,8 @@ public class NetworkService extends IntentService {
       new TypeToken<Rpc.Response<PuzzleRpcs.AttemptResult>>() {};
   private static final TypeToken<Rpc.Response<PuzzleRpcs.VoteResult>> SAVE_VOTE_TOKEN =
       new TypeToken<Rpc.Response<PuzzleRpcs.VoteResult>>() {};
+      private static final TypeToken<Rpc.Response<PuzzleRpcs.PuzzleResult>> PUZZLE_STATS_TOKEN =
+          new TypeToken<Rpc.Response<PuzzleRpcs.PuzzleResult>>() {};
 
   private Prefs mPrefs;
   private Database mDb;
@@ -489,7 +491,7 @@ public class NetworkService extends IntentService {
     }
 
     @Override public int hashCode() {
-      return (int) (attempt._id * 3278521983482875L);
+      return (int) attempt._id * 327852198 + 1283764;
     }
   }
 
@@ -535,7 +537,88 @@ public class NetworkService extends IntentService {
     }
 
     @Override public int hashCode() {
-      return (int) (puzzle._id * 8726345876234875677L);
+      return (int) puzzle._id * 872634587 + 2384675;
+    }
+  }
+
+  /**
+   * An Op for updating all the puzzle stats last updated before a particular
+   * point in time.
+   */
+  private static class UpdateOldStatsOp implements Op {
+    private final long cutoff;
+
+    public UpdateOldStatsOp(long cutoff) {
+      this.cutoff = cutoff;
+    }
+
+    @Override public void addRpcs(NetworkService svc, Set<RpcOp<?>> rpcs) {
+      for (Database.Puzzle puzzle : svc.mDb.getPuzzlesWithOldStats(cutoff))
+        rpcs.add(svc.new UpdateStatsRpcOp(puzzle));
+    }
+  }
+
+  /**
+   * An Op for saving a particular attempt.
+   */
+  private static class UpdateStatsOp implements Op {
+    private final Database.Puzzle puzzle;
+
+    public UpdateStatsOp(Database.Puzzle puzzle) {
+      this.puzzle = puzzle;
+    }
+
+    @Override public void addRpcs(NetworkService svc, Set<RpcOp<?>> rpcs) {
+      rpcs.add(svc.new UpdateStatsRpcOp(puzzle));
+    }
+  }
+
+  /**
+   * The RPC op that fetches the stats about a puzzle and saves them to the
+   * database.
+   */
+  private class UpdateStatsRpcOp implements RpcOp<PuzzleRpcs.PuzzleResult> {
+    private final Database.Puzzle puzzle;
+
+    public UpdateStatsRpcOp(Database.Puzzle puzzle) {
+      this.puzzle = puzzle;
+    }
+
+    @Override public PuzzleRpcs.PuzzleParams asRequestParams() {
+      PuzzleRpcs.PuzzleParams params = new PuzzleRpcs.PuzzleParams();
+      params.puzzle = puzzle.clues.toFlatString();
+      if (puzzle.stats != null) {
+        PuzzleRpcs.PuzzleResult stats = GSON.fromJson(puzzle.stats, PuzzleRpcs.PuzzleResult.class);
+        params.previousStatsTimestamp = stats.statsTimestamp;
+      }
+      return params;
+    }
+
+    @Override public TypeToken<Rpc.Response<PuzzleRpcs.PuzzleResult>> getResponseTypeToken() {
+      return PUZZLE_STATS_TOKEN;
+    }
+
+    @Override public String getMethod() {
+      return PuzzleRpcs.PUZZLE_GET_METHOD;
+    }
+
+    @Override public boolean process(Rpc.Response<PuzzleRpcs.PuzzleResult> res) {
+      if (res.result != null) {
+        mDb.setPuzzleStats(puzzle._id, GSON.toJson(res.result));
+      }
+      return true;
+    }
+
+    @Override public boolean equals(Object o) {
+      if (o instanceof UpdateStatsRpcOp) {
+        UpdateStatsRpcOp that = (UpdateStatsRpcOp) o;
+        return this.puzzle._id == that.puzzle._id;
+      }
+      return false;
+    }
+
+    @Override public int hashCode() {
+      return (int) puzzle._id * 384763457 + 348567121;
     }
   }
 }
