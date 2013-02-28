@@ -847,6 +847,10 @@ public class Database {
         db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [stats] TEXT");
         db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [statsTime] INTEGER DEFAULT 0");
         db.execSQL("ALTER TABLE [Attempt] ADD COLUMN [saved] INTEGER");
+
+        ContentValues values = new ContentValues();
+        values.put("voteSaved", 0);
+        db.update("Puzzle", values, "[vote] <> 0", null);
       }
     }
   }
