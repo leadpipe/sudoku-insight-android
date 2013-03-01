@@ -67,7 +67,7 @@ public class PuzzleListActivity extends ActivityBase
   }
 
   @Override protected String getHelpPage() {
-    return mInfoFragment == null ? "list" : "info";
+    return mInfoFragment == null ? "list" : "list-info";
   }
 
   @Override protected void onPostCreate(Bundle savedInstanceState) {
