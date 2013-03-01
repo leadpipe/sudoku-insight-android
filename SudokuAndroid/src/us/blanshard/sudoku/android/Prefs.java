@@ -100,8 +100,8 @@ public class Prefs {
       prefs.putString(USER_ID, "");
       prefs.apply();
     }
-    // Always sync installation info at startup time (if required).
-    NetworkService.saveInstallationInfo(mAppContext);
+    // Kick off all required save ops at startup time.
+    NetworkService.runStartupTimeOps(mAppContext);
   }
 
   public static synchronized Prefs instance(Context context) {

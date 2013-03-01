@@ -64,12 +64,13 @@ import javax.annotation.Nullable;
  */
 public class NetworkService extends IntentService {
 
-  public static void saveInstallationInfo(Context context) {
-    runOp(context, new SaveInstallationOp(), "Sync installation started");
+  public static void runStartupTimeOps(Context context) {
+    pendingOps.add(new SaveInstallationOp());
+    runOp(context, new SaveAllUnsavedAttemptsAndVotesOp(), "Startup time ops started");
   }
 
-  public static void saveUnsavedAttemptsAndVotes(Context context) {
-    runOp(context, new SaveAllUnsavedAttemptsAndVotesOp(), "Save all started");
+  public static void saveInstallationInfo(Context context) {
+    runOp(context, new SaveInstallationOp(), "Save installation started");
   }
 
   public static void saveAttempt(Context context, Database.Attempt attempt) {
