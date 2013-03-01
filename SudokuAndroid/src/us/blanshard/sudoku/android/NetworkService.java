@@ -65,9 +65,33 @@ import javax.annotation.Nullable;
 public class NetworkService extends IntentService {
 
   public static void syncInstallationInfo(Context context) {
-    pendingOps.add(new SaveInstallationOp());
+    runOp(context, new SaveInstallationOp(), "Sync installation started");
+  }
+
+  public static void saveUnsavedAttemptsAndVotes(Context context) {
+    runOp(context, new SaveAllUnsavedAttemptsAndVotesOp(), "Save all started");
+  }
+
+  public static void saveAttempt(Context context, Database.Attempt attempt) {
+    runOp(context, new SaveAttemptOp(attempt), "Saving attempt for " + attempt.puzzleId);
+  }
+
+  public static void saveVote(Context context, Database.Puzzle puzzle) {
+    runOp(context, new SaveVoteOp(puzzle), "Saving vote for " + puzzle._id);
+  }
+
+  public static void updateOldStats(Context context, long cutoff) {
+    runOp(context, new UpdateOldStatsOp(cutoff), "Updating old stats");
+  }
+
+  public static void updateStats(Context context, Database.Puzzle puzzle) {
+    runOp(context, new UpdateStatsOp(puzzle), "Updating stats for " + puzzle._id);
+  }
+
+  private static void runOp(Context context, Op op, String desc) {
+    pendingOps.add(op);
     context.startService(new Intent(context, NetworkService.class));
-    Log.d(TAG, "Sync installation started");
+    Log.d(TAG, desc);
   }
 
   /**
