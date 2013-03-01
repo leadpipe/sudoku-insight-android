@@ -80,13 +80,13 @@ public class Prefs {
     mPrefsListener = new OnSharedPreferenceChangeListener() {
       @Override public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         mBackupManager.dataChanged();
-        NetworkService.syncInstallationInfo(mAppContext);
+        NetworkService.saveInstallationInfo(mAppContext);
       }
     };
     mPrefs.registerOnSharedPreferenceChangeListener(mPrefsListener);
     mLocalPrefsListener = new OnSharedPreferenceChangeListener() {
       @Override public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        NetworkService.syncInstallationInfo(mAppContext);
+        NetworkService.saveInstallationInfo(mAppContext);
       }
     };
     mLocalPrefs.registerOnSharedPreferenceChangeListener(mLocalPrefsListener);
@@ -101,7 +101,7 @@ public class Prefs {
       prefs.apply();
     }
     // Always sync installation info at startup time (if required).
-    NetworkService.syncInstallationInfo(mAppContext);
+    NetworkService.saveInstallationInfo(mAppContext);
   }
 
   public static synchronized Prefs instance(Context context) {

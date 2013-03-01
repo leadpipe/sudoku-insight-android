@@ -64,7 +64,7 @@ import javax.annotation.Nullable;
  */
 public class NetworkService extends IntentService {
 
-  public static void syncInstallationInfo(Context context) {
+  public static void saveInstallationInfo(Context context) {
     runOp(context, new SaveInstallationOp(), "Sync installation started");
   }
 
