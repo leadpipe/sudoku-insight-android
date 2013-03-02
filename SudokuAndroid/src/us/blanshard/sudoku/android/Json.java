@@ -18,8 +18,11 @@ package us.blanshard.sudoku.android;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.messages.Rpc;
 
+import com.google.common.base.Function;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import java.lang.reflect.Type;
 
 /**
  * @author Luke Blanshard
@@ -27,6 +30,17 @@ import com.google.gson.GsonBuilder;
 public class Json {
   /** An instance with all of our type adapters registered. */
   public static final Gson GSON = GameJson.register(
-      Rpc.register(new GsonBuilder(), null))
-      .create();
+      Rpc.register(new GsonBuilder(), null, new Function<Integer, Type>() {
+        @Override public Type apply(Integer id) {
+          return idToTypeSlot.get().apply(id);
+        }
+      })
+      ).create();
+
+  private static final ThreadLocal<Function<Integer, Type>> idToTypeSlot =
+      new ThreadLocal<Function<Integer,Type>>();
+
+  static void setIdToType(Function<Integer, Type> idToType) {
+    idToTypeSlot.set(idToType);
+  }
 }

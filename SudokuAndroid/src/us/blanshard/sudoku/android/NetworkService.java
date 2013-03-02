@@ -24,6 +24,7 @@ import us.blanshard.sudoku.gen.Generator;
 import us.blanshard.sudoku.messages.InstallationRpcs;
 import us.blanshard.sudoku.messages.PuzzleRpcs;
 import us.blanshard.sudoku.messages.Rpc;
+import us.blanshard.sudoku.messages.Rpc.Response;
 
 import android.accounts.Account;
 import android.app.IntentService;
@@ -38,18 +39,27 @@ import android.util.Log;
 
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -128,6 +138,12 @@ public class NetworkService extends IntentService {
     String getMethod();
 
     /**
+     * Returns a cost for this RPC, approximating the relative time required
+     * to service it.
+     */
+    int getCost();
+
+    /**
      * Processes the given response from the server. Returns true if the RPC is
      * complete (whether successful or not), false if it should be retried.
      */
@@ -157,8 +173,13 @@ public class NetworkService extends IntentService {
       new TypeToken<Rpc.Response<PuzzleRpcs.AttemptResult>>() {};
   private static final TypeToken<Rpc.Response<PuzzleRpcs.VoteResult>> SAVE_VOTE_TOKEN =
       new TypeToken<Rpc.Response<PuzzleRpcs.VoteResult>>() {};
-      private static final TypeToken<Rpc.Response<PuzzleRpcs.PuzzleResult>> PUZZLE_STATS_TOKEN =
-          new TypeToken<Rpc.Response<PuzzleRpcs.PuzzleResult>>() {};
+  private static final TypeToken<Rpc.Response<PuzzleRpcs.PuzzleResult>> PUZZLE_STATS_TOKEN =
+      new TypeToken<Rpc.Response<PuzzleRpcs.PuzzleResult>>() {};
+  private static final TypeToken<List<Rpc.Response<Object>>> BATCH_RESULT_TOKEN =
+      new TypeToken<List<Rpc.Response<Object>>>() {};
+  private static final int WRITE_COST = 10;
+  private static final int READ_COST = 1;
+  private static final int MAX_COST = 200;
 
   private Prefs mPrefs;
   private Database mDb;
@@ -221,34 +242,76 @@ public class NetworkService extends IntentService {
     }
   }
 
+  private static class RpcCall<T> {
+    RpcOp<T> op;
+    Rpc.Request request;
+    Rpc.Response<T> response;
+
+    RpcCall(RpcOp<T> op, Object params) {
+      this.op = op;
+      this.request = new Rpc.Request();
+      this.request.method = op.getMethod();
+      this.request.params = params;
+      this.request.id = sId.incrementAndGet();
+    }
+
+    static <T> RpcCall<T> create(RpcOp<T> op, Object params) {
+      return new RpcCall<T>(op, params);
+    }
+
+    @SuppressWarnings("unchecked")
+    void setResponse(Response<?> response) {
+      this.response = (Response<T>) response;
+    }
+
+    boolean processResponse() {
+      return response != null && op.process(response);
+    }
+  }
+
   private void processOps() {
     long timeoutMs = DEFAULT_RETRY_TIME_MS;
-    Set<RpcOp<?>> rpcOps = Sets.newLinkedHashSet();
+    Set<RpcOp<?>> pendingRpcOps = Sets.newLinkedHashSet();
 
-    while (!pendingOps.isEmpty() || !rpcOps.isEmpty()) {
+    while (!pendingOps.isEmpty() || !pendingRpcOps.isEmpty()) {
       if (!waitUntilConnected())
         break;
 
       for (Op op; (op = pendingOps.poll()) != null; )
-        op.addRpcs(this, rpcOps);
+        op.addRpcs(this, pendingRpcOps);
 
-      if (rpcOps.isEmpty())
+      List<Rpc.Request> batch = Lists.newArrayList();
+      Map<Integer, RpcCall<?>> calls = Maps.newLinkedHashMap();
+      int cost = 0;
+
+      for (Iterator<RpcOp<?>> it = pendingRpcOps.iterator(); it.hasNext(); ) {
+        RpcOp<?> rpcOp = it.next();
+        if (cost + rpcOp.getCost() > MAX_COST)
+          break;
+        it.remove();
+
+        Object params = rpcOp.asRequestParams();
+        if (params == null)
+          continue;
+
+        cost += rpcOp.getCost();
+        RpcCall<?> call = RpcCall.create(rpcOp, params);
+        batch.add(call.request);
+        calls.put(call.request.id, call);
+      }
+
+      if (batch.isEmpty())
         break;
 
-      RpcOp<?> rpcOp = rpcOps.iterator().next();
-      rpcOps.remove(rpcOp);
+      Log.d(TAG, "Sending " + batch.size() + " RPCs with cost " + cost);
 
-      Object params = rpcOp.asRequestParams();
-      if (params == null)
-        continue;
-
-      if (processRpc(rpcOp, params)) {
+      if (processBatch(batch, calls, pendingRpcOps)) {
         timeoutMs = DEFAULT_RETRY_TIME_MS;
         continue;
       }
 
-      // Add the RPC back and wait awhile before retrying.
-      rpcOps.add(rpcOp);
+      // The RPCs that can be retried have been put back into the pending set.
+      // Sleep awhile and try again.
       try {
         Thread.sleep(timeoutMs);
         timeoutMs = Math.min(MAX_RETRY_TIME_MS, timeoutMs * 3);
@@ -271,22 +334,40 @@ public class NetworkService extends IntentService {
     return true;
   }
 
-  private <T> boolean processRpc(RpcOp<T> rpcOp, Object params) {
-    Rpc.Response<T> response = sendRpc(rpcOp.getMethod(), params, rpcOp.getResponseTypeToken());
-    if (response == null)
-      return false;
-    return rpcOp.process(response);
+  /**
+   * Sends a batch RPC, processes their results. Returns true if all the calls
+   * are complete, false if some of them should be retried. In the false case,
+   * also puts the retriable ones back into the {@code pendingRpcOps} set.
+   *
+   * @param batch the requests to send
+   * @param calls mapping from request ID to call
+   * @param pendingRpcOps the set of RPC ops still left to send
+   * @return true if none need retrying
+   */
+  private boolean processBatch(List<Rpc.Request> batch, Map<Integer, RpcCall<?>> calls,
+      Set<RpcOp<?>> pendingRpcOps) {
+    sendBatch(batch, calls);
+    boolean answer = true;
+    for (RpcCall<?> call : calls.values()) {
+      if (call.processResponse()) {
+        if (call.response.error == null)
+          Log.d(TAG, "Processed RPC " + call.request.method);
+        else
+          Log.w(TAG, "Processed failed RPC " + call.request.method + ", error "
+              + GSON.toJson(call.response.error));
+      } else {
+        Log.w(TAG, "Unable to process RPC " + call.request.method + ", will retry");
+        pendingRpcOps.add(call.op);
+        answer = false;
+      }
+    }
+    return answer;
   }
 
-  private <T> Rpc.Response<T> sendRpc(String method, Object params, TypeToken<Rpc.Response<T>> token) {
-    Rpc.Request req = new Rpc.Request();
-    req.method = method;
-    req.params = params;
-    req.id = sId.incrementAndGet();
-
-    String json = GSON.toJson(req);
+  private void sendBatch(List<Rpc.Request> batch, final Map<Integer, RpcCall<?>> calls) {
+    String json = GSON.toJson(batch);
+    Rpc.Response<Object> singleReponse = null;
     HttpURLConnection conn = null;
-    Rpc.Response<T> res = null;
     try {
       URL url = new URL(RPC_URL);
       conn = (HttpURLConnection) url.openConnection();
@@ -302,20 +383,43 @@ public class NetworkService extends IntentService {
       conn.getHeaderFields();  // Waits for the response
       if (url.getHost().equals(conn.getURL().getHost())) {
         if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-          Reader in = new InputStreamReader(conn.getInputStream(), Charsets.UTF_8);
-          res = GSON.fromJson(in, token.getType());
-          if (!req.id.equals(res.id))
-            Log.d(TAG, "RPC completed with wrong req ID: " + res.id + ", s/b " + req.id);
+          Reader reader = new InputStreamReader(conn.getInputStream(), Charsets.UTF_8);
+          JsonReader in = new JsonReader(reader);
+          if (in.peek() == JsonToken.BEGIN_ARRAY) {
+            Json.setIdToType(new Function<Integer, Type>() {
+              @Override public Type apply(@Nullable Integer input) {
+                return calls.get(input).op.getResponseTypeToken().getType();
+              }
+            });
+            try {
+              List<Rpc.Response<?>> responses = GSON.fromJson(in, BATCH_RESULT_TOKEN.getType());
+              for (Rpc.Response<?> res : responses) {
+                RpcCall<?> call = calls.get(res.id);
+                if (call == null) {
+                  Log.w(TAG, "Mismatched ID in batch response: " + res.id);
+                } else {
+                  call.setResponse(res);
+                }
+              }
+            } finally {
+              Json.setIdToType(null);
+            }
+          } else {
+            // Probably just a single error, something bad happened.
+            singleReponse = GSON.fromJson(in, Rpc.Response.class);
+            if (singleReponse.error == null)
+              singleReponse.error = Rpc.error(0, "unknown", null);
+            Log.d(TAG, "RPC batch returned single response: " + GSON.toJson(singleReponse));
+          }
         } else {
           // Unexpected error from the server. Make a response object, so we
           // don't retry.
-          res = new Rpc.Response<T>();
-          res.error = Rpc.error(conn.getResponseCode(), conn.getResponseMessage(), null);
+          singleReponse = new Rpc.Response<Object>();
+          singleReponse.error = Rpc.error(conn.getResponseCode(), conn.getResponseMessage(), null);
         }
-        if (res.result == null) {
-          Log.w(TAG, "RPC " + method + " failed: " + GSON.toJson(res.error));
-        } else {
-          Log.d(TAG, "RPC " + method + " succeeded");
+        if (singleReponse != null) {
+          for (RpcCall<?> call : calls.values())
+            call.setResponse(singleReponse);
         }
       } else {
         // Whoops, we were redirected unexpectedly. Possibly there's a
@@ -323,11 +427,14 @@ public class NetworkService extends IntentService {
         Log.e(TAG, "redirected trying to send RPC: " + conn.getURL());
       }
     } catch (Exception e) {
-      Log.e(TAG, "send RPC", e);
+      Log.e(TAG, "send RPC batch", e);
     } finally {
       if (conn != null) conn.disconnect();
     }
-    return res;
+  }
+
+  private static boolean shouldRetry(Rpc.Error error) {
+    return error != null && error.code == Rpc.RETRIABLE_ERROR;
   }
 
   // Op and RpcOp classes
@@ -385,6 +492,10 @@ public class NetworkService extends IntentService {
       return InstallationRpcs.UPDATE_METHOD;
     }
 
+    @Override public int getCost() {
+      return WRITE_COST;
+    }
+
     @Override public boolean process(Rpc.Response<InstallationRpcs.UpdateResult> res) {
       if (res.result != null) {
         mPrefs.setInstallDataSync(savedJson);
@@ -394,7 +505,7 @@ public class NetworkService extends IntentService {
         // Setting the stream count has to come after the stream itself:
         mPrefs.setStreamCountAsync(res.result.streamCount);
       }
-      return true;
+      return !shouldRetry(res.error);
     }
 
     @Override public boolean equals(Object o) {
@@ -502,11 +613,15 @@ public class NetworkService extends IntentService {
       return PuzzleRpcs.ATTEMPT_UPDATE_METHOD;
     }
 
+    @Override public int getCost() {
+      return WRITE_COST;
+    }
+
     @Override public boolean process(Rpc.Response<PuzzleRpcs.AttemptResult> res) {
       if (res.result != null) {
         mDb.markAttemptSaved(attempt._id, attempt.lastTime);
       }
-      return true;
+      return !shouldRetry(res.error);
     }
 
     @Override public boolean equals(Object o) {
@@ -548,11 +663,15 @@ public class NetworkService extends IntentService {
       return PuzzleRpcs.VOTE_UPDATE_METHOD;
     }
 
+    @Override public int getCost() {
+      return WRITE_COST;
+    }
+
     @Override public boolean process(Rpc.Response<PuzzleRpcs.VoteResult> res) {
       if (res.result != null) {
         mDb.markVoteSaved(puzzle._id, puzzle.vote);
       }
-      return true;
+      return !shouldRetry(res.error);
     }
 
     @Override public boolean equals(Object o) {
@@ -629,11 +748,18 @@ public class NetworkService extends IntentService {
       return PuzzleRpcs.PUZZLE_GET_METHOD;
     }
 
+    @Override public int getCost() {
+      return READ_COST;
+    }
+
     @Override public boolean process(Rpc.Response<PuzzleRpcs.PuzzleResult> res) {
       if (res.result != null) {
         mDb.setPuzzleStats(puzzle._id, GSON.toJson(res.result));
+      } else if (res.error.code == Rpc.OBJECT_UNCHANGED) {
+        // Just update the timestamp.
+        mDb.setPuzzleStats(puzzle._id, puzzle.stats);
       }
-      return true;
+      return !shouldRetry(res.error);
     }
 
     @Override public boolean equals(Object o) {
