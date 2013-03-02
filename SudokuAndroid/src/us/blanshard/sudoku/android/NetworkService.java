@@ -314,6 +314,8 @@ public class NetworkService extends IntentService {
         }
         if (res.result == null) {
           Log.w(TAG, "RPC " + method + " failed: " + GSON.toJson(res.error));
+        } else {
+          Log.d(TAG, "RPC " + method + " succeeded");
         }
       } else {
         // Whoops, we were redirected unexpectedly. Possibly there's a
