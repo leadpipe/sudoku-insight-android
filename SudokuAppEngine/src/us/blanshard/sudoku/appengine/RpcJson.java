@@ -44,7 +44,7 @@ public class RpcJson {
       @Override @Nullable public Type apply(@Nullable String method) {
         return METHODS.get(method).getParamsTypeToken().getType();
       }
-    });
+    }, null);
     GSON = builder.create();
   }
 

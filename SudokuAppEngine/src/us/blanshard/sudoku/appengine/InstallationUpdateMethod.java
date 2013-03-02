@@ -147,7 +147,7 @@ public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResu
       }
 
       ds.put(tx, entity);
-      tx.commit();
+      Transactions.commit(tx);
     } finally {
       if (tx.isActive()) tx.rollback();
     }
@@ -323,7 +323,7 @@ public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResu
     }
   }
 
-  private int getConfigStreamCount(DatastoreService ds) {
+  private int getConfigStreamCount(DatastoreService ds) throws MethodException {
     Key configKey = KeyFactory.createKey(Schema.Config.KIND, Schema.Config.ID);
     Entity config;
     try {
@@ -334,7 +334,7 @@ public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResu
       Transaction tx = ds.beginTransaction();
       try {
         ds.put(tx, config);
-        tx.commit();
+        Transactions.commit(tx);
       } finally {
         if (tx.isActive()) tx.rollback();
       }

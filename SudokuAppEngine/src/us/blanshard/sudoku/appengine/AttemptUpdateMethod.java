@@ -15,10 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.appengine;
 
-import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.logging.Level.SEVERE;
-
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.gen.Generator;
@@ -35,10 +31,6 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Text;
 import com.google.appengine.api.datastore.Transaction;
-import com.google.appengine.api.taskqueue.Queue;
-import com.google.appengine.api.taskqueue.QueueFactory;
-import com.google.appengine.api.taskqueue.TaskAlreadyExistsException;
-import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
@@ -57,9 +49,6 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
 
   private static final TypeToken<AttemptParams> TOKEN = new TypeToken<AttemptParams>() {};
   private static final Logger logger = Logger.getLogger(AttemptUpdateMethod.class.getName());
-
-  private static final long PRIMARY_STATS_TASK_COUNTDOWN = SECONDS.toMillis(30);
-  private static final long BACKUP_STATS_TASK_COUNTDOWN = HOURS.toMillis(1);
 
   public AttemptUpdateMethod() {
     super(TOKEN);
@@ -103,7 +92,7 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
    * first attempt.
    */
   private boolean saveAttempt(DatastoreService ds, String puzzleString, AttemptParams params,
-      boolean won, int numTrails) {
+      boolean won, int numTrails) throws MethodException {
     boolean wasFirst = false;
     Transaction tx = ds.beginTransaction();
     try {
@@ -161,10 +150,10 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
       }
 
       ds.put(tx, instPuzzle);
-      tx.commit();
+      Transactions.commit(tx);
 
       if (wasFirst)
-        queuePuzzleStatsTask(puzzleString);
+        TaskQueuer.queuePuzzleStatsTask(puzzleString);
     } finally {
       if (tx.isActive()) tx.rollback();
     }
@@ -177,30 +166,5 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
   private boolean isSameAttempt(EmbeddedEntity a, EmbeddedEntity b) {
     return Objects.equal(
         a.getProperty(Schema.Attempt.ATTEMPT_ID), b.getProperty(Schema.Attempt.ATTEMPT_ID));
-  }
-
-  static void queuePuzzleStatsTask(String puzzle) {
-    Queue queue = QueueFactory.getDefaultQueue();
-    PuzzleStatsTask task = new PuzzleStatsTask(puzzle);
-    try {
-      queue.add(TaskOptions.Builder
-          .withCountdownMillis(PRIMARY_STATS_TASK_COUNTDOWN)
-          .payload(task)
-          .taskName(task.getTaskName()));
-      queue.deleteTask(task.getBackupTaskName());
-    } catch (TaskAlreadyExistsException e) {
-      logger.info("puzzle stats task already exists for " + puzzle);
-      try {
-        queue.add(TaskOptions.Builder
-            .withCountdownMillis(BACKUP_STATS_TASK_COUNTDOWN)
-            .payload(task)
-            .taskName(task.getBackupTaskName()));
-      } catch (TaskAlreadyExistsException ignored) {
-      } catch (Exception e2) {
-        logger.log(SEVERE, "Unable to queue backup stats task for " + puzzle, e2);
-      }
-    } catch (Exception e) {
-      logger.log(SEVERE, "Unable to queue puzzle stats task for " + puzzle, e);
-    }
   }
 }

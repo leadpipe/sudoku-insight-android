@@ -58,11 +58,11 @@ public class VoteUpdateMethod extends RpcMethod<VoteParams, VoteResult> {
         instPuzzle.setUnindexedProperty(Schema.InstallationPuzzle.VOTE, params.vote);
 
       ds.put(tx, instPuzzle);
-      tx.commit();
+      Transactions.commit(tx);
     } finally {
       if (tx.isActive()) tx.rollback();
     }
-    AttemptUpdateMethod.queuePuzzleStatsTask(params.puzzle);
+    TaskQueuer.queuePuzzleStatsTask(params.puzzle);
     return new VoteResult();
   }
 }
