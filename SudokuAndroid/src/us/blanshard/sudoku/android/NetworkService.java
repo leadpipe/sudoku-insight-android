@@ -545,7 +545,7 @@ public class NetworkService extends IntentService {
     }
 
     @Override public String getMethod() {
-      return PuzzleRpcs.ATTEMPT_UPDATE_METHOD;
+      return PuzzleRpcs.VOTE_UPDATE_METHOD;
     }
 
     @Override public boolean process(Rpc.Response<PuzzleRpcs.VoteResult> res) {

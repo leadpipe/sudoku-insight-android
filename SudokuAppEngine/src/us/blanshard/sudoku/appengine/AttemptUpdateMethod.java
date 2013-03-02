@@ -179,7 +179,7 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
         a.getProperty(Schema.Attempt.ATTEMPT_ID), b.getProperty(Schema.Attempt.ATTEMPT_ID));
   }
 
-  private void queuePuzzleStatsTask(String puzzle) {
+  static void queuePuzzleStatsTask(String puzzle) {
     Queue queue = QueueFactory.getDefaultQueue();
     PuzzleStatsTask task = new PuzzleStatsTask(puzzle);
     try {

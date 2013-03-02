@@ -43,25 +43,26 @@ public class VoteUpdateMethod extends RpcMethod<VoteParams, VoteResult> {
     DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
     Transaction tx = ds.beginTransaction();
     try {
-      Entity attempts;
+      Entity instPuzzle;
       Key installationKey = KeyFactory.createKey(Schema.Installation.KIND, params.installationId);
       Key key = installationKey.getChild(Schema.InstallationPuzzle.KIND, params.puzzle);
       try {
-        attempts = ds.get(key);
+        instPuzzle = ds.get(key);
       } catch (EntityNotFoundException e) {
         throw new MethodException(e, Rpc.invalidParams(params));
       }
 
       if (params.vote == 0)
-        attempts.removeProperty(Schema.InstallationPuzzle.VOTE);
+        instPuzzle.removeProperty(Schema.InstallationPuzzle.VOTE);
       else
-        attempts.setUnindexedProperty(Schema.InstallationPuzzle.VOTE, params.vote);
+        instPuzzle.setUnindexedProperty(Schema.InstallationPuzzle.VOTE, params.vote);
 
-      ds.put(tx, attempts);
+      ds.put(tx, instPuzzle);
       tx.commit();
     } finally {
       if (tx.isActive()) tx.rollback();
     }
+    AttemptUpdateMethod.queuePuzzleStatsTask(params.puzzle);
     return new VoteResult();
   }
 }
