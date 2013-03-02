@@ -27,6 +27,32 @@ END
     - find and fix the bug; but also harden the fragment against future similar
       bugs, by _not_ updating the DB when it gets a complete attempt
     - no idea, but did try to make sure the fragment doesn't write these back to the db
+*** DONE Crasher on capture startup
+03-02 11:42:35.771: E/AndroidRuntime(4806): FATAL EXCEPTION: main
+03-02 11:42:35.771: E/AndroidRuntime(4806): android.view.WindowManager$BadTokenException: Unable to add window -- token null is not valid; is your activity running?
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.view.ViewRootImpl.setView(ViewRootImpl.java:513)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.view.WindowManagerImpl.addView(WindowManagerImpl.java:301)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.view.WindowManagerImpl.addView(WindowManagerImpl.java:215)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.view.WindowManagerImpl$CompatModeWrapper.addView(WindowManagerImpl.java:140)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.view.Window$LocalWindowManager.addView(Window.java:537)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.widget.PopupWindow.invokePopup(PopupWindow.java:988)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.widget.PopupWindow.showAsDropDown(PopupWindow.java:897)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.widget.ListPopupWindow.show(ListPopupWindow.java:595)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.widget.AutoCompleteTextView.showDropDown(AutoCompleteTextView.java:1062)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at us.blanshard.sudoku.android.CapturePuzzleActivity$FetchAutocompletes.onPostExecute(CapturePuzzleActivity.java:181)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at us.blanshard.sudoku.android.CapturePuzzleActivity$FetchAutocompletes.onPostExecute(CapturePuzzleActivity.java:1)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at us.blanshard.sudoku.android.WorkerFragment$BaseTask$1$1.run(WorkerFragment.java:102)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at us.blanshard.sudoku.android.WorkerFragment$BaseTask$Foreground.runInForeground(WorkerFragment.java:201)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at us.blanshard.sudoku.android.WorkerFragment$1.handleMessage(WorkerFragment.java:319)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.os.Looper.loop(Looper.java:137)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.app.ActivityThread.main(ActivityThread.java:4424)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at java.lang.reflect.Method.invokeNative(Native Method)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at java.lang.reflect.Method.invoke(Method.java:511)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:784)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:551)
+03-02 11:42:35.771: E/AndroidRuntime(4806): 	at dalvik.system.NativeStart.main(Native Method)
+
 *** TODO Change behavior of capture when we already have the puzzle
     - Include a link to the puzzle details
 *** TODO Finish help content
@@ -44,7 +70,7 @@ END
     - need to trigger login if an account is selected
 *** TODO Add pref for whether to sync from other devices
     - dependent on selecting an account
-*** TODO Update NetworkService to handle saving of attempts & votes, fetching of stats
+*** DONE Update NetworkService to handle saving of attempts & votes, fetching of stats
     - static collection of operations
       - save installation info
       - save all unsaved attempts & votes

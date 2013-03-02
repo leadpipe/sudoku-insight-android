@@ -86,6 +86,9 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
     mSudokuView.setDefaultChoice(Numeral.of(1));
     mSudokuView.setEditable(editable);
     updateState();
+  }
+
+  @Override public void onAttachedToWindow() {
     new FetchAutocompletes(this).execute();
   }
 
