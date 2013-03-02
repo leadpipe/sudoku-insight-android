@@ -132,8 +132,8 @@ END
 * App engine app
 
 ** Missing pieces
-*** TODO Implement batch RPC
-*** TODO Have a config object containing, eg, num streams?
+*** DONE Implement batch RPC
+*** DONE Have a config object containing, eg, num streams?
 
 ** Protocols
 

@@ -107,7 +107,7 @@ public class Rpc {
     public abstract Error toError();
   }
 
-  private static class InvalidRequestException extends ProblemException {
+  public static class InvalidRequestException extends ProblemException {
     private static final long serialVersionUID = 1L;
 
     public InvalidRequestException(String message) {
