@@ -65,7 +65,7 @@ public class WebViewEx extends WebView
                 init(context);
         }
 
-        @SuppressWarnings("deprecation")
+        //@SuppressWarnings("deprecation")
         public WebViewEx(Context context, AttributeSet attrs, int defStyle, boolean privateBrowsing)
         {
                 super(context, attrs, defStyle, privateBrowsing);
@@ -165,6 +165,6 @@ public class WebViewEx extends WebView
 
         public static String getDefaultCacheRootPath(Context context)
         {
-                return "/data/data/" + context.getPackageName() + "/webviewfix/";
+                return context.getFilesDir().getPath() + context.getPackageName() + "/webviewfix/";
         }
 }
