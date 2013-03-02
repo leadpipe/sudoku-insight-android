@@ -20,7 +20,7 @@ limitations under the License.
     >
 
     <uses-sdk
-        android:minSdkVersion="15"
+        android:minSdkVersion="14"
         android:targetSdkVersion="17"
         />
 
