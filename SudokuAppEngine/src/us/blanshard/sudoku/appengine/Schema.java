@@ -54,8 +54,8 @@ public class Schema {
    * puzzle that have occurred in that installation. Its key is the puzzle
    * string, and it is also indexed on the puzzle string.
    */
-  public static class Attempts {
-    public static final String KIND = "Attempts";
+  public static class InstallationPuzzle {
+    public static final String KIND = "InstallationPuzzle";
 
     public static final String FIRST_ATTEMPT = "firstAttempt";
     public static final String LATER_ATTEMPTS = "laterAttempts";

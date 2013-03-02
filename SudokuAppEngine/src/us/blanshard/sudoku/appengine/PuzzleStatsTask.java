@@ -19,25 +19,35 @@ import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.EmbeddedEntity;
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.taskqueue.DeferredTask;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Multisets;
+import com.google.common.collect.Sets;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
-import java.util.logging.Level;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
  * A deferred task to summarize the (first) attempts to solve a puzzle.
  */
 public class PuzzleStatsTask implements DeferredTask {
+  /**
+   *
+   */
+  private static final int MAX_SOURCES = 10;
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(PuzzleStatsTask.class.getName());
 
@@ -75,6 +85,10 @@ public class PuzzleStatsTask implements DeferredTask {
   @Override public void run() {
     DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
 
+    String name = null;
+    Set<String> otherNames = Sets.newHashSet();
+    Multiset<String> sources = HashMultiset.create();
+
     DescriptiveStatistics elapsed1 = new DescriptiveStatistics();
     DescriptiveStatistics moves1 = new DescriptiveStatistics();
     DescriptiveStatistics trails1 = new DescriptiveStatistics();
@@ -86,14 +100,24 @@ public class PuzzleStatsTask implements DeferredTask {
     int numDownVotes = 0;
     int numUpVotes = 0;
 
-    Query query = new Query(Schema.Attempts.KIND)
-        .setFilter(FilterOperator.EQUAL.of(Schema.Attempts.PUZZLE, puzzle));
-    for (Entity attempts : ds.prepare(query).asIterable()) {
-      EmbeddedEntity attempt = (EmbeddedEntity) attempts.getProperty(Schema.Attempts.FIRST_ATTEMPT);
+    Query query = new Query(Schema.InstallationPuzzle.KIND)
+        .setFilter(FilterOperator.EQUAL.of(Schema.InstallationPuzzle.PUZZLE, puzzle));
+    for (Entity instPuzzle : ds.prepare(query).asIterable()) {
+      if (instPuzzle.hasProperty(Schema.InstallationPuzzle.NAME)) {
+        String newName = (String) instPuzzle.getProperty(Schema.InstallationPuzzle.NAME);
+        if (name == null) name = newName;
+        else if (!name.equals(newName) && otherNames.add(newName)) {
+          // Don't really expect to ever see this, but it could happen.
+          logger.warning("Duplicate names found: " + name + " and " + newName);
+        }
+      }
+      if (instPuzzle.hasProperty(Schema.InstallationPuzzle.SOURCE))
+        sources.add((String) instPuzzle.getProperty(Schema.InstallationPuzzle.SOURCE));
+      EmbeddedEntity attempt = (EmbeddedEntity) instPuzzle.getProperty(Schema.InstallationPuzzle.FIRST_ATTEMPT);
       ++numAttempts;
       if ((Boolean) attempt.getProperty(Schema.Attempt.WON)) {
-        if (attempts.hasProperty(Schema.Attempts.VOTE)) {
-          int vote = ((Number) attempts.getProperty(Schema.Attempts.VOTE)).intValue();
+        if (instPuzzle.hasProperty(Schema.InstallationPuzzle.VOTE)) {
+          int vote = ((Number) instPuzzle.getProperty(Schema.InstallationPuzzle.VOTE)).intValue();
           if (vote < 0) ++numDownVotes;
           else if (vote > 0) ++numUpVotes;
         }
@@ -118,15 +142,25 @@ public class PuzzleStatsTask implements DeferredTask {
       }
     }
 
-    Entity entity;
     Key key = KeyFactory.createKey(Schema.Puzzle.KIND, puzzle);
+    Entity entity = new Entity(key);
     Transaction tx = ds.beginTransaction();
     try {
-      try {
-        entity = ds.get(key);
-      } catch (EntityNotFoundException e) {
-        logger.log(Level.SEVERE, "Puzzle entity missing: " + puzzle, e);
-        return;  // Throwing would be bad, because it would re-queue the task.
+      if (name != null)
+        entity.setUnindexedProperty(Schema.Puzzle.NAME, name);
+
+      if (!sources.isEmpty()) {
+        if (sources.elementSet().size() > MAX_SOURCES) {
+          sources = Multisets.copyHighestCountFirst(sources);
+        }
+        List<String> savedSources = Lists.newArrayList();
+        for (String s : sources.elementSet()) {
+          savedSources.add(s);
+          if (savedSources.size() >= MAX_SOURCES)
+            break;
+        }
+        Collections.sort(savedSources, String.CASE_INSENSITIVE_ORDER);
+        entity.setUnindexedProperty(Schema.Puzzle.SOURCES, savedSources);
       }
 
       entity.setUnindexedProperty(Schema.Puzzle.STATS_TIMESTAMP, System.currentTimeMillis());

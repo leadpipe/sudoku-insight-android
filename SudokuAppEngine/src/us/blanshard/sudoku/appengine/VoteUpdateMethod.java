@@ -45,7 +45,7 @@ public class VoteUpdateMethod extends RpcMethod<VoteParams, VoteResult> {
     try {
       Entity attempts;
       Key installationKey = KeyFactory.createKey(Schema.Installation.KIND, params.installationId);
-      Key key = installationKey.getChild(Schema.Attempts.KIND, params.puzzle);
+      Key key = installationKey.getChild(Schema.InstallationPuzzle.KIND, params.puzzle);
       try {
         attempts = ds.get(key);
       } catch (EntityNotFoundException e) {
@@ -53,9 +53,9 @@ public class VoteUpdateMethod extends RpcMethod<VoteParams, VoteResult> {
       }
 
       if (params.vote == 0)
-        attempts.removeProperty(Schema.Attempts.VOTE);
+        attempts.removeProperty(Schema.InstallationPuzzle.VOTE);
       else
-        attempts.setUnindexedProperty(Schema.Attempts.VOTE, params.vote);
+        attempts.setUnindexedProperty(Schema.InstallationPuzzle.VOTE, params.vote);
 
       ds.put(tx, attempts);
       tx.commit();
