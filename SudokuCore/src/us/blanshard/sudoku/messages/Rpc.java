@@ -68,6 +68,7 @@ public class Rpc {
   public static final int AUTH_VERIFICATION_FAILED = -32000;
   public static final int OBJECT_NOT_FOUND = -32001;
   public static final int OBJECT_UNCHANGED = -32002;
+  public static final int RETRIABLE_ERROR = -32003;
 
   public static Error error(int code, String message, @Nullable Object data) {
     Error answer = new Error();
@@ -156,82 +157,170 @@ public class Rpc {
   }
 
   /**
-   * Registers type adapters in the given builder so that {@link Request}
-   * objects can be serialized and deserialized in a symmetric way. The
-   * deserializer requires the "method" field of the request to come before the
-   * "params" field, which requirement is not strictly conformant with JSON. The
-   * serializer ensures that they are in that order.
+   * Registers type adapters in the given builder so that {@link Request} and
+   * {@link Response} objects can be serialized and deserialized in a symmetric
+   * way.
+   *
+   * <p>
+   * The request deserializer requires the "method" field of the request to come
+   * before the "params" field, which requirement is not strictly conformant
+   * with JSON. The serializer ensures that they are in that order.
+   *
+   * <p>
+   * Likewise, the response's "id" field must come before the "result" field.
    */
   public static GsonBuilder register(
-      GsonBuilder builder, final Function<String, Type> methodToParamsType) {
+      GsonBuilder builder, final Function<String, Type> methodToParamsType,
+      final Function<Integer, Type> idToResultType) {
 
     builder.registerTypeAdapterFactory(new TypeAdapterFactory() {
 
       @SuppressWarnings("unchecked")
       @Override public <T> TypeAdapter<T> create(final Gson gson, TypeToken<T> type) {
-        if (type.getRawType() != Request.class) {
-          return null;
+        if (type.getRawType() == Request.class) {
+          TypeAdapter<Request> typeAdapter = new RequestAdapter(gson, methodToParamsType);
+          return (TypeAdapter<T>) typeAdapter.nullSafe();
         }
-        TypeAdapter<Request> typeAdapter = new TypeAdapter<Request>() {
-          @Override public void write(JsonWriter out, Request value) throws IOException {
-            out.beginObject();
-            out.name("jsonrpc").value(value.jsonrpc);
-            out.name("method").value(value.method);
-            if (value.params != null) {
-              out.name("params");
-              gson.toJson(value.params, value.params.getClass(), out);
-            }
-            if (value.id != null) {
-              out.name("id").value(value.id);
-            }
-            out.endObject();
-          }
-
-          @Override public Request read(JsonReader in) throws IOException {
-            Request answer = new Request();
-            boolean versionFound = false;
-            in.beginObject();
-            while (in.hasNext()) {
-              String name = in.nextName();
-              if (name.equals("jsonrpc")) {
-                final String version = in.nextString();
-                if (version.equals(VERSION))
-                  versionFound = true;
-                else
-                  throw new InvalidRequestException("Unrecognized JSON-RPC version " + version);
-              } else if (name.equals("method")) {
-                answer.method = in.nextString();
-              } else if (name.equals("id")) {
-                answer.id = in.nextInt();
-              } else if (name.equals("params")) {
-                if (answer.method == null)
-                  throw new InvalidRequestException("Method must precede params");
-                if (methodToParamsType == null)
-                  throw new InternalErrorException("No mapping from method to params type provided");
-                final Type paramsType = methodToParamsType.apply(answer.method);
-                if (paramsType == null)
-                  throw new MethodNotFoundException("No such method " + answer.method);
-                try {
-                  answer.params = gson.fromJson(in, paramsType);
-                } catch (JsonSyntaxException e) {
-                  throw new InvalidParamsException(e.getMessage());
-                }
-              } else {
-                throw new InvalidRequestException("Unrecognized JSON-RPC request component " + name);
-              }
-            }
-            in.endObject();
-            if (!versionFound)
-              throw new InvalidRequestException("No JSON-RPC version found");
-            if (answer.method == null)
-              throw new InvalidRequestException("No JSON-RPC method found");
-            return answer;
-          }
-        };
-        return (TypeAdapter<T>) typeAdapter.nullSafe();
+        if (type.getRawType() == Response.class) {
+          TypeAdapter<Response<Object>> typeAdapter = new ResponseAdapter(gson, idToResultType);
+          return (TypeAdapter<T>) typeAdapter.nullSafe();
+        }
+        return null;
       }
     });
 
     return builder;
   }
+
+  /**
+   * Type adapter for {@link Request}.
+   */
+  private static final class RequestAdapter extends TypeAdapter<Request> {
+    private final Gson gson;
+    private final Function<String, Type> methodToParamsType;
+
+    private RequestAdapter(Gson gson, Function<String, Type> methodToParamsType) {
+      this.gson = gson;
+      this.methodToParamsType = methodToParamsType;
+    }
+
+    @Override public void write(JsonWriter out, Request value) throws IOException {
+      out.beginObject();
+      out.name("jsonrpc").value(value.jsonrpc);
+      out.name("method").value(value.method);
+      if (value.params != null) {
+        out.name("params");
+        gson.toJson(value.params, value.params.getClass(), out);
+      }
+      if (value.id != null) {
+        out.name("id").value(value.id);
+      }
+      out.endObject();
+    }
+
+    @Override public Request read(JsonReader in) throws IOException {
+      Request answer = new Request();
+      boolean versionFound = false;
+      in.beginObject();
+      while (in.hasNext()) {
+        String name = in.nextName();
+        if (name.equals("jsonrpc")) {
+          final String version = in.nextString();
+          if (version.equals(VERSION))
+            versionFound = true;
+          else
+            throw new InvalidRequestException("Unrecognized JSON-RPC version " + version);
+        } else if (name.equals("method")) {
+          answer.method = in.nextString();
+        } else if (name.equals("id")) {
+          answer.id = in.nextInt();
+        } else if (name.equals("params")) {
+          if (answer.method == null)
+            throw new InvalidRequestException("Method must precede params");
+          if (methodToParamsType == null)
+            throw new InternalErrorException("No mapping from method to params type provided");
+          final Type paramsType = methodToParamsType.apply(answer.method);
+          if (paramsType == null)
+            throw new MethodNotFoundException("No such method " + answer.method);
+          try {
+            answer.params = gson.fromJson(in, paramsType);
+          } catch (JsonSyntaxException e) {
+            throw new InvalidParamsException(e.getMessage());
+          }
+        } else {
+          throw new InvalidRequestException("Unrecognized JSON-RPC request component " + name);
+        }
+      }
+      in.endObject();
+      if (!versionFound)
+        throw new InvalidRequestException("No JSON-RPC version found");
+      if (answer.method == null)
+        throw new InvalidRequestException("No JSON-RPC method found");
+      return answer;
+    }
+  }
+
+  /**
+   * Type adapter for {@link Response}.
+   */
+  private static final class ResponseAdapter extends TypeAdapter<Response<Object>> {
+    private final Gson gson;
+    private final Function<Integer, Type> idToResultType;
+
+    private ResponseAdapter(Gson gson, Function<Integer, Type> idToResultType) {
+      this.gson = gson;
+      this.idToResultType = idToResultType;
+    }
+
+    @Override public void write(JsonWriter out, Response<Object> value) throws IOException {
+      out.beginObject();
+      out.name("jsonrpc").value(value.jsonrpc);
+      if (value.id != null) {
+        out.name("id").value(value.id);
+      }
+      if (value.error != null) {
+        out.name("error");
+        gson.toJson(value.error, value.error.getClass(), out);
+      }
+      if (value.result != null) {
+        out.name("result");
+        gson.toJson(value.result, value.result.getClass(), out);
+      }
+      out.endObject();
+    }
+
+    @Override public Response<Object> read(JsonReader in) throws IOException {
+      Response<Object> answer = new Response<Object>();
+      boolean versionFound = false;
+      in.beginObject();
+      while (in.hasNext()) {
+        String name = in.nextName();
+        if (name.equals("jsonrpc")) {
+          final String version = in.nextString();
+          if (version.equals(VERSION))
+            versionFound = true;
+          else
+            throw new InvalidRequestException("Unrecognized JSON-RPC version " + version);
+        } else if (name.equals("id")) {
+          answer.id = in.nextInt();
+        } else if (name.equals("error")) {
+          answer.error = gson.fromJson(in, Error.class);
+        } else if (name.equals("result")) {
+          if (idToResultType == null)
+            throw new InternalErrorException("No mapping from ID to result type provided");
+          final Type resultType = idToResultType.apply(answer.id);
+          if (resultType == null)
+            throw new MethodNotFoundException("No such ID " + answer.id);
+          answer.result = gson.fromJson(in, resultType);
+        } else {
+          throw new IOException("Unrecognized JSON-RPC response component " + name);
+        }
+      }
+      in.endObject();
+      if (!versionFound)
+        throw new IOException("No JSON-RPC version found");
+      return answer;
+    }
+  }
+
 }
