@@ -84,7 +84,7 @@
     <string name="text_puzzle_name_start">"Sudoku %1$s (#%2$d): "</string>
     <string name="text_puzzle_number">#%1$d</string>
     <string name="text_puzzle_number_start">"Sudoku #%1$d: "</string>
-    <string name="text_puzzle_stats_summary">Global attempts: %1$d; solved by: %2$d; avg time: %3$s.</string>
+    <string name="text_puzzle_stats_summary">People who have attempted: %1$d; solved by: %2$d; avg time: %3$s.</string>
     <string name="text_recommended_puzzles">Recommended puzzles</string>
     <string name="text_replay_title">Review #%1$d</string>
     <string name="text_sentence_end">.</string>
