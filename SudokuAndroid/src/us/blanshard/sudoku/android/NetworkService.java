@@ -520,6 +520,7 @@ public class NetworkService extends IntentService {
       InstallationRpcs.UpdateParams params = new InstallationRpcs.UpdateParams();
       params.id = Installation.id(NetworkService.this);
       params.shareData = mPrefs.getShareData();
+      params.androidSdk = Build.VERSION.SDK_INT;
       params.manufacturer = Build.MANUFACTURER;
       params.model = Build.MODEL;
       params.streamCount = mPrefs.getStreamCount();

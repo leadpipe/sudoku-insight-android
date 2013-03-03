@@ -39,6 +39,7 @@ public class Schema {
     public static final String KIND = "Installation";
 
     public static final String ACCOUNT_ID = "accountId";  // email
+    public static final String ANDROID_SDK = "androidSdk";
     public static final String INDEXED_ID = "indexedId";
     public static final String MANUFACTURER = "manufacturer";
     public static final String MODEL = "model";
