@@ -193,7 +193,8 @@ public class NetworkService extends IntentService {
       new TypeToken<PuzzleRpcs.PuzzleResult>() {};
   private static final TypeToken<List<Rpc.Response<Object>>> BATCH_RESULT_TOKEN =
       new TypeToken<List<Rpc.Response<Object>>>() {};
-  private static final int WRITE_COST = 10;
+  private static final int WRITE_COST = 8;
+  private static final int SAVE_ATTEMPT_COST = 20;
   private static final int READ_COST = 1;
   private static final int MAX_COST = 200;
 
@@ -632,7 +633,7 @@ public class NetworkService extends IntentService {
     }
 
     @Override public int getCost() {
-      return WRITE_COST;
+      return SAVE_ATTEMPT_COST;
     }
 
     @Override public boolean process(Rpc.Response<PuzzleRpcs.AttemptResult> res) {
