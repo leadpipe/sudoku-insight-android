@@ -69,6 +69,7 @@ public class RpcServlet extends HttpServlet {
           rpcResponse.error = Rpc.internalError(t.getMessage());
         }
         rpcResponse.id = rpcRequest.id;
+        rpcResponses.add(rpcResponse);
       }
 
       responseObject = singleRequest ? rpcResponses.get(0) : rpcResponses;

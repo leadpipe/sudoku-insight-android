@@ -189,7 +189,7 @@ public class Rpc {
       }
     });
 
-    return builder;
+    return builder.serializeSpecialFloatingPointValues();
   }
 
   /**

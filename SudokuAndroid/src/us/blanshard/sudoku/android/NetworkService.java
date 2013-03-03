@@ -144,7 +144,7 @@ public class NetworkService extends IntentService {
     /**
      * Exposes an object to guide the JSON parsing of the RPC response.
      */
-    TypeToken<Rpc.Response<T>> getResponseTypeToken();
+    TypeToken<T> getResultTypeToken();
 
     /**
      * Returns the RPC method name.
@@ -183,14 +183,14 @@ public class NetworkService extends IntentService {
 
   private static final String TAG = "NetworkService";
 
-  private static final TypeToken<Rpc.Response<InstallationRpcs.UpdateResult>> SET_INSTALLATION_TOKEN =
-      new TypeToken<Rpc.Response<InstallationRpcs.UpdateResult>>() {};
-  private static final TypeToken<Rpc.Response<PuzzleRpcs.AttemptResult>> SAVE_ATTEMPT_TOKEN =
-      new TypeToken<Rpc.Response<PuzzleRpcs.AttemptResult>>() {};
-  private static final TypeToken<Rpc.Response<PuzzleRpcs.VoteResult>> SAVE_VOTE_TOKEN =
-      new TypeToken<Rpc.Response<PuzzleRpcs.VoteResult>>() {};
-  private static final TypeToken<Rpc.Response<PuzzleRpcs.PuzzleResult>> PUZZLE_STATS_TOKEN =
-      new TypeToken<Rpc.Response<PuzzleRpcs.PuzzleResult>>() {};
+  private static final TypeToken<InstallationRpcs.UpdateResult> SET_INSTALLATION_TOKEN =
+      new TypeToken<InstallationRpcs.UpdateResult>() {};
+  private static final TypeToken<PuzzleRpcs.AttemptResult> SAVE_ATTEMPT_TOKEN =
+      new TypeToken<PuzzleRpcs.AttemptResult>() {};
+  private static final TypeToken<PuzzleRpcs.VoteResult> SAVE_VOTE_TOKEN =
+      new TypeToken<PuzzleRpcs.VoteResult>() {};
+  private static final TypeToken<PuzzleRpcs.PuzzleResult> PUZZLE_STATS_TOKEN =
+      new TypeToken<PuzzleRpcs.PuzzleResult>() {};
   private static final TypeToken<List<Rpc.Response<Object>>> BATCH_RESULT_TOKEN =
       new TypeToken<List<Rpc.Response<Object>>>() {};
   private static final int WRITE_COST = 10;
@@ -390,7 +390,7 @@ public class NetworkService extends IntentService {
       conn.setDoOutput(true);
       conn.setDoInput(true);
       conn.setConnectTimeout((int) SECONDS.toMillis(15));
-      conn.setReadTimeout((int) DEFAULT_RETRY_TIME_MS);
+      conn.setReadTimeout((int) SECONDS.toMillis(60));  // App engine request timeout
       Writer out = new OutputStreamWriter(conn.getOutputStream(), Charsets.UTF_8);
       out.write(json);
       out.flush();
@@ -404,11 +404,12 @@ public class NetworkService extends IntentService {
           if (in.peek() == JsonToken.BEGIN_ARRAY) {
             Json.setIdToType(new Function<Integer, Type>() {
               @Override public Type apply(@Nullable Integer input) {
-                return calls.get(input).op.getResponseTypeToken().getType();
+                return calls.get(input).op.getResultTypeToken().getType();
               }
             });
             try {
               List<Rpc.Response<?>> responses = GSON.fromJson(in, BATCH_RESULT_TOKEN.getType());
+              Log.d(TAG, "#responses: " + responses.size());
               for (Rpc.Response<?> res : responses) {
                 RpcCall<?> call = calls.get(res.id);
                 if (call == null) {
@@ -500,7 +501,7 @@ public class NetworkService extends IntentService {
       return params;
     }
 
-    @Override public TypeToken<Rpc.Response<InstallationRpcs.UpdateResult>> getResponseTypeToken() {
+    @Override public TypeToken<InstallationRpcs.UpdateResult> getResultTypeToken() {
       return SET_INSTALLATION_TOKEN;
     }
 
@@ -622,7 +623,7 @@ public class NetworkService extends IntentService {
       return params;
     }
 
-    @Override public TypeToken<Rpc.Response<PuzzleRpcs.AttemptResult>> getResponseTypeToken() {
+    @Override public TypeToken<PuzzleRpcs.AttemptResult> getResultTypeToken() {
       return SAVE_ATTEMPT_TOKEN;
     }
 
@@ -672,7 +673,7 @@ public class NetworkService extends IntentService {
       return params;
     }
 
-    @Override public TypeToken<Rpc.Response<PuzzleRpcs.VoteResult>> getResponseTypeToken() {
+    @Override public TypeToken<PuzzleRpcs.VoteResult> getResultTypeToken() {
       return SAVE_VOTE_TOKEN;
     }
 
@@ -757,7 +758,7 @@ public class NetworkService extends IntentService {
       return params;
     }
 
-    @Override public TypeToken<Rpc.Response<PuzzleRpcs.PuzzleResult>> getResponseTypeToken() {
+    @Override public TypeToken<PuzzleRpcs.PuzzleResult> getResultTypeToken() {
       return PUZZLE_STATS_TOKEN;
     }
 
