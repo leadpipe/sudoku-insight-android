@@ -95,8 +95,8 @@ public class NetworkService extends IntentService {
     runOp(context, new UpdateOldStatsOp(cutoff), "Updating old stats");
   }
 
-  public static void updateStats(Context context, Database.Puzzle puzzle) {
-    runOp(context, new UpdateStatsOp(puzzle), "Updating stats for " + puzzle._id);
+  public static void updateStats(Context context, long puzzleId) {
+    runOp(context, new UpdateStatsOp(puzzleId), "Updating stats for " + puzzleId);
   }
 
   private static void runOp(Context context, Op op, String desc) {
@@ -705,17 +705,17 @@ public class NetworkService extends IntentService {
   }
 
   /**
-   * An Op for saving a particular attempt.
+   * An Op for updating the stats for a particular puzzle.
    */
   private static class UpdateStatsOp implements Op {
-    private final Database.Puzzle puzzle;
+    private final long puzzleId;
 
-    public UpdateStatsOp(Database.Puzzle puzzle) {
-      this.puzzle = puzzle;
+    public UpdateStatsOp(long puzzleId) {
+      this.puzzleId = puzzleId;
     }
 
     @Override public void addRpcs(NetworkService svc, Set<RpcOp<?>> rpcs) {
-      rpcs.add(svc.new UpdateStatsRpcOp(puzzle));
+      rpcs.add(svc.new UpdateStatsRpcOp(svc.mDb.getFullPuzzle(puzzleId)));
     }
   }
 
