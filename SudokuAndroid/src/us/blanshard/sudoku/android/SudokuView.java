@@ -432,7 +432,7 @@ public class SudokuView extends View {
             float cy = mPointerY;
             float r = mClockRadius;
             double d = Math.hypot(x - cx, y - cy);
-            if (d > r * 2) {
+            if (d > r * 3) {
               choice = -1;  // Pull away from center to cancel
             } else if (mChanging || d > mSquareSize * 0.5) {
               // Don't change anything until there's some perceptible movement

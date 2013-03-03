@@ -17,7 +17,7 @@ END
 *** TODO Improve layout on tablets
     - make play grid larger, replay grid smaller; max ~30% differential
     - ensure capture grid matches play grid
-*** TODO Increase escape radius for input
+*** DONE Increase escape radius for input
     - really annoyingly small on tablet
 *** DONE Show stats on puzzle detail page
     - make new RPC
