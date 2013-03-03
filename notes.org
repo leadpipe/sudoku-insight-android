@@ -27,6 +27,7 @@ END
     - find and fix the bug; but also harden the fragment against future similar
       bugs, by _not_ updating the DB when it gets a complete attempt
     - no idea, but did try to make sure the fragment doesn't write these back to the db
+    - ok, I may have an idea: it may be that the generation counter got reset somehow
 *** TODO Change behavior of capture when we already have the puzzle
     - Include a link to the puzzle details
 *** TODO Finish help content

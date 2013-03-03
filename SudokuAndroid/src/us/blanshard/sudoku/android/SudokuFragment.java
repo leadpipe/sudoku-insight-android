@@ -363,16 +363,19 @@ public class SudokuFragment
           1 + cal.get(Calendar.MONTH), counter);
       long id = db.addGeneratedPuzzle(props);
       Database.Attempt attempt = db.getCurrentAttemptForPuzzle(id);
-      if (prefs.getProperOnly() && props.get(Generator.NUM_SOLUTIONS_KEY).getAsInt() > 1) {
+      if (attempt == null || !attempt.attemptState.isInPlay()) {
+        // Whoops, we've already seen this puzzle: our counter got out of sync.
+        // Loop around and generate the next one.
+      } else if (prefs.getProperOnly() && props.get(Generator.NUM_SOLUTIONS_KEY).getAsInt() > 1) {
         // Skip improper puzzles if the settings say so.
         Database.startUnstartedAttempt(attempt);
         attempt.attemptState = AttemptState.SKIPPED;
         db.updateAttempt(attempt);
-        ++counter;
       } else {
         prefs.setNextCounterSync(cal, counter);
         return attempt;
       }
+      ++counter;
     }
   }
 
