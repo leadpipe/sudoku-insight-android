@@ -27,32 +27,6 @@ END
     - find and fix the bug; but also harden the fragment against future similar
       bugs, by _not_ updating the DB when it gets a complete attempt
     - no idea, but did try to make sure the fragment doesn't write these back to the db
-*** DONE Crasher on capture startup
-03-02 11:42:35.771: E/AndroidRuntime(4806): FATAL EXCEPTION: main
-03-02 11:42:35.771: E/AndroidRuntime(4806): android.view.WindowManager$BadTokenException: Unable to add window -- token null is not valid; is your activity running?
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.view.ViewRootImpl.setView(ViewRootImpl.java:513)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.view.WindowManagerImpl.addView(WindowManagerImpl.java:301)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.view.WindowManagerImpl.addView(WindowManagerImpl.java:215)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.view.WindowManagerImpl$CompatModeWrapper.addView(WindowManagerImpl.java:140)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.view.Window$LocalWindowManager.addView(Window.java:537)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.widget.PopupWindow.invokePopup(PopupWindow.java:988)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.widget.PopupWindow.showAsDropDown(PopupWindow.java:897)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.widget.ListPopupWindow.show(ListPopupWindow.java:595)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.widget.AutoCompleteTextView.showDropDown(AutoCompleteTextView.java:1062)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at us.blanshard.sudoku.android.CapturePuzzleActivity$FetchAutocompletes.onPostExecute(CapturePuzzleActivity.java:181)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at us.blanshard.sudoku.android.CapturePuzzleActivity$FetchAutocompletes.onPostExecute(CapturePuzzleActivity.java:1)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at us.blanshard.sudoku.android.WorkerFragment$BaseTask$1$1.run(WorkerFragment.java:102)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at us.blanshard.sudoku.android.WorkerFragment$BaseTask$Foreground.runInForeground(WorkerFragment.java:201)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at us.blanshard.sudoku.android.WorkerFragment$1.handleMessage(WorkerFragment.java:319)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.os.Handler.dispatchMessage(Handler.java:99)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.os.Looper.loop(Looper.java:137)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at android.app.ActivityThread.main(ActivityThread.java:4424)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at java.lang.reflect.Method.invokeNative(Native Method)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at java.lang.reflect.Method.invoke(Method.java:511)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:784)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:551)
-03-02 11:42:35.771: E/AndroidRuntime(4806): 	at dalvik.system.NativeStart.main(Native Method)
-
 *** TODO Change behavior of capture when we already have the puzzle
     - Include a link to the puzzle details
 *** TODO Finish help content
@@ -66,29 +40,8 @@ END
 
 ** Cross-installation work
 *** TODO At startup on new installation, show settings page
-    - with account selection popup showing?
-    - need to trigger login if an account is selected
 *** TODO Add pref for whether to sync from other devices
     - dependent on selecting an account
-*** DONE Update NetworkService to handle saving of attempts & votes, fetching of stats
-    - static collection of operations
-      - save installation info
-      - save all unsaved attempts & votes
-      - save specific attempt or vote
-      - fetch all stats last fetched before specific time
-      - fetch stats for specific puzzle
-    - loop while there are operations in the static set or there are pending RPCs:
-      - wait until the network is available
-    - translate any operations into pending RPCs
-      - installation info, if different from what's already saved
-      - save attempt
-      - save vote
-      - fetch stats
-    - Q: try to prioritize these?  or just go in order?
-    - send next RPC, handle response
-      - future: send them in batches
-    - if transient error, put RPC(s) back in pending collection and sleep awhile
-    - back to loop
 
 ** Replay cleanups
 *** TODO Revise calculation and display of disproofs
@@ -131,75 +84,14 @@ END
 
 * App engine app
 
-** Missing pieces
-*** DONE Implement batch RPC
-*** DONE Have a config object containing, eg, num streams?
-
-** Protocols
-
-** API from phone
-   - Send installation info:
-     - installation ID
-     - phone model info
-     - email address (opt)
-     - generation stream number
-   - > return generation stream number (opt)
-     - and puzzles & attempts from other installations
-     - and other installations info
-     - and recommended puzzles?
-   - Send attempt:
-     - installation ID
-     - attempt ID -- why not?
-     - puzzle
-     - puzzle params
-     - history -- log and drop if history's > say 50k
-     - startTime, stopTime
-   - Send vote:
-     - installation ID
-     - puzzle
-     - vote
-   - Get puzzle stats
-
 ** Push notifications to phone
    - Recommended puzzle
    - Other installation info updated
-
-** Schema
-   - Installation: root, key = installation ID
-     - optional email address (with index)
-     - opaque ID with index (generated)
-     - phone model, generation stream number
-     - PuzzleHistory: child, key = puzzle string
-       - index on puzzle string
-       - source, generation params
-       - contains all attempt histories (up to 20 or something)
-         - each with history string, elapsed time, #moves, #trails,
-           solved/gave up flag, attempt ID from phone, startTime, stopTime
-       - if not first installation for this user that tackled this puzzle,
-         pointer to the one that was first
-   - Puzzle: root, key = puzzle string
-     - contains generation params if applicable
-     - contains puzzle sources and installation IDs they came from
-     - contains summary of stats on this puzzle:
-       - how many played
-       - how many won on first attempt
-       - avg elapsed time
-       - avg #moves
-       - avg #trails
-       - perhaps distributions of above
-   - User: root, key = email address
-     - opaque ID with index (generated)
-     - contains list of installation IDs
 
 ** The web app
    - sample puzzles?
    - stats? num puzzles? num installations? num users? rates of change?
    - for logged-in users, info about their stuff
-
-** Constraints
-   - The installation ID and email address are secret--can't let them leak out of the app engine app
-   - So we need alternative IDs that we expose and index on
-   - Is there an encryption service?  Is it possible to have params not visible via source?
 
 * Math
 ** Pathological grids

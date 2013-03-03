@@ -629,6 +629,7 @@ public class SudokuFragment
   private void transitionToInfoPage() {
     mPrefs.removeCurrentAttemptIdAsync();
     saveAttemptFromUiThread();
+    NetworkService.saveAttempt(getActivity(), mAttempt._id);
     Intent intent = new Intent(getActivity(), PuzzleListActivity.class);
     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_CLEAR_TOP);
     intent.putExtra(Extras.PUZZLE_ID, mAttempt.puzzleId);

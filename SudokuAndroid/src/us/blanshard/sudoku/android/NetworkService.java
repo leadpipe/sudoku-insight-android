@@ -83,12 +83,12 @@ public class NetworkService extends IntentService {
     runOp(context, new SaveInstallationOp(), "Save installation started");
   }
 
-  public static void saveAttempt(Context context, Database.Attempt attempt) {
-    runOp(context, new SaveAttemptOp(attempt), "Saving attempt for " + attempt.puzzleId);
+  public static void saveAttempt(Context context, long attemptId) {
+    runOp(context, new SaveAttemptOp(attemptId), "Saving attempt " + attemptId);
   }
 
-  public static void saveVote(Context context, Database.Puzzle puzzle) {
-    runOp(context, new SaveVoteOp(puzzle), "Saving vote for " + puzzle._id);
+  public static void saveVote(Context context, long puzzleId) {
+    runOp(context, new SaveVoteOp(puzzleId), "Saving vote for " + puzzleId);
   }
 
   public static void updateOldStats(Context context, long cutoff) {
@@ -552,14 +552,14 @@ public class NetworkService extends IntentService {
    * An Op for saving a particular attempt.
    */
   private static class SaveAttemptOp implements Op {
-    private final Database.Attempt attempt;
+    private final long attemptId;
 
-    public SaveAttemptOp(Database.Attempt attempt) {
-      this.attempt = attempt;
+    public SaveAttemptOp(long attemptId) {
+      this.attemptId = attemptId;
     }
 
     @Override public void addRpcs(NetworkService svc, Set<RpcOp<?>> rpcs) {
-      rpcs.add(svc.new SaveAttemptRpcOp(attempt));
+      rpcs.add(svc.new SaveAttemptRpcOp(svc.mDb.getAttempt(attemptId)));
     }
   }
 
@@ -567,14 +567,14 @@ public class NetworkService extends IntentService {
    * An Op for saving a particular vote.
    */
   private static class SaveVoteOp implements Op {
-    private final Database.Puzzle puzzle;
+    private final long puzzleId;
 
-    public SaveVoteOp(Database.Puzzle puzzle) {
-      this.puzzle = puzzle;
+    public SaveVoteOp(long puzzleId) {
+      this.puzzleId = puzzleId;
     }
 
     @Override public void addRpcs(NetworkService svc, Set<RpcOp<?>> rpcs) {
-      rpcs.add(svc.new SaveVoteRpcOp(puzzle));
+      rpcs.add(svc.new SaveVoteRpcOp(svc.mDb.getFullPuzzle(puzzleId)));
     }
   }
 

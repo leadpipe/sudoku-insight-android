@@ -156,6 +156,7 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
         StrictMode.setThreadPolicy(policy);
       }
       mCallback.voted();
+      NetworkService.saveVote(getActivity(), mPuzzle._id);
     }
   }
 
