@@ -22,6 +22,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import us.blanshard.sudoku.android.Database.Attempt;
 import us.blanshard.sudoku.android.Database.AttemptState;
+import us.blanshard.sudoku.messages.PuzzleRpcs.PuzzleResult;
 
 import android.content.Context;
 import android.text.Html;
@@ -121,5 +122,10 @@ public class ToText {
     CharSequence when = longTime ? relativeDateTime(context, attempt.lastTime)
         : dateTimeWithPreposition(context, attempt.lastTime);
     return context.getString(resourceId, elapsedTime, when);
+  }
+
+  public static String puzzleStatsSummaryHtml(Context context, PuzzleResult result) {
+    return context.getString(R.string.text_puzzle_stats_summary, result.numAttempts,
+        result.elapsedMsStat.count, elapsedTime((long) result.elapsedMsStat.mean));
   }
 }

@@ -15,9 +15,13 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static us.blanshard.sudoku.gen.Generator.NAME_KEY;
 
 import us.blanshard.sudoku.android.Database.Attempt;
+import us.blanshard.sudoku.android.Database.Puzzle;
+import us.blanshard.sudoku.messages.PuzzleRpcs.PuzzleResult;
 
 import android.os.Bundle;
 import android.text.Html;
@@ -49,7 +53,12 @@ import java.util.List;
  *
  * @author Luke Blanshard
  */
-public class PuzzleListFragment extends FragmentBase {
+public class PuzzleListFragment extends FragmentBase implements NetworkService.StatsCallback {
+
+  /** How fresh we want our stats to be. */
+  private static final long STATS_FRESHNESS_MS = HOURS.toMillis(1);
+  /** How long to wait before reloading after a stats update. */
+  private static final long STATS_UPDATE_PAUSE_MS = SECONDS.toMillis(1);
   //private static final String TAG = "PuzzleListFragment";
   private ListView mList;
   private PuzzleAdapter mPuzzleAdapter;
@@ -57,6 +66,12 @@ public class PuzzleListFragment extends FragmentBase {
   private long mCollectionId = Database.ALL_PSEUDO_COLLECTION_ID;
   private long mPuzzleId = 0;
   private Sort mSort = Sort.NUMBER;
+
+  private final Runnable reloader = new Runnable() {
+    @Override public void run() {
+      reloadPuzzles();
+    }
+  };
 
   enum Sort {
     NUMBER(R.id.menu_sort_by_number, new Comparator<Database.Puzzle>() {
@@ -151,6 +166,8 @@ public class PuzzleListFragment extends FragmentBase {
     if (savedInstanceState != null && savedInstanceState.containsKey(Extras.PUZZLE_ID))
       mPuzzleId = savedInstanceState.getLong(Extras.PUZZLE_ID);
     getActivity().invalidateOptionsMenu();
+    NetworkService.addStatsCallback(this);
+    NetworkService.updateOldStats(getActivity(), System.currentTimeMillis() - STATS_FRESHNESS_MS);
   }
 
   @Override public void onSaveInstanceState(Bundle outState) {
@@ -178,6 +195,13 @@ public class PuzzleListFragment extends FragmentBase {
       getActivity().invalidateOptionsMenu();
     }
     return true;
+  }
+
+  @Override public void statsUpdated(long puzzleId) {
+    // We reload, but only after a delay to allow all the stats-updated
+    // notifications to come through first.
+    mList.removeCallbacks(reloader);
+    mList.postDelayed(reloader, STATS_UPDATE_PAUSE_MS);
   }
 
   public void reloadPuzzles() {
@@ -313,6 +337,10 @@ public class PuzzleListFragment extends FragmentBase {
       }
       if (!puzzle.attempts.isEmpty()) {
         appendAttemptSummary(sb, puzzle.attempts.get(puzzle.attempts.size() - 1));
+        if (puzzle.stats != null && shouldShowStats(puzzle)) {
+          PuzzleResult result = Json.GSON.fromJson(puzzle.stats, PuzzleResult.class);
+          sb.append("  ").append(ToText.puzzleStatsSummaryHtml(getContext(), result));
+        }
         if (!puzzle.elements.isEmpty()) sb.append("<br>");
       }
       if (!puzzle.elements.isEmpty()) {
@@ -326,6 +354,13 @@ public class PuzzleListFragment extends FragmentBase {
         sb.append(getString(R.string.text_sentence_end));
       }
       return sb.toString();
+    }
+
+    private boolean shouldShowStats(Puzzle puzzle) {
+      for (Attempt attempt : puzzle.attempts)
+        if (attempt.attemptState.isComplete())
+          return true;
+      return false;
     }
 
     private void appendAttemptSummary(StringBuilder sb, Attempt attempt) {

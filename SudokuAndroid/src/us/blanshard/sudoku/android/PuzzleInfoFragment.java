@@ -26,6 +26,7 @@ import us.blanshard.sudoku.android.WorkerFragment.Priority;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.messages.PuzzleRpcs.PuzzleResult;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -56,12 +57,14 @@ import java.util.List;
  * @author Luke Blanshard
  */
 @SuppressLint("SetJavaScriptEnabled")
-public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeListener {
+public class PuzzleInfoFragment extends FragmentBase
+    implements OnCheckedChangeListener, NetworkService.StatsCallback {
   private static final String TAG = "PuzzleInfoFragment";
+  private long mPuzzleId;
   private ActivityCallback mCallback;
   private JsonObject mProperties;
   private SudokuView mGrid;
-  private TextView mPuzzleId;
+  private TextView mPuzzleIdView;
   private View mVoteLayout;
   private RadioGroup mVote;
   private WebView mDetails;
@@ -94,17 +97,20 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
     super.onActivityCreated(savedInstanceState);
     mCallback = (ActivityCallback) getActivity();
     mGrid = (SudokuView) getActivity().findViewById(R.id.info_grid);
-    mPuzzleId = (TextView) getActivity().findViewById(R.id.info_puzzle_id);
+    mPuzzleIdView = (TextView) getActivity().findViewById(R.id.info_puzzle_id);
     mVoteLayout = getActivity().findViewById(R.id.vote_layout);
     mVote = (RadioGroup) getActivity().findViewById(R.id.vote_group);
     mVote.setOnCheckedChangeListener(this);
     mDetails = (WebView) getActivity().findViewById(R.id.info_details);
     mDetails.setBackgroundColor(0);  // Makes the background transparent
     mDetails.setWebViewClient(new LinkHandler());
+    NetworkService.addStatsCallback(this);
   }
 
   public void setPuzzleId(long puzzleId) {
+    mPuzzleId = puzzleId;
     new FetchPuzzle(this).execute(puzzleId);
+    NetworkService.updateStats(getActivity(), puzzleId);
   }
 
   @Override public void onCreateOptionsMenu(Menu menu, MenuInflater menuInflater) {
@@ -160,6 +166,12 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
     }
   }
 
+  @Override public void statsUpdated(long puzzleId) {
+    if (puzzleId == mPuzzleId) {
+      new FetchPuzzle(this).execute(puzzleId);
+    }
+  }
+
   private boolean canVote() {
     if (mPuzzle != null)
       for (Database.Attempt attempt : mPuzzle.attempts)
@@ -168,11 +180,19 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
     return false;
   }
 
+  private boolean canSeeStats() {
+    if (mPuzzle != null)
+      for (Database.Attempt attempt : mPuzzle.attempts)
+        if (attempt.attemptState.isComplete())
+          return true;
+    return false;
+  }
+
   private void setPuzzle(Database.Puzzle puzzle) {
     mPuzzle = puzzle;
     mProperties = new JsonParser().parse(puzzle.properties).getAsJsonObject();
     mGrid.setPuzzle(puzzle.clues);
-    mPuzzleId.setText(makeIdString());
+    mPuzzleIdView.setText(makeIdString());
     mVoteLayout.setVisibility(canVote() ? View.VISIBLE : View.GONE);
     mVote.check(puzzle.vote == 0 ? R.id.radio_no_vote
         : puzzle.vote < 0 ? R.id.radio_vote_down : R.id.radio_vote_up);
@@ -241,6 +261,10 @@ public class PuzzleInfoFragment extends FragmentBase implements OnCheckedChangeL
   }
 
   private void appendOtherProperties(StringBuilder sb) {
+    if (canSeeStats() && mPuzzle.stats != null) {
+      PuzzleResult result = Json.GSON.fromJson(mPuzzle.stats, PuzzleResult.class);
+      sb.append("<li>").append(ToText.puzzleStatsSummaryHtml(getActivity(), result));
+    }
     if (canVote() && mProperties.has(Generator.NUM_SOLUTIONS_KEY))
       sb.append("<li>").append(getString(R.string.text_num_solutions,
           mProperties.get(Generator.NUM_SOLUTIONS_KEY).getAsInt()));

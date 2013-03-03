@@ -398,15 +398,16 @@ containing a value of this type.
         public static final int text_puzzle_name_start=0x7f060059;
         public static final int text_puzzle_number=0x7f06005a;
         public static final int text_puzzle_number_start=0x7f06005b;
-        public static final int text_recommended_puzzles=0x7f06005c;
-        public static final int text_replay_title=0x7f06005d;
-        public static final int text_sentence_end=0x7f06005e;
-        public static final int text_source=0x7f06005f;
-        public static final int text_symmetry=0x7f060060;
-        public static final int text_synced_puzzles=0x7f060061;
-        public static final int text_vote_down=0x7f060062;
-        public static final int text_vote_question=0x7f060063;
-        public static final int text_vote_up=0x7f060064;
+        public static final int text_puzzle_stats_summary=0x7f06005c;
+        public static final int text_recommended_puzzles=0x7f06005d;
+        public static final int text_replay_title=0x7f06005e;
+        public static final int text_sentence_end=0x7f06005f;
+        public static final int text_source=0x7f060060;
+        public static final int text_symmetry=0x7f060061;
+        public static final int text_synced_puzzles=0x7f060062;
+        public static final int text_vote_down=0x7f060063;
+        public static final int text_vote_question=0x7f060064;
+        public static final int text_vote_up=0x7f060065;
     }
     public static final class xml {
         public static final int preferences=0x7f040000;

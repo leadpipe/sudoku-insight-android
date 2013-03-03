@@ -19,7 +19,7 @@ END
     - ensure capture grid matches play grid
 *** TODO Increase escape radius for input
     - really annoyingly small on tablet
-*** TODO Show stats on puzzle detail page
+*** DONE Show stats on puzzle detail page
     - make new RPC
     - show always?  or only if completed?
 *** TODO bug: somehow wound up getting shown completed puzzles
@@ -30,7 +30,6 @@ END
 *** TODO Change behavior of capture when we already have the puzzle
     - Include a link to the puzzle details
 *** TODO Finish help content
-*** TODO Show user ID settings page at installation time?
 *** TODO Give visual indication when try to set an unsettable location
 *** TODO Make translation of symmetry names possible
 *** TODO Look into sending crash info to the app engine
