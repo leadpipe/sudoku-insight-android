@@ -276,7 +276,7 @@ public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResu
       int activeMonthNumber = monthNumber(cal);
 
       for (String id : getInstallationIds(account)) {
-        if (id.equals(params.account.id)) continue;
+        if (id.equals(params.id)) continue;
         Entity other = ds.get(KeyFactory.createKey(KIND, id));
         String name = (String) other.getProperty(NAME);
         if (name != null) otherNames.add(name);
