@@ -177,8 +177,8 @@ public class NetworkService extends IntentService {
   private static final long DEFAULT_RETRY_TIME_MS = SECONDS.toMillis(10);
   private static final long MAX_RETRY_TIME_MS = HOURS.toMillis(1);
 
-  private static final String BASE_URL = //"https://sudoku-insight.appspot.com/";
-      "http://10.0.2.2:8888/";  // <-- reaches localhost
+  private static final String BASE_URL = "https://sudoku-insight.appspot.com/";
+//      "http://10.0.2.2:8888/";  // <-- reaches localhost
   private static final String RPC_URL = BASE_URL + "rpc";
 
   private static final String TAG = "NetworkService";
