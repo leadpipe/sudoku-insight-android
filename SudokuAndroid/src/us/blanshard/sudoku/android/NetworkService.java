@@ -494,7 +494,12 @@ public class NetworkService extends IntentService {
         }
       } catch (Exception e) {
         Log.e(TAG, "problem getting auth token", e);
-        return null;
+        // Delink the account from the installation. This isn't great, but it's
+        // preferable to not being able to save the installation at all.
+        params.account = null;
+        savedJson = GSON.toJson(params);
+        if (savedJson.equals(prev))
+          return null;
       }
 
       // Clear out our notion of what's been synced with the server.

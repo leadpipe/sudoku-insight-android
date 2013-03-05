@@ -167,7 +167,8 @@ public class PuzzleListFragment extends FragmentBase implements NetworkService.S
       mPuzzleId = savedInstanceState.getLong(Extras.PUZZLE_ID);
     getActivity().invalidateOptionsMenu();
     NetworkService.addStatsCallback(this);
-    NetworkService.updateOldStats(getActivity(), System.currentTimeMillis() - STATS_FRESHNESS_MS);
+    if (!getActivity().isFinishing())
+      NetworkService.updateOldStats(getActivity(), System.currentTimeMillis() - STATS_FRESHNESS_MS);
   }
 
   @Override public void onSaveInstanceState(Bundle outState) {
