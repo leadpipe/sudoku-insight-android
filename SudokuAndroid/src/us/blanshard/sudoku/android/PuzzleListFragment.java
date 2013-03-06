@@ -166,9 +166,10 @@ public class PuzzleListFragment extends FragmentBase implements NetworkService.S
     if (savedInstanceState != null && savedInstanceState.containsKey(Extras.PUZZLE_ID))
       mPuzzleId = savedInstanceState.getLong(Extras.PUZZLE_ID);
     getActivity().invalidateOptionsMenu();
-    NetworkService.addStatsCallback(this);
-    if (!getActivity().isFinishing())
+    if (!getActivity().isFinishing()) {
+      NetworkService.addStatsCallback(this);
       NetworkService.updateOldStats(getActivity(), System.currentTimeMillis() - STATS_FRESHNESS_MS);
+    }
   }
 
   @Override public void onSaveInstanceState(Bundle outState) {
