@@ -9,11 +9,17 @@ handlers:
   secure: always
   servlet: us.blanshard.sudoku.appengine.RpcServlet
 
-- url: /
+- url: /installations/*
   secure: optional
-  servlet: us.blanshard.sudoku.appengine.TopServlet
+  servlet: us.blanshard.sudoku.appengine.InstallationsServlet
+
+- url: /puzzles/*
+  secure: optional
+  servlet: us.blanshard.sudoku.appengine.PuzzlesServlet
 
 
 system_properties:
   java.util.logging.config.file: WEB-INF/logging.properties
 
+welcome_files:
+  - index.html
