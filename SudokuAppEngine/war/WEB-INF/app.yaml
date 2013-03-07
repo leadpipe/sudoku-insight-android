@@ -9,11 +9,11 @@ handlers:
   secure: always
   servlet: us.blanshard.sudoku.appengine.RpcServlet
 
-- url: /installations/*
+- url: /installation/*
   secure: optional
   servlet: us.blanshard.sudoku.appengine.InstallationsServlet
 
-- url: /puzzles/*
+- url: /puzzle/*
   secure: optional
   servlet: us.blanshard.sudoku.appengine.PuzzlesServlet
 
