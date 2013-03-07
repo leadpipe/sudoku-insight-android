@@ -89,15 +89,18 @@ public class Schema {
   public static class Puzzle {
     public static final String KIND = "Puzzle";
 
+    public static final String BROKEN_SYMMETRY = "brokenSymmetry";
     public static final String ELAPSED_MS_STAT = "elapsedMsStat";
     public static final String NAME = "name";  // from Generator
     public static final String NUM_ATTEMPTS = "numAttempts";
     public static final String NUM_DOWN_VOTES = "numDownVotes";
     public static final String NUM_MOVES_STAT = "numMovesStat";
+    public static final String NUM_SOLUTIONS = "numSolutions";
     public static final String NUM_TRAILS_STAT = "numTrailsStat";
     public static final String NUM_UP_VOTES = "numUpVotes";
     public static final String SOURCES = "sources";
     public static final String STATS_TIMESTAMP = "statsTimestamp";
+    public static final String SYMMETRY = "symmetry";
   }
 
   /**

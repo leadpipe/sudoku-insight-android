@@ -15,10 +15,15 @@ limitations under the License.
 */
 package us.blanshard.sudoku.appengine;
 
+import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Solver;
+import us.blanshard.sudoku.gen.Generator;
+
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.EmbeddedEntity;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
@@ -30,6 +35,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
 import com.google.common.collect.Sets;
+import com.google.gson.JsonObject;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
@@ -143,9 +149,23 @@ public class PuzzleStatsTask implements DeferredTask {
     }
 
     Key key = KeyFactory.createKey(Schema.Puzzle.KIND, puzzle);
-    Entity entity = new Entity(key);
+    Entity entity;
     Transaction tx = ds.beginTransaction();
     try {
+      try {
+        entity = ds.get(tx, key);
+      } catch (EntityNotFoundException e) {
+        entity = new Entity(key);
+        JsonObject props = Generator.makePuzzleProperties(Solver.solve(Grid.fromString(puzzle), 20));
+        entity.setUnindexedProperty(Schema.Puzzle.NUM_SOLUTIONS,
+            props.get(Generator.NUM_SOLUTIONS_KEY).getAsInt());
+        if (props.has(Generator.BROKEN_SYMMETRY_KEY))
+          entity.setUnindexedProperty(Schema.Puzzle.BROKEN_SYMMETRY,
+              props.get(Generator.BROKEN_SYMMETRY_KEY).getAsString());
+        if (props.has(Generator.SYMMETRY_KEY))
+          entity.setUnindexedProperty(Schema.Puzzle.SYMMETRY,
+              props.get(Generator.SYMMETRY_KEY).getAsString());
+      }
       if (name != null)
         entity.setUnindexedProperty(Schema.Puzzle.NAME, name);
 
@@ -163,7 +183,7 @@ public class PuzzleStatsTask implements DeferredTask {
         entity.setUnindexedProperty(Schema.Puzzle.SOURCES, savedSources);
       }
 
-      entity.setUnindexedProperty(Schema.Puzzle.STATS_TIMESTAMP, System.currentTimeMillis());
+      entity.setProperty(Schema.Puzzle.STATS_TIMESTAMP, System.currentTimeMillis());
 
       entity.setUnindexedProperty(Schema.Puzzle.NUM_ATTEMPTS, numAttempts);
       entity.setUnindexedProperty(Schema.Puzzle.NUM_DOWN_VOTES, numDownVotes);
