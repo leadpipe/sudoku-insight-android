@@ -56,6 +56,8 @@ END
 *** TODO Try making selection color darker
 *** TODO Try not minimizing disproofs until they're selected
 *** TODO Why does the first trail in puzzle 14 switch errors?
+*** TODO Analysis getting cropped early when use the slider
+    - Leftover thread interruption?
 *** TODO Automatically pause the replay on switch of trail, just after the move
     - Or, rethink this.  Not clear it would be helpful.
     - It would be nice to be able to jump past trail switches
