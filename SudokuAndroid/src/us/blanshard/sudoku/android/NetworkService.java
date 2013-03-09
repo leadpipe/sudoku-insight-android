@@ -613,6 +613,11 @@ public class NetworkService extends IntentService {
     }
 
     @Override public PuzzleRpcs.AttemptParams asRequestParams() {
+      if (!attempt.attemptState.isComplete()) {
+        Log.e(TAG, "Trying to save an incomplete attempt " + attempt._id
+            + ": " + attempt.attemptState);
+        return null;
+      }
       PuzzleRpcs.AttemptParams params = new PuzzleRpcs.AttemptParams();
       params.installationId = Installation.id(getApplicationContext());
       params.attemptId = attempt._id;
