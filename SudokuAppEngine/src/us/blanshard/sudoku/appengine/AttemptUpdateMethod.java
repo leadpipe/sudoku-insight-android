@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.appengine;
 
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.gen.Generator;
 import us.blanshard.sudoku.messages.PuzzleRpcs.AttemptParams;
@@ -72,6 +73,14 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
           params.name = null;
         }
       }
+      long lastTs = 0;
+      for (Move move : params.history) {
+        if (move.timestamp < lastTs)
+          throw new IllegalArgumentException("Bad move timestamp " + move);
+        lastTs = move.timestamp;
+      }
+      if (params.elapsedMs < lastTs)
+        throw new IllegalArgumentException("Bad elapsed time");
       Sudoku game = new Sudoku(clues, Sudoku.nullRegistry(), params.history, params.elapsedMs);
       won = game.getState().getGrid().getState() == Grid.State.SOLVED;
       numTrails = game.getNumTrails();
@@ -121,32 +130,31 @@ public class AttemptUpdateMethod extends RpcMethod<AttemptParams, AttemptResult>
       attempt.setUnindexedProperty(Schema.Attempt.STOP_TIME, new Date(params.stopTime));
       attempt.setUnindexedProperty(Schema.Attempt.WON, won);
 
-      if (instPuzzle.hasProperty(Schema.InstallationPuzzle.FIRST_ATTEMPT)) {
-        if (isSameAttempt(attempt, (EmbeddedEntity) instPuzzle.getProperty(Schema.InstallationPuzzle.FIRST_ATTEMPT))) {
-          wasFirst = true;
-          logger.info("First attempt already present for " + puzzleString);
-        } else {
-          boolean alreadyThere = false;
-          List<EmbeddedEntity> later = Lists.newArrayList();
-          if (instPuzzle.hasProperty(Schema.InstallationPuzzle.LATER_ATTEMPTS)) {
-            @SuppressWarnings("unchecked")
-            Collection<EmbeddedEntity> existing = (Collection<EmbeddedEntity>) instPuzzle.getProperty(Schema.InstallationPuzzle.LATER_ATTEMPTS);
-            for (EmbeddedEntity e : existing) {
-              later.add(e);
-              if (isSameAttempt(attempt, e))
-                alreadyThere = true;
-            }
-          }
-          if (alreadyThere) {
-            logger.info("Later attempt already present for " + puzzleString);
-          } else {
-            later.add(attempt);
-            instPuzzle.setUnindexedProperty(Schema.InstallationPuzzle.LATER_ATTEMPTS, later);
-          }
-        }
-      } else {
+      boolean hasFirst = instPuzzle.hasProperty(Schema.InstallationPuzzle.FIRST_ATTEMPT);
+      if (!hasFirst || isSameAttempt(attempt, (EmbeddedEntity) instPuzzle.getProperty(Schema.InstallationPuzzle.FIRST_ATTEMPT))) {
         instPuzzle.setUnindexedProperty(Schema.InstallationPuzzle.FIRST_ATTEMPT, attempt);
         wasFirst = true;
+        if (hasFirst)
+          logger.info("First attempt already present for " + puzzleString);
+      } else {
+        boolean alreadyThere = false;
+        List<EmbeddedEntity> later = Lists.newArrayList();
+        if (instPuzzle.hasProperty(Schema.InstallationPuzzle.LATER_ATTEMPTS)) {
+          @SuppressWarnings("unchecked")
+          Collection<EmbeddedEntity> existing = (Collection<EmbeddedEntity>) instPuzzle.getProperty(Schema.InstallationPuzzle.LATER_ATTEMPTS);
+          for (EmbeddedEntity e : existing) {
+            if (isSameAttempt(attempt, e)) {
+              later.add(attempt);
+              alreadyThere = true;
+              logger.info("Later attempt already present for " + puzzleString);
+            } else {
+              later.add(e);
+            }
+          }
+        }
+        if (!alreadyThere)
+          later.add(attempt);
+        instPuzzle.setUnindexedProperty(Schema.InstallationPuzzle.LATER_ATTEMPTS, later);
       }
 
       ds.put(tx, instPuzzle);
