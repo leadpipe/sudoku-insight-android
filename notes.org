@@ -31,6 +31,9 @@ END
     - Include a link to the puzzle details
 
 ** Publishing the app
+*** TODO Make release keys
+*** TODO Backup API key?
+*** TODO Include app's android:versionCode in installation data
 *** TODO Make other graphics for play store
 
 ** Cross-installation work
