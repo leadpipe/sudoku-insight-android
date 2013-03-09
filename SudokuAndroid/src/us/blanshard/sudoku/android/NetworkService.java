@@ -97,8 +97,8 @@ public class NetworkService extends IntentService {
     runOp(context, new SaveInstallationOp(), "Save installation started");
   }
 
-  public static void saveAttempt(Context context, long attemptId) {
-    runOp(context, new SaveAttemptOp(attemptId), "Saving attempt " + attemptId);
+  public static void saveAttempt(Context context, Database.Attempt attempt) {
+    runOp(context, new SaveAttemptOp(attempt), "Saving attempt " + attempt._id);
   }
 
   public static void saveVote(Context context, long puzzleId) {
@@ -576,14 +576,14 @@ public class NetworkService extends IntentService {
    * An Op for saving a particular attempt.
    */
   private static class SaveAttemptOp implements Op {
-    private final long attemptId;
+    private final Database.Attempt attempt;
 
-    public SaveAttemptOp(long attemptId) {
-      this.attemptId = attemptId;
+    public SaveAttemptOp(Database.Attempt attempt) {
+      this.attempt = attempt;
     }
 
     @Override public void addRpcs(NetworkService svc, Set<RpcOp<?>> rpcs) {
-      rpcs.add(svc.new SaveAttemptRpcOp(svc.mDb.getAttempt(attemptId)));
+      rpcs.add(svc.new SaveAttemptRpcOp(attempt));
     }
   }
 
