@@ -18,6 +18,7 @@ package us.blanshard.sudoku.appengine;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 import static us.blanshard.sudoku.appengine.Schema.Installation.ACCOUNT_ID;
+import static us.blanshard.sudoku.appengine.Schema.Installation.ANDROID_APP_VERSION;
 import static us.blanshard.sudoku.appengine.Schema.Installation.ANDROID_SDK;
 import static us.blanshard.sudoku.appengine.Schema.Installation.INDEXED_ID;
 import static us.blanshard.sudoku.appengine.Schema.Installation.KIND;
@@ -136,8 +137,10 @@ public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResu
       else
         entity.removeProperty(INDEXED_ID);
 
-      if (params.androidSdk != null)
+      if (params.androidSdk > 0)
         entity.setUnindexedProperty(ANDROID_SDK, params.androidSdk);
+      if (params.androidAppVersion > 0)
+        entity.setUnindexedProperty(ANDROID_APP_VERSION, params.androidAppVersion);
 
       entity.setUnindexedProperty(MANUFACTURER, params.manufacturer);
       entity.setUnindexedProperty(MODEL, params.model);

@@ -68,7 +68,7 @@ public class PuzzleGetMethod extends RpcMethod<PuzzleParams, PuzzleResult> {
     if (entity.hasProperty(STATS_TIMESTAMP)) {
       result.statsTimestamp = ((Number) entity.getProperty(STATS_TIMESTAMP)).longValue();
       if (result.statsTimestamp.equals(params.previousStatsTimestamp))
-        throw new MethodException(Rpc.error(Rpc.OBJECT_UNCHANGED, "stats not updated", params));
+        throw new MethodException(Rpc.error(Rpc.OBJECT_UNCHANGED, "stats not updated", null));
     }
 
     if (entity.hasProperty(SOURCES)) {

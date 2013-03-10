@@ -62,7 +62,7 @@ public class RpcServlet extends HttpServlet {
               (RpcMethod<Object, Object>) RpcJson.METHODS.get(rpcRequest.method);
           rpcResponse.result = rpcMethod.call(rpcRequest.params);
         } catch (MethodException e) {
-          logger.log(INFO, "Anticipated RPC error", e);
+          logger.log(INFO, "Anticipated RPC error: " + e.getError().message);
           rpcResponse.error = e.getError();
         } catch (Throwable t) {
           logger.log(INFO, "RPC method problem", t);

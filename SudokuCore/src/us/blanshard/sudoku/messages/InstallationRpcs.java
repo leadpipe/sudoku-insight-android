@@ -40,7 +40,9 @@ public class InstallationRpcs {
     /** Whether to make this installation's anonymous data public. */
     public boolean shareData;
     /** The Android SDK number this installation is running. */
-    @Nullable public Integer androidSdk;
+    public int androidSdk;
+    /** The version code of the Android app. */
+    public int androidAppVersion;
     /** The manufacturer of the device where the installation lives. */
     public String manufacturer;
     /** The public model name of the device. */
