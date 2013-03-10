@@ -39,6 +39,7 @@ END
 ** Cross-installation work
 *** TODO At startup on new installation, show settings page
     - with some introductory help?
+    - or... a dialog?
 *** TODO Add pref for whether to sync from other devices
     - dependent on selecting an account
 
@@ -82,6 +83,9 @@ END
       occasionally, etc)
 *** TODO Consider supporting other selection-based operations on the list: deletion, exporting
 
+
+* How to release the android app
+  - TBD
 
 * App engine app
 
