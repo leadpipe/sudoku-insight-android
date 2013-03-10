@@ -32,7 +32,7 @@ END
 
 ** Publishing the app
 *** TODO Make release keys
-*** TODO Backup API key?
+*** TODO Register api key using release keys
 *** TODO Include app's android:versionCode in installation data
 *** TODO Make other graphics for play store
 
