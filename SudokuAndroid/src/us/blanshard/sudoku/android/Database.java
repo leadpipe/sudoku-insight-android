@@ -492,7 +492,7 @@ public class Database {
     List<Attempt> answer = Lists.newArrayList();
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
     String sql = ATTEMPT_SELECT_AND_FROM_CLAUSE
-        + "WHERE [attemptState] IN (?, ?) AND [saved] IS NULL OR NOT [saved] ORDER BY [lastTime] ASC";
+        + "WHERE [attemptState] IN (?, ?) AND ([saved] IS NULL OR NOT [saved]) ORDER BY [lastTime] ASC";
     Cursor cursor = db.rawQuery(sql, new String[] {
         Integer.toString(AttemptState.FINISHED.getNumber()),
         Integer.toString(AttemptState.GAVE_UP.getNumber()),
