@@ -32,6 +32,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -370,7 +373,7 @@ public class NetworkService extends IntentService {
         if (call.response.error == null)
           Log.d(TAG, "Processed RPC " + call.request.method);
         else
-          Log.w(TAG, "Processed failed RPC " + call.request.method + ", error "
+          Log.i(TAG, "Processed failed RPC " + call.request.method + ", error "
               + GSON.toJson(call.response.error));
       } else {
         Log.w(TAG, "Unable to process RPC " + call.request.method + ", will retry");
@@ -544,6 +547,7 @@ public class NetworkService extends IntentService {
       params.id = Installation.id(NetworkService.this);
       params.shareData = mPrefs.getShareData();
       params.androidSdk = Build.VERSION.SDK_INT;
+      params.androidAppVersion = getAppVersion();
       params.manufacturer = Build.MANUFACTURER;
       params.model = Build.MODEL;
       params.streamCount = mPrefs.getStreamCount();
@@ -556,6 +560,17 @@ public class NetworkService extends IntentService {
         params.account.installationName = mPrefs.getDeviceName();
       }
       return params;
+    }
+
+    private int getAppVersion() {
+      PackageManager pm = NetworkService.this.getPackageManager();
+      try {
+        PackageInfo info = pm.getPackageInfo("us.blanshard.sudoku.android", 0);
+        return info.versionCode;
+      } catch (NameNotFoundException e) {
+        Log.e(TAG, "our package not found", e);
+        return 0;
+      }
     }
   }
 
