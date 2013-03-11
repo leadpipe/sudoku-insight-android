@@ -133,7 +133,8 @@ containing a value of this type.
     }
     public static final class dimen {
         public static final int info_view_top_margin=0x7f080000;
-        public static final int replay_view_padding=0x7f080001;
+        public static final int replay_frame_padding=0x7f080001;
+        public static final int replay_frame_width=0x7f080003;
         public static final int sudoku_view_padding=0x7f080002;
     }
     public static final class drawable {

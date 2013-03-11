@@ -1,5 +1,5 @@
 <resources>
     <dimen name="info_view_top_margin">0dp</dimen>
-    <dimen name="replay_view_padding">2dp</dimen>
+    <dimen name="replay_frame_padding">2dp</dimen>
     <dimen name="sudoku_view_padding">18dp</dimen>
 </resources>

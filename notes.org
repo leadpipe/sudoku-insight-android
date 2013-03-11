@@ -14,7 +14,7 @@ END
 * App
 
 ** App/UI cleanups
-*** TODO Improve layout on tablets
+*** DONE Improve layout on tablets
     - make play grid larger, replay grid smaller; max ~30% differential
     - ensure capture grid matches play grid
 *** TODO Finish help content
@@ -33,7 +33,7 @@ END
 ** Publishing the app
 *** DONE Make release keys
 *** TODO Register api key using release keys
-*** TODO Include app's android:versionCode in installation data
+*** DONE Include app's android:versionCode in installation data
 *** TODO Make other graphics for play store
 
 ** Cross-installation work

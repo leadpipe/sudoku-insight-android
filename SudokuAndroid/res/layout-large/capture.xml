@@ -3,7 +3,7 @@
     <include
         layout="@layout/capture_body"
         android:layout_width="480dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
         />
 </merge>
