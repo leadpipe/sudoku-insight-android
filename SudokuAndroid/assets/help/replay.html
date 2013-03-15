@@ -12,37 +12,64 @@ point, and then explore the moves implied at that point.
 
 <h2>Playback</h2>
 <ul>
-  <li><img class="float" src="file:///android_res/drawable/ic_menu_play_enabled.png">
-    <b>Play</b> resumes replaying your moves.
-
-  <li><img class="float" src="file:///android_res/drawable/ic_menu_back_enabled.png">
-    <b>Back</b> plays your moves backwards.
-
-  <li><img class="float" src="file:///android_res/drawable/ic_menu_pause_enabled.png">
-    <b>Pause</b> stops playback, and starts calculating all the implied moves at
+  <li><img class="float" src="file:///android_res/drawable/ic_btn_pause_enabled.png">
+    <i>Pause</i> stops playback, and starts calculating all the implied moves at
     the stopping point.
 
-  <li><img class="float" src="file:///android_res/drawable/ic_menu_redo_enabled.png">
-    <b>Redo</b> goes forward one move.
+  <li><div class="float">
+      <img src="file:///android_res/drawable/ic_btn_reverse_enabled.png">
+      <img src="file:///android_res/drawable/ic_btn_play_enabled.png">
+      </div>
+    <i>Reverse</i> and <i>Play</i> resume replaying your moves, backwards or
+    forwards.
 
-  <li><img class="float" src="file:///android_res/drawable/ic_menu_undo_enabled.png">
-    <b>Undo</b> goes back one move.
+  <li><div class="float">
+      <img src="file:///android_res/drawable/ic_menu_undo_enabled.png">
+      <img src="file:///android_res/drawable/ic_menu_redo_enabled.png">
+      </div>
+    <i>Undo</i> and <i>Redo</i> go backward or forward one move.
+
+  <li><b>The slider</b> below these buttons lets you jump to any point in the
+    playback.
 </ul>
-You may also jump to any point in the playback using the slider below these
-buttons.
 
 <h2>Exploration</h2>
 
-When playback is paused, the moves implied by the current state of the grid are
-calculated.  Squares with implied moves are outlined in green (for simple moves)
-to yellow (for complicated moves or series of moves).
+When playback is paused, the app calculates insights implied by the current
+state of the grid.  You can touch an outlined square to see the insights
+associated with that square.
+
 <ul>
-  <li>
+  <li><b>Yellow/green outline</b>: an <i>assignment</i> is implied for that
+    location.  Darker green means a shorter chain of insights leading to the
+    assignment, lighter means a longer chain.  Yellow means the number of links
+    hasn't been calculated yet.
+
+  <li><b>Orange outline</b>: a <i>disproof</i> is available at that location.
+    This is a proposed assignment to that location and the error that would
+    result, with a chain of insights between them.
 </ul>
 
-<h2>Symbols Within Squares</h2>
+During exploration, these actions are enabled:
+
 <ul>
-  <li>
+  <li><img class="float" src="file:///android_res/drawable/ic_menu_apply_enabled.png">
+    <i>Apply</i> makes the selected assignment, or crosses out the disproved
+    assignment.  Once you've applied one, every location you select
+    automatically applies its insight.
+
+  <li><img class="float" src="file:///android_res/drawable/ic_menu_clear_enabled.png">
+    <i>Clear</i> clears the insights from the grid.
+
+  <li><img class="float" src="file:///android_res/drawable/ic_menu_resume_enabled.png">
+    <i>Resume</i> undoes any applied insights and resumes playing back your
+    moves.
+
+  <li><div class="float">
+      <img class="float" src="file:///android_res/drawable/ic_menu_undo_enabled.png">
+      <img class="float" src="file:///android_res/drawable/ic_menu_redo_enabled.png">
+      </div>
+    <i>Undo</i> and <i>Redo</i> also work while exploring.
 </ul>
 </body>
 </html>
