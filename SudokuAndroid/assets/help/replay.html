@@ -55,8 +55,8 @@ During exploration, these actions are enabled:
 <ul>
   <li><img class="float" src="file:///android_res/drawable/ic_menu_apply_enabled.png">
     <i>Apply</i> makes the selected assignment, or crosses out the disproved
-    assignment.  Once you've applied one, every location you select
-    automatically applies its insight.
+    assignment.  Once you've applied one, every assignment you select is
+    automatically applied.
 
   <li><img class="float" src="file:///android_res/drawable/ic_menu_clear_enabled.png">
     <i>Clear</i> clears the insights from the grid.
@@ -66,10 +66,54 @@ During exploration, these actions are enabled:
     moves.
 
   <li><div class="float">
-      <img class="float" src="file:///android_res/drawable/ic_menu_undo_enabled.png">
-      <img class="float" src="file:///android_res/drawable/ic_menu_redo_enabled.png">
+      <img src="file:///android_res/drawable/ic_menu_undo_enabled.png">
+      <img src="file:///android_res/drawable/ic_menu_redo_enabled.png">
       </div>
     <i>Undo</i> and <i>Redo</i> also work while exploring.
 </ul>
+
+<h2>Insights</h2>
+
+<ul>
+  <li><div class="float"><img src="forced-loc-1.png"> <img src="forced-loc-2.png"></div>
+    <b>Forced-location assignment</b>: a numeral has only one possible location
+    within a <i>unit</i> (block, row, or column).  Shown with a unit indicator:
+    a square for the block, a line for the row or column.
+
+  <li><img class="float" src="forced-num.png">
+    <b>Forced-numeral assignment</b>: a location has only one possible numeral.
+    Shown with all the other numerals' clock positions crossed out.
+
+  <li><img class="float" src="overlap.png">
+    <b>Overlap</b>: a numeral's only possible locations within a block all lie
+    in a line, so that numeral can't appear elsewhere in the line.  Or vice
+    versa.  Shown with the numeral in its clock position and the unit indicator
+    of the unit whose choices are curtailed.
+
+  <li><img class="float" src="locked-set.png">
+    <b>Locked set</b>: a set of numerals is limited to a set of locations of the
+    same size within a unit, so no other numerals can go in those locations and
+    those numerals can't go in any other locations in the unit.  Shown with the
+    unit indicator.
+
+  <li><img class="float" src="conflict.png">
+    <b>Conflict error</b>: the same numeral appears twice in a given unit.
+    Shown with the offending numerals in red and the unit outlined in red.
+
+  <li><img class="float" src="barred-loc.png">
+    <b>Barred-location error</b>: a location is barred from having any numeral.
+    All numerals' clock positions are crossed out, and the location is outlined
+    in red.
+
+  <li><img class="float" src="barred-num.png">
+    <b>Barred-numeral error</b>: a numeral is barred from every location in a
+    unit.  The numeral's clock position is crossed out in all of the unit's
+    locations, and the unit is outlined in red.
+
+  <li><img class="float" src="unfounded.png">
+    <b>Unfounded assignment</b>: shown when an assignment has no basis in the
+    insights the app understands, and shown for a disproof's initial assignment.
+</ul>
+
 </body>
 </html>
