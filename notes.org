@@ -16,7 +16,7 @@ END
 ** App/UI cleanups
 *** DONE At startup on new installation, show dialog
     - point to settings & help
-*** TODO Add stream to settings
+*** DONE Add stream to settings
     - as a stopgap
     - update settings help
 *** TODO Do auto stream handling better

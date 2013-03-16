@@ -48,6 +48,7 @@ public class Prefs {
   public static final String DEVICE_NAME = "deviceName";
   public static final String PROPER_ONLY = "properOnly";
   public static final String SHARE_DATA = "shareData";
+  public static final String STREAM = "stream";
   public static final String USER_ID = "googleUserId";
 
   /** The largest number of solutions this app will tolerate. */
@@ -59,7 +60,6 @@ public class Prefs {
   private static final String MONTH = "month";
   private static final String SEEN_NOTICE = "seenNotice";
   private static final String SORT = "sort";
-  private static final String STREAM = "stream";
   private static final String STREAM_COUNT = "streamCount";
 
   private final Context mAppContext;
@@ -224,7 +224,6 @@ public class Prefs {
     if (streamCount == getStreamCount()) return;
     SharedPreferences.Editor prefs = mLocalPrefs.edit();
     prefs.putInt(STREAM_COUNT, streamCount);
-    prefs.remove(STREAM);  // recalculate the stream next time
     prefs.apply();
   }
 

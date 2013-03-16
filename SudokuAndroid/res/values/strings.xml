@@ -55,6 +55,7 @@
     <string name="prefs_proper_only">Proper sudokus only</string>
     <string name="prefs_share_data">Share anonymous data</string>
     <string name="prefs_share_desc">Thank you for supporting Sudoku science!</string>
+    <string name="prefs_stream">Puzzle stream number</string>
     <string name="prefs_user_id">Account</string>
     <string name="text_all_puzzles">All puzzles</string>
     <string name="text_already_have_puzzle">You already have this puzzle!</string>

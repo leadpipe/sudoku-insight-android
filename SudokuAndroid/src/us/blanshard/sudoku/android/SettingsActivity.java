@@ -56,6 +56,8 @@ public class SettingsActivity extends ActivityBase {
   }
 
   public static class SettingsFragment extends PreferenceFragment {
+    private Prefs mPrefs;
+
     @Override public void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
       getPreferenceManager().setSharedPreferencesName(Prefs.BACKED_UP_PREFS);
@@ -69,9 +71,11 @@ public class SettingsActivity extends ActivityBase {
 
     @Override public void onActivityCreated(Bundle savedInstanceState) {
       super.onActivityCreated(savedInstanceState);
+      mPrefs = ((SettingsActivity) getActivity()).mPrefs;
 
       setUpDeviceName();
       setUpAccounts();
+      setUpStream();
     }
 
     private void setUpDeviceName() {
@@ -107,6 +111,28 @@ public class SettingsActivity extends ActivityBase {
         }
       });
       applyChangeListener(pref);
+    }
+
+    private void setUpStream() {
+      ListPreference pref = (ListPreference) findPreference(Prefs.STREAM);
+      int count = mPrefs.getStreamCount();
+      CharSequence[] values = new CharSequence[count];
+      for (int i = 0; i < count; ++i)
+        values[i] = String.valueOf(i + 1);
+      pref.setEntries(values);
+      pref.setEntryValues(values);
+      pref.setValue(String.valueOf(mPrefs.getStream()));
+      pref.setSummary(pref.getValue());
+      pref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+        @Override public boolean onPreferenceChange(Preference preference, Object newValue) {
+          if (newValue != null) {
+            mPrefs.setStreamAsync(Integer.valueOf(newValue.toString()));
+            preference.setSummary(newValue.toString());
+            return true;
+          }
+          return false;
+        }
+      });
     }
 
     private static void applyChangeListener(Preference pref) {

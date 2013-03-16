@@ -19,6 +19,12 @@
         android:dependency="googleUserId"
         />
     
+    <ListPreference
+        android:key="stream"
+        android:title="@string/prefs_stream"
+        android:persistent="false"
+        />
+    
     <CheckBoxPreference
         android:key="properOnly"
         android:title="@string/prefs_proper_only"
