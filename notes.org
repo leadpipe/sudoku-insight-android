@@ -14,10 +14,15 @@ END
 * App
 
 ** App/UI cleanups
-*** DONE Improve layout on tablets
-    - make play grid larger, replay grid smaller; max ~30% differential
-    - ensure capture grid matches play grid
-*** DONE Finish help content
+*** TODO At startup on new installation, show dialog
+    - point to settings & help
+*** TODO Add stream to settings
+    - as a stopgap
+    - update settings help
+*** TODO Do auto stream handling better
+    - if the server sets the stream, explicitly skip queued puzzles from previous stream
+    - have the server send a GCM message to the younger installations to change
+      their streams, rather than changing the older installations
 *** TODO bug: somehow wound up getting shown completed puzzles
     - each time I started the app it advanced 3-4 in the history
     - find and fix the bug; but also harden the fragment against future similar
