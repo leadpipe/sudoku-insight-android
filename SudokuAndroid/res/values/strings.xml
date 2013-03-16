@@ -11,6 +11,8 @@
     <string name="button_once">Just Once</string>
     <string name="button_pause">Pause</string>
     <string name="button_play">Play</string>
+    <string name="dialog_first_time_message">Welcome to Sudoku Insight.  There is help available via the Help menu, and there are a few settings you may wish to adjust in the Settings menu.\n\nEnjoy!</string>
+    <string name="dialog_first_time_here_message">Welcome back.  If you see familiar puzzles, consider changing the stream number in Settings.</string>
     <string name="dialog_give_up_message">Give up on this puzzle?</string>
     <string name="dialog_improper_message">This Sudoku has more than one solution.  Play it anyway?</string>
     <string name="dialog_improper_title">"\"Improper\" Puzzle"</string>

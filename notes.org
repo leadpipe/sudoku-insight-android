@@ -14,7 +14,7 @@ END
 * App
 
 ** App/UI cleanups
-*** TODO At startup on new installation, show dialog
+*** DONE At startup on new installation, show dialog
     - point to settings & help
 *** TODO Add stream to settings
     - as a stopgap
@@ -42,7 +42,7 @@ END
 *** TODO Make other graphics for play store
 
 ** Cross-installation work
-*** TODO At startup on new installation, show settings page
+*** DONE At startup on new installation, show settings page
     - with some introductory help?
     - or... a dialog?
 *** TODO Add pref for whether to sync from other devices

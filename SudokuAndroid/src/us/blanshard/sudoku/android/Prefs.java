@@ -57,6 +57,7 @@ public class Prefs {
   private static final String DEFAULT_DEVICE_NAME = "defaultDeviceName";
   private static final String INSTALL_DATA = "installData";
   private static final String MONTH = "month";
+  private static final String SEEN_NOTICE = "seenNotice";
   private static final String SORT = "sort";
   private static final String STREAM = "stream";
   private static final String STREAM_COUNT = "streamCount";
@@ -263,5 +264,22 @@ public class Prefs {
     SharedPreferences.Editor prefs = mLocalPrefs.edit();
     prefs.putString(INSTALL_DATA, data);
     prefs.commit();
+  }
+
+  public boolean hasUserEverSeenNotice() {
+    return mPrefs.getBoolean(SEEN_NOTICE, false);
+  }
+
+  public boolean hasUserSeenNoticeHere() {
+    return mLocalPrefs.getBoolean(SEEN_NOTICE, false);
+  }
+
+  public void setUserHasSeenNoticeAsync() {
+    SharedPreferences.Editor prefs = mLocalPrefs.edit();
+    prefs.putBoolean(SEEN_NOTICE, true);
+    prefs.apply();
+    prefs = mPrefs.edit();
+    prefs.putBoolean(SEEN_NOTICE, true);
+    prefs.apply();
   }
 }

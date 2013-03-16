@@ -48,6 +48,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -315,6 +316,31 @@ public class SudokuFragment
     mProgress.setVisibility(View.VISIBLE);
   }
 
+  private void showFirstTimeDialog() {
+    if (mPrefs.hasUserSeenNoticeHere())
+      return;
+    final int messageId = mPrefs.hasUserEverSeenNotice()
+        ? R.string.dialog_first_time_here_message
+        : R.string.dialog_first_time_message;
+    DialogFragment dialog = new DialogFragment() {
+      @Override public Dialog onCreateDialog(Bundle savedInstanceState) {
+        return new AlertDialog.Builder(getActivity())
+            .setMessage(messageId)
+            .setNeutralButton(android.R.string.ok, new OnClickListener() {
+                @Override public void onClick(DialogInterface dialog, int which) {
+                  dialog.dismiss();
+                }
+            })
+            .create();
+      }
+      @Override public void onDismiss(DialogInterface dialog) {
+        mPrefs.setUserHasSeenNoticeAsync();
+      }
+    };
+    dialog.show(getFragmentManager(), "firstTime");
+    gameShowing(false);
+  }
+
   @Override public void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
     saveAttemptFromUiThread();
@@ -465,6 +491,7 @@ public class SudokuFragment
   }
 
   void gameShowing(boolean showing) {
+    Log.d("SudokuFragment", "gameShowing " + showing);
     if (mResumed = showing) {
       if (mGame != null && mState != Grid.State.SOLVED) mGame.resume();
       new CheckNextAttempt(this).execute(mAttempt == null ? null : mAttempt._id);
@@ -476,10 +503,8 @@ public class SudokuFragment
 
   @Override public void onResume() {
     super.onResume();
-    // You wouldn't think implementing this method was necessary, but without it
-    // the game gets suspended when the screen times out and doesn't get resumed
-    // when you turn the screen back on without going through the unlock cycle.
     gameShowing(true);
+    showFirstTimeDialog();
   }
 
   private void cancelStatus() {
@@ -528,7 +553,6 @@ public class SudokuFragment
         return true;
 
       case R.id.menu_undo_to_start:
-        gameShowing(true);
         try {
           while (mUndoStack.canUndo())
             mUndoStack.undo();
@@ -548,7 +572,6 @@ public class SudokuFragment
         return true;
 
       case R.id.menu_redo_to_end:
-        gameShowing(true);
         try {
           while (mUndoStack.canRedo())
             mUndoStack.redo();
