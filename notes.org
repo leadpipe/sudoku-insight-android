@@ -17,7 +17,7 @@ END
 *** DONE Improve layout on tablets
     - make play grid larger, replay grid smaller; max ~30% differential
     - ensure capture grid matches play grid
-*** TODO Finish help content
+*** DONE Finish help content
 *** TODO bug: somehow wound up getting shown completed puzzles
     - each time I started the app it advanced 3-4 in the history
     - find and fix the bug; but also harden the fragment against future similar
@@ -32,7 +32,7 @@ END
 
 ** Publishing the app
 *** DONE Make release keys
-*** TODO Register api key using release keys
+*** DONE Register api key using release keys
 *** DONE Include app's android:versionCode in installation data
 *** TODO Make other graphics for play store
 
