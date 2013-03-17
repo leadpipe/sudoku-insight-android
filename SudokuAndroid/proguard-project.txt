@@ -21,5 +21,6 @@
 
 # Application classes that will be serialized/deserialized over Gson
 -keep class us.blanshard.sudoku.messages.** { *; }
+-keepclassmembernames class us.blanshard.sudoku.android.SudokuFragment$UiState { <fields>; }
 
 ##---------------End: proguard configuration for Gson  ----------

@@ -24,7 +24,6 @@ import us.blanshard.sudoku.gen.Generator;
 import us.blanshard.sudoku.messages.InstallationRpcs;
 import us.blanshard.sudoku.messages.PuzzleRpcs;
 import us.blanshard.sudoku.messages.Rpc;
-import us.blanshard.sudoku.messages.Rpc.Response;
 
 import android.accounts.Account;
 import android.app.IntentService;
@@ -280,8 +279,8 @@ public class NetworkService extends IntentService {
     }
 
     @SuppressWarnings("unchecked")
-    void setResponse(Response<?> response) {
-      this.response = (Response<T>) response;
+    void setResponse(Rpc.Response<?> response) {
+      this.response = (Rpc.Response<T>) response;
     }
 
     boolean processResponse() {
