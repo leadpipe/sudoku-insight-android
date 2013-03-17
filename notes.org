@@ -96,6 +96,7 @@ END
   - File -> Export -> Android Application
   - Name it SudokuAndroid-x.y-suffix.apk
   - Run it using adb install -r xxx.apk (or adb -d install -r on a device)
+  - When it's all working, publish, then bump versionCode and versionName to dev numbers for next release
 
 * App engine app
 
