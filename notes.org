@@ -91,10 +91,11 @@ END
 
 * How to release the android app
   - http://developer.android.com/tools/publishing/preparing.html
-  - bump the versionCode and versionName in the manifest
+  - Bump the versionCode and versionName in the manifest
   - http://developer.android.com/tools/publishing/app-signing.html#ExportWizard
   - File -> Export -> Android Application
   - Name it SudokuAndroid-x.y-suffix.apk
+  - Run it using adb install -r xxx.apk (or adb -d install -r on a device)
 
 * App engine app
 

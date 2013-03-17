@@ -79,7 +79,7 @@ public class InstallationUpdateMethod extends RpcMethod<UpdateParams, UpdateResu
   private static final Logger logger = Logger.getLogger(InstallationUpdateMethod.class.getName());
   private static final ImmutableSet<String> CLIENT_IDS = ImmutableSet.of(
       "826990774749.apps.googleusercontent.com",
-      "826990774749-258fl53lo3h8t964408sftsog11em9ij.apps.googleusercontent.com");
+      "826990774749-gmc8pl4fq05crl0bqbep9bcl28hfc5fj.apps.googleusercontent.com");
   private static final Pattern BASE_NAME_PATTERN = Pattern.compile("(.*)\\s+\\d+");
   private final JsonFactory jsonFactory = new GsonFactory();
   private final GoogleIdTokenVerifier tokenVerifier = new GoogleIdTokenVerifier(new NetHttpTransport(), jsonFactory);
