@@ -31,6 +31,9 @@ SharedLibs/*.jar
 # Android copies of those jars
 SudokuAndroid/libs/*.jar
 
+# Proguard output
+SudokuAndroid/proguard/*.txt
+
 # Java appserver stuff
 WEB-INF/lib/*.jar
 WEB-INF/*/*.xml
