@@ -59,14 +59,18 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
+import com.google.common.primitives.Floats;
 import com.google.common.primitives.Ints;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -108,11 +112,11 @@ public class ReplayActivity extends ActivityBase
   private Command mPendingCommand;
 
   private static final Integer[] sMinAssignmentColors, sUnminAssignmentColors;
-  private static final Integer[] sMinDisproofColors;
+  private static final Integer[] sUnminDisproofColors;
+  private static final Integer[][] sMinDisproofColors;
   static {
     sMinAssignmentColors = new Integer[10];
     sUnminAssignmentColors = new Integer[10];
-    sMinDisproofColors = new Integer[10];
     for (int i = 0; i < 10; ++i) {
       float f = 1f / (1 << i);
       float h = 1 - f;
@@ -120,7 +124,17 @@ public class ReplayActivity extends ActivityBase
       float v = h * 0.4f + 0.6f;
       sMinAssignmentColors[i] = Color.HSVToColor(new float[] {90f - 20 * h, s, 0.9f * v});
       sUnminAssignmentColors[i] = Color.HSVToColor(new float[] {60f, s, 0.95f});
-      sMinDisproofColors[i] = Color.HSVToColor(new float[] {20 + 10 * h, s, v});
+    }
+    sUnminDisproofColors = new Integer[11];
+    sMinDisproofColors = new Integer[11][11];
+    for (int i = 0; i < 11; ++i) {
+      float f = (float) i / 11;
+      float h = 240 + 60 * (1 - f);
+      sUnminDisproofColors[i] = Color.HSVToColor(new float[] {h, 0.5f, 1});
+      for (int j = 0; j < 11; ++j) {
+        float s = f * 0.5f + 0.5f;
+        sMinDisproofColors[j][i] = Color.HSVToColor(new float[] {h, s, 0.7f});
+      }
     }
   }
 
@@ -139,8 +153,13 @@ public class ReplayActivity extends ActivityBase
       if (insightMin == null) {
         insightMin = mInsights.disproofs.get(loc);
         if (insightMin == null) return null;
-        colors = sMinDisproofColors;
-        index = insightMin.insight.getCount() - 1;
+        if (insightMin.minimized) {
+          index = Math.min(10, insightMin.insight.getCount() - 1);
+          colors = sMinDisproofColors[index];
+        } else {
+          colors = sUnminDisproofColors;
+        }
+        index = Math.round(insightMin.fractionCovered * 10);
       } else if (insightMin.minimized) {
         colors = sMinAssignmentColors;
         index = insightMin.insight.getCount() - 1;
@@ -413,7 +432,7 @@ public class ReplayActivity extends ActivityBase
       if (mDisprove != null) mDisprove.cancel();
       if (mMinimize != null) mMinimize.cancel();
       mMinimize = new Minimize(this, true);
-      mMinimize.execute(singleton(mInsights.error), mInsights.assignments.values(), mInsights.disproofs.values());
+      mMinimize.execute(singleton(mInsights.error), mInsights.assignments.values(), mInsights.disproofsInOrder());
     }
   }
 
@@ -434,11 +453,18 @@ public class ReplayActivity extends ActivityBase
     }
   }
 
-  void addDisproof(DisprovedAssignment disproof, boolean minimized) {
+  void addDisproof(InsightMin insightMin) {
+    DisprovedAssignment disproof = (DisprovedAssignment) insightMin.insight;
     Location loc = disproof.getDisprovedAssignment().location;
-    mInsights.disproofs.put(loc, minimized ? new InsightMin(disproof, true) : new InsightMin(disproof));
-    if (!mRunning)
-      mReplayView.invalidateLocation(loc);
+    InsightMin existing = mInsights.disproofs.get(loc);
+    if (existing == null
+        || insightMin.fractionCovered > existing.fractionCovered
+        || (insightMin.fractionCovered == existing.fractionCovered
+            && insightMin.insight.getDepth() < existing.insight.getDepth())) {
+      mInsights.disproofs.put(loc, insightMin);
+      if (!mRunning)
+        mReplayView.invalidateLocation(loc);
+    }
   }
 
   void minimized(InsightMin insightMin) {
@@ -744,21 +770,23 @@ public class ReplayActivity extends ActivityBase
     }
   }
 
-  private static class InsightMin {
+  private static class InsightMin implements Comparable<InsightMin> {
     volatile Insight insight;
     volatile boolean minimized;
+    final float fractionCovered;
 
     InsightMin(Insight insight) {
-      this(insight, insight.getDepth() == 0);
+      this(insight, insight.getDepth() == 0, 0);
     }
 
-    InsightMin(DisprovedAssignment insight) {
-      this(insight, insight.getDepth() == 1);
+    InsightMin(DisprovedAssignment insight, float fractionCovered) {
+      this(insight, insight.getDepth() == 1, fractionCovered);
     }
 
-    InsightMin(Insight insight, boolean minimized) {
+    InsightMin(Insight insight, boolean minimized, float fractionCovered) {
       this.insight = insight;
       this.minimized = minimized;
+      this.fractionCovered = fractionCovered;
     }
 
     boolean minimize(GridMarks gridMarks) {
@@ -777,6 +805,11 @@ public class ReplayActivity extends ActivityBase
       if (minimized) return insight.toString();
       return insight.toShortString();
     }
+
+    @Override public int compareTo(InsightMin that) {
+      // Compare by larger fraction covered.
+      return Floats.compare(that.fractionCovered, this.fractionCovered);
+    }
   }
 
   private static class Insights {
@@ -784,10 +817,21 @@ public class ReplayActivity extends ActivityBase
     final Map<Location, InsightMin> assignments = Maps.newLinkedHashMap();
     final Map<Location, InsightMin> disproofs = Maps.newHashMap();
     @Nullable InsightMin error;
+    @Nullable LocSet available;
+    @Nullable Queue<PossibleAssignment> possibles;
     int disproofsSetSize;
 
     Insights(GridMarks gridMarks) {
       this.gridMarks = gridMarks;
+    }
+
+    Collection<InsightMin> disproofsInOrder() {
+      List<InsightMin> list = Lists.newArrayList();
+      for (InsightMin insightMin : disproofs.values())
+        if (!insightMin.minimized)
+          list.add(insightMin);
+      Collections.sort(list);
+      return list;
     }
   }
 
@@ -839,6 +883,33 @@ public class ReplayActivity extends ActivityBase
       if (insight.isError()) {
         error = insight;
         throw new StopException();
+      }
+    }
+  }
+
+  /**
+   * Analyzer callback that keeps track of all assignment locations found within
+   * a set and stops early if the entire set is covered.
+   */
+  private static class CoverageMeasurer implements Analyzer.Callback {
+    private final LocSet available;
+    LocSet found = new LocSet();
+
+    public CoverageMeasurer(LocSet available) {
+      this.available = available;
+    }
+
+    public float getFractionCovered() {
+      return (float) found.size() / available.size();
+    }
+
+    @Override public void take(Insight insight) throws StopException {
+      if (insight.isAssignment()) {
+        Location loc = insight.getImpliedAssignment().location;
+        if (available.contains(loc)) {
+          if (found.add(loc) && available.minus(found).isEmpty())
+            throw new StopException();
+        }
       }
     }
   }
@@ -946,7 +1017,7 @@ public class ReplayActivity extends ActivityBase
   }
 
   private static class Disprove
-      extends WorkerFragment.ActivityTask<ReplayActivity, Void, DisprovedAssignment, Void> {
+      extends WorkerFragment.ActivityTask<ReplayActivity, Void, InsightMin, Void> {
     private final Insights mInsights;
     private final GridMarks mSolution;
     private int mSetSize;
@@ -960,31 +1031,29 @@ public class ReplayActivity extends ActivityBase
 
     @Override protected Void doInBackground(Void... params) {
       GridMarks current = mInsights.gridMarks;
-      LocSet available = LocSet.all()
-          .minus(current.grid.keySet())
-          .minus(mInsights.assignments.keySet())
-          .minus(mInsights.disproofs.keySet());
-      List<PossibleAssignment> possibles = findPossibles(mSolution, current, available);
-
-      // First pass: look for assignments that cause an error on recursive assignment.
-      for (PossibleAssignment p : possibles) {
-        if (available.isEmpty() || wasCanceled()) break;
-        checkForDisproof(current, available, p, true);
+      if (mInsights.possibles == null) {
+        mInsights.available = LocSet.all()
+            .minus(current.grid.keySet())
+            .minus(mInsights.assignments.keySet());
+        mInsights.possibles = findPossibles(mSolution, current, mInsights.available);
       }
 
-      // Second pass: do the rest.
-      for (PossibleAssignment p : possibles) {
-        if (available.isEmpty() || wasCanceled()) break;
-        checkForDisproof(current, available, p, false);
+      for (PossibleAssignment p; (p = mInsights.possibles.poll()) != null; ) {
+        if (mSetSize > 0 && p.setSize > mSetSize) {
+          mInsights.possibles.clear();
+          break;
+        }
+        if (wasCanceled()) break;
+        checkForDisproof(current, p);
       }
 
       return null;
     }
 
-    @Override protected void onProgressUpdate(ReplayActivity activity, DisprovedAssignment... disproofs) {
+    @Override protected void onProgressUpdate(ReplayActivity activity, InsightMin... insightMins) {
       mInsights.disproofsSetSize = mSetSize;
       if (mInsights == activity.mInsights)
-        activity.addDisproof(disproofs[0], true);
+        activity.addDisproof(insightMins[0]);
     }
 
     @Override protected void onPostExecute(ReplayActivity activity, Void result) {
@@ -992,9 +1061,9 @@ public class ReplayActivity extends ActivityBase
       activity.disproofComplete(this);
     }
 
-    private List<PossibleAssignment> findPossibles(GridMarks solution, GridMarks current,
+    private Queue<PossibleAssignment> findPossibles(GridMarks solution, GridMarks current,
         LocSet available) {
-      List<PossibleAssignment> possibles = Lists.newArrayList();
+      Queue<PossibleAssignment> possibles = Queues.newPriorityQueue();
       for (Unit unit : Unit.allUnits())
         for (Numeral num : Numeral.ALL) {
           UnitSubset set = current.marks.get(unit, num);
@@ -1011,25 +1080,19 @@ public class ReplayActivity extends ActivityBase
           for (Numeral num : set.minus(solSet))
             possibles.add(new PossibleAssignment(loc, num, set.size()));
       }
-      Collections.sort(possibles);
       return possibles;
     }
 
-    private void checkForDisproof(
-        GridMarks current, LocSet available, PossibleAssignment p, boolean fastPath) {
-      if (!available.contains(p.loc)) return;
-      if (mSetSize > 0 && p.setSize > mSetSize) return;
-      if (fastPath && current.marks.toBuilder().assignRecursively(p.loc, p.num)) return;
-
+    private void checkForDisproof(GridMarks current, PossibleAssignment p) {
       ErrorGrabber grabber = new ErrorGrabber();
       Analyzer.analyze(current.toBuilder().assign(p.loc, p.num).build(), grabber);
 
       if (grabber.error != null) {
         mSetSize = p.setSize;
         DisprovedAssignment disproof = new DisprovedAssignment(p.toAssignment(), grabber.error);
-        disproof = (DisprovedAssignment) Analyzer.minimize(current, disproof);
-        publishProgress(disproof);
-        available.remove(p.loc);
+        CoverageMeasurer cm = new CoverageMeasurer(mInsights.available);
+        Analyzer.analyze(current.toBuilder().eliminate(p.loc, p.num).build(), cm);
+        publishProgress(new InsightMin(disproof, cm.getFractionCovered()));
       }
     }
   }
