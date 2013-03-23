@@ -19,6 +19,8 @@ END
 *** DONE Add stream to settings
     - as a stopgap
     - update settings help
+*** DONE Crasher when going from info through list to new puzzle
+    - made WorkerFragment more resilient to being used while shutting down
 *** TODO Do auto stream handling better
     - if the server sets the stream, explicitly skip queued puzzles from previous stream
     - have the server send a GCM message to the younger installations to change

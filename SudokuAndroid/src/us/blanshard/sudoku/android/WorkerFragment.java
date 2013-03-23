@@ -195,6 +195,8 @@ public class WorkerFragment extends Fragment {
 
     abstract class Foreground implements Runnable {
       final void runInForeground() {
+        if (mWorker == null)
+          return;  // The task was created at the wrong time, just bury it.
         if (getAnchor() == null)
           mWorker.runWhenAttached(this);
         else
@@ -337,6 +339,7 @@ public class WorkerFragment extends Fragment {
   }
 
   private static WorkerFragment getWorker(FragmentManager fm) {
+    if (fm == null) return null;
     WorkerFragment worker = (WorkerFragment) fm.findFragmentByTag(TAG);
     if (worker == null) {
       worker = new WorkerFragment();
