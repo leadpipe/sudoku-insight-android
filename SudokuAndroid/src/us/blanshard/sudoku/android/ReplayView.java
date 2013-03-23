@@ -68,7 +68,7 @@ public class ReplayView extends SudokuView {
   private static final int OVERLAP_COLOR = Color.argb(128, 32, 96, 160);
   private static final int QUESTION_COLOR = Color.argb(128, 192, 96, 96);
   private static final int UNIT_COLOR = Color.argb(64, 96, 96, 96);
-  private static final int SELECTION_COLOR = Color.argb(16, 0, 0, 255);
+  private static final int SELECTION_COLOR = Color.argb(24, 0, 0, 0);
 
   private static final int UNIT_MASK = 7;
   private static final int ERROR_BORDER_MASK = 8;
