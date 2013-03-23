@@ -91,6 +91,7 @@ public class WorkerFragment extends Fragment {
     /** Initiates the background task, passing the given inputs. */
     public final void execute(final I... inputs) {
       checkState(mFuture == null, "Task already executed");
+      if (mWorker == null) return;
       Runnable r = new Runnable() {
         @Override public void run() {
           Process.setThreadPriority(mPriority.mThreadPriority);
