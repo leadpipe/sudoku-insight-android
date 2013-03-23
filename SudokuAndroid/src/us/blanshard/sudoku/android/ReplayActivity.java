@@ -128,12 +128,13 @@ public class ReplayActivity extends ActivityBase
     sUnminDisproofColors = new Integer[11];
     sMinDisproofColors = new Integer[11][11];
     for (int i = 0; i < 11; ++i) {
-      float f = (float) i / 11;
-      float h = 240 + 60 * (1 - f);
-      sUnminDisproofColors[i] = Color.HSVToColor(new float[] {h, 0.5f, 1});
+      float h = 240 + 60 * (1 - ((float) i / 11));
+      sUnminDisproofColors[i] = Color.HSVToColor(new float[] {h, 0.3f, 1});
       for (int j = 0; j < 11; ++j) {
-        float s = f * 0.5f + 0.5f;
-        sMinDisproofColors[j][i] = Color.HSVToColor(new float[] {h, s, 0.7f});
+        float f = 1f / (1 << j);
+        float s = f * 0.4f + 0.6f;
+        float v = 0.7f + 0.3f * i / 11;
+        sMinDisproofColors[j][i] = Color.HSVToColor(new float[] {h, s, v});
       }
     }
   }

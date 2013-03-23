@@ -51,21 +51,23 @@ END
     - dependent on selecting an account
 
 ** Replay cleanups
-*** TODO Revise calculation and display of disproofs
+*** DONE Revise calculation and display of disproofs
     - find all disproofs (not just one per open location)
     - don't minimize them right away
     - add a new phase to calculate the efficacy of each disproof: the proportion
       of open locations that get assignments when insights are gathered after
       the disproof is applied
+      - (didn't do this step)
     - show the efficacy as hue between purple (least) and blue (most)
     - for locations with disproofs not yet evaluated for efficacy, use orange
+      - (nor this one)
     - for a given location, display the most effective disproof
     - use saturation/value to show length of disproof; so will get brighter
       after minimization
+*** TODO Redo in exploration mode?
 *** TODO Wrong-numeral mistakes show without the error during single-step playback
     - the error appears while running forward
 *** TODO Try making selection color darker
-*** TODO Try not minimizing disproofs until they're selected
 *** TODO Why does the first trail in puzzle 14 switch errors?
 *** TODO Analysis getting cropped early when use the slider
     - Leftover thread interruption?
