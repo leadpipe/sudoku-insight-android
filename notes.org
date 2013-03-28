@@ -31,7 +31,7 @@ END
     - Include a link to the puzzle details
 
 ** Publishing the app
-*** TODO Make other graphics for play store
+*** DONE Make other graphics for play store
 
 ** Cross-installation work
 *** TODO Add pref for whether to sync from other devices
