@@ -67,6 +67,7 @@ END
 * How to release the android app
   - http://developer.android.com/tools/publishing/preparing.html
   - Bump the versionCode and versionName in the manifest
+  - Turn off "Build Automatically" (this gets the DEBUG flag turned off in the released app)
   - http://developer.android.com/tools/publishing/app-signing.html#ExportWizard
   - File -> Export -> Android Application
   - Name it SudokuAndroid-x.y-suffix.apk
