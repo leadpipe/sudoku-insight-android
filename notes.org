@@ -38,20 +38,23 @@ END
     - dependent on selecting an account
 
 ** Replay cleanups
+*** TODO Add jump forward/jump back buttons
+    - land just before trail switches
+*** TODO Improve display of insight data
+    - show insight count and coverage percentage in the square, along with the
+      corresponding border color
+    - I guess show them only if no insight display showing in the square
+*** TODO Animate insight display
+    - for complex implications, this could help the visualization
 *** TODO Redo in exploration mode?
 *** TODO Wrong-numeral mistakes show without the error during single-step playback
     - the error appears while running forward
 *** TODO Why does the first trail in puzzle 14 switch errors?
 *** TODO Analysis getting cropped early when use the slider
     - Leftover thread interruption?
-*** TODO Automatically pause the replay on switch of trail, just after the move
-    - Or, rethink this.  Not clear it would be helpful.
-    - It would be nice to be able to jump past trail switches
 *** TODO Clearing the present insight should clear the selected location too
     - should it also clear the error displayed?
     - or possibly everything but the nub of the error?
-*** TODO Think about animation of insight display
-    - for complex implications, this could help the visualization
 
 ** List view ideas
 *** TODO Add a count to the list spinner: #puzzles in collection
