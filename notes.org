@@ -47,6 +47,7 @@ END
 *** TODO Animate insight display
     - for complex implications, this could help the visualization
 *** TODO Update the help for replay
+*** TODO Update screen shots?
 *** TODO Redo in exploration mode?
 *** TODO Wrong-numeral mistakes show without the error during single-step playback
     - the error appears while running forward
