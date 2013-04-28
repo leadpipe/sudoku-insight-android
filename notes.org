@@ -38,7 +38,7 @@ END
     - dependent on selecting an account
 
 ** Replay cleanups
-*** TODO Add jump forward/jump back buttons
+*** DONE Add jump forward/jump back buttons
     - land just before trail switches
 *** TODO Improve display of insight data
     - show insight count and coverage percentage in the square, along with the

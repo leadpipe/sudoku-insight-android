@@ -8,6 +8,8 @@
     <string name="button_capture_play">Play Now</string>
     <string name="button_capture_save">Save for Later</string>
     <string name="button_give_up">Give Up</string>
+    <string name="button_jump_back">Jump Back</string>
+    <string name="button_jump_forward">Jump Forward</string>
     <string name="button_once">Just Once</string>
     <string name="button_pause">Pause</string>
     <string name="button_play">Play</string>

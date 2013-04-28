@@ -203,6 +203,8 @@ public class ReplayActivity extends ActivityBase
     findViewById(R.id.back).setOnClickListener(this);
     findViewById(R.id.undo).setOnClickListener(this);
     findViewById(R.id.redo).setOnClickListener(this);
+    findViewById(R.id.jump_back).setOnClickListener(this);
+    findViewById(R.id.jump_forward).setOnClickListener(this);
 
     mRegistry.addListener(new Sudoku.Adapter() {
       @Override public void moveMade(Sudoku game, Move move) {
@@ -521,7 +523,7 @@ public class ReplayActivity extends ActivityBase
         break;
 
       case R.id.undo:
-      case R.id.redo:
+      case R.id.redo: {
         mRunning = false;
         mReplayView.removeCallbacks(replayCycler);
         boolean forward = v.getId() == R.id.redo;
@@ -533,6 +535,16 @@ public class ReplayActivity extends ActivityBase
           stepReplay(true);
         }
         break;
+      }
+      case R.id.jump_back:
+      case R.id.jump_forward: {
+        mRunning = false;
+        mReplayView.removeCallbacks(replayCycler);
+        mForward = v.getId() == R.id.jump_forward;
+        clearPending();
+        jump();
+        break;
+      }
     }
   }
 
@@ -541,19 +553,23 @@ public class ReplayActivity extends ActivityBase
       findViewById(R.id.play).setEnabled(false);
       findViewById(R.id.back).setEnabled(false);
       findViewById(R.id.pause).setEnabled(false);
+      findViewById(R.id.jump_back).setEnabled(false);
+      findViewById(R.id.jump_forward).setEnabled(false);
       findViewById(R.id.undo).setEnabled(mUndoStack.canUndo());
       findViewById(R.id.redo).setEnabled(mUndoStack.canRedo());
       mReplayLocation.setEnabled(false);
       mTimer.setTextColor(Color.LTGRAY);
       mMoveNumber.setTextColor(Color.LTGRAY);
     } else {
-      findViewById(R.id.play).setEnabled(
-          (!mRunning || !mForward) && mHistoryPosition < mHistory.size());
-      findViewById(R.id.back).setEnabled(
-          (!mRunning || mForward) && mHistoryPosition > 0);
+      boolean notAtBeginning = mHistoryPosition > 0;
+      boolean notAtEnd = mHistory != null && mHistoryPosition < mHistory.size();
+      findViewById(R.id.play).setEnabled((!mRunning || !mForward) && notAtEnd);
+      findViewById(R.id.back).setEnabled((!mRunning || mForward) && notAtBeginning);
       findViewById(R.id.pause).setEnabled(mRunning);
-      findViewById(R.id.undo).setEnabled(mHistoryPosition > 0);
-      findViewById(R.id.redo).setEnabled(mHistory != null && mHistoryPosition < mHistory.size());
+      findViewById(R.id.undo).setEnabled(notAtBeginning);
+      findViewById(R.id.redo).setEnabled(notAtEnd);
+      findViewById(R.id.jump_back).setEnabled(notAtBeginning);
+      findViewById(R.id.jump_forward).setEnabled(notAtEnd);
       mReplayLocation.setEnabled(!mRunning);
       mTimer.setTextColor(Color.BLACK);
       mMoveNumber.setTextColor(Color.BLACK);
@@ -671,6 +687,25 @@ public class ReplayActivity extends ActivityBase
       }
     }
     return false;
+  }
+
+  private void jump() {
+    int trailId = nextTrailId();
+    while (move(mForward) && trailId == nextTrailId()) {
+      // Just move
+    }
+    mInsights = null;
+    reflectCurrentMove();
+    setControlsEnablement();
+  }
+
+  private int nextTrailId() {
+    if (mForward) {
+      if (mHistoryPosition < mHistory.size())
+        return mHistory.get(mHistoryPosition).trailId;
+    } else if (mHistoryPosition > 0)
+      return mHistory.get(mHistoryPosition - 1).trailId;
+    return -1;
   }
 
   private void reflectCurrentMove() {

@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     >
 
-    <!-- Top line: buttonsr -->
+    <!-- Top line: buttons -->
     <ImageButton
         android:id="@+id/undo"
         android:layout_width="wrap_content"
@@ -13,6 +13,16 @@
         android:contentDescription="@string/menu_undo"
         style="@android:style/Widget.Button.Small"
         android:src="@drawable/menu_undo"
+        android:layout_toLeftOf="@+id/jump_back"
+        />
+
+    <ImageButton
+        android:id="@+id/jump_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/button_jump_back"
+        style="@android:style/Widget.Button.Small"
+        android:src="@drawable/btn_jump_back"
         android:layout_toLeftOf="@+id/back"
         />
 
@@ -34,8 +44,6 @@
         style="@android:style/Widget.Button.Small"
         android:src="@drawable/btn_pause"
         android:layout_centerHorizontal="true"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
         />
 
     <ImageButton
@@ -49,13 +57,23 @@
         />
 
     <ImageButton
+        android:id="@+id/jump_forward"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/button_jump_forward"
+        style="@android:style/Widget.Button.Small"
+        android:src="@drawable/btn_jump_forward"
+        android:layout_toRightOf="@+id/play"
+        />
+
+    <ImageButton
         android:id="@+id/redo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:contentDescription="@string/menu_redo"
         style="@android:style/Widget.Button.Small"
         android:src="@drawable/menu_redo"
-        android:layout_toRightOf="@+id/play"
+        android:layout_toRightOf="@+id/jump_forward"
         />
 
     <!-- Middle line: seek bar -->
