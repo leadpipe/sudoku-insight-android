@@ -40,7 +40,7 @@ END
 ** Replay cleanups
 *** DONE Add jump forward/jump back buttons
     - land just before trail switches
-*** TODO Improve display of insight data
+*** DONE Improve display of insight data
     - show insight count and coverage percentage in the square, along with the
       corresponding border color
     - I guess show them only if no insight display showing in the square

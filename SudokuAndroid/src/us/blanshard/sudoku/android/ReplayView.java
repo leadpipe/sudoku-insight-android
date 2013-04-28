@@ -63,12 +63,14 @@ public class ReplayView extends SudokuView {
   private static final float ASGMT_SCALE3 = 0.55f;
   private static final float CLOCK_SCALE = 0.5f;
   private static final float QUESTION_SCALE = 0.6f;
+  private static final float STATS_SCALE = 0.52f;
   private static final int ASGMT_COLOR = Color.argb(192, 32, 160, 64);
   private static final int ELIM_COLOR = Color.argb(192, 255, 100, 100);
   private static final int OVERLAP_COLOR = Color.argb(128, 32, 96, 160);
   private static final int QUESTION_COLOR = Color.argb(128, 192, 96, 96);
-  private static final int UNIT_COLOR = Color.argb(64, 96, 96, 96);
   private static final int SELECTION_COLOR = Color.argb(24, 0, 0, 0);
+  private static final int STATS_COLOR = Color.argb(128, 64, 64, 64);
+  private static final int UNIT_COLOR = Color.argb(64, 96, 96, 96);
 
   private static final int UNIT_MASK = 7;
   private static final int ERROR_BORDER_MASK = 8;
@@ -77,6 +79,8 @@ public class ReplayView extends SudokuView {
   private OnSelectListener mOnSelectListener;
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private Function<Location, Integer> mSelectableColors = (Function) Functions.constant(null);
+  private Function<Location, Integer> mInsightSize = mSelectableColors;
+  private Function<Location, Integer> mPercentages = mSelectableColors;
   private Location mSelected;
   private Map<Location, NumSet> mEliminations;
   private Collection<Insight> mInsights;
@@ -112,6 +116,14 @@ public class ReplayView extends SudokuView {
 
   public void setSelectableColorsFunction(Function<Location, Integer> selectableColors) {
     mSelectableColors = selectableColors;
+  }
+
+  public void setInsightSizeFunction(Function<Location, Integer> insightSize) {
+    mInsightSize = insightSize;
+  }
+
+  public void setPercentagesFunction(Function<Location, Integer> percentages) {
+    mPercentages = percentages;
   }
 
   public void selectableColorsUpdated() {
@@ -243,7 +255,11 @@ public class ReplayView extends SudokuView {
     mPaint.setFakeBoldText(false);
     for (Location loc : Location.ALL) {
       drawSelectable(canvas, loc);
-      drawInsights(canvas, loc, mLocDisplays.get(loc));
+      LocDisplay locDisplay = mLocDisplays.get(loc);
+      if (locDisplay == null)
+        drawStats(canvas, loc);
+      else
+        drawInsights(canvas, loc, locDisplay);
     }
     if (mErrorUnits != null)
       for (Unit unit : mErrorUnits)
@@ -338,6 +354,29 @@ public class ReplayView extends SudokuView {
     if (answer == null)
       mLocDisplays.put(loc, (answer = new LocDisplay()));
     return answer;
+  }
+
+  private void drawStats(Canvas canvas, Location loc) {
+    Integer insightSize = mInsightSize.apply(loc);
+    Integer percentage = mPercentages.apply(loc);
+    if (insightSize == null && percentage == null) return;
+
+    float s = mSquareSize;
+    float h = s * 0.5f;
+    float x = mOffsetsX[loc.column.index];
+    float y = mOffsetsY[loc.row.index];
+
+    mPaint.setTextSize(mTextSize * STATS_SCALE);
+    mPaint.setStyle(Style.FILL);
+    mPaint.setColor(STATS_COLOR);
+
+    if (insightSize != null) {
+      canvas.drawText(insightSize.toString(), x + h, y + h, mPaint);
+    }
+
+    if (percentage != null) {
+      canvas.drawText(percentage + "%", x + h, y + h - mPaint.ascent(), mPaint);
+    }
   }
 
   private void drawInsights(Canvas canvas, Location loc, LocDisplay locDisplay) {

@@ -173,6 +173,28 @@ public class ReplayActivity extends ActivityBase
     }
   };
 
+  private final Function<Location, Integer> insightSize = new Function<Location, Integer>() {
+    @Override public Integer apply(Location loc) {
+      if (mInsights == null) return null;
+      InsightMin insightMin = mInsights.assignments.get(loc);
+      if (insightMin == null)
+        insightMin = mInsights.disproofs.get(loc);
+      if (insightMin == null || !insightMin.minimized)
+        return null;
+      return insightMin.insight.getCount();
+    }
+  };
+
+  private final Function<Location, Integer> percentages = new Function<Location, Integer>() {
+    @Override public Integer apply(Location loc) {
+      if (mInsights == null) return null;
+      InsightMin insightMin = mInsights.disproofs.get(loc);
+      if (insightMin == null)
+        return null;
+      return (int) (insightMin.fractionCovered * 100f + 0.5f);
+    }
+  };
+
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -196,6 +218,8 @@ public class ReplayActivity extends ActivityBase
 
     mReplayView.setOnSelectListener(this);
     mReplayView.setSelectableColorsFunction(selectableColors);
+    mReplayView.setInsightSizeFunction(insightSize);
+    mReplayView.setPercentagesFunction(percentages);
     mReplayLocation.setOnSeekBarChangeListener(this);
 
     findViewById(R.id.play).setOnClickListener(this);
@@ -449,14 +473,17 @@ public class ReplayActivity extends ActivityBase
     }
   }
 
-  void disproofComplete(Disprove instance) {
+  void disproofComplete(Disprove instance, boolean changed) {
     if (instance == mDisprove) {
       mDisprove = null;
-      if (mMinimize == null) mProgress2.setVisibility(View.INVISIBLE);
+      if (changed)
+        minimizeEverything();
+      else
+        mProgress2.setVisibility(View.INVISIBLE);
     }
   }
 
-  void addDisproof(InsightMin insightMin) {
+  boolean addDisproof(InsightMin insightMin) {
     DisprovedAssignment disproof = (DisprovedAssignment) insightMin.insight;
     Location loc = disproof.getDisprovedAssignment().location;
     InsightMin existing = mInsights.disproofs.get(loc);
@@ -467,7 +494,9 @@ public class ReplayActivity extends ActivityBase
       mInsights.disproofs.put(loc, insightMin);
       if (!mRunning)
         mReplayView.invalidateLocation(loc);
+      return true;
     }
+    return false;
   }
 
   void minimized(InsightMin insightMin) {
@@ -753,7 +782,8 @@ public class ReplayActivity extends ActivityBase
         Location toClear = null;
         if (!mExploring) {
           Assignment asmt = nextAssignment();
-          if (asmt != null) toClear = asmt.location;
+          if (asmt != null && nextTrailId() == mReplayView.getInputState().getId())
+            toClear = asmt.location;
         }
         mAnalyze.execute(mReplayView.getGridMarks(toClear));
         if (!mRunning)
@@ -1057,6 +1087,7 @@ public class ReplayActivity extends ActivityBase
     private final Insights mInsights;
     private final GridMarks mSolution;
     private int mSetSize;
+    private volatile boolean mChanged;
 
     Disprove(ReplayActivity activity) {
       super(activity);
@@ -1079,8 +1110,13 @@ public class ReplayActivity extends ActivityBase
           mInsights.possibles.clear();
           break;
         }
-        if (wasCanceled()) break;
-        checkForDisproof(current, p);
+        if (wasCanceled()) {
+          mChanged = true;
+          break;
+        }
+        InsightMin insightMin = mInsights.disproofs.get(p.loc);
+        if (insightMin == null || insightMin.fractionCovered < 1f)
+          checkForDisproof(current, p);
       }
 
       return null;
@@ -1088,13 +1124,14 @@ public class ReplayActivity extends ActivityBase
 
     @Override protected void onProgressUpdate(ReplayActivity activity, InsightMin... insightMins) {
       mInsights.disproofsSetSize = mSetSize;
-      if (mInsights == activity.mInsights)
-        activity.addDisproof(insightMins[0]);
+      if (mInsights == activity.mInsights
+          && activity.addDisproof(insightMins[0]))
+        mChanged = true;
     }
 
     @Override protected void onPostExecute(ReplayActivity activity, Void result) {
       if (mSolution != null) activity.mSolution = mSolution;
-      activity.disproofComplete(this);
+      activity.disproofComplete(this, mChanged);
     }
 
     private Queue<PossibleAssignment> findPossibles(GridMarks solution, GridMarks current,
