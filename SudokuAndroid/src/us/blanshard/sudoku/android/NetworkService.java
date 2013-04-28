@@ -322,7 +322,7 @@ public class NetworkService extends IntentService {
       if (batch.isEmpty())
         break;
 
-      Log.d(TAG, "Sending " + batch.size() + " RPCs with cost " + cost);
+//      Log.d(TAG, "Sending " + batch.size() + " RPCs with cost " + cost);
 
       if (processBatch(batch, calls, pendingRpcOps)) {
         timeoutMs = DEFAULT_RETRY_TIME_MS;
@@ -369,11 +369,11 @@ public class NetworkService extends IntentService {
     boolean answer = true;
     for (RpcCall<?> call : calls.values()) {
       if (call.processResponse()) {
-        if (call.response.error == null)
-          Log.d(TAG, "Processed RPC " + call.request.method);
-        else
-          Log.i(TAG, "Processed failed RPC " + call.request.method + ", error "
-              + GSON.toJson(call.response.error));
+//        if (call.response.error == null)
+//          Log.d(TAG, "Processed RPC " + call.request.method);
+//        else
+//          Log.i(TAG, "Processed failed RPC " + call.request.method + ", error "
+//              + GSON.toJson(call.response.error));
       } else {
         Log.w(TAG, "Unable to process RPC " + call.request.method + ", will retry");
         pendingRpcOps.add(call.op);
@@ -412,7 +412,7 @@ public class NetworkService extends IntentService {
             });
             try {
               List<Rpc.Response<?>> responses = GSON.fromJson(in, BATCH_RESULT_TOKEN.getType());
-              Log.d(TAG, "#responses: " + responses.size());
+//              Log.d(TAG, "#responses: " + responses.size());
               for (Rpc.Response<?> res : responses) {
                 RpcCall<?> call = calls.get(res.id);
                 if (call == null) {
@@ -429,7 +429,7 @@ public class NetworkService extends IntentService {
             singleReponse = GSON.fromJson(in, Rpc.Response.class);
             if (singleReponse.error == null)
               singleReponse.error = Rpc.error(0, "unknown", null);
-            Log.d(TAG, "RPC batch returned single response: " + GSON.toJson(singleReponse));
+//            Log.d(TAG, "RPC batch returned single response: " + GSON.toJson(singleReponse));
           }
         } else {
           // Unexpected error from the server. Make a response object, so we
