@@ -13,6 +13,9 @@ END
 
 * App
 
+** Bugs
+*** TODO Undo to beginning is broken -- the game is being paused before it's applied
+
 ** App/UI cleanups
 *** TODO Do auto stream handling better
     - if the server sets the stream, explicitly skip queued puzzles from previous stream
