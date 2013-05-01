@@ -538,6 +538,7 @@ public class SudokuFragment
   }
 
   @Override public boolean onOptionsItemSelected(MenuItem item) {
+    gameShowing(true);
     switch (item.getItemId()) {
       case R.id.menu_give_up:
         giveUp();

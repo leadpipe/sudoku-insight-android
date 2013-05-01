@@ -14,7 +14,7 @@ END
 * App
 
 ** Bugs
-*** TODO Undo to beginning is broken -- the game is being paused before it's applied
+*** DONE Undo to beginning is broken -- the game is being paused before it's applied
 
 ** App/UI cleanups
 *** TODO Do auto stream handling better
