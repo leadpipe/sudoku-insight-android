@@ -24,6 +24,14 @@ point, and then explore the moves implied at that point.
     forwards.
 
   <li><div class="float">
+      <img src="file:///android_res/drawable/ic_btn_jump_back_enabled.png">
+      <img src="file:///android_res/drawable/ic_btn_jump_forward_enabled.png">
+      </div>
+    <i>Jump Back</i> and <i>Jump Forward</i> take you to the previous or next
+    point in the playback where you switched trails.  These points are often the
+    best places to see what you missed, and from which to start exploring.
+
+  <li><div class="float">
       <img src="file:///android_res/drawable/ic_menu_undo_enabled.png">
       <img src="file:///android_res/drawable/ic_menu_redo_enabled.png">
       </div>
@@ -50,6 +58,17 @@ associated with that square.
     would result, with a chain of insights between them.  Purple means the
     disproof leads to few or no subsequent assignments; blue means it leads to
     many or all remaining squares having implied assignments.
+</ul>
+
+In addition, these squares contain numbers that measure the insights:
+
+<ul>
+  <li><b>Number of steps</b> in the insight.  Smaller numbers usually mean that
+    the insight is easier to see.
+
+  <li><b>Coverage percentage</b> for disproofs, meaning the percentage of
+    remaining unfilled squares that would have implied assignments if the
+    disproof were applied.
 </ul>
 
 During exploration, these actions are enabled:
