@@ -49,7 +49,7 @@ END
     - I guess show them only if no insight display showing in the square
 *** TODO Animate insight display
     - for complex implications, this could help the visualization
-*** TODO Update the help for replay
+*** DONE Update the help for replay
 *** TODO Update screen shots?
 *** TODO Redo in exploration mode?
 *** TODO Wrong-numeral mistakes show without the error during single-step playback
