@@ -35,22 +35,14 @@ END
     - Include a link to the puzzle details
 
 ** Publishing the app
-*** DONE Make other graphics for play store
 
 ** Cross-installation work
 *** TODO Add pref for whether to sync from other devices
     - dependent on selecting an account
 
 ** Replay cleanups
-*** DONE Add jump forward/jump back buttons
-    - land just before trail switches
-*** DONE Improve display of insight data
-    - show insight count and coverage percentage in the square, along with the
-      corresponding border color
-    - I guess show them only if no insight display showing in the square
 *** TODO Animate insight display
     - for complex implications, this could help the visualization
-*** DONE Update the help for replay
 *** TODO Update screen shots?
 *** TODO Redo in exploration mode?
 *** TODO Wrong-numeral mistakes show without the error during single-step playback

@@ -1,3 +1,7 @@
+-libraryjars ../SharedLibs/guava.jar
+-libraryjars ../SharedLibs/jsr305.jar
+-libraryjars ../../Documents/workspace/google-play-services_lib/libs/google-play-services.jar
+
 # Extra stuff for including Guava
 -dontwarn sun.misc.Unsafe
 -dontwarn com.google.common.collect.MinMaxPriorityQueue
