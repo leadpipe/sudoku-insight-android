@@ -456,12 +456,14 @@ public class SudokuView extends View {
       case MotionEvent.ACTION_UP:
       case MotionEvent.ACTION_POINTER_UP:
         if (mPointerId == event.getPointerId(event.getActionIndex())) {
+          if (mChoice != mPreviousChoice && event.getEventTime() - mChoiceChangeTimestamp < DEBOUNCE_MS)
+            mChoice = mPreviousChoice;
           if (mState != null && mChoice >= 0) {
-            if (mChoice != mPreviousChoice && event.getEventTime() - mChoiceChangeTimestamp < DEBOUNCE_MS)
-              mChoice = mPreviousChoice;
             Numeral num = numeral(mChoice);
             if (num != mState.get(mLocation)) {
-              mDefaultChoice = num;
+              if (num != null) {
+                mDefaultChoice = num;
+              }
               if (mOnMoveListener != null) {
                 mOnMoveListener.onMove(mState, mLocation, num);
               }

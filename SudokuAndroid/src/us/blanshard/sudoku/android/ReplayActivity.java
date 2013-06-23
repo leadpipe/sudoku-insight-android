@@ -730,7 +730,7 @@ public class ReplayActivity extends ActivityBase
 
   private int nextTrailId() {
     if (mForward) {
-      if (mHistoryPosition < mHistory.size())
+      if (mHistory != null && mHistoryPosition < mHistory.size())
         return mHistory.get(mHistoryPosition).trailId;
     } else if (mHistoryPosition > 0)
       return mHistory.get(mHistoryPosition - 1).trailId;

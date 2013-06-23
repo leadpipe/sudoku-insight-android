@@ -14,7 +14,8 @@ END
 * App
 
 ** Bugs
-*** DONE Undo to beginning is broken -- the game is being paused before it's applied
+*** DONE NPE in ReplayActivity
+*** DONE out-of-bounds in SudokuView
 
 ** App/UI cleanups
 *** TODO Do auto stream handling better
