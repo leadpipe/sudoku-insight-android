@@ -35,6 +35,10 @@ import android.webkit.WebView;
 public class HelpActivity extends ActivityBase {
   private WebView mHelpView;
 
+  // This is here to force the class to be included in the proguarded program,
+  // which will allow the icons to be displayed in the help pages.
+  static final Class<?> sDrawableClass = R.drawable.class;
+
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
