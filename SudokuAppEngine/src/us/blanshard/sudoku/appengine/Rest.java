@@ -56,6 +56,11 @@ public class Rest {
     public boolean won;
   }
 
+  public static class Puzzles {
+    public List<Puzzle> puzzles;
+    @Nullable public String nextPageToken;
+  }
+
   public static class Puzzle {
     public String puzzle;
     @Nullable public String name;

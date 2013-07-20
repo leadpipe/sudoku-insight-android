@@ -31,13 +31,13 @@ import javax.servlet.http.HttpServletResponse;
 @SuppressWarnings("serial")
 public class InstallationsServlet extends HttpServlet {
 
-  private static final Pattern PATH_PARTS = Pattern.compile(
+  private static final Pattern EXTRA_PATH_PARTS = Pattern.compile(
       "/(?:(\\d+)(?:/(?:(puzzle)(?:/([.\\d]+)?)?)?)?)?");
 
   @Override
   public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     String pathInfo = req.getPathInfo();
-    Matcher matcher = PATH_PARTS.matcher(pathInfo == null ? "/" : pathInfo);
+    Matcher matcher = EXTRA_PATH_PARTS.matcher(pathInfo == null ? "/" : pathInfo);
     if (!matcher.matches()) {
       resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
       return;
@@ -86,9 +86,7 @@ public class InstallationsServlet extends HttpServlet {
   static void getPublicInstallation(long indexedId, HttpServletRequest req,
       HttpServletResponse resp) throws IOException {
     DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
-    Query query = new Query(Schema.Installation.KIND)
-        .setFilter(FilterOperator.EQUAL.of(Schema.Installation.INDEXED_ID, indexedId));
-    Entity entity = ds.prepare(query).asSingleEntity();
+    Entity entity = getInstallationEntity(ds, indexedId);
     Rest.Installation answer = new Rest.Installation();
     answer.id = indexedId;
     if (entity.hasProperty(Schema.Installation.ANDROID_SDK))
@@ -99,10 +97,19 @@ public class InstallationsServlet extends HttpServlet {
     GSON.toJson(answer, resp.getWriter());
   }
 
+  private static Entity getInstallationEntity(DatastoreService ds, long indexedId) {
+    Query query = new Query(Schema.Installation.KIND)
+        .setFilter(FilterOperator.EQUAL.of(Schema.Installation.INDEXED_ID, indexedId));
+    Entity entity = ds.prepare(query).asSingleEntity();
+    return entity;
+  }
+
   static void getInstallationPuzzles(long indexedId, HttpServletRequest req,
       HttpServletResponse resp) throws IOException {
     DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+    Entity installation = getInstallationEntity(ds, indexedId);
     Query query = new Query(Schema.InstallationPuzzle.KIND)
+        .setAncestor(installation.getKey())
         .addProjection(new PropertyProjection(Schema.InstallationPuzzle.PUZZLE, String.class));
     String token = req.getParameter("pageToken");
     if (token != null) {
@@ -133,9 +140,7 @@ public class InstallationsServlet extends HttpServlet {
   static void getInstallationPuzzle(long indexedId, String puzzle,
       HttpServletRequest req, HttpServletResponse resp) throws IOException {
     DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
-    Query query = new Query(Schema.Installation.KIND)
-        .setFilter(FilterOperator.EQUAL.of(Schema.Installation.INDEXED_ID, indexedId));
-    Entity entity = ds.prepare(query).asSingleEntity();
+    Entity entity = getInstallationEntity(ds, indexedId);
     Key key = KeyFactory.createKey(entity.getKey(), Schema.InstallationPuzzle.KIND, puzzle);
     try {
       entity = ds.get(key);
