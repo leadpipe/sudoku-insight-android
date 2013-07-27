@@ -14,10 +14,10 @@ END
 * App
 
 ** Bugs
-*** DONE NPE in ReplayActivity
-*** DONE out-of-bounds in SudokuView
 
 ** App/UI cleanups
+*** TODO Add a navigation drawer
+*** TODO Change "give up" to "show solution," and have it go straight to the replay view.
 *** TODO Do auto stream handling better
     - if the server sets the stream, explicitly skip queued puzzles from previous stream
     - have the server send a GCM message to the younger installations to change
