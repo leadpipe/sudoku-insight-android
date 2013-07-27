@@ -30,7 +30,7 @@
     <string name="menu_help_info">Puzzle Details</string>
     <string name="menu_help_list">Listing Puzzles</string>
     <string name="menu_help_overview">Overview</string>
-    <string name="menu_help_replay">Reviewing Puzzles</string>
+    <string name="menu_help_replay">Reviewing Puzzles\' Solutions</string>
     <string name="menu_help_settings">Settings Help</string>
     <string name="menu_help_sudoku">Solving Sudoku</string>
     <string name="menu_list_puzzles">List Puzzles</string>
