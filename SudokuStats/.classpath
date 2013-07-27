@@ -4,10 +4,8 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SudokuCore"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="/Users/leadpipe/dev/eclipse/plugins/com.google.appengine.eclipse.sdkbundle_1.7.5/appengine-java-sdk-1.7.5/lib/impl/appengine-api-labs.jar"/>
-	<classpathentry kind="lib" path="/Users/leadpipe/dev/eclipse/plugins/com.google.appengine.eclipse.sdkbundle_1.7.5/appengine-java-sdk-1.7.5/lib/impl/appengine-api-stubs.jar"/>
-	<classpathentry kind="lib" path="/Users/leadpipe/dev/eclipse/plugins/com.google.appengine.eclipse.sdkbundle_1.7.5/appengine-java-sdk-1.7.5/lib/impl/appengine-api.jar"/>
-	<classpathentry kind="lib" path="/Users/leadpipe/dev/eclipse/plugins/com.google.appengine.eclipse.sdkbundle_1.7.5/appengine-java-sdk-1.7.5/lib/testing/appengine-testing.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SudokuAppEngine"/>
+	<classpathentry kind="con" path="com.google.appengine.eclipse.core.GAE_CONTAINER"/>
+	<classpathentry kind="lib" path="/Users/leadpipe/dev/eclipse/plugins/com.google.appengine.eclipse.sdkbundle_1.8.2/appengine-java-sdk-1.8.2/lib/testing/appengine-testing.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
