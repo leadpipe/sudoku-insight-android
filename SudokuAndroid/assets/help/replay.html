@@ -4,9 +4,9 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body>
-<h1>Reviewing Puzzles</h1>
+<h1>Puzzle Solution</h1>
 
-The review page replays the moves you made in a puzzle, showing you how each
+The solution page replays the moves you made in a puzzle, showing you how each
 move is implied or if it is in error.  You may also pause the replay at any
 point, and then explore the moves implied at that point.
 
@@ -41,23 +41,23 @@ point, and then explore the moves implied at that point.
     playback.
 </ul>
 
-<h2>Exploration</h2>
+<h2>Exploring the Solution</h2>
 
-When playback is paused, the app calculates insights implied by the current
-state of the grid.  You can touch an outlined square to see the insights
-associated with that square.
+When playback is paused or complete, the app calculates moves implied by the
+current state of the grid.  You can touch an outlined square to see the insights
+associated with that square.  Once you've touched one, use the <i>Apply</i>
+command to make the associated move and continue exploring.
 
 <ul>
-  <li><b>Yellow/green outline</b>: an <i>assignment</i> is implied for that
-    location.  Darker green means a shorter chain of insights leading to the
-    assignment, lighter means a longer chain.  Yellow means the number of links
-    hasn't been calculated yet.
+  <li><b>Yellow/green outline</b>: a move is implied for that location.  Darker
+    green means a shorter chain of insights leading to the move, lighter means a
+    longer chain.  Yellow means the number of links hasn't been calculated yet.
 
   <li><b>Purple/blue outline</b>: a <i>disproof</i> is available at that
-    location.  This is a proposed assignment to that location and the error that
-    would result, with a chain of insights between them.  Purple means the
-    disproof leads to few or no subsequent assignments; blue means it leads to
-    many or all remaining squares having implied assignments.
+    location.  This is a proposed move in that location and the error that would
+    result, with a chain of insights between them.  Purple means the disproof
+    leads to few or no subsequent moves; blue means it leads to many or all
+    remaining squares having implied moves.
 </ul>
 
 In addition, these squares contain numbers that measure the insights:
@@ -75,12 +75,12 @@ During exploration, these actions are enabled:
 
 <ul>
   <li><img class="float" src="file:///android_res/drawable/ic_menu_apply_enabled.png">
-    <i>Apply</i> makes the selected assignment, or crosses out the disproved
-    assignment.  Once you've applied one, every assignment you select is
-    automatically applied.
+    <i>Apply</i> makes the selected move, or crosses out the disproved move.
+    Once you've applied one, every following move you select is automatically
+    applied.
 
   <li><img class="float" src="file:///android_res/drawable/ic_menu_clear_enabled.png">
-    <i>Clear</i> clears the insights from the grid.
+    <i>Clear</i> clears the insights currently being shown.
 
   <li><img class="float" src="file:///android_res/drawable/ic_menu_resume_enabled.png">
     <i>Resume</i> undoes any applied insights and resumes playing back your
@@ -94,6 +94,8 @@ During exploration, these actions are enabled:
 </ul>
 
 <h2>Insights</h2>
+
+These are the insights displayed in the grid, and what they mean.
 
 <ul>
   <li><div class="float"><img src="forced-loc-1.png"> <img src="forced-loc-2.png"></div>
