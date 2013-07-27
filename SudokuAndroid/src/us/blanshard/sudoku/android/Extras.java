@@ -26,4 +26,5 @@ public class Extras {
   public static final String HELP_PAGE = "helpPage";
   public static final String PUZZLE_ID = "puzzleId";
   public static final String SHOW_INFO = "showInfo";
+  public static final String SHOW_SOLUTION = "showSolution";
 }

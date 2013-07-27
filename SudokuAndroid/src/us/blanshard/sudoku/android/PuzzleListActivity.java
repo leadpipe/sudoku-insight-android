@@ -52,6 +52,8 @@ public class PuzzleListActivity extends ActivityBase
     if (mInfoFragment == null && extras != null && extras.getBoolean(Extras.SHOW_INFO, false)) {
       Intent infoIntent = new Intent(this, PuzzleInfoActivity.class);
       infoIntent.putExtra(Extras.PUZZLE_ID, extras.getLong(Extras.PUZZLE_ID));
+      if (extras.getLong(Extras.SHOW_SOLUTION, -1) >= 0)
+        infoIntent.putExtra(Extras.SHOW_SOLUTION, extras.getLong(Extras.SHOW_SOLUTION));
       infoIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_CLEAR_TOP);
       startActivity(infoIntent);
       finish();

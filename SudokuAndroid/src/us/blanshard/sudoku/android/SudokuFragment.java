@@ -219,12 +219,12 @@ public class SudokuFragment
     return Toast.makeText(getActivity().getApplicationContext(), s, Toast.LENGTH_LONG);
   }
 
-  public void giveUp() {
+  public void showSolution() {
     DialogFragment dialog = new DialogFragment() {
       @Override public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new AlertDialog.Builder(getActivity())
-            .setMessage(R.string.dialog_give_up_message)
-            .setPositiveButton(R.string.button_give_up, new OnClickListener() {
+            .setMessage(R.string.dialog_show_solution_message)
+            .setPositiveButton(R.string.button_show_solution, new OnClickListener() {
                 @Override public void onClick(DialogInterface dialog, int which) {
                   dialog.dismiss();
                   mAttempt.attemptState = AttemptState.GAVE_UP;
@@ -530,7 +530,7 @@ public class SudokuFragment
           break;
 
         case R.id.menu_new_trail:
-        case R.id.menu_give_up:
+        case R.id.menu_show_solution:
           item.setEnabled(going);
           break;
       }
@@ -540,8 +540,8 @@ public class SudokuFragment
   @Override public boolean onOptionsItemSelected(MenuItem item) {
     gameShowing(true);
     switch (item.getItemId()) {
-      case R.id.menu_give_up:
-        giveUp();
+      case R.id.menu_show_solution:
+        showSolution();
         return true;
 
       case R.id.menu_undo:
@@ -661,6 +661,9 @@ public class SudokuFragment
     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_CLEAR_TOP);
     intent.putExtra(Extras.PUZZLE_ID, mAttempt.puzzleId);
     intent.putExtra(Extras.SHOW_INFO, true);
+    if (mAttempt.attemptState == AttemptState.GAVE_UP) {
+      intent.putExtra(Extras.SHOW_SOLUTION, mAttempt._id);
+    }
     startActivity(intent);
     getActivity().finish();
   }

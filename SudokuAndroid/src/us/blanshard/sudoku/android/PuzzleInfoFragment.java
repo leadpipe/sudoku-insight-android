@@ -105,6 +105,13 @@ public class PuzzleInfoFragment extends FragmentBase
     mDetails.setBackgroundColor(0);  // Makes the background transparent
     mDetails.setWebViewClient(new LinkHandler());
     NetworkService.addStatsCallback(this);
+
+    if (getActivity().getIntent().hasExtra(Extras.SHOW_SOLUTION)) {
+      Intent intent = new Intent(getActivity(), ReplayActivity.class);
+      intent.putExtra(Extras.ATTEMPT_ID,
+          getActivity().getIntent().getLongExtra(Extras.SHOW_SOLUTION, 0));
+      startActivity(intent);
+    }
   }
 
   public void setPuzzleId(long puzzleId) {
