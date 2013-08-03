@@ -15,21 +15,26 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static us.blanshard.sudoku.core.NumSetTest.set;
 
+import us.blanshard.sudoku.core.Block;
 import us.blanshard.sudoku.core.Column;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.NumSetTest;
+import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.game.Sudoku;
 
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import org.junit.Test;
@@ -178,6 +183,36 @@ public class AnalyzerTest {
     Unit c2 = Column.of(2);
     assertTrue(collector.taken.contains(new LockedSet(set(1,2), locs(c2, 5, 6), false)));
     assertTrue(collector.taken.contains(new LockedSet(set(4,5), locs(c2, 3, 8), false)));
+  }
+
+  @Test public void correctSets2() {
+    Grid grid = Grid.fromString(
+        " . 1 4 | . 9 . | . 5 . " +
+        " . . . | 6 . . | . . 1 " +
+        " 2 9 6 | 5 1 4 | 7 8 3 " +
+        "-------+-------+-------" +
+        " . 4 . | . 5 1 | 3 6 . " +
+        " 8 . 1 | 3 . 2 | . 7 . " +
+        " . . 3 | . 7 . | . 1 . " +
+        "-------+-------+-------" +
+        " . . 5 | . . . | 1 . 7 " +
+        " . . 9 | 1 . 5 | . . . " +
+        " 1 3 . | . . . | 5 . . ");
+
+    Collector collector = new Collector();
+    GridMarks gridMarks = new GridMarks(grid);
+
+    Analyzer.analyze(gridMarks, collector);
+
+    Unit b3 = Block.of(3);
+    assertTrue(collector.taken.contains(new LockedSet(set(4,9), locs(b3, 4, 5), false)));
+    LockedSet set26 = new LockedSet(set(2,6), locs(b3, 1, 3), true);
+    assertTrue(collector.taken.contains(set26));
+    Implication imp = (Implication) Iterables.find(collector.taken, Predicates.instanceOf(Implication.class));
+    assertEquals(new ForcedLoc(Block.of(2), Numeral.of(2), Location.of(2, 5)), imp.getConsequent());
+
+    Implication imp2 = (Implication) Analyzer.minimize(gridMarks, imp);
+    assertEquals(Lists.newArrayList(set26), imp2.getAntecedents());
   }
 
   private void setAll(Sudoku.State state, Grid grid) {

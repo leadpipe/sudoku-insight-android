@@ -290,6 +290,28 @@ public class Analyzer {
     }
   }
 
+  /**
+   * Looks to see whether the given unit subset belongs to a different unit as
+   * well, and returns that equivalent set if so. Only handles sets of size 2 or
+   * 3.
+   */
+  @Nullable public static UnitSubset findOverlappingSet(UnitSubset set) {
+    if (set.size() < 2 || set.size() > 3) return null;
+    if (set.unit.getType() == Unit.Type.BLOCK) {
+      int index = Arrays.binarySearch(OVERLAP_BITS, set.bits);
+      if (index >= 0)
+        return set.get(0).row.intersect(set);
+      index = Arrays.binarySearch(OVERLAP_BITS_2, set.bits);
+      if (index >= 0)
+        return set.get(0).column.intersect(set);
+    } else {
+      int index = Arrays.binarySearch(OVERLAP_BITS, set.bits);
+      if (index >= 0)
+        return set.get(0).block.intersect(set);
+    }
+    return null;
+  }
+
   private static void findOverlaps(GridMarks gridMarks, Callback callback, Numeral num,
       List<? extends Unit> units, Unit.Type overlappingType, int[] bits) {
     for (Unit unit : units) {

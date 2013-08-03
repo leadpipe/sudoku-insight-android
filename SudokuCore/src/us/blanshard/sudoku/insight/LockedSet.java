@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -38,6 +39,7 @@ import javax.annotation.concurrent.Immutable;
 public final class LockedSet extends Insight {
   private final NumSet nums;
   private final UnitSubset locs;
+  @Nullable private final UnitSubset overlapLocs;
   private final boolean isNaked;
   private volatile Collection<Assignment> eliminations;
 
@@ -46,6 +48,7 @@ public final class LockedSet extends Insight {
     this.nums = nums;
     this.locs = locs;
     this.isNaked = isNaked;
+    this.overlapLocs = Analyzer.findOverlappingSet(locs);
   }
 
   @Override public Collection<Assignment> getEliminations() {
@@ -59,6 +62,10 @@ public final class LockedSet extends Insight {
           for (Numeral num : nums)
             for (Location loc : locs)
               builder.add(Assignment.of(loc, num));
+          if (overlapLocs != null)
+            for (Numeral num : this.nums)
+              for (Location loc : overlapLocs.not())
+                builder.add(Assignment.of(loc, num));
           eliminations = answer = builder.build();
         }
       }
