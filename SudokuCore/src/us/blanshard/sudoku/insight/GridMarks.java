@@ -63,7 +63,7 @@ public class GridMarks {
 
     public Builder assign(Location loc, Numeral num) {
       gridBuilder.put(loc, num);
-      hasErrors |= marksBuilder.assign(loc, num);
+      hasErrors |= !marksBuilder.assign(loc, num);
       return this;
     }
 
@@ -72,7 +72,7 @@ public class GridMarks {
     }
 
     public Builder eliminate(Location loc, Numeral num) {
-      hasErrors |= marksBuilder.eliminate(loc, num);
+      hasErrors |= !marksBuilder.eliminate(loc, num);
       return this;
     }
 
