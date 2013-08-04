@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.never;
@@ -29,6 +30,7 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.NumSetTest;
 import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.Row;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.game.Sudoku;
@@ -213,6 +215,33 @@ public class AnalyzerTest {
 
     Implication imp2 = (Implication) Analyzer.minimize(gridMarks, imp);
     assertEquals(Lists.newArrayList(set26), imp2.getAntecedents());
+  }
+
+  @Test public void overlappingUnit() {
+    Unit u = Block.of(2);
+    assertNull(Analyzer.findOverlappingUnit(locs(u,1,6)));
+    assertEquals(Row.of(1), Analyzer.findOverlappingUnit(locs(u,1,2)));
+    assertEquals(Row.of(2), Analyzer.findOverlappingUnit(locs(u,4,6)));
+    assertEquals(Row.of(3), Analyzer.findOverlappingUnit(locs(u,8,9)));
+    assertEquals(Row.of(1), Analyzer.findOverlappingUnit(locs(u,1,2,3)));
+    assertEquals(Column.of(4), Analyzer.findOverlappingUnit(locs(u,1,4)));
+    assertEquals(Column.of(5), Analyzer.findOverlappingUnit(locs(u,5,8)));
+    assertEquals(Column.of(6), Analyzer.findOverlappingUnit(locs(u,3,9)));
+    assertEquals(Column.of(5), Analyzer.findOverlappingUnit(locs(u,2,5,8)));
+
+    u = Row.of(4);
+    assertNull(Analyzer.findOverlappingUnit(locs(u,3,4)));
+    assertEquals(Block.of(4), Analyzer.findOverlappingUnit(locs(u,1,3)));
+    assertEquals(Block.of(5), Analyzer.findOverlappingUnit(locs(u,5,6)));
+    assertEquals(Block.of(6), Analyzer.findOverlappingUnit(locs(u,7,8)));
+    assertEquals(Block.of(6), Analyzer.findOverlappingUnit(locs(u,7,8,9)));
+
+    u = Column.of(7);
+    assertNull(Analyzer.findOverlappingUnit(locs(u,3,4)));
+    assertEquals(Block.of(3), Analyzer.findOverlappingUnit(locs(u,2,3)));
+    assertEquals(Block.of(6), Analyzer.findOverlappingUnit(locs(u,4,5)));
+    assertEquals(Block.of(9), Analyzer.findOverlappingUnit(locs(u,7,9)));
+    assertEquals(Block.of(6), Analyzer.findOverlappingUnit(locs(u,4,5,6)));
   }
 
   private void setAll(Sudoku.State state, Grid grid) {

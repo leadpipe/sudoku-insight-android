@@ -19,6 +19,7 @@ import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
 
 import com.google.common.base.Objects;
@@ -39,7 +40,7 @@ import javax.annotation.concurrent.Immutable;
 public final class LockedSet extends Insight {
   private final NumSet nums;
   private final UnitSubset locs;
-  @Nullable private final UnitSubset overlapLocs;
+  @Nullable private final UnitSubset extraElims;
   private final boolean isNaked;
   private volatile Collection<Assignment> eliminations;
 
@@ -48,7 +49,8 @@ public final class LockedSet extends Insight {
     this.nums = nums;
     this.locs = locs;
     this.isNaked = isNaked;
-    this.overlapLocs = Analyzer.findOverlappingSet(locs);
+    Unit overlap = Analyzer.findOverlappingUnit(locs);
+    this.extraElims = overlap == null ? null : overlap.subtract(locs.unit);
   }
 
   @Override public Collection<Assignment> getEliminations() {
@@ -62,9 +64,9 @@ public final class LockedSet extends Insight {
           for (Numeral num : nums)
             for (Location loc : locs)
               builder.add(Assignment.of(loc, num));
-          if (overlapLocs != null)
+          if (extraElims != null)
             for (Numeral num : this.nums)
-              for (Location loc : overlapLocs.not())
+              for (Location loc : extraElims)
                 builder.add(Assignment.of(loc, num));
           eliminations = answer = builder.build();
         }
