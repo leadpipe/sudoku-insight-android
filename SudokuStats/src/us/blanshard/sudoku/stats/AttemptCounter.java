@@ -69,6 +69,7 @@ public class AttemptCounter {
     }
   }
 
+  @SuppressWarnings("deprecation")
   @Test public void count() throws Exception {
     Map<String, Count> counts = Maps.newHashMap();
     FileService fs = FileServiceFactory.getFileService();
