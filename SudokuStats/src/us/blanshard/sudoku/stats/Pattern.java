@@ -23,24 +23,31 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
-import us.blanshard.sudoku.core.UnitSubset;
-import us.blanshard.sudoku.insight.Insight.Type;
 
+import com.google.appengine.labs.repackaged.com.google.common.collect.ImmutableMap;
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Bytes;
 import com.google.common.primitives.SignedBytes;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 
@@ -53,9 +60,12 @@ import javax.annotation.concurrent.Immutable;
  * @author Luke Blanshard
  */
 @Immutable
-public abstract class Pattern {
+public abstract class Pattern implements Comparable<Pattern> {
 
   private static final Splitter COLON_SPLITTER = Splitter.on(':');
+  private static final Splitter COLON_SPLITTER_2 = COLON_SPLITTER.limit(2);
+  private static final Splitter COMMA_SPLITTER = Splitter.on(',').omitEmptyStrings();
+  private static final Splitter STAR_SPLITTER_2 = Splitter.on('*').limit(2);
 
   private final Type type;
 
@@ -67,73 +77,130 @@ public abstract class Pattern {
     return type;
   }
 
-  @Override public final String toString() {
-    return typeNames.inverse().get(type) + ':' + toStringGuts();
+  public Appendable appendTo(Appendable a) throws IOException {
+    a.append(type.getName()).append(':');
+    appendGutsTo(a);
+    return a;
   }
 
-  @Override public abstract boolean equals(Object o);
-  @Override public abstract int hashCode();
+  public StringBuilder appendTo(StringBuilder sb) {
+    try {
+      appendTo((Appendable) sb);
+      return sb;
+    } catch (IOException impossible) {
+      throw new AssertionError(impossible);
+    }
+  }
 
   public static Pattern fromString(String patternString) {
-    Iterator<String> pieces = COLON_SPLITTER.split(patternString).iterator();
-    Type type = typeNames.get(pieces.next());
+    Iterator<String> pieces = COLON_SPLITTER_2.split(patternString).iterator();
+    Type type = Type.fromName(pieces.next());
+    String params = pieces.next();
     switch (type) {
       case CONFLICT:
-        return conflict(UnitCategory.fromPieces(pieces));
+        return conflict(UnitCategory.fromString(params));
       case BARRED_LOCATION:
-        return barredLocation(PeerMetrics.fromPieces(pieces));
+        return barredLocation(PeerMetrics.fromString(params));
       case BARRED_NUMERAL:
-        return barredNumeral(UnitCategory.fromPieces(pieces));
+        return barredNumeral(UnitCategory.fromString(params));
       case FORCED_LOCATION:
-        return forcedLocation(UnitCategory.fromPieces(pieces));
+        return forcedLocation(UnitCategory.fromString(params));
       case FORCED_NUMERAL:
-        return forcedNumeral(PeerMetrics.fromPieces(pieces));
+        return forcedNumeral(PeerMetrics.fromString(params));
       case OVERLAP:
-        return overlap(UnitCategory.fromPieces(pieces));
+        return overlap(UnitCategory.fromString(params));
       case LOCKED_SET:
-        return LockedSet.fromPieces(pieces);
+        return LockedSet.fromString(params);
+      case IMPLICATION:
+        return Implication.fromString(params);
       default:
         throw new IllegalArgumentException(patternString);
     }
   }
 
-  protected abstract String toStringGuts();
-
-  private static final ImmutableBiMap<String, Type> typeNames =
-      ImmutableBiMap.<String, Type>builder()
-          .put("c", Type.CONFLICT)
-          .put("bl", Type.BARRED_LOCATION)
-          .put("bn", Type.BARRED_NUMERAL)
-          .put("fl", Type.FORCED_LOCATION)
-          .put("fn", Type.FORCED_NUMERAL)
-          .put("o", Type.OVERLAP)
-          .put("s", Type.LOCKED_SET)
-          .build();
-
-  static int countOpenLocs(Grid grid, UnitSubset locs) {
-    int numOpenLocs = 0;
-    for (Location loc : locs)
-      if (!grid.containsKey(loc))
-        ++numOpenLocs;
-    return numOpenLocs;
+  public static Appendable appendTo(Appendable a, Iterable<? extends Pattern> patterns) throws IOException {
+    return Joiner.on(',').appendTo(a, patterns);
   }
 
-  static boolean isImplicit(Grid grid, Location loc, Numeral num) {
-    for (Location peer : loc.peers)
-      if (grid.get(peer) == num) return false;
-    return true;
+  public static Appendable appendTo(Appendable a, Multiset<? extends Pattern> patterns) throws IOException {
+    boolean one = false;
+    for (Multiset.Entry<? extends Pattern> entry : patterns.entrySet()) {
+      if (one) a.append(',');
+      else one = true;
+      entry.getElement().appendTo(a);
+      a.append('*').append(String.valueOf(entry.getCount()));
+    }
+    return a;
   }
 
-  static int countImplicit(Grid grid, NumSet nums, UnitSubset locs, int max) {
-    int numImplicit = 0;
-    for (Location loc : locs)
-      for (Numeral num : nums)
-        if (isImplicit(grid, loc, num)) {
-          ++numImplicit;
-          if (numImplicit >= max) return max;
-        }
-    return numImplicit;
+  public static List<Pattern> listFromString(String s) {
+    ImmutableList.Builder<Pattern> builder = ImmutableList.builder();
+    for (String piece : COMMA_SPLITTER.split(s)) {
+      builder.add(fromString(piece));
+    }
+    return builder.build();
   }
+
+  public static Multiset<Pattern> multisetFromString(String s) {
+    ImmutableMultiset.Builder<Pattern> builder = ImmutableMultiset.builder();
+    for (String piece : COMMA_SPLITTER.split(s)) {
+      Iterator<String> iter = STAR_SPLITTER_2.split(piece).iterator();
+      builder.setCount(fromString(iter.next()), Integer.parseInt(iter.next()));
+    }
+    return builder.build();
+  }
+
+  public enum Type {
+    CONFLICT("c"),
+    BARRED_LOCATION("bl"),
+    BARRED_NUMERAL("bn"),
+    FORCED_LOCATION("fl"),
+    FORCED_NUMERAL("fn"),
+    OVERLAP("o"),
+    LOCKED_SET("s"),
+    IMPLICATION("i");
+
+    private final String name;
+    private static final ImmutableMap<String, Type> byName;
+    static {
+      ImmutableMap.Builder<String, Type> builder = ImmutableMap.builder();
+      for (Type t : values())
+        builder.put(t.name, t);
+      byName = builder.build();
+    }
+
+    private Type(String name) {
+      this.name = name;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public static Type fromName(String name) {
+      Type answer = byName.get(name);
+      if (answer == null) throw new IllegalArgumentException();
+      return answer;
+    }
+  };
+
+  @Override public final String toString() {
+    StringBuilder sb = new StringBuilder();
+    appendTo(sb);
+    return sb.toString();
+  }
+
+  @Override public int compareTo(Pattern that) {
+    int answer = this.type.compareTo(that.type);
+    if (answer == 0) answer = this.compareToGuts(that);
+    return answer;
+  }
+
+  @Override public abstract boolean equals(Object o);
+  @Override public abstract int hashCode();
+
+  protected abstract Appendable appendGutsTo(Appendable a) throws IOException;
+  protected abstract int compareToGuts(Pattern that);
 
   /**
    * Many patterns refer to {@linkplain Unit units} on the Sudoku board; a given
@@ -159,10 +226,6 @@ public abstract class Pattern {
         default:
           throw new IllegalArgumentException();
       }
-    }
-
-    public static UnitCategory fromPieces(Iterator<String> pieces) {
-      return fromString(Iterators.getOnlyElement(pieces));
     }
 
     @Override public String toString() {
@@ -204,8 +267,13 @@ public abstract class Pattern {
       return getClass().hashCode() ^ category.hashCode();
     }
 
-    @Override protected String toStringGuts() {
-      return category.toString();
+    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
+      return a.append(category.toString());
+    }
+
+    @Override protected int compareToGuts(Pattern p) {
+      UnitBased that = (UnitBased) p;
+      return this.category.compareTo(that.category);
     }
   }
 
@@ -213,7 +281,7 @@ public abstract class Pattern {
    * For patterns that require enumerating the numerals that affect a particular
    * location, this class counts those adjacent numerals in detail.
    */
-  public static final class PeerMetrics {
+  public static final class PeerMetrics implements Comparable<PeerMetrics> {
     /**
      * For each possible distance between two locations within a block, the
      * number of filled locations at that distance from the location in
@@ -258,21 +326,30 @@ public abstract class Pattern {
       return line2Coordinates.clone();
     }
 
+    public Appendable appendTo(Appendable a) throws IOException {
+      for (int count : blockCounts) a.append(String.valueOf(count));
+      a.append(':');
+      appendCoordinatesTo(line1Coordinates, a);
+      a.append(':');
+      appendCoordinatesTo(line2Coordinates, a);
+      return a;
+    }
+
     @Override public String toString() {
       StringBuilder sb = new StringBuilder();
-      for (int count : blockCounts) sb.append(count);
-      sb.append(':');
-      appendCoordinates(line1Coordinates, sb);
-      sb.append(':');
-      appendCoordinates(line2Coordinates, sb);
+      try {
+        appendTo(sb);
+      } catch (IOException impossible) {
+        throw new AssertionError(impossible);
+      }
       return sb.toString();
     }
 
-    private void appendCoordinates(byte[] coords, StringBuilder sb) {
+    private void appendCoordinatesTo(byte[] coords, Appendable a) throws IOException {
       for (int coord : coords) {
-        if (coord == 0) sb.append('-');
-        else if (coord > 0) sb.append(coord);
-        else sb.append((char)('a' - coord - 1));  // -1 => a, -2 => b, etc
+        if (coord == 0) a.append('-');
+        else if (coord > 0) a.append(String.valueOf(coord));
+        else a.append((char)('a' - coord - 1));  // -1 => a, -2 => b, etc
       }
     }
 
@@ -280,7 +357,7 @@ public abstract class Pattern {
       return fromPieces(COLON_SPLITTER.split(s).iterator());
     }
 
-    public static PeerMetrics fromPieces(Iterator<String> pieces) {
+    private static PeerMetrics fromPieces(Iterator<String> pieces) {
       String counts = pieces.next();
       String line1 = pieces.next();
       String line2 = Iterators.getOnlyElement(pieces);
@@ -317,6 +394,15 @@ public abstract class Pattern {
       return Arrays.hashCode(blockCounts)
           + Arrays.hashCode(line1Coordinates)
           + Arrays.hashCode(line2Coordinates);
+    }
+
+    @Override public int compareTo(PeerMetrics that) {
+      Comparator<byte[]> comp = SignedBytes.lexicographicalComparator();
+      return ComparisonChain.start()
+          .compare(this.blockCounts, that.blockCounts, comp)
+          .compare(this.line1Coordinates, that.line1Coordinates, comp)
+          .compare(this.line2Coordinates, that.line2Coordinates, comp)
+          .result();
     }
   }
 
@@ -467,8 +553,13 @@ public abstract class Pattern {
       return getClass().hashCode() ^ metrics.hashCode();
     }
 
-    @Override protected String toStringGuts() {
-      return metrics.toString();
+    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
+      return metrics.appendTo(a);
+    }
+
+    @Override protected int compareToGuts(Pattern p) {
+      PeerMetricsBased that = (PeerMetricsBased) p;
+      return this.metrics.compareTo(that.metrics);
     }
   }
 
@@ -627,11 +718,19 @@ public abstract class Pattern {
       return Objects.hashCode(super.hashCode(), setSize, isNaked);
     }
 
-    @Override protected String toStringGuts() {
-      return super.toStringGuts() + ':' + setSize + ':' + (isNaked ? 'n' : 'h');
+    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
+      return super.appendGutsTo(a)
+          .append(':')
+          .append(String.valueOf(setSize))
+          .append(':')
+          .append(isNaked ? 'n' : 'h');
     }
 
-    public static LockedSet fromPieces(Iterator<String> pieces) {
+    public static LockedSet fromString(String s) {
+      return fromPieces(COLON_SPLITTER.split(s).iterator());
+    }
+
+    private static LockedSet fromPieces(Iterator<String> pieces) {
       UnitCategory category = UnitCategory.fromString(pieces.next());
       int setSize = Integer.parseInt(pieces.next());
       String s = Iterators.getOnlyElement(pieces);
@@ -648,5 +747,68 @@ public abstract class Pattern {
 
   public static LockedSet lockedSet(UnitCategory category, int setSize, boolean isNaked) {
     return new LockedSet(category, setSize, isNaked);
+  }
+
+  /**
+   * A collection of antecedent patterns leading to a consequent pattern.
+   */
+  public static class Implication extends Pattern {
+    private final List<Pattern> antecedents;
+    private final Pattern consequent;
+
+    public Implication(Collection<? extends Pattern> antecedents, Pattern consequent) {
+      super(Type.IMPLICATION);
+      checkArgument(antecedents.size() > 0);
+      Pattern[] a = antecedents.toArray(new Pattern[antecedents.size()]);
+      Arrays.sort(a);
+      for (Pattern p : a) {
+        checkNotNull(p);
+        checkArgument(p.getType() != Type.IMPLICATION);
+      }
+      this.antecedents = Arrays.asList(a);
+      this.consequent = checkNotNull(consequent);
+    }
+
+    @Override public boolean equals(Object o) {
+      if (!(o instanceof Implication)) return false;
+      Implication that = (Implication) o;
+      return this.antecedents.equals(that.antecedents)
+          && this.consequent.equals(that.consequent);
+    }
+
+    @Override public int hashCode() {
+      return Objects.hashCode(antecedents, consequent);
+    }
+
+    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
+      Joiner.on('+').appendTo(a, antecedents).append('=');
+      return consequent.appendTo(a);
+    }
+
+    private static final Splitter EQUALS_SPLITTER_2 = Splitter.on('=').limit(2);
+    private static final Splitter PLUS_SPLITTER = Splitter.on('+');
+
+    public static Implication fromString(String s) {
+      Iterator<String> iter = EQUALS_SPLITTER_2.split(s).iterator();
+      String as = iter.next();
+      String c = iter.next();
+      List<Pattern> antecedents = Lists.newArrayList();
+      for (String a : PLUS_SPLITTER.split(as))
+        antecedents.add(Pattern.fromString(a));
+      return new Implication(antecedents, Pattern.fromString(c));
+    }
+
+    @Override protected int compareToGuts(Pattern p) {
+      Implication that = (Implication) p;
+      Ordering<Iterable<Pattern>> ordering = Ordering.natural().lexicographical();
+      return ComparisonChain.start()
+          .compare(this.antecedents, that.antecedents, ordering)
+          .compare(this.consequent, that.consequent)
+          .result();
+    }
+  }
+
+  public static Implication implication(Collection<? extends Pattern> antecedents, Pattern consequent) {
+    return new Implication(antecedents, consequent);
   }
 }
