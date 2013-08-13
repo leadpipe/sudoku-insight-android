@@ -64,10 +64,9 @@ public class Analyzer {
    * time-consuming operation; if run as a background thread it can be stopped
    * early by interrupting the thread.
    *
-   * <p> Any {@link Implication}s returned will have elimination-only insights
-   * as antecedents, and these may well include insights that have nothing to do
-   * with the consequent. Call {@link #minimizeImplication} to squeeze out
-   * irrelevant antecedents.
+   * <p> Any {@link Implication}s returned may include insights as
+   * antecedents that have nothing to do with the consequent. Call
+   * {@link #minimizeImplication} to squeeze out irrelevant antecedents.
    */
   public static boolean analyze(GridMarks gridMarks, Callback callback) {
     boolean complete = false;
