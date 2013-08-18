@@ -104,7 +104,7 @@ public class InsightMeasurer implements Runnable {
         List<Move> history = GSON.fromJson(historyString.getValue(), HISTORY_TYPE);
         new InsightMeasurer(puzzle, history, out).run();
         System.out.print('.');
-        if (npuzzles % 50 == 0) System.out.println();
+        if (npuzzles % 100 == 0) System.out.println();
         out.flush();
       }
     }

@@ -44,13 +44,13 @@ public class PatternTest {
   }
 
   @Test public void peerMetrics() {
-    testPeerMetrics(1, 1, "10100:54-----:--3----");
-    testPeerMetrics(5, 5, "00000:43cd-----:-32-c----");
-    testPeerMetrics(6, 3, "01220:----:----");
-    testPeerMetrics(4, 1, "21200:8---:1---");
-    testPeerMetrics(5, 7, "21110:65--:-2b-");
-    testPeerMetrics(6, 7, "11011:3a--:--6-");
-    testPeerMetrics(4, 5, "00000:4bc------:---4ab---");
+    testPeerMetrics(1, 1, "56:10100:54-----:--3----");
+    testPeerMetrics(5, 5, "56:00000:43cd-----:-32-c----");
+    testPeerMetrics(6, 3, "56:01220:----:----");
+    testPeerMetrics(4, 1, "56:21200:8---:1---");
+    testPeerMetrics(5, 7, "56:21110:65--:-2b-");
+    testPeerMetrics(6, 7, "56:11011:3a--:--6-");
+    testPeerMetrics(4, 5, "56:00000:4bc------:---4ab---");
 
     assertTrue(peerMetrics(4, 5).compareTo(peerMetrics(5, 5)) < 0);
     assertTrue(peerMetrics(1, 1).compareTo(peerMetrics(1, 1)) == 0);
@@ -69,17 +69,17 @@ public class PatternTest {
   @Test public void patterns() {
     testPattern("c:b", Pattern.conflict(UnitCategory.BLOCK));
     testPattern("c:l", Pattern.conflict(UnitCategory.LINE));
-    testPattern("bl:21200:8---:1---", Pattern.barredLocation(peerMetrics(4, 1)));
+    testPattern("bl:56:21200:8---:1---", Pattern.barredLocation(peerMetrics(4, 1)));
     testPattern("bn:b", Pattern.barredNumeral(UnitCategory.BLOCK));
     testPattern("fl:l", Pattern.forcedLocation(UnitCategory.LINE));
-    testPattern("fn:21200:8---:1---", Pattern.forcedNumeral(peerMetrics(4, 1)));
+    testPattern("fn:56:21200:8---:1---", Pattern.forcedNumeral(peerMetrics(4, 1)));
     testPattern("o:b", Pattern.overlap(UnitCategory.BLOCK));
     testPattern("s:b:4:n", Pattern.lockedSet(UnitCategory.BLOCK, 4, true));
     testPattern("s:l:2:h", Pattern.lockedSet(UnitCategory.LINE, 2, false));
     testPattern("i:o:b+o:l=fl:b",
         Pattern.implication(Arrays.asList(Pattern.Overlap.LINE, Pattern.Overlap.BLOCK),
             Pattern.ForcedLoc.BLOCK));
-    testPattern("i:fl:l+o:b=i:fn:21200:8---:1---+s:l:2:n=c:b",
+    testPattern("i:fl:l+o:b=i:fn:56:21200:8---:1---+s:l:2:n=c:b",
         Pattern.implication(Arrays.asList(Pattern.Overlap.BLOCK, Pattern.ForcedLoc.LINE),
             Pattern.implication(Arrays.asList(Pattern.lockedSet(UnitCategory.LINE, 2, true),
                 Pattern.forcedNumeral(peerMetrics(4, 1))), Pattern.Conflict.BLOCK)));

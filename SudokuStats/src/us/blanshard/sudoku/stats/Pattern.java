@@ -54,7 +54,7 @@ import java.util.SortedMap;
 import javax.annotation.concurrent.Immutable;
 
 /**
- * A set of classes that categorize atomic insights by the pattern that must be
+ * A set of classes that categorize insights by the pattern that must be
  * discerned in the Sudoku board to find them.
  *
  * @author Luke Blanshard
@@ -158,7 +158,8 @@ public abstract class Pattern implements Comparable<Pattern> {
     FORCED_NUMERAL("fn"),
     OVERLAP("o"),
     LOCKED_SET("s"),
-    IMPLICATION("i");
+    IMPLICATION("i"),
+    NONE("none");
 
     private final String name;
     private static final ImmutableMap<String, Type> byName;
@@ -283,6 +284,11 @@ public abstract class Pattern implements Comparable<Pattern> {
    */
   public static final class PeerMetrics implements Comparable<PeerMetrics> {
     /**
+     * The number of open locations in the entire grid.
+     */
+    private final int openCount;
+
+    /**
      * For each possible distance between two locations within a block, the
      * number of filled locations at that distance from the location in
      * question.  The distances are: 1, 1+1, 2, 2+1, and 2+2.
@@ -308,7 +314,8 @@ public abstract class Pattern implements Comparable<Pattern> {
      */
     private final byte[] line2Coordinates;
 
-    PeerMetrics(byte[] blockCounts, byte[] line1Coordinates, byte[] line2Coordinates) {
+    PeerMetrics(int openCount, byte[] blockCounts, byte[] line1Coordinates, byte[] line2Coordinates) {
+      this.openCount = openCount;
       this.blockCounts = blockCounts;
       this.line1Coordinates = line1Coordinates;
       this.line2Coordinates = line2Coordinates;
@@ -327,6 +334,7 @@ public abstract class Pattern implements Comparable<Pattern> {
     }
 
     public Appendable appendTo(Appendable a) throws IOException {
+      a.append(String.valueOf(openCount)).append(':');
       for (int count : blockCounts) a.append(String.valueOf(count));
       a.append(':');
       appendCoordinatesTo(line1Coordinates, a);
@@ -358,6 +366,7 @@ public abstract class Pattern implements Comparable<Pattern> {
     }
 
     private static PeerMetrics fromPieces(Iterator<String> pieces) {
+      int openCount = Integer.parseInt(pieces.next());
       String counts = pieces.next();
       String line1 = pieces.next();
       String line2 = Iterators.getOnlyElement(pieces);
@@ -372,7 +381,7 @@ public abstract class Pattern implements Comparable<Pattern> {
         line1Coordinates[i] = fromCoordinate(line1.charAt(i));
         line2Coordinates[i] = fromCoordinate(line2.charAt(i));
       }
-      return new PeerMetrics(blockCounts, line1Coordinates, line2Coordinates);
+      return new PeerMetrics(openCount, blockCounts, line1Coordinates, line2Coordinates);
     }
 
     private static byte fromCoordinate(char c) {
@@ -385,13 +394,15 @@ public abstract class Pattern implements Comparable<Pattern> {
     @Override public boolean equals(Object o) {
       if (!(o instanceof PeerMetrics)) return false;
       PeerMetrics that = (PeerMetrics) o;
-      return Arrays.equals(this.blockCounts, that.blockCounts)
+      return this.openCount == that.openCount
+          && Arrays.equals(this.blockCounts, that.blockCounts)
           && Arrays.equals(this.line1Coordinates, that.line1Coordinates)
           && Arrays.equals(this.line2Coordinates, that.line2Coordinates);
     }
 
     @Override public int hashCode() {
-      return Arrays.hashCode(blockCounts)
+      return Objects.hashCode(openCount)
+          + Arrays.hashCode(blockCounts)
           + Arrays.hashCode(line1Coordinates)
           + Arrays.hashCode(line2Coordinates);
     }
@@ -399,6 +410,7 @@ public abstract class Pattern implements Comparable<Pattern> {
     @Override public int compareTo(PeerMetrics that) {
       Comparator<byte[]> comp = SignedBytes.lexicographicalComparator();
       return ComparisonChain.start()
+          .compare(this.openCount, that.openCount)
           .compare(this.blockCounts, that.blockCounts, comp)
           .compare(this.line1Coordinates, that.line1Coordinates, comp)
           .compare(this.line2Coordinates, that.line2Coordinates, comp)
@@ -410,6 +422,8 @@ public abstract class Pattern implements Comparable<Pattern> {
    * Calculates the peer metrics for a location in a grid.
    */
   public static PeerMetrics peerMetrics(Grid grid, Location loc) {
+    int openCount = Location.COUNT - grid.size();
+
     byte[] blockCounts = new byte[5];
     for (Location l2 : loc.block)
       if (l2 != loc && grid.containsKey(l2)) {
@@ -463,7 +477,7 @@ public abstract class Pattern implements Comparable<Pattern> {
     for (Integer coord : invertAndSort(line2, negate2).keySet())
       line2Coordinates[index++] = (byte) coord.intValue();
 
-    return new PeerMetrics(blockCounts, line1Coordinates, line2Coordinates);
+    return new PeerMetrics(openCount, blockCounts, line1Coordinates, line2Coordinates);
   }
 
   private static boolean isRowLine1(
@@ -763,7 +777,7 @@ public abstract class Pattern implements Comparable<Pattern> {
       Arrays.sort(a);
       for (Pattern p : a) {
         checkNotNull(p);
-        checkArgument(p.getType() != Type.IMPLICATION);
+        checkArgument(p.getType().ordinal() < Type.IMPLICATION.ordinal());
       }
       this.antecedents = Arrays.asList(a);
       this.consequent = checkNotNull(consequent);
@@ -811,4 +825,37 @@ public abstract class Pattern implements Comparable<Pattern> {
   public static Implication implication(Collection<? extends Pattern> antecedents, Pattern consequent) {
     return new Implication(antecedents, consequent);
   }
+
+  /**
+   * A special null Pattern object used to collection information about
+   * patterns that were not seen.
+   */
+  public static class None extends Pattern {
+    private None() {
+      super(Type.NONE);
+    }
+
+    @Override public Appendable appendTo(Appendable a) throws IOException {
+      a.append("none");
+      return a;
+    }
+
+    @Override public boolean equals(Object o) {
+      return this == o;
+    }
+
+    @Override public int hashCode() {
+      return getClass().hashCode();
+    }
+
+    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override protected int compareToGuts(Pattern that) {
+      return 0;
+    }
+  }
+
+  public static final None NONE = new None();
 }
