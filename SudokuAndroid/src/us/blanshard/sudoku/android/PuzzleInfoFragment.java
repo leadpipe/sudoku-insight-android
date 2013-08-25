@@ -106,10 +106,12 @@ public class PuzzleInfoFragment extends FragmentBase
     mDetails.setWebViewClient(new LinkHandler());
     NetworkService.addStatsCallback(this);
 
-    if (getActivity().getIntent().hasExtra(Extras.SHOW_SOLUTION)) {
+    Intent activityIntent = getActivity().getIntent();
+    if (activityIntent.hasExtra(Extras.SHOW_SOLUTION)) {
       Intent intent = new Intent(getActivity(), ReplayActivity.class);
       intent.putExtra(Extras.ATTEMPT_ID,
-          getActivity().getIntent().getLongExtra(Extras.SHOW_SOLUTION, 0));
+          activityIntent.getLongExtra(Extras.SHOW_SOLUTION, 0));
+      activityIntent.removeExtra(Extras.SHOW_SOLUTION);
       startActivity(intent);
     }
   }
@@ -251,10 +253,14 @@ public class PuzzleInfoFragment extends FragmentBase
                 ToText.relativeDateTime(getActivity(), attempt.startTime))));
       }
     }
-    if (attempt.attemptState.isComplete())
+    if (attempt.attemptState.isComplete()) {
+      int stringId = attempt.attemptState == AttemptState.GAVE_UP
+          ? R.string.text_attempt_show_solution
+          : R.string.text_attempt_replay;
       sb.append("<br><a href='" + Uris.REPLAY_URI_PREFIX).append(attempt._id).append("'>")
-          .append(TextUtils.htmlEncode(getString(R.string.text_attempt_replay)))
+          .append(TextUtils.htmlEncode(getString(stringId)))
           .append("</a>");
+    }
     if (attempt.replayTime > 0)
       sb.append("<br>")
           .append(TextUtils.htmlEncode(getString(

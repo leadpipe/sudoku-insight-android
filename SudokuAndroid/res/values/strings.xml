@@ -67,6 +67,7 @@
     <!-- deliberately not using elapsed time argument: -->
     <string name="text_attempt_queued">Queued to play %2$s</string>
     <string name="text_attempt_replay">Review for insight</string>
+    <string name="text_attempt_show_solution">Show solution</string>
     <!-- deliberately not using elapsed time argument: -->
     <string name="text_attempt_skipped">Skipped %2$s</string>
     <string name="text_attempt_solved">Solved in %1$s %2$s</string>
