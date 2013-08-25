@@ -48,6 +48,14 @@ public class PuzzleListActivity extends ActivityBase
     mListFragment = (PuzzleListFragment) getFragmentManager().findFragmentById(R.id.list_fragment);
     mInfoFragment = (PuzzleInfoFragment) getFragmentManager().findFragmentById(R.id.info_fragment);
 
+    if (savedInstanceState != null) {
+      // Remove SHOW_SOLUTION when the activity gets recreated, so we don't
+      // loop into the replay page.
+      Intent intent = getIntent();
+      intent.removeExtra(Extras.SHOW_SOLUTION);
+      setIntent(intent);
+    }
+
     Bundle extras = getIntent().getExtras();
     if (mInfoFragment == null && extras != null && extras.getBoolean(Extras.SHOW_INFO, false)) {
       Intent infoIntent = new Intent(this, PuzzleInfoActivity.class);

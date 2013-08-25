@@ -111,7 +111,6 @@ public class PuzzleInfoFragment extends FragmentBase
       Intent intent = new Intent(getActivity(), ReplayActivity.class);
       intent.putExtra(Extras.ATTEMPT_ID,
           activityIntent.getLongExtra(Extras.SHOW_SOLUTION, 0));
-      activityIntent.removeExtra(Extras.SHOW_SOLUTION);
       startActivity(intent);
     }
   }
