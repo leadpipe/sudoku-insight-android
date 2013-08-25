@@ -528,6 +528,7 @@ public class ReplayActivity extends ActivityBase
   }
 
   @Override public void onClick(View v) {
+    if (mHistory == null) return;
     switch (v.getId()) {
       case R.id.play:
       case R.id.back:
