@@ -69,10 +69,19 @@ public class Analyzer {
    * {@link #minimizeImplication} to squeeze out irrelevant antecedents.
    */
   public static boolean analyze(GridMarks gridMarks, Callback callback) {
+    return analyze(gridMarks, callback, false);
+  }
+
+  /**
+   * Like the main version of analyze, but when elimsOnly is true, leaves
+   * assignments out of the antecedents of any implications found.
+   */
+  public static boolean analyze(
+      GridMarks gridMarks, Callback callback, boolean elimsOnly) {
     boolean complete = false;
 
     try {
-      findInsights(gridMarks, callback, null);
+      findInsights(gridMarks, callback, null, elimsOnly);
       complete = true;
 
     } catch (InterruptedException e) {
@@ -108,8 +117,8 @@ public class Analyzer {
   }
 
   private static void findInsights(
-      GridMarks gridMarks, Callback callback, @Nullable Set<Insight> index)
-      throws InterruptedException {
+      GridMarks gridMarks, Callback callback,
+      @Nullable Set<Insight> index, boolean elimsOnly) throws InterruptedException {
 
     index = index == null ? Sets.<Insight>newHashSet() : Sets.newHashSet(index);
     Collector collector;
@@ -120,12 +129,15 @@ public class Analyzer {
       checkInterruption();
     }
 
-    collector = new Collector(callback, index, true);
+    collector = new Collector(callback, index, !elimsOnly);
 
     findSingletonLocations(gridMarks, collector);
     checkInterruption();
     findSingletonNumerals(gridMarks, collector);
     checkInterruption();
+
+    if (elimsOnly)
+      collector = new Collector(callback, index, true);
 
     findOverlaps(gridMarks, collector);
     checkInterruption();
@@ -133,14 +145,16 @@ public class Analyzer {
     checkInterruption();
 
     if (!collector.list.isEmpty()) {
-      findImplications(gridMarks, collector, callback);
+      findImplications(gridMarks, collector, callback, elimsOnly);
     }
   }
 
-  private static void findImplications(GridMarks gridMarks, Collector antecedents, Callback callback) throws InterruptedException {
+  private static void findImplications(GridMarks gridMarks, Collector antecedents,
+      Callback callback, boolean elimsOnly) throws InterruptedException {
 
     Collector collector = new Collector(null, antecedents.index, true);
-    findInsights(gridMarks.toBuilder().apply(antecedents.list).build(), collector, antecedents.index);
+    findInsights(gridMarks.toBuilder().apply(antecedents.list).build(), collector,
+        antecedents.index, elimsOnly);
 
     for (Insight insight : collector.list)
       callback.take(new Implication(antecedents.list, insight));
@@ -151,7 +165,7 @@ public class Analyzer {
     final Set<Insight> index;
     @Nullable final List<Insight> list;
 
-    Collector(@Nullable Callback delegate, @Nullable Set<Insight> index, boolean makeList) {
+    Collector(@Nullable Callback delegate, Set<Insight> index, boolean makeList) {
       this.delegate = delegate;
       this.index = index;
       this.list = makeList ? Lists.<Insight>newArrayList() : null;

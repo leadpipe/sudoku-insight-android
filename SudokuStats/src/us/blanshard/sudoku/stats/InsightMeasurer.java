@@ -170,13 +170,15 @@ public class InsightMeasurer implements Runnable {
     }
 
     @Override public void take(Insight insight) throws StopException {
+      Assignment a = insight.getImpliedAssignment();
       boolean isError = insight.isError();
-      if (isError || insight.isAssignment()) {
+      if (isError || a != null) {
         Pattern pattern = getPattern(Analyzer.minimize(gridMarks, insight));
-        if (isError || !assignment.equals(insight.getImpliedAssignment()))
+        if (isError || !assignment.equals(a)) {
           missed.add(pattern);
-        else
+        } else {
           found.add(pattern);
+        }
       }
     }
 

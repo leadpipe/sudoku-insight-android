@@ -15,8 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.stats;
 
-import us.blanshard.sudoku.stats.Pattern.Type;
-
 import com.google.common.base.Splitter;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
@@ -35,6 +33,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
@@ -50,32 +49,39 @@ public class PatternCounter {
     Splitter splitter = Splitter.on('\t');
     for (String line; (line = in.readLine()) != null; ) {
       Iterator<String> iter = splitter.split(line).iterator();
-      String found = iter.next();
+      String foundString = iter.next();
       long ms = Long.parseLong(iter.next());
       Multiset<Pattern> missed = Pattern.multisetFromString(iter.next());
-      if (found.isEmpty())
-        noteFound(Pattern.NONE, ms, missed);
-      else for (Pattern p : Pattern.listFromString(found))
-        noteFound(p, ms, missed);
+      if (foundString.isEmpty())
+        noteFound(Sp.NONE, ms, missed);
+      else {
+        List<Pattern> found = Pattern.listFromString(foundString);
+        // If there are multiple patterns, skip them: we're trying to distinguish
+        // among patterns, and we can't tell which pattern or patterns were actually
+        // seen.
+        if (found.size() == 1)
+          noteFound(Sp.fromPattern(found.get(0)), ms, missed);
+      }
       for (Pattern p : missed)
-        noteMissed(p, ms);
+        noteMissed(Sp.fromPattern(p), ms);
     }
     in.close();
 
     System.out.println(" ==== Found patterns times in seconds ====");
     printStats(found, 9);
+    System.out.flush();
 
 //    System.out.println(" ==== Missed patterns times in seconds ====");
 //    printStats(missed, 100);
 
     System.out.println();
-    for (Pattern p : numAhead.rowKeySet()) {
-      Map<Pattern, Count> aheadCounts = numAhead.row(p);
-      Map<Pattern, Count> behindCounts = numAhead.column(p);
-      Collection<Pattern> aheadOf = findClearLosers(aheadCounts, behindCounts);
+    for (Sp p : numAhead.rowKeySet()) {
+      Map<Sp, Count> aheadCounts = numAhead.row(p);
+      Map<Sp, Count> behindCounts = numAhead.column(p);
+      Collection<Sp> aheadOf = findClearLosers(aheadCounts, behindCounts);
       if (aheadOf != null)
         System.out.printf("%-24s\tahead of %d: %s\n", p, aheadOf.size(), aheadOf);
-      Collection<Pattern> behind = findClearLosers(behindCounts, aheadCounts);
+      Collection<Sp> behind = findClearLosers(behindCounts, aheadCounts);
       if (behind != null)
         System.out.printf("%-24s\tbehind %d: %s\n", p, behind.size(), behind);
     }
@@ -84,10 +90,10 @@ public class PatternCounter {
     System.out.printf("Total missed: %d\n", missedOnce.size() + missed.size());
   }
 
-  private static Collection<Pattern> findClearLosers(Map<Pattern, Count> aheadCounts,
-      Map<Pattern, Count> behindCounts) {
-    Collection<Pattern> aheadOf = null;
-    for (Map.Entry<Pattern, Count> e : aheadCounts.entrySet()) {
+  private static Collection<Sp> findClearLosers(Map<Sp, Count> aheadCounts,
+      Map<Sp, Count> behindCounts) {
+    Collection<Sp> aheadOf = null;
+    for (Map.Entry<Sp, Count> e : aheadCounts.entrySet()) {
       int aheadCount = e.getValue().num;
       Count behind = behindCounts.get(e.getKey());
       int behindCount = behind == null ? 0 : behind.num;
@@ -100,37 +106,37 @@ public class PatternCounter {
     return aheadOf;
   }
 
-  private static final Map<Pattern, Double> foundOnce = Maps.newHashMap();
-  private static final Map<Pattern, DescriptiveStatistics> found = Maps.newHashMap();
-  private static final Map<Pattern, Double> missedOnce = Maps.newHashMap();
-  private static final Map<Pattern, DescriptiveStatistics> missed = Maps.newHashMap();
-  private static final Table<Pattern, Pattern, Count> numAhead = TreeBasedTable.create();
+  private static final Map<Sp, Double> foundOnce = Maps.newHashMap();
+  private static final Map<Sp, DescriptiveStatistics> found = Maps.newHashMap();
+  private static final Map<Sp, Double> missedOnce = Maps.newHashMap();
+  private static final Map<Sp, DescriptiveStatistics> missed = Maps.newHashMap();
+  private static final Table<Sp, Sp, Count> numAhead = TreeBasedTable.create();
 
   static class Count {
     int num;
   }
 
-  private static final EnumSet<Pattern.Type> COMPARE =
-      EnumSet.of(Type.FORCED_LOCATION, Type.FORCED_NUMERAL, Type.NONE);
+  private static final EnumSet<Sp.Type> COMPARE =
+      EnumSet.of(Sp.Type.FORCED_LOCATION, Sp.Type.FORCED_NUMERAL, Sp.Type.NONE);
 
   /**
    * Notes that the given pattern (or NONE) was seen in the given number
    * of milliseconds.
    */
-  private static void noteFound(Pattern p, long ms, Multiset<Pattern> missed) {
-    notePattern(p, ms, foundOnce, found);
+  private static void noteFound(Sp p, long ms, Multiset<Pattern> missed) {
+    noteSp(p, ms, foundOnce, found);
     if (!COMPARE.contains(p.getType())) return;
-    if (p != Pattern.NONE)
-      noteAhead(p, Pattern.NONE, 1);
+    if (p != Sp.NONE)
+      noteAhead(p, Sp.NONE, 1);
     for (Multiset.Entry<Pattern> e : missed.entrySet()) {
-      Pattern p2 = e.getElement();
+      Sp p2 = Sp.fromPattern(e.getElement());
       if (!COMPARE.contains(p2.getType())) continue;
       if (p2.equals(p)) continue;
       noteAhead(p, p2, e.getCount());
     }
   }
 
-  private static void noteAhead(Pattern p, Pattern p2, int count) {
+  private static void noteAhead(Sp p, Sp p2, int count) {
     Count c = numAhead.get(p, p2);
     if (c == null) numAhead.put(p, p2, (c = new Count()));
     c.num += count;
@@ -140,12 +146,12 @@ public class PatternCounter {
    * Notes that the given pattern was overlooked for the given number
    * of milliseconds.
    */
-  private static void noteMissed(Pattern p, long ms) {
-    notePattern(p, ms, missedOnce, missed);
+  private static void noteMissed(Sp p, long ms) {
+    noteSp(p, ms, missedOnce, missed);
   }
 
-  private static void notePattern(Pattern p, long ms, Map<Pattern, Double> first,
-      Map<Pattern, DescriptiveStatistics> stats) {
+  private static void noteSp(Sp p, long ms, Map<Sp, Double> first,
+      Map<Sp, DescriptiveStatistics> stats) {
     Double prevSec = first.remove(p);
     if (prevSec != null) {
       DescriptiveStatistics s = new DescriptiveStatistics();
@@ -160,11 +166,11 @@ public class PatternCounter {
       s.addValue(sec);
   }
 
-  private static void printStats(Map<Pattern, DescriptiveStatistics> stats, int min) {
-    SortedSet<Map.Entry<Pattern, DescriptiveStatistics>> sorted = Sets.newTreeSet(
-        new Ordering<Map.Entry<Pattern, DescriptiveStatistics>>() {
-          @Override public int compare(@Nullable Map.Entry<Pattern, DescriptiveStatistics> left,
-              @Nullable Map.Entry<Pattern, DescriptiveStatistics> right) {
+  private static void printStats(Map<Sp, DescriptiveStatistics> stats, int min) {
+    SortedSet<Map.Entry<Sp, DescriptiveStatistics>> sorted = Sets.newTreeSet(
+        new Ordering<Map.Entry<Sp, DescriptiveStatistics>>() {
+          @Override public int compare(@Nullable Map.Entry<Sp, DescriptiveStatistics> left,
+              @Nullable Map.Entry<Sp, DescriptiveStatistics> right) {
             return ComparisonChain.start()
                 // Right comes first:
 //                .compare(right.getValue().getN(), left.getValue().getN())
@@ -175,12 +181,12 @@ public class PatternCounter {
         }
     );
 
-    for (Map.Entry<Pattern, DescriptiveStatistics> e : stats.entrySet()) {
+    for (Map.Entry<Sp, DescriptiveStatistics> e : stats.entrySet()) {
       if (e.getValue().getN() >= min)
         sorted.add(e);
     }
 
-    for (Map.Entry<Pattern, DescriptiveStatistics> e : sorted) {
+    for (Map.Entry<Sp, DescriptiveStatistics> e : sorted) {
       DescriptiveStatistics s = e.getValue();
       System.out.format("count=%,-2d\tmedian=%3.1f\tmean=%3.1f\tstddev=%3.1f\tp=%s\n", s.getN(),
           s.getPercentile(0.5), s.getMean(), s.getStandardDeviation(), e.getKey());

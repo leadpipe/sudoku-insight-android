@@ -24,7 +24,6 @@ import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 
-import com.google.appengine.labs.repackaged.com.google.common.collect.ImmutableMap;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
@@ -32,6 +31,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -158,8 +158,7 @@ public abstract class Pattern implements Comparable<Pattern> {
     FORCED_NUMERAL("fn"),
     OVERLAP("o"),
     LOCKED_SET("s"),
-    IMPLICATION("i"),
-    NONE("none");
+    IMPLICATION("i");
 
     private final String name;
     private static final ImmutableMap<String, Type> byName;
@@ -321,6 +320,10 @@ public abstract class Pattern implements Comparable<Pattern> {
       this.line2Coordinates = line2Coordinates;
     }
 
+    public int getOpenCount() {
+      return openCount;
+    }
+
     public byte[] getBlockCounts() {
       return blockCounts.clone();
     }
@@ -353,7 +356,7 @@ public abstract class Pattern implements Comparable<Pattern> {
       return sb.toString();
     }
 
-    private void appendCoordinatesTo(byte[] coords, Appendable a) throws IOException {
+    static void appendCoordinatesTo(byte[] coords, Appendable a) throws IOException {
       for (int coord : coords) {
         if (coord == 0) a.append('-');
         else if (coord > 0) a.append(String.valueOf(coord));
@@ -783,6 +786,14 @@ public abstract class Pattern implements Comparable<Pattern> {
       this.consequent = checkNotNull(consequent);
     }
 
+    public List<Pattern> getAntecedents() {
+      return Collections.unmodifiableList(antecedents);
+    }
+
+    public Pattern getConsequent() {
+      return consequent;
+    }
+
     @Override public boolean equals(Object o) {
       if (!(o instanceof Implication)) return false;
       Implication that = (Implication) o;
@@ -825,37 +836,4 @@ public abstract class Pattern implements Comparable<Pattern> {
   public static Implication implication(Collection<? extends Pattern> antecedents, Pattern consequent) {
     return new Implication(antecedents, consequent);
   }
-
-  /**
-   * A special null Pattern object used to collection information about
-   * patterns that were not seen.
-   */
-  public static class None extends Pattern {
-    private None() {
-      super(Type.NONE);
-    }
-
-    @Override public Appendable appendTo(Appendable a) throws IOException {
-      a.append("none");
-      return a;
-    }
-
-    @Override public boolean equals(Object o) {
-      return this == o;
-    }
-
-    @Override public int hashCode() {
-      return getClass().hashCode();
-    }
-
-    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override protected int compareToGuts(Pattern that) {
-      return 0;
-    }
-  }
-
-  public static final None NONE = new None();
 }
