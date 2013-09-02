@@ -106,11 +106,13 @@ public class PuzzleInfoFragment extends FragmentBase
     mDetails.setWebViewClient(new LinkHandler());
     NetworkService.addStatsCallback(this);
 
-    Intent activityIntent = getActivity().getIntent();
-    if (activityIntent.hasExtra(Extras.SHOW_SOLUTION)) {
+    // Only go straight to the solution if the activity has no saved state.
+    // Otherwise it's possible to loop.
+    if (savedInstanceState == null
+        && getActivity().getIntent().hasExtra(Extras.SHOW_SOLUTION)) {
       Intent intent = new Intent(getActivity(), ReplayActivity.class);
       intent.putExtra(Extras.ATTEMPT_ID,
-          activityIntent.getLongExtra(Extras.SHOW_SOLUTION, 0));
+          getActivity().getIntent().getLongExtra(Extras.SHOW_SOLUTION, 0));
       startActivity(intent);
     }
   }
