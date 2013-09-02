@@ -19,7 +19,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
@@ -35,6 +34,7 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 
 import javax.annotation.Nullable;
@@ -49,21 +49,16 @@ public class PatternCounter {
     Splitter splitter = Splitter.on('\t');
     for (String line; (line = in.readLine()) != null; ) {
       Iterator<String> iter = splitter.split(line).iterator();
-      String foundString = iter.next();
+      List<Pattern> found = Pattern.listFromString(iter.next());
       long ms = Long.parseLong(iter.next());
-      Multiset<Pattern> missed = Pattern.multisetFromString(iter.next());
-      if (foundString.isEmpty())
-        noteFound(Sp.NONE, ms, missed);
-      else {
-        List<Pattern> found = Pattern.listFromString(foundString);
-        // If there are multiple patterns, skip them: we're trying to distinguish
-        // among patterns, and we can't tell which pattern or patterns were actually
-        // seen.
-        if (found.size() == 1)
-          noteFound(Sp.fromPattern(found.get(0)), ms, missed);
-      }
-      for (Pattern p : missed)
-        noteMissed(Sp.fromPattern(p), ms);
+      int openCount = Integer.parseInt(iter.next());
+      int numAssignments = Integer.parseInt(iter.next());
+      List<List<Pattern>> missed = Pattern.combinationsFromString(iter.next());
+      Sp sp = Sp.fromList(found, openCount, numAssignments);
+      noteFound(sp, ms, missed, openCount, numAssignments);
+      for (List<Pattern> list : missed)
+        for (Pattern p : list)
+          noteMissed(Sp.fromPattern(p, openCount, numAssignments), ms);
     }
     in.close();
 
@@ -75,7 +70,9 @@ public class PatternCounter {
 //    printStats(missed, 100);
 
     System.out.println();
-    for (Sp p : numAhead.rowKeySet()) {
+    Set<Sp> all = Sets.newTreeSet(numAhead.rowKeySet());
+    all.addAll(numAhead.columnKeySet());
+    for (Sp p : all) {
       Map<Sp, Count> aheadCounts = numAhead.row(p);
       Map<Sp, Count> behindCounts = numAhead.column(p);
       Collection<Sp> aheadOf = findClearLosers(aheadCounts, behindCounts);
@@ -114,31 +111,35 @@ public class PatternCounter {
 
   static class Count {
     int num;
+    final Sp p1, p2;
+    Count(Sp p1, Sp p2) { this.p1 = p1; this.p2 = p2; }
+    @Override public String toString() { return String.valueOf(num); }
   }
 
   private static final EnumSet<Sp.Type> COMPARE =
-      EnumSet.of(Sp.Type.FORCED_LOCATION, Sp.Type.FORCED_NUMERAL, Sp.Type.NONE);
+      EnumSet.of(Sp.Type.FORCED_LOCATION, Sp.Type.FORCED_NUMERAL,
+                 Sp.Type.IMPLICATION2, Sp.Type.COMBINATION2, Sp.Type.NONE);
 
   /**
    * Notes that the given pattern (or NONE) was seen in the given number
    * of milliseconds.
    */
-  private static void noteFound(Sp p, long ms, Multiset<Pattern> missed) {
+  private static void noteFound(Sp p, long ms, List<List<Pattern>> missed, int openCount, int numAssignments) {
     noteSp(p, ms, foundOnce, found);
     if (!COMPARE.contains(p.getType())) return;
-    if (p != Sp.NONE)
+    if (p.getType() != Sp.Type.NONE)
       noteAhead(p, Sp.NONE, 1);
-    for (Multiset.Entry<Pattern> e : missed.entrySet()) {
-      Sp p2 = Sp.fromPattern(e.getElement());
+    for (List<Pattern> list : missed) {
+      Sp p2 = Sp.fromList(list, openCount, numAssignments);
       if (!COMPARE.contains(p2.getType())) continue;
       if (p2.equals(p)) continue;
-      noteAhead(p, p2, e.getCount());
+      noteAhead(p, p2, 1);
     }
   }
 
   private static void noteAhead(Sp p, Sp p2, int count) {
     Count c = numAhead.get(p, p2);
-    if (c == null) numAhead.put(p, p2, (c = new Count()));
+    if (c == null) numAhead.put(p, p2, (c = new Count(p, p2)));
     c.num += count;
   }
 
@@ -174,7 +175,8 @@ public class PatternCounter {
             return ComparisonChain.start()
                 // Right comes first:
 //                .compare(right.getValue().getN(), left.getValue().getN())
-                .compare(left.getValue().getPercentile(0.5), right.getValue().getPercentile(0.5))
+//                .compare(left.getValue().getPercentile(0.5), right.getValue().getPercentile(0.5))
+                .compare(left.getValue().getMean(), right.getValue().getMean())
                 .compare(left.getKey(), right.getKey())
                 .result();
           }

@@ -27,19 +27,13 @@ import us.blanshard.sudoku.core.Unit;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
-import com.google.common.collect.BiMap;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
-import com.google.common.primitives.Bytes;
-import com.google.common.primitives.SignedBytes;
+import com.google.common.primitives.UnsignedBytes;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -48,8 +42,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -65,7 +57,7 @@ public abstract class Pattern implements Comparable<Pattern> {
   private static final Splitter COLON_SPLITTER = Splitter.on(':');
   private static final Splitter COLON_SPLITTER_2 = COLON_SPLITTER.limit(2);
   private static final Splitter COMMA_SPLITTER = Splitter.on(',').omitEmptyStrings();
-  private static final Splitter STAR_SPLITTER_2 = Splitter.on('*').limit(2);
+  private static final Splitter SEMI_SPLITTER = Splitter.on(';').omitEmptyStrings();
 
   private final Type type;
 
@@ -122,13 +114,12 @@ public abstract class Pattern implements Comparable<Pattern> {
     return Joiner.on(',').appendTo(a, patterns);
   }
 
-  public static Appendable appendTo(Appendable a, Multiset<? extends Pattern> patterns) throws IOException {
+  public static Appendable appendAllTo(Appendable a, Collection<List<Pattern>> patternLists) throws IOException {
     boolean one = false;
-    for (Multiset.Entry<? extends Pattern> entry : patterns.entrySet()) {
-      if (one) a.append(',');
+    for (List<Pattern> list : patternLists) {
+      if (one) a.append(';');
       else one = true;
-      entry.getElement().appendTo(a);
-      a.append('*').append(String.valueOf(entry.getCount()));
+      appendTo(a, list);
     }
     return a;
   }
@@ -141,11 +132,10 @@ public abstract class Pattern implements Comparable<Pattern> {
     return builder.build();
   }
 
-  public static Multiset<Pattern> multisetFromString(String s) {
-    ImmutableMultiset.Builder<Pattern> builder = ImmutableMultiset.builder();
-    for (String piece : COMMA_SPLITTER.split(s)) {
-      Iterator<String> iter = STAR_SPLITTER_2.split(piece).iterator();
-      builder.setCount(fromString(iter.next()), Integer.parseInt(iter.next()));
+  public static List<List<Pattern>> combinationsFromString(String s) {
+    ImmutableList.Builder<List<Pattern>> builder = ImmutableList.builder();
+    for (String piece : SEMI_SPLITTER.split(s)) {
+      builder.add(listFromString(piece));
     }
     return builder.build();
   }
@@ -279,70 +269,66 @@ public abstract class Pattern implements Comparable<Pattern> {
 
   /**
    * For patterns that require enumerating the numerals that affect a particular
-   * location, this class counts those adjacent numerals in detail.
+   * location, this class classifies those adjacent numerals in detail.
    */
   public static final class PeerMetrics implements Comparable<PeerMetrics> {
     /**
-     * The number of open locations in the entire grid.
+     * For each location in the target location's units, a byte indicating the
+     * category of the location. There are 27 bytes in the array, one for each
+     * location in the block, row, and column (note there are overlaps). 0 means
+     * the location is unset. 8 means the location is the target location. Other
+     * values use the bits 1, 2, and 4 to indicate which of the block, row, and
+     * column the numeral in question is set in.
      */
-    private final int openCount;
+    private final byte[] categories;
+
+    PeerMetrics(byte[] categories) {
+      this.categories = categories;
+    }
+
+    public static final byte UNSET = 0;
+    public static final byte TARGET = 8;
+    public static final byte BLOCK_BIT = 1;
+    public static final byte ROW_BIT = 2;
+    public static final byte COLUMN_BIT = 4; // unitBit(Unit.Type.COLUMN);
+
+    public byte[] getBlockCategories() {
+      return getUnitCategories(Unit.Type.BLOCK);
+    }
+
+    public byte[] getRowCategories() {
+      return getUnitCategories(Unit.Type.ROW);
+    }
+
+    public byte[] getColumnCategories() {
+      return getUnitCategories(Unit.Type.COLUMN);
+    }
+
+    public byte[] getUnitCategories(Unit.Type type) {
+      byte[] answer = new byte[9];
+      System.arraycopy(categories, type.ordinal() * 9, answer, 0, 9);
+      return answer;
+    }
+
+    public static int unitBit(Unit.Type type) {
+      return 1 << type.ordinal();
+    }
 
     /**
-     * For each possible distance between two locations within a block, the
-     * number of filled locations at that distance from the location in
-     * question.  The distances are: 1, 1+1, 2, 2+1, and 2+2.
+     * Returns the location category for the given unit and index within that
+     * unit.
      */
-    private final byte[] blockCounts;
-
-    /**
-     * For the numerals <b>not</b> in the block, the signed distance from the
-     * location in question where each numeral lies along one of the location's
-     * peer lines, ordered from most positive to most negative. Numerals not in
-     * either the block nor this line are represented as zero, and they are
-     * ordered last. There are particular rules for deciding which line is
-     * counted as line 1 and which line 2, and which direction from the location
-     * counts as positive and which negative, such that two similar patterns
-     * always are counted in the same way.
-     */
-    private final byte[] line1Coordinates;
-
-    /**
-     * The same, but for the other line.  For line 2, the order matches that of
-     * line 1, meaning that index 0 of both arrays refers to the coordinate of
-     * the same numeral along both lines.
-     */
-    private final byte[] line2Coordinates;
-
-    PeerMetrics(int openCount, byte[] blockCounts, byte[] line1Coordinates, byte[] line2Coordinates) {
-      this.openCount = openCount;
-      this.blockCounts = blockCounts;
-      this.line1Coordinates = line1Coordinates;
-      this.line2Coordinates = line2Coordinates;
-    }
-
-    public int getOpenCount() {
-      return openCount;
-    }
-
-    public byte[] getBlockCounts() {
-      return blockCounts.clone();
-    }
-
-    public byte[] getLine1Coordinates() {
-      return line1Coordinates.clone();
-    }
-
-    public byte[] getLine2Coordinates() {
-      return line2Coordinates.clone();
+    public byte getLocationCategory(Unit.Type type, int index) {
+      return categories[type.ordinal() * 9 + index];
     }
 
     public Appendable appendTo(Appendable a) throws IOException {
-      a.append(String.valueOf(openCount)).append(':');
-      for (int count : blockCounts) a.append(String.valueOf(count));
-      a.append(':');
-      appendCoordinatesTo(line1Coordinates, a);
-      a.append(':');
-      appendCoordinatesTo(line2Coordinates, a);
+      for (Unit.Type type : Unit.Type.values()) {
+        if (type.ordinal() > 0)
+          a.append(':');
+        for (int index = 0; index < 9; ++index)
+          a.append((char) ('0' + getLocationCategory(type, index)));
+      }
       return a;
     }
 
@@ -369,55 +355,31 @@ public abstract class Pattern implements Comparable<Pattern> {
     }
 
     private static PeerMetrics fromPieces(Iterator<String> pieces) {
-      int openCount = Integer.parseInt(pieces.next());
-      String counts = pieces.next();
-      String line1 = pieces.next();
-      String line2 = Iterators.getOnlyElement(pieces);
-      checkArgument(counts.length() == 5, "bad counts: %s", counts);
-      checkArgument(line1.length() == line2.length(), "mismatched lines: %s vs %s", line1, line2);
-      byte[] blockCounts = new byte[5];
-      for (int i = 0; i < counts.length(); ++i)
-        blockCounts[i] = (byte) (counts.charAt(i) - '0');
-      byte[] line1Coordinates = new byte[line1.length()];
-      byte[] line2Coordinates = new byte[line1.length()];
-      for (int i = 0; i < line1.length(); ++i) {
-        line1Coordinates[i] = fromCoordinate(line1.charAt(i));
-        line2Coordinates[i] = fromCoordinate(line2.charAt(i));
+      byte[] categories = new byte[27];
+      int index = 0;
+      while (pieces.hasNext()) {
+        String piece = pieces.next();
+        for (int j = 0; j < piece.length(); ++j)
+          categories[index++] = (byte) (piece.charAt(j) - '0');
       }
-      return new PeerMetrics(openCount, blockCounts, line1Coordinates, line2Coordinates);
-    }
-
-    private static byte fromCoordinate(char c) {
-      if (c == '-') return 0;
-      if (c >= '0' && c <= '9') return (byte) (c - '0');
-      if (c >= 'a' && c <= 'h') return (byte) ('a' - c - 1);
-      throw new IllegalArgumentException();
+      if (index != categories.length)
+        throw new IllegalArgumentException();
+      return new PeerMetrics(categories);
     }
 
     @Override public boolean equals(Object o) {
       if (!(o instanceof PeerMetrics)) return false;
       PeerMetrics that = (PeerMetrics) o;
-      return this.openCount == that.openCount
-          && Arrays.equals(this.blockCounts, that.blockCounts)
-          && Arrays.equals(this.line1Coordinates, that.line1Coordinates)
-          && Arrays.equals(this.line2Coordinates, that.line2Coordinates);
+      return Arrays.equals(this.categories, that.categories);
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(openCount)
-          + Arrays.hashCode(blockCounts)
-          + Arrays.hashCode(line1Coordinates)
-          + Arrays.hashCode(line2Coordinates);
+      return Arrays.hashCode(categories);
     }
 
     @Override public int compareTo(PeerMetrics that) {
-      Comparator<byte[]> comp = SignedBytes.lexicographicalComparator();
-      return ComparisonChain.start()
-          .compare(this.openCount, that.openCount)
-          .compare(this.blockCounts, that.blockCounts, comp)
-          .compare(this.line1Coordinates, that.line1Coordinates, comp)
-          .compare(this.line2Coordinates, that.line2Coordinates, comp)
-          .result();
+      Comparator<byte[]> comp = UnsignedBytes.lexicographicalComparator();
+      return comp.compare(this.categories, that.categories);
     }
   }
 
@@ -425,123 +387,29 @@ public abstract class Pattern implements Comparable<Pattern> {
    * Calculates the peer metrics for a location in a grid.
    */
   public static PeerMetrics peerMetrics(Grid grid, Location loc) {
-    int openCount = Location.COUNT - grid.size();
+    NumSet[] unitNums = {NumSet.NONE, NumSet.NONE, NumSet.NONE};
+    for (Unit.Type type : Unit.Type.values())
+      for (Location peer : loc.unit(type))
+        if (grid.containsKey(peer))
+          unitNums[type.ordinal()] = unitNums[type.ordinal()].with(grid.get(peer));
 
-    byte[] blockCounts = new byte[5];
-    for (Location l2 : loc.block)
-      if (l2 != loc && grid.containsKey(l2)) {
-        int index;
-        int i1 = Math.abs(l2.row.index - loc.row.index);
-        int i2 = Math.abs(l2.column.index - loc.column.index);
-        if (i1 == 0) index = i2 == 1 ? 0 : 2;
-        else if (i2 == 0) index = i1 == 1 ? 0 : 2;
-        else if (i1 == 1 && i2 == 1) index = 1;
-        else if (i1 == 2 && i2 == 2) index = 4;
-        else index = 3;
-        ++blockCounts[index];
-      }
-
-    NumSet remaining = loc.block.getMissing(grid);
-    BiMap<Numeral, Integer> rowCoordinates = HashBiMap.create();
-    BiMap<Numeral, Integer> colCoordinates = HashBiMap.create();
-    for (Location l2 : loc.row) {
-      Numeral num = grid.get(l2);
-      if (num != null && remaining.contains(num)) {
-        int diff = l2.column.index - loc.column.index;
-        rowCoordinates.put(num, diff);
-      }
-    }
-    for (Location l2 : loc.column) {
-      Numeral num = grid.get(l2);
-      if (num != null && remaining.contains(num)) {
-        int diff = l2.row.index - loc.row.index;
-        colCoordinates.put(num, diff);
-      }
-    }
-
-    boolean isRowLine1 = isRowLine1(rowCoordinates, colCoordinates);
-    BiMap<Numeral, Integer> line1 = isRowLine1 ? rowCoordinates : colCoordinates;
-    BiMap<Numeral, Integer> line2 = isRowLine1 ? colCoordinates : rowCoordinates;
-    boolean negate1 = shouldNegateLine(line1.inverse(), line2);
-    boolean negate2 = shouldNegateLine(line2.inverse(), line1);
-
-    byte[] line1Coordinates = new byte[remaining.size()];
-    byte[] line2Coordinates = new byte[remaining.size()];
+    byte[] categories = new byte[27];
     int index = 0;
-    for (Map.Entry<Integer, Numeral> e : invertAndSort(line1, negate1).entrySet()) {
-      line1Coordinates[index] = (byte) e.getKey().intValue();
-      if (line2.containsKey(e.getValue())) {
-        int coord = line2.get(e.getValue());
-        line2Coordinates[index] = (byte) (negate2 ? -coord : coord);
-        line2.remove(e.getValue());
+    for (Unit.Type type : Unit.Type.values())
+      for (Location peer : loc.unit(type)) {
+        byte category = PeerMetrics.UNSET;
+        if (peer == loc)
+          category = PeerMetrics.TARGET;
+        else if (grid.containsKey(peer)) {
+          Numeral numeral = grid.get(peer);
+          for (Unit.Type t2 : Unit.Type.values())
+            if (unitNums[t2.ordinal()].contains(numeral))
+              category |= PeerMetrics.unitBit(t2);
+        }
+        categories[index++] = category;
       }
-      ++index;
-    }
-    for (Integer coord : invertAndSort(line2, negate2).keySet())
-      line2Coordinates[index++] = (byte) coord.intValue();
 
-    return new PeerMetrics(openCount, blockCounts, line1Coordinates, line2Coordinates);
-  }
-
-  private static boolean isRowLine1(
-      Map<Numeral, Integer> rowCoordinates, Map<Numeral, Integer> colCoordinates) {
-    if (rowCoordinates.size() > colCoordinates.size()) return true;
-    if (rowCoordinates.size() < colCoordinates.size()) return false;
-
-    byte[] rowDistances = toOrderedAbsoluteBytes(rowCoordinates.values());
-    byte[] colDistances = toOrderedAbsoluteBytes(colCoordinates.values());
-    return SignedBytes.lexicographicalComparator().compare(rowDistances, colDistances) >= 0;
-  }
-
-  private static boolean shouldNegateLine(Map<Integer, Numeral> line, Map<Numeral, Integer> opp) {
-    byte[] bytes = toBytes(line.keySet());
-    Arrays.sort(bytes);  // Sorts negatives first
-    for (int i = 0; i < bytes.length; ++i) {
-      int j = bytes.length - 1 - i;
-      // Larger distances win:
-      if (bytes[j] > -bytes[i]) return false;
-      if (bytes[j] < -bytes[i]) return true;
-    }
-    for (int i = 0; true; ++i) {
-      int j = bytes.length - 1 - i;
-      if (i > j) break;
-      // Larger distances on the opposite line win:
-      Numeral ni = line.get((int) bytes[i]);
-      Numeral nj = line.get((int) bytes[j]);
-      Integer oi = opp.get(ni);
-      Integer oj = opp.get(nj);
-      if (oj != null && oi == null) return false;
-      if (oj == null && oi != null) return true;
-      if (oj != null) {
-        if (Math.abs(oj) > Math.abs(oi)) return false;
-        if (Math.abs(oj) < Math.abs(oi)) return true;
-      }
-    }
-    return false;
-  }
-
-  private static byte[] toBytes(Collection<Integer> ints) {
-    byte[] answer = new byte[ints.size()];
-    int index = 0;
-    for (int i : ints)
-      answer[index++] = (byte) i;
-    return answer;
-  }
-
-  private static byte[] toOrderedAbsoluteBytes(Collection<Integer> ints) {
-    byte[] answer = toBytes(ints);
-    for (int i = 0; i < answer.length; ++i)
-      if (answer[i] < 0) answer[i] = (byte) -answer[i];
-    Collections.sort(Bytes.asList(answer), Ordering.natural().reverse());
-    return answer;
-  }
-
-  private static SortedMap<Integer, Numeral> invertAndSort(
-      Map<Numeral, Integer> line, boolean negate) {
-    SortedMap<Integer, Numeral> sorted = Maps.newTreeMap(Ordering.natural().reverse());
-    for (Map.Entry<Numeral, Integer> e : line.entrySet())
-      sorted.put(negate ? -e.getValue() : e.getValue(), e.getKey());
-    return sorted;
+    return new PeerMetrics(categories);
   }
 
   /**

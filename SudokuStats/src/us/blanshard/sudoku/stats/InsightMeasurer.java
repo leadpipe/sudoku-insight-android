@@ -21,6 +21,8 @@ import static us.blanshard.sudoku.game.GameJson.HISTORY_TYPE;
 import us.blanshard.sudoku.appengine.Schema;
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.LocSet;
+import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.game.GameJson;
@@ -51,10 +53,8 @@ import com.google.appengine.api.files.FileServiceFactory;
 import com.google.appengine.api.files.RecordReadChannel;
 import com.google.appengine.tools.development.testing.LocalBlobstoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
@@ -62,9 +62,10 @@ import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 /**
  * Analyzes sudoku game histories to measure the time taken to make use of
@@ -140,14 +141,18 @@ public class InsightMeasurer implements Runnable {
         grid = grid.toBuilder().remove(move.getLocation()).build();
       GridMarks gridMarks = new GridMarks(grid);
       Collector collector = new Collector(gridMarks, move.getAssignment());
-      Analyzer.analyze(gridMarks, collector);
+      Analyzer.analyze(gridMarks, collector, true);
       long elapsed = move.timestamp - prevSetTime;
       try {
         Pattern.appendTo(out, collector.found)
             .append('\t')
             .append(String.valueOf(elapsed))
+            .append('\t')
+            .append(String.valueOf(Location.COUNT - grid.size()))
+            .append('\t')
+            .append(String.valueOf(collector.locsWithAssignments.size()))
             .append('\t');
-        Pattern.appendTo(out, collector.missed);
+        Pattern.appendAllTo(out, collector.missed.values());
         out.println();
       } catch (IOException e) {
         throw new AssertionError(e);
@@ -161,8 +166,9 @@ public class InsightMeasurer implements Runnable {
   class Collector implements Analyzer.Callback {
     final GridMarks gridMarks;
     final Assignment assignment;
-    final Set<Pattern> found = Sets.newHashSet();
-    final Multiset<Pattern> missed = HashMultiset.create();
+    final List<Pattern> found = Lists.newArrayList();
+    final Map<Object, List<Pattern>> missed = Maps.newHashMap();
+    final LocSet locsWithAssignments = new LocSet();
 
     Collector(GridMarks gridMarks, Assignment assignment) {
       this.gridMarks = gridMarks;
@@ -174,12 +180,18 @@ public class InsightMeasurer implements Runnable {
       boolean isError = insight.isError();
       if (isError || a != null) {
         Pattern pattern = getPattern(Analyzer.minimize(gridMarks, insight));
-        if (isError || !assignment.equals(a)) {
-          missed.add(pattern);
-        } else {
+        if (isError)
+          missed.put(new Object(), Collections.singletonList(pattern));
+        else if (assignment.equals(a))
           found.add(pattern);
+        else {
+          List<Pattern> list = missed.get(a);
+          if (list == null) missed.put(a, list = Lists.newArrayList());
+          list.add(pattern);
         }
       }
+      if (a != null && a.location != assignment.location)
+        locsWithAssignments.add(a.location);
     }
 
     private Pattern getPattern(Insight insight) {
