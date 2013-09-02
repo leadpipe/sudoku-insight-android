@@ -37,7 +37,7 @@ public abstract class Unit extends AbstractCollection<Location>
   public static final int COUNT = 3 * 9;  // 9 each of rows, columns, and blocks.
 
   public enum Type {
-    ROW, COLUMN, BLOCK
+    BLOCK, ROW, COLUMN
   }
 
   /**
@@ -50,9 +50,9 @@ public abstract class Unit extends AbstractCollection<Location>
 
   /** Returns the row, column, or block corresponding to the given unit index. */
   public static Unit ofIndex(int unitIndex) {
-    if (unitIndex < 9) return Row.ofIndex(unitIndex);
-    if (unitIndex < 18) return Column.ofIndex(unitIndex - 9);
-    return Block.ofIndex(unitIndex - 18);
+    if (unitIndex < 9) return Block.ofIndex(unitIndex);
+    if (unitIndex < 18) return Row.ofIndex(unitIndex - 9);
+    return Column.ofIndex(unitIndex - 18);
   }
 
   /** Returns the numerals that have conflicts in this unit in the given grid. */

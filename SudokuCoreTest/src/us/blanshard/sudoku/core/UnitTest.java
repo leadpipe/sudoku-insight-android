@@ -41,9 +41,11 @@ public class UnitTest {  // What're the odds?
   }
 
   @Test public void ofIndex() {
-    assertSame(Row.ofIndex(3), Unit.ofIndex(3));
-    assertSame(Column.ofIndex(3), Unit.ofIndex(12));
-    assertSame(Block.ofIndex(3), Unit.ofIndex(21));
+    assertSame(Block.ofIndex(3), Unit.ofIndex(3));
+    assertSame(Row.ofIndex(3), Unit.ofIndex(12));
+    assertSame(Column.ofIndex(3), Unit.ofIndex(21));
+    for (Unit u : Unit.allUnits())
+      assertSame(u, Unit.ofIndex(u.unitIndex()));
   }
 
   @Test public void getConflicts() {
