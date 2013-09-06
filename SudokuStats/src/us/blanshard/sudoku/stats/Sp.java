@@ -218,11 +218,11 @@ public abstract class Sp implements Comparable<Sp> {
    * location, this class counts those adjacent numerals in detail.
    */
   public static final class PeerMetrics implements Comparable<PeerMetrics> {
-    private final int openInBlock;
-    private final int openInLines;  // but not block
-    private final boolean bothLinesRequired;
+    public final int openInBlock;
+    public final int openInLines;  // but not block
+    public final boolean bothLinesRequired;
 
-    PeerMetrics(Pattern.PeerMetrics that) {
+    public PeerMetrics(Pattern.PeerMetrics that) {
       int openInBlock = 0;
       int openInLines = 0;
       boolean row = false, col = false;

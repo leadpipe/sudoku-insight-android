@@ -69,6 +69,10 @@ public abstract class Pattern implements Comparable<Pattern> {
     return type;
   }
 
+  public Pattern getNub() {
+    return this;
+  }
+
   public Appendable appendTo(Appendable a) throws IOException {
     a.append(type.getName()).append(':');
     appendGutsTo(a);
@@ -660,6 +664,10 @@ public abstract class Pattern implements Comparable<Pattern> {
 
     public Pattern getConsequent() {
       return consequent;
+    }
+
+    @Override public Pattern getNub() {
+      return consequent.getNub();
     }
 
     @Override public boolean equals(Object o) {
