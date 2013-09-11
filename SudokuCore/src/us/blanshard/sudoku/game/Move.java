@@ -66,8 +66,14 @@ public abstract class Move {
   }
 
   public abstract Location getLocation();
-
+  @Nullable public abstract Numeral getNumeral();
   @Nullable public abstract Assignment getAssignment();
+
+  public static Move make(Location loc, @Nullable Numeral num, long timestamp, int stateId) {
+    return num == null
+        ? new Move.Clear(timestamp, stateId, loc)
+        : new Move.Set(timestamp, stateId, loc, num);
+  }
 
   @Immutable
   public static class Set extends Move {
@@ -100,7 +106,11 @@ public abstract class Move {
       return loc;
     }
 
-    @Override @Nullable public Assignment getAssignment() {
+    @Override public Numeral getNumeral() {
+      return num;
+    }
+
+    @Override public Assignment getAssignment() {
       return Assignment.of(loc, num);
     }
   }
@@ -132,6 +142,10 @@ public abstract class Move {
 
     @Override public Location getLocation() {
       return loc;
+    }
+
+    @Override @Nullable public Numeral getNumeral() {
+      return null;
     }
 
     @Override @Nullable public Assignment getAssignment() {

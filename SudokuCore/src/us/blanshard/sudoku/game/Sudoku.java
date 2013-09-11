@@ -29,7 +29,9 @@ import com.google.common.collect.Lists;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
@@ -117,7 +119,7 @@ public final class Sudoku {
 
   /** Returns the total elapsed time in milliseconds. */
   public long elapsedMillis() {
-    return initialMillis + stopwatch.elapsedMillis();
+    return initialMillis + stopwatch.elapsed(TimeUnit.MILLISECONDS);
   }
 
   /** Tells whether the puzzle is in its normal running state. */
@@ -172,7 +174,11 @@ public final class Sudoku {
   /** Applies the given move to this puzzle, adds it to the history if it worked. */
   public boolean move(Move move) {
     if (!isRunning()) return false;
-    if (!move.apply(this)) return false;
+    registry.asListener().moveComing(this, move);
+    if (!move.apply(this)) {
+      registry.asListener().moveFailed(this, move);
+      return false;
+    }
     history.add(move);
     registry.asListener().moveMade(this, move);
     return true;
@@ -197,8 +203,14 @@ public final class Sudoku {
     /** Called when a Sudoku has been resumed. */
     void gameResumed(Sudoku game);
 
+    /** Called before a move will be attempted in a Sudoku. */
+    void moveComing(Sudoku game, Move move);
+
     /** Called when a move has been successfully made in a Sudoku. */
     void moveMade(Sudoku game, Move move);
+
+    /** Called when a move has failed to be applied in a Sudoku. */
+    void moveFailed(Sudoku game, Move move);
 
     /** Called when a new trail has been created. */
     void trailCreated(Sudoku game, Trail trail);
@@ -212,7 +224,9 @@ public final class Sudoku {
     @Override public void gameCreated(Sudoku game) {}
     @Override public void gameSuspended(Sudoku game) {}
     @Override public void gameResumed(Sudoku game) {}
+    @Override public void moveComing(Sudoku game, Move move) {}
     @Override public void moveMade(Sudoku game, Move move) {}
+    @Override public void moveFailed(Sudoku game, Move move) {}
     @Override public void trailCreated(Sudoku game, Trail trail) {}
   }
 
@@ -276,9 +290,8 @@ public final class Sudoku {
      * only doesn't work if the location contains one of the puzzle's original
      * clues.
      */
-    public boolean set(Location loc, Numeral num) {
-      return move(num == null ? new Move.Clear(elapsedMillis(), loc)
-                  : new Move.Set(elapsedMillis(), loc, num));
+    public boolean set(Location loc, @Nullable Numeral num) {
+      return move(Move.make(loc, num, elapsedMillis(), getId()));
     }
 
     /** Tells whether a call to {@link #set} will succeed. */
@@ -325,12 +338,6 @@ public final class Sudoku {
     /** Returns the first location set in this trail, or null if none yet. */
     public Location getTrailhead() {
       return first;
-    }
-
-    /** Sets or clears the given location, tells whether it worked. */
-    @Override public boolean set(Location loc, Numeral num) {
-      return move(num == null ? new Move.Clear(elapsedMillis(), id, loc)
-                  : new Move.Set(elapsedMillis(), id, loc, num));
     }
 
     @Override public boolean canModify(Location loc) {
@@ -393,9 +400,19 @@ public final class Sudoku {
         listener.gameResumed(game);
     }
 
+    @Override public void moveComing(Sudoku game, Move move) {
+      for (Listener listener : listeners)
+        listener.moveComing(game, move);
+    }
+
     @Override public void moveMade(Sudoku game, Move move) {
       for (Listener listener : listeners)
         listener.moveMade(game, move);
+    }
+
+    @Override public void moveFailed(Sudoku game, Move move) {
+      for (Listener listener : listeners)
+        listener.moveFailed(game, move);
     }
 
     @Override public void trailCreated(Sudoku game, Trail trail) {
