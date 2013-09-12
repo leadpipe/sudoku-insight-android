@@ -28,6 +28,7 @@ import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.Sudoku;
+import us.blanshard.sudoku.game.UndoDetector;
 import us.blanshard.sudoku.insight.Analyzer;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
 import us.blanshard.sudoku.insight.BarredLoc;
@@ -114,35 +115,37 @@ public class InsightMeasurer implements Runnable {
     helper.tearDown();
   }
 
-  private final Grid solution;
   private final Sudoku game;
   private final List<Move> history;
+  private final UndoDetector undoDetector;
   private final PrintWriter out;
 
   private InsightMeasurer(Grid puzzle, List<Move> history, PrintWriter out) {
     Solver.Result result = Solver.solve(puzzle, 10, new Random());
-    checkNotNull(this.solution = result.intersection);
-    this.game = new Sudoku(puzzle, Sudoku.nullRegistry()).resume();
+    checkNotNull(result.intersection);
+    this.game = new Sudoku(puzzle).resume();
     this.history = history;
+    this.undoDetector = new UndoDetector(game);
     this.out = out;
   }
 
   @Override public void run() {
-    long prevSetTime = 0;
+    long prevTime = 0;
     for (Move move : history) {
-      prevSetTime = applyMove(move, prevSetTime);
+      applyMove(move, prevTime);
+      prevTime = move.timestamp;
     }
   }
 
-  long applyMove(Move move, long prevSetTime) {
-    if (move instanceof Move.Set) {
+  void applyMove(Move move, long prevTime) {
+    if (move instanceof Move.Set && !undoDetector.isUndoOrRedo(move)) {
       Grid grid = game.getState(move.trailId).getGrid();
       if (grid.containsKey(move.getLocation()))
         grid = grid.toBuilder().remove(move.getLocation()).build();
       GridMarks gridMarks = new GridMarks(grid);
       Collector collector = new Collector(gridMarks, move.getAssignment());
       Analyzer.analyze(gridMarks, collector, true);
-      long elapsed = move.timestamp - prevSetTime;
+      long elapsed = move.timestamp - prevTime;
       try {
         Pattern.appendTo(out, collector.found)
             .append('\t')
@@ -157,10 +160,8 @@ public class InsightMeasurer implements Runnable {
       } catch (IOException e) {
         throw new AssertionError(e);
       }
-      prevSetTime = move.timestamp;
     }
     game.move(move);
-    return prevSetTime;
   }
 
   class Collector implements Analyzer.Callback {
