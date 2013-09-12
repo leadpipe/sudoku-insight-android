@@ -20,6 +20,7 @@ import us.blanshard.sudoku.stats.Pattern.ForcedNum;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
@@ -217,8 +218,8 @@ public class ScanPoints {
     private final String description;
     private final Predicate<Pattern> matches;
     private final ProcessCounter counter;
-    private long matched;
-    private long unmatched;
+    private long movesIncluded;
+    private long movesSkipped;
 
     public Process(String description, Predicate<Pattern> matches, Random random) {
       this.description = description;
@@ -228,37 +229,24 @@ public class ScanPoints {
 
     @Override public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
         int openCount) {
-      int matchCount = 0;
-      Pattern choice = null;
-      for (Pattern p : found)
-        if (matches.apply(p)) {
-          if (choice == null) choice = p;
-          matchCount += countFor(p);
-        }
-
-      if (choice == null) {
-        if (found.size() > 0) ++unmatched;
+      if (!Iterables.any(found, matches)) {
+        if (found.size() > 0) ++movesSkipped;
         return;
       }
-      ++matched;
+      ++movesIncluded;
+      int matchingAssignments = 1;
 
       for (List<Pattern> list : missed)
-        for (Pattern p : list)
-          if (matches.apply(p))
-            matchCount += countFor(p);
+        if (Iterables.any(list, matches))
+          ++matchingAssignments;
 
       double seconds = ms / 1000.0;
-      double pointsScanned = countFor(choice) * openCount / (double) matchCount;
+      double pointsScanned = openCount / (double) matchingAssignments;
       counter.count(seconds, pointsScanned);
     }
 
-    private int countFor(Pattern p) {
-      return 1;
-//      return p.size();
-    }
-
     public void report(PrintStream out) {
-      out.printf("%s: %,d matched, %,d unmatched\n", description, matched, unmatched);
+      out.printf("%s: %,d moves included, %,d skipped\n", description, movesIncluded, movesSkipped);
       counter.report(out);
       out.println();
     }
