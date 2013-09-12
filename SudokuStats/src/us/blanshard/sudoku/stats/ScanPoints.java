@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Analyzes the output from {@link InsightMeasurer} to look for Poisson
@@ -195,8 +196,9 @@ public class ScanPoints {
           .build();
     }
 
+    private static final Random random = new Random();
     private static Process make(Predicate<Pattern> matches, String description) {
-      return new Process(description, matches);
+      return new Process(description, matches, random);
     }
 
     public void reportSummaries(PrintStream out) {
@@ -215,57 +217,94 @@ public class ScanPoints {
     private final String description;
     private final Predicate<Pattern> matches;
     private final ProcessCounter counter;
+    private long matched;
     private long unmatched;
 
-    public Process(String description, Predicate<Pattern> matches) {
+    public Process(String description, Predicate<Pattern> matches, Random random) {
       this.description = description;
       this.matches = matches;
-      this.counter = new ProcessCounter();
+      this.counter = new ProcessCounter(random);
     }
 
     @Override public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
         int openCount) {
       int matchCount = 0;
+      Pattern choice = null;
       for (Pattern p : found)
-        if (matches.apply(p))
-          ++matchCount;
+        if (matches.apply(p)) {
+          if (choice == null) choice = p;
+          matchCount += countFor(p);
+        }
 
-      if (matchCount == 0) {
+      if (choice == null) {
         if (found.size() > 0) ++unmatched;
         return;
       }
+      ++matched;
 
       for (List<Pattern> list : missed)
         for (Pattern p : list)
           if (matches.apply(p))
-            ++matchCount;
+            matchCount += countFor(p);
 
-      counter.count(ms, openCount, matchCount);
+      double seconds = ms / 1000.0;
+      double pointsScanned = countFor(choice) * openCount / (double) matchCount;
+      counter.count(seconds, pointsScanned);
+    }
+
+    private int countFor(Pattern p) {
+      return 1;
+//      return p.size();
     }
 
     public void report(PrintStream out) {
-      out.printf("%s: %,d unmatched\n", description, unmatched);
+      out.printf("%s: %,d matched, %,d unmatched\n", description, matched, unmatched);
       counter.report(out);
       out.println();
     }
   }
 
-  static class ProcessCounter {
+  static class Counter {
     private double totalSeconds;
     private double totalPointsScanned;
-    private final SummaryStatistics stats = new SummaryStatistics();
 
-    public void count(long ms, int openCount, int assignmentCount) {
-      double seconds = ms / 1000.0;
+    public void count(double seconds, double pointsScanned) {
       this.totalSeconds += seconds;
-      double pointsScanned = openCount / (double) assignmentCount;
       this.totalPointsScanned += pointsScanned;
-      stats.addValue(seconds / pointsScanned);
+    }
+
+    public double getSecondsPerScanPoint() {
+      return totalSeconds / totalPointsScanned;
+    }
+  }
+
+  static class ProcessCounter {
+    private final Counter overallCounter = new Counter();
+    private final Random random;
+    private static final int NBUCKETS = 800;
+    private final Counter[] counters = new Counter[NBUCKETS];
+
+    public ProcessCounter(Random random) {
+      this.random = random;
+    }
+
+    public void count(double seconds, double pointsScanned) {
+      overallCounter.count(seconds, pointsScanned);
+      int bucket = random.nextInt(NBUCKETS);
+      if (counters[bucket] == null) counters[bucket] = new Counter();
+      counters[bucket].count(seconds, pointsScanned);
     }
 
     public void report(PrintStream out) {
-      out.printf("Overall seconds/scan-point: %.2f\n%s",
-          totalSeconds / totalPointsScanned, stats);
+      out.printf("Overall seconds/scan-point: %.2f\n", overallCounter.getSecondsPerScanPoint());
+      SummaryStatistics stats = new SummaryStatistics();
+      for (Counter c : counters) {
+        if (c != null)
+          stats.addValue(c.getSecondsPerScanPoint());
+      }
+      out.printf("Randomly bucketed: %d buckets, mean %.2f, stddev %.2f (%.2f%%)\n",
+          stats.getN(), stats.getMean(), stats.getStandardDeviation(),
+          100 * stats.getStandardDeviation() / stats.getMean());
     }
   }
 }

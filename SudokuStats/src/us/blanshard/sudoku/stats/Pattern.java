@@ -73,6 +73,10 @@ public abstract class Pattern implements Comparable<Pattern> {
     return this;
   }
 
+  public int size() {
+    return 1;
+  }
+
   public Appendable appendTo(Appendable a) throws IOException {
     a.append(type.getName()).append(':');
     appendGutsTo(a);
@@ -594,6 +598,10 @@ public abstract class Pattern implements Comparable<Pattern> {
       return isNaked;
     }
 
+    @Override public int size() {
+      return setSize;
+    }
+
     @Override public boolean equals(Object o) {
       if (super.equals(o)) {
         LockedSet that = (LockedSet) o;
@@ -652,7 +660,7 @@ public abstract class Pattern implements Comparable<Pattern> {
       Arrays.sort(a);
       for (Pattern p : a) {
         checkNotNull(p);
-        checkArgument(p.getType().ordinal() < Type.IMPLICATION.ordinal());
+        checkArgument(p.getType() != Type.IMPLICATION);
       }
       this.antecedents = Arrays.asList(a);
       this.consequent = checkNotNull(consequent);
@@ -668,6 +676,13 @@ public abstract class Pattern implements Comparable<Pattern> {
 
     @Override public Pattern getNub() {
       return consequent.getNub();
+    }
+
+    @Override public int size() {
+      int answer = 1 + consequent.size();
+      for (Pattern a : antecedents)
+        answer += a.size();
+      return answer;
     }
 
     @Override public boolean equals(Object o) {
