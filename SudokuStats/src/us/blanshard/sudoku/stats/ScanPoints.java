@@ -19,9 +19,13 @@ import us.blanshard.sudoku.stats.Pattern.ForcedNum;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.TreeMultiset;
 
+import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import java.io.BufferedReader;
@@ -30,7 +34,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Analyzes the output from {@link InsightMeasurer} to look for Poisson
@@ -197,9 +200,8 @@ public class ScanPoints {
           .build();
     }
 
-    private static final Random random = new Random();
     private static Process make(Predicate<Pattern> matches, String description) {
-      return new Process(description, matches, random);
+      return new Process(description, matches);
     }
 
     public void reportSummaries(PrintStream out) {
@@ -221,10 +223,10 @@ public class ScanPoints {
     private long movesIncluded;
     private long movesSkipped;
 
-    public Process(String description, Predicate<Pattern> matches, Random random) {
+    public Process(String description, Predicate<Pattern> matches) {
       this.description = description;
       this.matches = matches;
-      this.counter = new ProcessCounter(random);
+      this.counter = new ProcessCounter();
     }
 
     @Override public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
@@ -234,15 +236,16 @@ public class ScanPoints {
         return;
       }
       ++movesIncluded;
-      int matchingAssignments = 1;
 
+      int matchingAssignments = 1;
       for (List<Pattern> list : missed)
         if (Iterables.any(list, matches))
           ++matchingAssignments;
 
       double seconds = ms / 1000.0;
       double pointsScanned = openCount / (double) matchingAssignments;
-      counter.count(seconds, pointsScanned);
+      double secondsPerPoint = seconds / pointsScanned;
+      counter.count(secondsPerPoint);
     }
 
     public void report(PrintStream out) {
@@ -252,47 +255,32 @@ public class ScanPoints {
     }
   }
 
-  static class Counter {
-    private double totalSeconds;
-    private double totalPointsScanned;
-
-    public void count(double seconds, double pointsScanned) {
-      this.totalSeconds += seconds;
-      this.totalPointsScanned += pointsScanned;
-    }
-
-    public double getSecondsPerScanPoint() {
-      return totalSeconds / totalPointsScanned;
-    }
-  }
-
   static class ProcessCounter {
-    private final Counter overallCounter = new Counter();
-    private final Random random;
-    private static final int NBUCKETS = 800;
-    private final Counter[] counters = new Counter[NBUCKETS];
+    private final Multiset<Integer> pointsPerSecond = HashMultiset.create();
+    private double pendingSeconds;
+    private int pendingPoints;
 
-    public ProcessCounter(Random random) {
-      this.random = random;
-    }
-
-    public void count(double seconds, double pointsScanned) {
-      overallCounter.count(seconds, pointsScanned);
-      int bucket = random.nextInt(NBUCKETS);
-      if (counters[bucket] == null) counters[bucket] = new Counter();
-      counters[bucket].count(seconds, pointsScanned);
+    public void count(double secondsPerPoint) {
+      pendingSeconds += secondsPerPoint;
+      while (pendingSeconds >= 1.0) {
+        pointsPerSecond.add(pendingPoints);
+        pendingPoints = 0;
+        pendingSeconds -= 1.0;
+      }
+      ++pendingPoints;
     }
 
     public void report(PrintStream out) {
-      out.printf("Overall seconds/scan-point: %.2f\n", overallCounter.getSecondsPerScanPoint());
       SummaryStatistics stats = new SummaryStatistics();
-      for (Counter c : counters) {
-        if (c != null)
-          stats.addValue(c.getSecondsPerScanPoint());
-      }
-      out.printf("Randomly bucketed: %d buckets, mean %.2f, stddev %.2f (%.2f%%)\n",
-          stats.getN(), stats.getMean(), stats.getStandardDeviation(),
-          100 * stats.getStandardDeviation() / stats.getMean());
+      for (int points : pointsPerSecond)
+        stats.addValue(points);
+      out.printf("Scan-points/second: %.2f; var: %.2f (%.2f%%)\n", stats.getMean(),
+          stats.getVariance(), 100 * stats.getVariance() / stats.getMean());
+      PoissonDistribution dist = new PoissonDistribution(stats.getMean());
+      out.println("Histogram, actual vs predicted:");
+      for (Multiset.Entry<Integer> e : TreeMultiset.create(pointsPerSecond).entrySet())
+        out.printf("  %2d:%6d  |%9.2f\n", e.getElement(), e.getCount(),
+            dist.probability(e.getElement()) * stats.getN());
     }
   }
 }
