@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.stats;
 
 import us.blanshard.sudoku.stats.Pattern.ForcedNum;
+import us.blanshard.sudoku.stats.Pattern.UnitCategory;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
@@ -93,6 +94,22 @@ public class ScanPoints {
   static final Predicate<Pattern> matchFlsOnly = new Predicate<Pattern>() {
     @Override public boolean apply(Pattern p) {
       return p.getType() == Pattern.Type.FORCED_LOCATION;
+    }
+  };
+
+  static final Predicate<Pattern> matchFlbsOnly = new Predicate<Pattern>() {
+    @Override public boolean apply(Pattern p) {
+      if (p.getType() != Pattern.Type.FORCED_LOCATION) return false;
+      Pattern.ForcedLoc fl = (Pattern.ForcedLoc) p;
+      return fl.getCategory() == UnitCategory.BLOCK;
+    }
+  };
+
+  static final Predicate<Pattern> matchFllsOnly = new Predicate<Pattern>() {
+    @Override public boolean apply(Pattern p) {
+      if (p.getType() != Pattern.Type.FORCED_LOCATION) return false;
+      Pattern.ForcedLoc fl = (Pattern.ForcedLoc) p;
+      return fl.getCategory() == UnitCategory.LINE;
     }
   };
 
@@ -189,6 +206,8 @@ public class ScanPoints {
     public Reporter() {
       processes = ImmutableList.<Process>builder()
           .add(make(matchFlsOnly, "Forced locations only"))
+          .add(make(matchFlbsOnly, "Forced locations/block only"))
+          .add(make(matchFllsOnly, "Forced locations/line only"))
           .add(make(matchAllImpliedFls, "All implied forced locations"))
           .add(make(matchSimplyImpliedFls, "Simply-implied forced locations"))
           .add(make(matchFlsAndFns, "Direct assignments"))
@@ -244,8 +263,7 @@ public class ScanPoints {
 
       double seconds = ms / 1000.0;
       double pointsScanned = openCount / (double) matchingAssignments;
-      double secondsPerPoint = seconds / pointsScanned;
-      counter.count(secondsPerPoint);
+      counter.count(seconds, pointsScanned);
     }
 
     public void report(PrintStream out) {
@@ -258,16 +276,28 @@ public class ScanPoints {
   static class ProcessCounter {
     private final Multiset<Integer> pointsPerSecond = HashMultiset.create();
     private double pendingSeconds;
-    private int pendingPoints;
+    private double pendingPoints;
 
-    public void count(double secondsPerPoint) {
-      pendingSeconds += secondsPerPoint;
+    public void count(double seconds, double pointsScanned) {
+      double secondsPerPoint = seconds / pointsScanned;
+      int pointsScannedFloor = (int) pointsScanned;
+      for (int i = 0; i < pointsScannedFloor; ++i) {
+        pendingSeconds += secondsPerPoint;
+        addPendingPointsPerSecond();
+        pendingPoints += 1.0;
+      }
+      pendingSeconds += (seconds - secondsPerPoint * pointsScannedFloor);
+      addPendingPointsPerSecond();
+      pendingPoints += (pointsScanned - pointsScannedFloor);
+    }
+
+    private void addPendingPointsPerSecond() {
       while (pendingSeconds >= 1.0) {
-        pointsPerSecond.add(pendingPoints);
-        pendingPoints = 0;
+        int pendingPointsFloor = (int) pendingPoints;
+        pointsPerSecond.add(pendingPointsFloor);
+        pendingPoints -= pendingPointsFloor;
         pendingSeconds -= 1.0;
       }
-      ++pendingPoints;
     }
 
     public void report(PrintStream out) {
