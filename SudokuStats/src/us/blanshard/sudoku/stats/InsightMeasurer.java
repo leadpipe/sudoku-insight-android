@@ -54,8 +54,10 @@ import com.google.appengine.api.files.FileServiceFactory;
 import com.google.appengine.api.files.RecordReadChannel;
 import com.google.appengine.tools.development.testing.LocalBlobstoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
@@ -115,14 +117,16 @@ public class InsightMeasurer implements Runnable {
     helper.tearDown();
   }
 
+  private final Grid solution;
   private final Sudoku game;
   private final List<Move> history;
   private final UndoDetector undoDetector;
+  private final Multimap<Integer, Location> mistakes = HashMultimap.create();
   private final PrintWriter out;
 
   private InsightMeasurer(Grid puzzle, List<Move> history, PrintWriter out) {
     Solver.Result result = Solver.solve(puzzle, 10, new Random());
-    checkNotNull(result.intersection);
+    this.solution = checkNotNull(result.intersection);
     this.game = new Sudoku(puzzle).resume();
     this.history = history;
     this.undoDetector = new UndoDetector(game);
@@ -137,8 +141,11 @@ public class InsightMeasurer implements Runnable {
     }
   }
 
-  void applyMove(Move move, long prevTime) {
-    if (move instanceof Move.Set && !undoDetector.isUndoOrRedo(move)) {
+  private void applyMove(Move move, long prevTime) {
+    noteMistakes(move);
+    if (move instanceof Move.Set
+        && !undoDetector.isUndoOrRedo(move)
+        && !isApparentCorrection(move)) {
       Grid grid = game.getState(move.trailId).getGrid();
       if (grid.containsKey(move.getLocation()))
         grid = grid.toBuilder().remove(move.getLocation()).build();
@@ -162,6 +169,17 @@ public class InsightMeasurer implements Runnable {
       }
     }
     game.move(move);
+  }
+
+  private void noteMistakes(Move move) {
+    if (solution.containsKey(move.getLocation())
+        && solution.get(move.getLocation()) != move.getNumeral()) {
+      mistakes.put(move.trailId, move.getLocation());
+    }
+  }
+
+  private boolean isApparentCorrection(Move move) {
+    return mistakes.containsEntry(move.trailId, move.getLocation());
   }
 
   class Collector implements Analyzer.Callback {
