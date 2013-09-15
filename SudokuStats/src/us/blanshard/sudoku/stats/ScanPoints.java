@@ -136,22 +136,27 @@ public class ScanPoints {
     }
   };
 
-  static final Predicate<Pattern> matchAllImpliedFls = new Predicate<Pattern>() {
-    @Override public boolean apply(Pattern p) {
-      return p.getNub().getType() == Pattern.Type.FORCED_LOCATION;
-    }
-  };
-
-  static final Predicate<Pattern> matchSimplyImpliedFls = new Predicate<Pattern>() {
-    @Override public boolean apply(Pattern p) {
-      switch (p.getType()) {
-        case FORCED_LOCATION: return true;
-        default:
-          if (p.getType() != Pattern.Type.IMPLICATION) return false;
-          return hasSimpleAntecedents((Pattern.Implication) p);
+  static Predicate<Pattern> implied(final Predicate<Pattern> pred) {
+    return new Predicate<Pattern>() {
+      @Override public boolean apply(Pattern p) {
+        return pred.apply(p.getNub());
       }
-    }
-  };
+    };
+  }
+
+  static Predicate<Pattern> simplyImplied(final Predicate<Pattern> pred) {
+    return new Predicate<Pattern>() {
+      @Override public boolean apply(Pattern p) {
+        if (pred.apply(p)) return true;
+        if (!pred.apply(p.getNub())) return false;
+        if (p.getType() != Pattern.Type.IMPLICATION) return false;
+        return hasSimpleAntecedents((Pattern.Implication) p);
+      }
+    };
+  }
+
+  static final Predicate<Pattern> matchAllImpliedFls = implied(matchFlsOnly);
+  static final Predicate<Pattern> matchSimplyImpliedFls = simplyImplied(matchFlsOnly);
 
   static final Predicate<Pattern> matchFlsAndFns = new Predicate<Pattern>() {
     @Override public boolean apply(Pattern p) {
@@ -168,6 +173,7 @@ public class ScanPoints {
   static final Predicate<Pattern> matchSimplyImpliedFlsAndFns = new Predicate<Pattern>() {
     @Override public boolean apply(Pattern p) {
       if (p.isDirectAssignment()) return true;
+      if (!p.isAssignment()) return false;
       if (p.getType() != Pattern.Type.IMPLICATION) return false;
       return hasSimpleAntecedents((Pattern.Implication) p);
     }
@@ -183,29 +189,8 @@ public class ScanPoints {
     }
   };
 
-  static final Predicate<Pattern> matchAllImpliedFlsAndEasyFns = new Predicate<Pattern>() {
-    @Override public boolean apply(Pattern p) {
-      switch (p.getNub().getType()) {
-        case FORCED_LOCATION: return true;
-        case FORCED_NUMERAL: return isEasyFn((ForcedNum) p.getNub());
-        default: return false;
-      }
-    }
-  };
-
-  static final Predicate<Pattern> matchSimplyImpliedFlsAndEasyFns = new Predicate<Pattern>() {
-    @Override public boolean apply(Pattern p) {
-      switch (p.getType()) {
-        case FORCED_LOCATION: return true;
-        case FORCED_NUMERAL: return isEasyFn((ForcedNum) p);
-        default:
-          if (p.getType() != Pattern.Type.IMPLICATION) return false;
-          if (p.getNub().getType() == Pattern.Type.FORCED_NUMERAL
-              && !isEasyFn((ForcedNum) p.getNub())) return false;
-          return hasSimpleAntecedents((Pattern.Implication) p);
-      }
-    }
-  };
+  static final Predicate<Pattern> matchAllImpliedFlsAndEasyFns = implied(matchFlsAndEasyFns);
+  static final Predicate<Pattern> matchSimplyImpliedFlsAndEasyFns = simplyImplied(matchFlsAndEasyFns);
 
   interface Consumer {
     void take(List<Pattern> found, List<List<Pattern>> missed, long ms, int openCount);
@@ -220,11 +205,17 @@ public class ScanPoints {
           .add(make("Forced locations/block", matchFlbsOnly))
           .add(make("Forced locations/line", matchFllsOnly))
           .add(make("Forced locations/block w/no lines", Predicates.and(any(matchFlbsOnly), none(matchFllsOnly)), matchAnything))
+          .add(make("Forced locations/block w/no indirect lines", Predicates.and(any(matchFlbsOnly), none(implied(matchFllsOnly))), matchAnything))
           .add(make("Forced locations/line w/no blocks", Predicates.and(any(matchFllsOnly), none(matchFlbsOnly)), matchAnything))
+          .add(make("Forced locations/line w/no indirect blocks", Predicates.and(any(matchFllsOnly), none(implied(matchFlbsOnly))), matchAnything))
           .add(make("Forced locations/block w/no lines anywhere", Predicates.and(any(matchFlbsOnly), none(matchFllsOnly)), none(matchFllsOnly)))
           .add(make("Forced locations/line w/no blocks anywhere", Predicates.and(any(matchFllsOnly), none(matchFlbsOnly)), none(matchFlbsOnly)))
           .add(make("Implied forced locations", matchAllImpliedFls))
+          .add(make("Implied forced locations/block w/no direct lines", Predicates.and(any(implied(matchFlbsOnly)), none(matchFllsOnly)), matchAnything))
+          .add(make("Implied forced locations/block w/no indirect lines", Predicates.and(any(implied(matchFlbsOnly)), none(implied(matchFllsOnly))), matchAnything))
           .add(make("Simply-implied forced locations", matchSimplyImpliedFls))
+          .add(make("Simply-implied forced locations/block w/no direct lines", Predicates.and(any(simplyImplied(matchFlbsOnly)), none(matchFllsOnly)), matchAnything))
+          .add(make("Simply-implied forced locations/block w/no indirect lines", Predicates.and(any(simplyImplied(matchFlbsOnly)), none(implied(matchFllsOnly))), matchAnything))
           .add(make("Direct assignments", matchFlsAndFns))
           .add(make("Implied assignments", matchAllImpliedFlsAndFns))
           .add(make("Simply-implied assignments", matchSimplyImpliedFls))
