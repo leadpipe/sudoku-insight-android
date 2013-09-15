@@ -62,8 +62,8 @@ public class ScanPoints {
   static boolean hasSimpleAntecedents(Pattern.Implication p) {
     int count = 0;
     do {
+      if (++count > 2) return false;
       for (Pattern a : p.getAntecedents()) {
-        if (++count > 3) return false;
         switch (a.getType()) {
           case OVERLAP:
             if (((Pattern.Overlap) a).getCategory() == Pattern.UnitCategory.LINE)
@@ -110,6 +110,10 @@ public class ScanPoints {
 
   static Predicate<List<Pattern>> none(Predicate<Pattern> pred) {
     return all(Predicates.not(pred));
+  }
+
+  static Predicate<List<Pattern>> notAll(Predicate<Pattern> pred) {
+    return Predicates.not(all(pred));
   }
 
   static final Predicate<List<Pattern>> matchAnything = Predicates.alwaysTrue();
@@ -202,8 +206,14 @@ public class ScanPoints {
     public Reporter() {
       processes = ImmutableList.<Process>builder()
           .add(make("Forced locations", matchFlsOnly))
+          .add(make("Forced locations everywhere", any(matchFlsOnly), any(matchFlsOnly)))
+          .add(make("Forced locations mostly", any(matchFlsOnly), any(matchFlsOnly), 0.8))
           .add(make("Forced locations/block", matchFlbsOnly))
+          .add(make("Forced locations/block everywhere", any(matchFlbsOnly), any(matchFlbsOnly)))
+          .add(make("Forced locations/block mostly", any(matchFlbsOnly), any(matchFlbsOnly), 0.8))
           .add(make("Forced locations/line", matchFllsOnly))
+          .add(make("Forced locations/line everywhere", any(matchFllsOnly), any(matchFllsOnly)))
+          .add(make("Forced locations/line mostly", any(matchFllsOnly), any(matchFllsOnly), 0.8))
           .add(make("Forced locations/block w/no lines", Predicates.and(any(matchFlbsOnly), none(matchFllsOnly)), matchAnything))
           .add(make("Forced locations/block w/no indirect lines", Predicates.and(any(matchFlbsOnly), none(implied(matchFllsOnly))), matchAnything))
           .add(make("Forced locations/line w/no blocks", Predicates.and(any(matchFllsOnly), none(matchFlbsOnly)), matchAnything))
@@ -217,21 +227,34 @@ public class ScanPoints {
           .add(make("Simply-implied forced locations/block w/no direct lines", Predicates.and(any(simplyImplied(matchFlbsOnly)), none(matchFllsOnly)), matchAnything))
           .add(make("Simply-implied forced locations/block w/no indirect lines", Predicates.and(any(simplyImplied(matchFlbsOnly)), none(implied(matchFllsOnly))), matchAnything))
           .add(make("Direct assignments", matchFlsAndFns))
+          .add(make("Direct assignments everywhere", any(matchFlsAndFns), any(matchFlsAndFns)))
+          .add(make("Direct assignments mostly", any(matchFlsAndFns), any(matchFlsAndFns), 0.8))
           .add(make("Implied assignments", matchAllImpliedFlsAndFns))
           .add(make("Simply-implied assignments", matchSimplyImpliedFls))
+          .add(make("Simply-implied assignments everywhere", any(matchSimplyImpliedFls), any(matchSimplyImpliedFls)))
+          .add(make("Simply-implied assignments mostly", any(matchSimplyImpliedFls), any(matchSimplyImpliedFls), 0.8))
           .add(make("Forced locations and easy forced numerals", matchFlsAndEasyFns))
+          .add(make("Forced locations and easy forced numerals everywhere", any(matchFlsAndEasyFns), any(matchFlsAndEasyFns)))
+          .add(make("Forced locations and easy forced numerals mostly", any(matchFlsAndEasyFns), any(matchFlsAndEasyFns), 0.8))
           .add(make("Implied forced locations and easy forced numerals", matchAllImpliedFlsAndEasyFns))
           .add(make("Simply-implied forced locations and easy forced numerals", matchSimplyImpliedFlsAndEasyFns))
+          .add(make("Simply-implied forced locations and easy forced numerals everywhere", any(matchSimplyImpliedFlsAndEasyFns), any(matchSimplyImpliedFlsAndEasyFns)))
+          .add(make("Simply-implied forced locations and easy forced numerals mostly", any(matchSimplyImpliedFlsAndEasyFns), any(matchSimplyImpliedFlsAndEasyFns), 0.8))
           .build();
     }
 
     private static Process make(String description, Predicate<Pattern> matches) {
-      return new Process(description, matches);
+      return make(description, any(matches), matchAnything);
     }
 
     private static Process make(String description, Predicate<List<Pattern>> foundMatches,
         Predicate<List<Pattern>> missedMatches) {
-      return new Process(description, foundMatches, missedMatches);
+      return make(description, foundMatches, missedMatches, 1.0);
+    }
+
+    private static Process make(String description, Predicate<List<Pattern>> foundMatches,
+        Predicate<List<Pattern>> missedMatches, double missedMatchesMinRatio) {
+      return new Process(description, foundMatches, missedMatches, missedMatchesMinRatio);
     }
 
     public void reportSummaries(PrintStream out) {
@@ -251,34 +274,37 @@ public class ScanPoints {
     private final String description;
     private final Predicate<List<Pattern>> foundMatches;
     private final Predicate<List<Pattern>> missedMatches;
+    private final double missedMatchesMinRatio;
     private long movesIncluded;
     private long movesSkipped;
 
-    public Process(String description, final Predicate<Pattern> matches) {
-      this(description, any(matches), matchAnything);
-    }
-
     public Process(String description, Predicate<List<Pattern>> foundMatches,
-        Predicate<List<Pattern>> missedMatches) {
+        Predicate<List<Pattern>> missedMatches, double missedMatchesMinRatio) {
       this.description = description;
       this.foundMatches = foundMatches;
       this.missedMatches = missedMatches;
+      this.missedMatchesMinRatio = missedMatchesMinRatio;
     }
 
     @Override public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
         int openCount) {
       if (found.isEmpty()) return;
 
-      boolean rowMatches = foundMatches.apply(found);
+      boolean foundLocationMatches = foundMatches.apply(found);
 
       int assignments = found.size();
+      int missedLocations = 0;
+      int matchingMissedLocations = 0;
       for (List<Pattern> list : missed) {
         if (list.isEmpty() || !list.get(0).isAssignment()) continue;
-        rowMatches &= missedMatches.apply(list);
+        ++missedLocations;
+        if (missedMatches.apply(list)) ++matchingMissedLocations;
         assignments += list.size();
       }
 
-      if (!rowMatches) {
+      if (!foundLocationMatches
+          || (missedLocations > 0
+              && matchingMissedLocations / (double) missedLocations < missedMatchesMinRatio)) {
         ++movesSkipped;
         return;
       }
