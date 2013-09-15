@@ -77,6 +77,20 @@ public abstract class Pattern implements Comparable<Pattern> {
     return 1;
   }
 
+  public boolean isDirectAssignment() {
+    switch (type) {
+      case FORCED_LOCATION:
+      case FORCED_NUMERAL:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  public boolean isAssignment() {
+    return getNub().isDirectAssignment();
+  }
+
   public Appendable appendTo(Appendable a) throws IOException {
     a.append(type.getName()).append(':');
     appendGutsTo(a);

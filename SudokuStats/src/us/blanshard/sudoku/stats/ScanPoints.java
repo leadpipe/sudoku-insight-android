@@ -132,33 +132,21 @@ public class ScanPoints {
 
   static final Predicate<Pattern> matchFlsAndFns = new Predicate<Pattern>() {
     @Override public boolean apply(Pattern p) {
-      switch (p.getType()) {
-        case FORCED_LOCATION:
-        case FORCED_NUMERAL: return true;
-        default: return false;
-      }
+      return p.isDirectAssignment();
     }
   };
 
   static final Predicate<Pattern> matchAllImpliedFlsAndFns = new Predicate<Pattern>() {
     @Override public boolean apply(Pattern p) {
-      switch (p.getNub().getType()) {
-        case FORCED_LOCATION:
-        case FORCED_NUMERAL: return true;
-        default: return false;
-      }
+      return p.isAssignment();
     }
   };
 
   static final Predicate<Pattern> matchSimplyImpliedFlsAndFns = new Predicate<Pattern>() {
     @Override public boolean apply(Pattern p) {
-      switch (p.getType()) {
-        case FORCED_LOCATION:
-        case FORCED_NUMERAL: return true;
-        default:
-          if (p.getType() != Pattern.Type.IMPLICATION) return false;
-          return hasSimpleAntecedents((Pattern.Implication) p);
-      }
+      if (p.isDirectAssignment()) return true;
+      if (p.getType() != Pattern.Type.IMPLICATION) return false;
+      return hasSimpleAntecedents((Pattern.Implication) p);
     }
   };
 
@@ -250,19 +238,22 @@ public class ScanPoints {
 
     @Override public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
         int openCount) {
+      if (found.isEmpty()) return;
+
       if (!Iterables.any(found, matches)) {
-        if (found.size() > 0) ++movesSkipped;
+        ++movesSkipped;
         return;
       }
       ++movesIncluded;
 
-      int matchingAssignments = 1;
-      for (List<Pattern> list : missed)
-        if (Iterables.any(list, matches))
-          ++matchingAssignments;
+      int assignments = found.size();
+      for (List<Pattern> list : missed) {
+        if (list.isEmpty() || !list.get(0).isAssignment()) continue;
+        assignments += list.size();
+      }
 
       double seconds = ms / 1000.0;
-      double pointsScanned = openCount / (double) matchingAssignments;
+      double pointsScanned = openCount / (double) assignments;
       counter.count(seconds, pointsScanned);
     }
 
