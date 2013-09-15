@@ -19,6 +19,7 @@ import us.blanshard.sudoku.stats.Pattern.ForcedNum;
 import us.blanshard.sudoku.stats.Pattern.UnitCategory;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
@@ -90,6 +91,28 @@ public class ScanPoints {
     Sp.PeerMetrics pm = new Sp.PeerMetrics(p.getMetrics());
     return pm.openInBlock < 3 && !pm.bothLinesRequired;
   }
+
+  static Predicate<List<Pattern>> any(final Predicate<Pattern> pred) {
+    return new Predicate<List<Pattern>>() {
+      @Override public boolean apply(List<Pattern> list) {
+        return Iterables.any(list, pred);
+      }
+    };
+  }
+
+  static Predicate<List<Pattern>> all(final Predicate<Pattern> pred) {
+    return new Predicate<List<Pattern>>() {
+      @Override public boolean apply(List<Pattern> list) {
+        return Iterables.all(list, pred);
+      }
+    };
+  }
+
+  static Predicate<List<Pattern>> none(Predicate<Pattern> pred) {
+    return all(Predicates.not(pred));
+  }
+
+  static final Predicate<List<Pattern>> matchAnything = Predicates.alwaysTrue();
 
   static final Predicate<Pattern> matchFlsOnly = new Predicate<Pattern>() {
     @Override public boolean apply(Pattern p) {
@@ -193,22 +216,31 @@ public class ScanPoints {
 
     public Reporter() {
       processes = ImmutableList.<Process>builder()
-          .add(make(matchFlsOnly, "Forced locations only"))
-          .add(make(matchFlbsOnly, "Forced locations/block only"))
-          .add(make(matchFllsOnly, "Forced locations/line only"))
-          .add(make(matchAllImpliedFls, "All implied forced locations"))
-          .add(make(matchSimplyImpliedFls, "Simply-implied forced locations"))
-          .add(make(matchFlsAndFns, "Direct assignments"))
-          .add(make(matchAllImpliedFlsAndFns, "All implied assignments"))
-          .add(make(matchSimplyImpliedFls, "Simply-implied assignments"))
-          .add(make(matchFlsAndEasyFns, "Forced locations and easy forced numerals"))
-          .add(make(matchAllImpliedFlsAndEasyFns, "All implied forced locations and easy forced numerals"))
-          .add(make(matchSimplyImpliedFlsAndEasyFns, "Simply-implied forced locations and easy forced numerals"))
+          .add(make("Forced locations", matchFlsOnly))
+          .add(make("Forced locations/block", matchFlbsOnly))
+          .add(make("Forced locations/line", matchFllsOnly))
+          .add(make("Forced locations/block w/no lines", Predicates.and(any(matchFlbsOnly), none(matchFllsOnly)), matchAnything))
+          .add(make("Forced locations/line w/no blocks", Predicates.and(any(matchFllsOnly), none(matchFlbsOnly)), matchAnything))
+          .add(make("Forced locations/block w/no lines anywhere", Predicates.and(any(matchFlbsOnly), none(matchFllsOnly)), none(matchFllsOnly)))
+          .add(make("Forced locations/line w/no blocks anywhere", Predicates.and(any(matchFllsOnly), none(matchFlbsOnly)), none(matchFlbsOnly)))
+          .add(make("Implied forced locations", matchAllImpliedFls))
+          .add(make("Simply-implied forced locations", matchSimplyImpliedFls))
+          .add(make("Direct assignments", matchFlsAndFns))
+          .add(make("Implied assignments", matchAllImpliedFlsAndFns))
+          .add(make("Simply-implied assignments", matchSimplyImpliedFls))
+          .add(make("Forced locations and easy forced numerals", matchFlsAndEasyFns))
+          .add(make("Implied forced locations and easy forced numerals", matchAllImpliedFlsAndEasyFns))
+          .add(make("Simply-implied forced locations and easy forced numerals", matchSimplyImpliedFlsAndEasyFns))
           .build();
     }
 
-    private static Process make(Predicate<Pattern> matches, String description) {
+    private static Process make(String description, Predicate<Pattern> matches) {
       return new Process(description, matches);
+    }
+
+    private static Process make(String description, Predicate<List<Pattern>> foundMatches,
+        Predicate<List<Pattern>> missedMatches) {
+      return new Process(description, foundMatches, missedMatches);
     }
 
     public void reportSummaries(PrintStream out) {
@@ -224,34 +256,42 @@ public class ScanPoints {
   }
 
   static class Process implements Consumer {
+    private final ProcessCounter counter = new ProcessCounter();
     private final String description;
-    private final Predicate<Pattern> matches;
-    private final ProcessCounter counter;
+    private final Predicate<List<Pattern>> foundMatches;
+    private final Predicate<List<Pattern>> missedMatches;
     private long movesIncluded;
     private long movesSkipped;
 
-    public Process(String description, Predicate<Pattern> matches) {
+    public Process(String description, final Predicate<Pattern> matches) {
+      this(description, any(matches), matchAnything);
+    }
+
+    public Process(String description, Predicate<List<Pattern>> foundMatches,
+        Predicate<List<Pattern>> missedMatches) {
       this.description = description;
-      this.matches = matches;
-      this.counter = new ProcessCounter();
+      this.foundMatches = foundMatches;
+      this.missedMatches = missedMatches;
     }
 
     @Override public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
         int openCount) {
       if (found.isEmpty()) return;
 
-      if (!Iterables.any(found, matches)) {
-        ++movesSkipped;
-        return;
-      }
-      ++movesIncluded;
+      boolean rowMatches = foundMatches.apply(found);
 
       int assignments = found.size();
       for (List<Pattern> list : missed) {
         if (list.isEmpty() || !list.get(0).isAssignment()) continue;
+        rowMatches &= missedMatches.apply(list);
         assignments += list.size();
       }
 
+      if (!rowMatches) {
+        ++movesSkipped;
+        return;
+      }
+      ++movesIncluded;
       double seconds = ms / 1000.0;
       double pointsScanned = openCount / (double) assignments;
       counter.count(seconds, pointsScanned);
@@ -297,6 +337,7 @@ public class ScanPoints {
         stats.addValue(points);
       out.printf("Scan-points/second: %.2f; var: %.2f (%.2f%%)\n", stats.getMean(),
           stats.getVariance(), 100 * stats.getVariance() / stats.getMean());
+      out.printf("Seconds/scan-point: %.2f\n", 1.0 / stats.getMean());
       PoissonDistribution dist = new PoissonDistribution(stats.getMean());
       out.println("Histogram, actual vs predicted:");
       for (Multiset.Entry<Integer> e : TreeMultiset.create(pointsPerSecond).entrySet())
