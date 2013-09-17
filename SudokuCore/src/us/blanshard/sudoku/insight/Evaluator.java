@@ -16,6 +16,9 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Unit;
+
+import javax.annotation.Nullable;
 
 /**
  * Methods to evaluate the difficulty of a Sudoku.
@@ -101,5 +104,78 @@ public class Evaluator {
     }
   }
 
+  /**
+   * Returns the appropriate MoveKind for the given insight within the given
+   * grid, or null if it isn't a move.
+   */
+  @Nullable public static MoveKind kindForInsight(Grid grid, Insight insight) {
+    if (!insight.isAssignment()) return null;
+    switch (insight.type) {
+      case FORCED_LOCATION: {
+        ForcedLoc fl = (ForcedLoc) insight;
+        return fl.getUnit().getType() == Unit.Type.BLOCK
+            ? MoveKind.FORCED_LOCATION_BLOCK
+            : MoveKind.FORCED_LOCATION_LINE;
+      }
+      case FORCED_NUMERAL: {
+        ForcedNum fn = (ForcedNum) insight;
+        return isEasy(grid, fn) ? MoveKind.EASY_DIRECT : MoveKind.DIRECT;
+      }
+      case IMPLICATION: {
+        Implication i = (Implication) insight;
+        return isSimple(i)
+            ? MoveKind.SIMPLY_IMPLIED
+            : isEasy(grid, i.getNub())
+            ? MoveKind.IMPLIED_EASY
+            : MoveKind.IMPLIED;
+      }
+      default:
+        return null;
+    }
+  }
 
+  /**
+   * Tells whether the given forced numeral is an easy one.
+   */
+  private static boolean isEasy(Grid grid, ForcedNum fn) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  /**
+   * Tells whether the given insight is an easy assignment.
+   */
+  private static boolean isEasy(Grid grid, Insight insight) {
+    switch (insight.type) {
+      case FORCED_LOCATION: return true;
+      case FORCED_NUMERAL: return isEasy(grid, insight);
+      default: return false;
+    }
+  }
+
+  /**
+   * Tells whether the given implication is a simple one.
+   */
+  private static boolean isSimple(Implication i) {
+    do {
+      for (Insight a : i.getAntecedents()) {
+        switch (a.type) {
+          case OVERLAP:
+            break;
+          case LOCKED_SET: {
+            LockedSet s = (LockedSet) a;
+            if (s.isNakedSet() || s.getLocations().unit.getType() != Unit.Type.BLOCK
+                || s.getLocations().size() > 3)
+              return false;
+            break;
+          }
+          default: return false;
+        }
+      }
+      i = i.getConsequent().type == Insight.Type.IMPLICATION
+          ? (Implication) i.getConsequent()
+          : null;
+    } while (i != null);
+    return true;
+  }
 }
