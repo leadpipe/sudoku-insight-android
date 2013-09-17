@@ -44,3 +44,4 @@ WEB-INF/appengine-generated/*
 # Data files
 data/*.tsv
 stats/*.tsv
+SudokuStats/*.txt
