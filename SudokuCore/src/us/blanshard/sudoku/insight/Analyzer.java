@@ -156,8 +156,11 @@ public class Analyzer {
     findInsights(gridMarks.toBuilder().apply(antecedents.list).build(), collector,
         antecedents.index, elimsOnly);
 
-    for (Insight insight : collector.list)
-      callback.take(new Implication(antecedents.list, insight));
+    if (!collector.list.isEmpty()) {
+      List<Insight> antecedentsList = ImmutableList.copyOf(antecedents.list);
+      for (Insight insight : collector.list)
+        callback.take(new Implication(antecedentsList, insight));
+    }
   }
 
   private static class Collector implements Callback {
