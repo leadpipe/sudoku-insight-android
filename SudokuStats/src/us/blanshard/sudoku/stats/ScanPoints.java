@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.stats;
 
+import static com.google.common.base.Predicates.and;
+
 import us.blanshard.sudoku.stats.Pattern.ForcedNum;
 import us.blanshard.sudoku.stats.Pattern.UnitCategory;
 
@@ -52,8 +54,11 @@ public class ScanPoints {
       long ms = Long.parseLong(iter.next());
       int openCount = Integer.parseInt(iter.next());
       iter.next();  // numAssignments
+//      iter.next();  // numTargets
+      int numTargets = Integer.parseInt(iter.next());
+      iter.next();  // numNonElimTargets
       List<List<Pattern>> missed = Pattern.combinationsFromString(iter.next());
-      reporter.take(found, missed, ms, openCount);
+      reporter.take(found, missed, ms, openCount, numTargets);
     }
     in.close();
     reporter.reportSummaries(System.out);
@@ -162,17 +167,17 @@ public class ScanPoints {
   static final Predicate<Pattern> matchAllImpliedFls = implied(matchFlsOnly);
   static final Predicate<Pattern> matchSimplyImpliedFls = simplyImplied(matchFlsOnly, 2);
 
-  static final Predicate<Pattern> matchFlsAndFns = new Predicate<Pattern>() {
+  static final Predicate<Pattern> matchDirectMoves = new Predicate<Pattern>() {
     @Override public boolean apply(Pattern p) {
       return p.isDirectAssignment();
     }
   };
 
-  static final Predicate<Pattern> matchAllImpliedFlsAndFns = implied(matchFlsAndFns);
-  static final Predicate<Pattern> matchSimplyImpliedFlsAndFns2 = simplyImplied(matchFlsAndFns, 2);
-  static final Predicate<Pattern> matchSimplyImpliedFlsAndFns3 = simplyImplied(matchFlsAndFns, 3);
-  static final Predicate<Pattern> matchSimplyImpliedFlsAndFns4 = simplyImplied(matchFlsAndFns, 4);
-  static final Predicate<Pattern> matchSimplyImpliedFlsAndFns5 = simplyImplied(matchFlsAndFns, 5);
+  static final Predicate<Pattern> matchAnyMove = implied(matchDirectMoves);
+  static final Predicate<Pattern> matchSimplyImpliedMoves2 = simplyImplied(matchDirectMoves, 2);
+  static final Predicate<Pattern> matchSimplyImpliedMoves3 = simplyImplied(matchDirectMoves, 3);
+  static final Predicate<Pattern> matchSimplyImpliedMoves4 = simplyImplied(matchDirectMoves, 4);
+  static final Predicate<Pattern> matchSimplyImpliedMoves5 = simplyImplied(matchDirectMoves, 5);
 
   static final Predicate<Pattern> matchFlsAndEasyFns = new Predicate<Pattern>() {
     @Override public boolean apply(Pattern p) {
@@ -188,7 +193,7 @@ public class ScanPoints {
   static final Predicate<Pattern> matchSimplyImpliedFlsAndEasyFns = simplyImplied(matchFlsAndEasyFns, 2);
 
   interface Consumer {
-    void take(List<Pattern> found, List<List<Pattern>> missed, long ms, int openCount);
+    void take(List<Pattern> found, List<List<Pattern>> missed, long ms, int openCount, int numTargets);
   }
 
   static class Reporter implements Consumer {
@@ -196,37 +201,44 @@ public class ScanPoints {
 
     public Reporter() {
       processes = ImmutableList.<Process>builder()
-//          .add(make("Forced locations", matchFlsOnly))
+          .add(make("Forced locations, no errors", matchFlsOnly))
+          .add(make("Forced locations or errors", any(matchFlsOnly), matchAnything))
           .add(make("Forced locations everywhere", any(matchFlsOnly), any(matchFlsOnly)))
 //          .add(make("Forced locations mostly", any(matchFlsOnly), any(matchFlsOnly), 0.8))
-//          .add(make("Forced locations/block", matchFlbsOnly))
+          .add(make("Forced locations/block", matchFlbsOnly))
           .add(make("Forced locations/block everywhere", any(matchFlbsOnly), any(matchFlbsOnly)))
 //          .add(make("Forced locations/block mostly", any(matchFlbsOnly), any(matchFlbsOnly), 0.8))
-//          .add(make("Forced locations/line", matchFllsOnly))
+          .add(make("Forced locations/line", matchFllsOnly))
           .add(make("Forced locations/line everywhere", any(matchFllsOnly), any(matchFllsOnly)))
 //          .add(make("Forced locations/line mostly", any(matchFllsOnly), any(matchFllsOnly), 0.8))
-          .add(make("Forced locations/block w/no lines", Predicates.and(any(matchFlbsOnly), none(matchFllsOnly)), matchAnything))
-//          .add(make("Forced locations/block w/no indirect lines", Predicates.and(any(matchFlbsOnly), none(implied(matchFllsOnly))), matchAnything))
-//          .add(make("Forced locations/line w/no blocks", Predicates.and(any(matchFllsOnly), none(matchFlbsOnly)), matchAnything))
-//          .add(make("Forced locations/line w/no indirect blocks", Predicates.and(any(matchFllsOnly), none(implied(matchFlbsOnly))), matchAnything))
-          .add(make("Forced locations/block w/no lines anywhere", Predicates.and(any(matchFlbsOnly), none(matchFllsOnly)), none(matchFllsOnly)))
-//          .add(make("Forced locations/line w/no blocks anywhere", Predicates.and(any(matchFllsOnly), none(matchFlbsOnly)), none(matchFlbsOnly)))
+          .add(make("Forced locations/block w/no lines or errors", and(any(matchFlbsOnly), none(matchFllsOnly)), any(matchAnyMove)))
+          .add(make("Forced locations/block w/no lines", and(any(matchFlbsOnly), none(matchFllsOnly)), matchAnything))
+          .add(make("Forced locations/block w/no indirect lines or errors", and(any(matchFlbsOnly), none(implied(matchFllsOnly))), any(matchAnyMove)))
+          .add(make("Forced locations/block w/no indirect lines", and(any(matchFlbsOnly), none(implied(matchFllsOnly))), matchAnything))
+          .add(make("Forced locations/line w/no blocks or errors", and(any(matchFllsOnly), none(matchFlbsOnly)), any(matchAnyMove)))
+          .add(make("Forced locations/line w/no blocks", and(any(matchFllsOnly), none(matchFlbsOnly)), matchAnything))
+          .add(make("Forced locations/line w/no indirect blocks or errors", and(any(matchFllsOnly), none(implied(matchFlbsOnly))), any(matchAnyMove)))
+          .add(make("Forced locations/line w/no indirect blocks", and(any(matchFllsOnly), none(implied(matchFlbsOnly))), matchAnything))
+          .add(make("Forced locations/block w/no lines anywhere", and(any(matchFlbsOnly), none(matchFllsOnly)), none(matchFllsOnly)))
+//          .add(make("Forced locations/line w/no blocks anywhere", and(any(matchFllsOnly), none(matchFlbsOnly)), none(matchFlbsOnly)))
 //          .add(make("Implied forced locations", matchAllImpliedFls))
-          .add(make("Implied forced locations/block w/no direct lines", Predicates.and(any(implied(matchFlbsOnly)), none(matchFllsOnly)), matchAnything))
-          .add(make("Implied forced locations/block w/no indirect lines", Predicates.and(any(implied(matchFlbsOnly)), none(implied(matchFllsOnly))), matchAnything))
+          .add(make("Implied forced locations/block w/no direct lines", and(any(implied(matchFlbsOnly)), none(matchFllsOnly)), any(matchAnyMove)))
+          .add(make("Implied forced locations/block w/no indirect lines", and(any(implied(matchFlbsOnly)), none(implied(matchFllsOnly))), any(matchAnyMove)))
           .add(make("Simply-implied forced locations", matchSimplyImpliedFls))
           .add(make("Simply-implied forced locations everywhere", any(matchSimplyImpliedFls), any(matchSimplyImpliedFls)))
-//          .add(make("Simply-implied forced locations/block w/no direct lines", Predicates.and(any(simplyImplied(matchFlbsOnly, 2)), none(matchFllsOnly)), matchAnything))
-//          .add(make("Simply-implied forced locations/block w/no indirect lines", Predicates.and(any(simplyImplied(matchFlbsOnly, 2)), none(implied(matchFllsOnly))), matchAnything))
+//          .add(make("Simply-implied forced locations/block w/no direct lines", and(any(simplyImplied(matchFlbsOnly, 2)), none(matchFllsOnly)), matchAnything))
+//          .add(make("Simply-implied forced locations/block w/no indirect lines", and(any(simplyImplied(matchFlbsOnly, 2)), none(implied(matchFllsOnly))), matchAnything))
 //          .add(make("Direct assignments", matchFlsAndFns))
-          .add(make("Direct assignments everywhere", any(matchFlsAndFns), any(matchFlsAndFns)))
+          .add(make("Direct assignments everywhere, no errors", any(matchDirectMoves), any(matchDirectMoves)))
+          .add(make("Direct assignments everywhere", any(matchDirectMoves), matchAnything))
 //          .add(make("Direct assignments mostly", any(matchFlsAndFns), any(matchFlsAndFns), 0.8))
-          .add(make("Implied assignments", matchAllImpliedFlsAndFns))
+          .add(make("Implied assignments, no errors", matchAnyMove))
+          .add(make("Implied assignments", any(matchAnyMove), matchAnything))
 //          .add(make("Simply-implied assignments", matchSimplyImpliedFlsAndFns2))
-          .add(make("Simply-implied assignments everywhere (2)", any(matchSimplyImpliedFlsAndFns2), any(matchSimplyImpliedFlsAndFns2)))
-          .add(make("Simply-implied assignments everywhere (3)", any(matchSimplyImpliedFlsAndFns3), any(matchSimplyImpliedFlsAndFns3)))
-          .add(make("Simply-implied assignments everywhere (4)", any(matchSimplyImpliedFlsAndFns4), any(matchSimplyImpliedFlsAndFns4)))
-          .add(make("Simply-implied assignments everywhere (5)", any(matchSimplyImpliedFlsAndFns5), any(matchSimplyImpliedFlsAndFns5)))
+          .add(make("Simply-implied assignments everywhere (2)", any(matchSimplyImpliedMoves2), any(matchSimplyImpliedMoves2)))
+          .add(make("Simply-implied assignments everywhere (3)", any(matchSimplyImpliedMoves3), any(matchSimplyImpliedMoves3)))
+          .add(make("Simply-implied assignments everywhere (4)", any(matchSimplyImpliedMoves4), any(matchSimplyImpliedMoves4)))
+          .add(make("Simply-implied assignments everywhere (5)", any(matchSimplyImpliedMoves5), any(matchSimplyImpliedMoves5)))
 //          .add(make("Simply-implied assignments mostly", any(matchSimplyImpliedFlsAndFns2), any(matchSimplyImpliedFlsAndFns2), 0.8))
 //          .add(make("Forced locations and easy forced numerals", matchFlsAndEasyFns))
           .add(make("Forced locations and easy forced numerals everywhere", any(matchFlsAndEasyFns), any(matchFlsAndEasyFns)))
@@ -240,7 +252,7 @@ public class ScanPoints {
     }
 
     private static Process make(String description, Predicate<Pattern> matches) {
-      return make(description, any(matches), matchAnything);
+      return make(description, any(matches), any(matchAnyMove));
     }
 
     private static Process make(String description, Predicate<List<Pattern>> foundMatches,
@@ -259,9 +271,9 @@ public class ScanPoints {
     }
 
     @Override public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
-        int openCount) {
+        int openCount, int numTargets) {
       for (Process p : processes)
-        p.take(found, missed, ms, openCount);
+        p.take(found, missed, ms, openCount, numTargets);
     }
   }
 
@@ -283,19 +295,16 @@ public class ScanPoints {
     }
 
     @Override public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
-        int openCount) {
+        int openCount, int numTargets) {
       if (found.isEmpty()) return;
 
       boolean foundLocationMatches = foundMatches.apply(found);
 
-      int assignments = found.size();
       int missedLocations = 0;
       int matchingMissedLocations = 0;
       for (List<Pattern> list : missed) {
-        if (list.isEmpty() || !list.get(0).isAssignment()) continue;
         ++missedLocations;
         if (missedMatches.apply(list)) ++matchingMissedLocations;
-        assignments += list.size();
       }
 
       if (!foundLocationMatches
@@ -306,7 +315,7 @@ public class ScanPoints {
       }
       ++movesIncluded;
       double seconds = ms / 1000.0;
-      double pointsScanned = openCount / (double) assignments;
+      double pointsScanned = openCount * 4.0 / numTargets;
       counter.count(seconds, pointsScanned);
     }
 

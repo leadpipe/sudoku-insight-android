@@ -41,6 +41,7 @@ import us.blanshard.sudoku.insight.Implication;
 import us.blanshard.sudoku.insight.Insight;
 import us.blanshard.sudoku.insight.LockedSet;
 import us.blanshard.sudoku.insight.Overlap;
+import us.blanshard.sudoku.insight.UnitNumeral;
 import us.blanshard.sudoku.stats.Pattern.UnitCategory;
 
 import com.google.appengine.api.blobstore.BlobKey;
@@ -58,6 +59,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
@@ -69,6 +71,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Analyzes sudoku game histories to measure the time taken to make use of
@@ -161,6 +164,10 @@ public class InsightMeasurer implements Runnable {
             .append(String.valueOf(Location.COUNT - grid.size()))
             .append('\t')
             .append(String.valueOf(collector.locsWithAssignments.size()))
+            .append('\t')
+            .append(String.valueOf(collector.getNumTargets()))
+            .append('\t')
+            .append(String.valueOf(collector.getNumNonElimTargets()))
             .append('\t');
         Pattern.appendAllTo(out, collector.missed.values());
         out.println();
@@ -188,6 +195,10 @@ public class InsightMeasurer implements Runnable {
     final List<Pattern> found = Lists.newArrayList();
     final Map<Object, List<Pattern>> missed = Maps.newHashMap();
     final LocSet locsWithAssignments = new LocSet();
+    final LocSet locTargets = new LocSet();
+    final LocSet nonElimLocTargets = new LocSet();
+    final Set<UnitNumeral> unitNumTargets = Sets.newHashSet();
+    final Set<UnitNumeral> nonElimUnitNumTargets = Sets.newHashSet();
 
     Collector(GridMarks gridMarks, Assignment assignment) {
       this.gridMarks = gridMarks;
@@ -198,7 +209,8 @@ public class InsightMeasurer implements Runnable {
       Assignment a = insight.getImpliedAssignment();
       boolean isError = insight.isError();
       if (isError || a != null) {
-        Pattern pattern = getPattern(Analyzer.minimize(gridMarks, insight));
+        Insight minimized = Analyzer.minimize(gridMarks, insight);
+        Pattern pattern = getPattern(minimized);
         if (isError)
           missed.put(new Object(), Collections.singletonList(pattern));
         else if (assignment.equals(a))
@@ -208,9 +220,19 @@ public class InsightMeasurer implements Runnable {
           if (list == null) missed.put(a, list = Lists.newArrayList());
           list.add(pattern);
         }
+        minimized.addScanTargets(nonElimLocTargets, nonElimUnitNumTargets);
       }
       if (a != null && a.location != assignment.location)
         locsWithAssignments.add(a.location);
+      insight.addScanTargets(locTargets, unitNumTargets);
+    }
+
+    int getNumTargets() {
+      return locTargets.size() + unitNumTargets.size();
+    }
+
+    int getNumNonElimTargets() {
+      return nonElimLocTargets.size() + nonElimUnitNumTargets.size();
     }
 
     private Pattern getPattern(Insight insight) {
