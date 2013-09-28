@@ -18,6 +18,8 @@ package us.blanshard.sudoku.insight;
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
 
+import java.util.Collection;
+
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -64,5 +66,9 @@ public final class BarredLoc extends Insight {
 
   @Override public String toString() {
     return location + " \u2190 \u2205";  // assignment empty-set
+  }
+
+  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
+    locs.add(location);
   }
 }

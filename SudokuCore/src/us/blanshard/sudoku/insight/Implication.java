@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import us.blanshard.sudoku.core.Assignment;
+import us.blanshard.sudoku.core.Location;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -127,5 +128,11 @@ public final class Implication extends Insight {
 
   @Override public String toString() {
     return consequent + " \u2235 " + antecedents;  // "because" symbol
+  }
+
+  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
+    for (Insight a : antecedents)
+      a.addScanTargets(locs, unitNums);
+    consequent.addScanTargets(locs, unitNums);
   }
 }

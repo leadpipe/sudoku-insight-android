@@ -23,6 +23,8 @@ import us.blanshard.sudoku.core.UnitSubset;
 
 import com.google.common.base.Objects;
 
+import java.util.Collection;
+
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -88,5 +90,9 @@ public final class ForcedLoc extends Insight {
 
   @Override public String toString() {
     return numeral + " \u2208 " + unit + " \u2192 " + location;  // element-of, right-arrow
+  }
+
+  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
+    unitNums.add(UnitNumeral.of(unit, numeral));
   }
 }

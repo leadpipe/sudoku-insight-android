@@ -117,4 +117,8 @@ public final class Overlap extends Insight {
   @Override public int hashCode() {
     return Objects.hashCode(unit, numeral, extra.unit);
   }
+
+  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
+    unitNums.add(UnitNumeral.of(unit, numeral));
+  }
 }

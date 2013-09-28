@@ -22,6 +22,8 @@ import us.blanshard.sudoku.core.Numeral;
 
 import com.google.common.base.Objects;
 
+import java.util.Collection;
+
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -80,5 +82,9 @@ public final class ForcedNum extends Insight {
 
   @Override public String toString() {
     return location + " \u2190 " + numeral.number;  // That's a left arrow
+  }
+
+  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
+    locs.add(location);
   }
 }

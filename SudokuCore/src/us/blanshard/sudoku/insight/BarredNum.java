@@ -16,10 +16,13 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
+import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 
 import com.google.common.base.Objects;
+
+import java.util.Collection;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -74,5 +77,9 @@ public final class BarredNum extends Insight {
 
   @Override public String toString() {
     return numeral + " \u2209 " + unit;  // not-element-of
+  }
+
+  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
+    unitNums.add(UnitNumeral.of(unit, numeral));
   }
 }

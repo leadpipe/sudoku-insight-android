@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import us.blanshard.sudoku.core.Assignment;
+import us.blanshard.sudoku.core.Location;
 
 import com.google.common.base.Objects;
 
@@ -113,5 +114,9 @@ public final class DisprovedAssignment extends Insight {
     String prefix = assignment.numeral.number + " \u219b "  // crossed-out right arrow
             + assignment.location + " \u2235 ";  // "because" symbol
     return prefix;
+  }
+
+  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
+    // This guy has nothing.
   }
 }

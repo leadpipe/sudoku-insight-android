@@ -23,6 +23,8 @@ import us.blanshard.sudoku.core.UnitSubset;
 
 import com.google.common.base.Objects;
 
+import java.util.Collection;
+
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -80,5 +82,9 @@ public final class Conflict extends Insight {
 
   @Override public String toString() {
     return numeral + " \u2208 " + locations.unit + " \u219b " + locations;  // element-of, right-arrow
+  }
+
+  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
+    // Conflicts are not about scanning open locations.
   }
 }

@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
+import us.blanshard.sudoku.core.Location;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -130,4 +131,14 @@ public abstract class Insight {
 
   /** Tells whether this insight is related to the given elimination. */
   public abstract boolean mightBeRevealedByElimination(Assignment elimination);
+
+  /**
+   * Adds "scan targets" associated with this insight to the given collections.
+   * There is one target for each location, and one for each unit-numeral pair.
+   * The location targets represent the constraint that there can be at most one
+   * occurrence of the numeral assigned to a location among all the units that
+   * the location belongs to.  The unit-numeral targets represent the constraint
+   * that there must be at least one occurrence of each numeral within each unit.
+   */
+  public abstract void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums);
 }
