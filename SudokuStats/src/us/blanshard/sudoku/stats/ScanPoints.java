@@ -190,7 +190,7 @@ public class ScanPoints {
   };
 
   static final Predicate<Pattern> matchAllImpliedFlsAndEasyFns = implied(matchFlsAndEasyFns);
-  static final Predicate<Pattern> matchSimplyImpliedFlsAndEasyFns = simplyImplied(matchFlsAndEasyFns, 2);
+  static final Predicate<Pattern> matchSimplyImpliedFlsAndEasyFns = simplyImplied(matchFlsAndEasyFns, 20);
 
   interface Consumer {
     void take(List<Pattern> found, List<List<Pattern>> missed, long ms, int openCount, int numTargets);
