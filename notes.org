@@ -1,5 +1,18 @@
 * Insights
-** TODO Figure out how to turn game histories into pattern times
+** Evaluator
+   - straight shot: analyze, apply best move, track time
+     - results: elapsed time, grid-marks, status (complete, error, inconclusive), interruption
+   - top-level evaluation:
+     - do straight shot
+     - if not complete, do N disproof runs and average their times
+   - disproof run:
+     - choose impossible assignment, do error-search run, eliminate the assignment, do straight shot
+     - if not complete, loop
+   - error-search run:
+     - do straight shot
+     - if ends in error, done
+     - choose set of assignments
+       - for each assignment, apply it and do error-search run
 
 ** Getting games with history from a sqlite db into a tsv file:
 sqlite3 phone-2012-07-08.db <<END
@@ -16,8 +29,7 @@ END
 ** Bugs
 
 ** App/UI cleanups
-*** TODO Add a navigation drawer
-*** DONE Change "give up" to "show solution," and have it go straight to the replay view.
+*** TODO Add a navigation drawer?
 *** TODO Do auto stream handling better
     - if the server sets the stream, explicitly skip queued puzzles from previous stream
     - have the server send a GCM message to the younger installations to change
@@ -47,6 +59,7 @@ END
 *** TODO Redo in exploration mode?
 *** TODO Wrong-numeral mistakes show without the error during single-step playback
     - the error appears while running forward
+    - but maybe not when it's in a trail?
 *** TODO Why does the first trail in puzzle 14 switch errors?
 *** TODO Analysis getting cropped early when use the slider
     - Leftover thread interruption?

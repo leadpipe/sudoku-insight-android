@@ -15,10 +15,15 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.LocSet;
 import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.NumSet;
+import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
 
@@ -29,6 +34,7 @@ import com.google.common.collect.Sets;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -38,14 +44,16 @@ import javax.annotation.Nullable;
  */
 public class Evaluator {
 
-  /**
-   * The current version of the time estimation algorithm.
-   */
+  /** The current version of the time estimation algorithm. */
   public static final int CURRENT_VERSION = 1;
 
   /**
-   * The object returned by the evaluator.
+   * How many times we run the evaluator when we must make choices that could
+   * make the result vary by a lot.
    */
+  public static final int NUM_TRIALS = 10;
+
+  /** The object returned by the evaluator. */
   public static class Result {
     /** The version of the estimation algorithm that was used for this result. */
     public final int algorithmVersion;
@@ -54,12 +62,16 @@ public class Evaluator {
     /** Whether the estimate was complete; if false, the estimate is probably
         less than it would have been if allowed to finish. */
     public final boolean estimateComplete;
+    /** Whether the evaluator was able to solve the puzzle in one pass; such
+        puzzles are easier in principle, even if they take a long time. */
+    public final boolean singlePass;
 
     public Result(int algorithmVersion, double estimatedAverageSolutionSeconds,
-        boolean estimateComplete) {
+        boolean estimateComplete, boolean singlePass) {
       this.algorithmVersion = algorithmVersion;
       this.estimatedAverageSolutionSeconds = estimatedAverageSolutionSeconds;
       this.estimateComplete = estimateComplete;
+      this.singlePass = singlePass;
     }
   }
 
@@ -69,6 +81,7 @@ public class Evaluator {
    */
   public interface Callback {
     void updateEstimate(double minSeconds);
+    void startingMultiPass();
   }
 
   /**
@@ -79,15 +92,158 @@ public class Evaluator {
    * stop early, and in that case the result object will be marked as incomplete.
    */
   public static Result evaluate(Grid puzzle, Callback callback) {
-    double seconds = 0;
-    GridMarks gridMarks = new GridMarks(puzzle);
-    while (!gridMarks.grid.isSolved()) {
-      Collector collector = new Collector(gridMarks);
-      boolean complete = Analyzer.analyze(gridMarks, collector, true);
-      if (!complete) return result(seconds, false);
-      seconds += collector.getElapsedSeconds();
+    return new Evaluator(puzzle).evaluate(callback);
+  }
+
+  private final Grid puzzle;
+  private final Grid solutionIntersection;
+  private final Random random;
+
+  public Evaluator(Grid puzzle) {
+    this(puzzle, new Random(0));
+  }
+
+  public Evaluator(Grid puzzle, Random random) {
+    Solver.Result solverResult = Solver.solve(puzzle, 10);
+    if (solverResult.intersection == null)
+      throw new IllegalArgumentException("Puzzle has no solution");
+    this.puzzle = puzzle;
+    this.solutionIntersection = solverResult.intersection;
+    this.random = random;
+  }
+
+  public Result evaluate(@Nullable Callback callback) {
+    return evaluate(callback, NUM_TRIALS);
+  }
+
+  public Result evaluate(@Nullable Callback callback, int trialCount) {
+    checkArgument(trialCount >= 1);
+    Run outer = new Run(new GridMarks(puzzle));
+    outer.runStraightShot(callback);
+    double seconds = outer.seconds;
+    boolean uninterrupted = outer.uninterrupted();
+    boolean singlePass = true;
+    if (outer.status == RunStatus.INCONCLUSIVE) {
+      singlePass = trialCount == 1;
+      if (callback != null) callback.startingMultiPass();
+      double totalSeconds = 0;
+      int numEvaluations = 0;
+      while (uninterrupted && numEvaluations++ < trialCount) {
+        Run inner = new Run(outer.gridMarks);
+        inner.runDisproof(singlePass ? callback : null);
+        uninterrupted = inner.uninterrupted();
+        totalSeconds += inner.seconds;
+      }
+      seconds += totalSeconds / numEvaluations;
     }
-    return result(seconds, true);
+    return result(seconds, uninterrupted, singlePass);
+  }
+
+  private enum RunStatus { INTERRUPTED, COMPLETE, ERROR, INCONCLUSIVE };
+
+  private class Run {
+    GridMarks gridMarks;
+    double seconds;
+    RunStatus status;
+
+    Run(GridMarks gridMarks) {
+      this.gridMarks = gridMarks;
+    }
+
+    void runStraightShot(@Nullable Callback callback) {
+      if (status == RunStatus.INTERRUPTED) return;
+      status = null;
+      do {
+        Collector collector = new Collector(gridMarks);
+        if (Analyzer.analyze(gridMarks, collector, true)) {
+          seconds += collector.getElapsedSeconds();
+          if (callback != null) callback.updateEstimate(seconds);
+          if (collector.hasMove()) {
+            gridMarks = gridMarks.toBuilder().apply(collector.getMove()).build();
+            if (gridMarks.grid.isSolved()) status = RunStatus.COMPLETE;
+          } else if (collector.hasVisibleErrors()) {
+            status = RunStatus.ERROR;
+          } else if (onlyAmbiguousAssignmentsRemaining()) {
+            gridMarks = gridMarks.toBuilder().assign(randomAssignment()).build();
+          } else {
+            status = RunStatus.INCONCLUSIVE;
+          }
+        } else {
+          status = RunStatus.INTERRUPTED;
+        }
+      } while (status == null);
+    }
+
+    void runDisproof(@Nullable Callback callback) {
+      do {
+        Assignment impossible = randomErroneousAssignment();
+        GridMarks start = gridMarks;
+        gridMarks = start.toBuilder().assign(impossible).build();
+        runErrorSearch(callback);
+        gridMarks = start.toBuilder().eliminate(impossible).build();
+        runStraightShot(callback);
+      } while (status == RunStatus.INCONCLUSIVE);
+    }
+
+    void runErrorSearch(@Nullable Callback callback) {
+      runStraightShot(callback);
+      if (status != RunStatus.INCONCLUSIVE) return;
+
+      Location loc = randomUnsetLocation(false);
+      NumSet nums = gridMarks.marks.get(loc);
+      GridMarks start = gridMarks;
+      for (Numeral num : nums) {
+        gridMarks = start.toBuilder().assign(Assignment.of(loc, num)).build();
+        runErrorSearch(callback);
+      }
+    }
+
+    boolean uninterrupted() {
+      return status != RunStatus.INTERRUPTED;
+    }
+
+    private boolean onlyAmbiguousAssignmentsRemaining() {
+      for (Location loc : Location.ALL) {
+        if (!gridMarks.grid.containsKey(loc) && solutionIntersection.containsKey(loc))
+          return false;
+      }
+      return true;
+    }
+
+    Assignment randomAssignment(Location loc, NumSet nums) {
+      return Assignment.of(loc, nums.get(random.nextInt(nums.size())));
+    }
+
+    Assignment randomAssignment() {
+      Location loc = randomUnsetLocation(false);
+      NumSet nums = gridMarks.marks.get(loc);
+      return randomAssignment(loc, nums);
+    }
+
+    Assignment randomErroneousAssignment() {
+      Location loc = randomUnsetLocation(true);
+      NumSet nums = gridMarks.marks.get(loc).without(gridMarks.grid.get(loc));
+      return randomAssignment(loc, nums);
+    }
+
+    Location randomUnsetLocation(boolean inIntersectionOnly) {
+      int size = 9;
+      int count = 0;
+      Location currentLoc = null;
+      for (Location loc : Location.ALL) {
+        if (inIntersectionOnly && !solutionIntersection.containsKey(loc)) continue;
+        NumSet possible = gridMarks.marks.get(loc);
+        if (possible.size() < 2 || possible.size() > size) continue;
+        if (possible.size() < size) {
+          count = 0;
+          size = possible.size();
+        }
+        // Choose uniformly from locations with the smallest size seen so far.
+        if (random.nextInt(++count) == 0)
+          currentLoc = loc;
+      }
+      return currentLoc;
+    }
   }
 
   /**
@@ -95,7 +251,7 @@ public class Evaluator {
    * of difficulty of different insights. They are ordered from easiest to
    * hardest.
    */
-  public enum MoveKind {
+  private enum MoveKind {
     EASY_DIRECT(1.1),
     DIRECT(1.2),
     SIMPLY_IMPLIED_EASY(1.4),
@@ -133,6 +289,8 @@ public class Evaluator {
     private final LocSet locTargets = new LocSet();
     private final Set<UnitNumeral> unitNumTargets = Sets.newHashSet();
     private final Map<Location, MoveKind> kinds = Maps.newHashMap();
+    private MoveKind best = null;
+    private Insight move;
     private boolean errors;
 
     Collector(GridMarks gridMarks) {
@@ -143,7 +301,12 @@ public class Evaluator {
       insight.addScanTargets(locTargets, unitNumTargets);
       Assignment a = insight.getImpliedAssignment();
       if (a != null) {
-        kinds.put(a.location, kindForInsight(insight, kinds.get(a.location)));
+        MoveKind kind = kindForInsight(insight, kinds.get(a.location));
+        kinds.put(a.location, kind);
+        if (best == null || kind.compareTo(best) < 0) {
+          best = kind;
+          move = insight;
+        }
       } else if (insight.isError()) {
         errors = true;
       }
@@ -155,8 +318,22 @@ public class Evaluator {
       int openLocs = Location.COUNT - gridMarks.grid.size();
       double totalScanPoints = 4.0 * openLocs;
       int scanTargets = locTargets.size() + unitNumTargets.size();
-      double scanPoints = scanTargets == 0 ? 2 * totalScanPoints : totalScanPoints / scanTargets;
+      // TODO: The 2 below is pure speculation
+      double scanPoints = move == null ? 2 * totalScanPoints : totalScanPoints / scanTargets;
       return kind.secondsPerScanPoint * scanPoints;
+    }
+
+    boolean hasMove() {
+      return move != null;
+    }
+
+    Insight getMove() {
+      return move;
+    }
+
+    boolean hasVisibleErrors() {
+      // TODO: improve this
+      return errors;
     }
 
     /**
@@ -218,8 +395,8 @@ public class Evaluator {
     }
   }
 
-  private static Result result(double seconds, boolean complete) {
-    return new Result(CURRENT_VERSION, seconds, complete);
+  private static Result result(double seconds, boolean complete, boolean singlePass) {
+    return new Result(CURRENT_VERSION, seconds, complete, singlePass);
   }
 
   private static boolean isSimpleAntecedent(Insight insight) {
