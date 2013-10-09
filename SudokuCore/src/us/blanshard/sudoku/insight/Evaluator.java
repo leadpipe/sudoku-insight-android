@@ -292,6 +292,8 @@ public class Evaluator {
     private MoveKind best = null;
     private Insight move;
     private boolean errors;
+    private int numDirectMoves;
+    private int numDirectErrors;
 
     Collector(GridMarks gridMarks) {
       this.gridMarks = gridMarks;
@@ -307,8 +309,12 @@ public class Evaluator {
           best = kind;
           move = insight;
         }
+        if (insight.type.isAssignment())
+          ++numDirectMoves;
       } else if (insight.isError()) {
         errors = true;
+        if (insight.type.isError())
+          ++numDirectErrors;
       }
     }
 
@@ -332,8 +338,8 @@ public class Evaluator {
     }
 
     boolean hasVisibleErrors() {
-      // TODO: improve this
-      return errors;
+      // TODO: validate this
+      return numDirectErrors > numDirectMoves;
     }
 
     /**
@@ -369,8 +375,32 @@ public class Evaluator {
      * Tells whether the given forced numeral is an easy one.
      */
     private boolean isEasy(ForcedNum fn) {
-      // TODO Auto-generated method stub
-      return false;
+      // Our current definition of easy: there are at most 2 open locations
+      // in the block (not counting the target location), and the numerals
+      // assigned to at most one of the row or column are required to force the
+      // target numeral.
+      Location target = fn.getLocation();
+      int openInBlock = 0;
+      NumSet inBlock = NumSet.NONE;
+      for (Location loc : target.block) {
+        if (loc == target) continue;
+        if (gridMarks.grid.containsKey(loc))
+          inBlock = inBlock.with(gridMarks.grid.get(loc));
+        else
+          ++openInBlock;
+      }
+      if (openInBlock > 2) return false;
+      NumSet inRow = inLine(target.row, target).minus(inBlock);
+      NumSet inCol = inLine(target.column, target).minus(inBlock);
+      return inRow.minus(inCol).isEmpty() || inCol.minus(inRow).isEmpty();
+    }
+
+    private NumSet inLine(Unit unit, Location target) {
+      NumSet answer = NumSet.NONE;
+      for (Location loc : unit)
+        if (loc.block != target.block && gridMarks.grid.containsKey(loc))
+          answer = answer.with(gridMarks.grid.get(loc));
+      return answer;
     }
 
     /**

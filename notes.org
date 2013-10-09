@@ -1,18 +1,11 @@
 * Insights
 ** Evaluator
-   - straight shot: analyze, apply best move, track time
-     - results: elapsed time, grid-marks, status (complete, error, inconclusive), interruption
-   - top-level evaluation:
-     - do straight shot
-     - if not complete, do N disproof runs and average their times
-   - disproof run:
-     - choose impossible assignment, do error-search run, eliminate the assignment, do straight shot
-     - if not complete, loop
-   - error-search run:
-     - do straight shot
-     - if ends in error, done
-     - choose set of assignments
-       - for each assignment, apply it and do error-search run
+*** TODO Try removing most obvious correlations from InsightMeasurer
+    - In particular: flb's with the same numeral as the previous move are often
+      just piggybacked on the previous scan.  Removing them from the analysis
+      should improve fit to Poisson distribution.  (Though it will probably cut
+      the amount of data down by a large amount -- and so may not be useful as
+      the source for timing numbers.)
 
 ** Getting games with history from a sqlite db into a tsv file:
 sqlite3 phone-2012-07-08.db <<END
