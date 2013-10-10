@@ -65,13 +65,16 @@ public class Evaluator {
     /** Whether the evaluator was able to solve the puzzle in one pass; such
         puzzles are easier in principle, even if they take a long time. */
     public final boolean singlePass;
+    /** Whether the puzzle has more than one solution. */
+    public final boolean improper;
 
     public Result(int algorithmVersion, double estimatedAverageSolutionSeconds,
-        boolean estimateComplete, boolean singlePass) {
+        boolean estimateComplete, boolean singlePass, boolean improper) {
       this.algorithmVersion = algorithmVersion;
       this.estimatedAverageSolutionSeconds = estimatedAverageSolutionSeconds;
       this.estimateComplete = estimateComplete;
       this.singlePass = singlePass;
+      this.improper = improper;
     }
   }
 
@@ -96,6 +99,7 @@ public class Evaluator {
   }
 
   private final Grid puzzle;
+  private final boolean improper;
   private final Grid solutionIntersection;
   private final Random random;
 
@@ -108,6 +112,7 @@ public class Evaluator {
     if (solverResult.intersection == null)
       throw new IllegalArgumentException("Puzzle has no solution");
     this.puzzle = puzzle;
+    this.improper = solverResult.numSolutions > 1;
     this.solutionIntersection = solverResult.intersection;
     this.random = random;
   }
@@ -124,19 +129,19 @@ public class Evaluator {
     boolean uninterrupted = outer.uninterrupted();
     boolean singlePass = true;
     if (outer.status == RunStatus.INCONCLUSIVE) {
-      singlePass = trialCount == 1;
+      singlePass = false;
       if (callback != null) callback.startingMultiPass();
       double totalSeconds = 0;
       int numEvaluations = 0;
       while (uninterrupted && numEvaluations++ < trialCount) {
         Run inner = new Run(outer.gridMarks);
-        inner.runDisproof(singlePass ? callback : null);
+        inner.runDisproof(trialCount == 1 ? callback : null);
         uninterrupted = inner.uninterrupted();
         totalSeconds += inner.seconds;
       }
       seconds += totalSeconds / numEvaluations;
     }
-    return result(seconds, uninterrupted, singlePass);
+    return new Result(CURRENT_VERSION, seconds, uninterrupted, singlePass, improper);
   }
 
   private enum RunStatus { INTERRUPTED, COMPLETE, ERROR, INCONCLUSIVE };
@@ -222,7 +227,7 @@ public class Evaluator {
 
     Assignment randomErroneousAssignment() {
       Location loc = randomUnsetLocation(true);
-      NumSet nums = gridMarks.marks.get(loc).without(gridMarks.grid.get(loc));
+      NumSet nums = gridMarks.marks.get(loc).without(solutionIntersection.get(loc));
       return randomAssignment(loc, nums);
     }
 
@@ -423,10 +428,6 @@ public class Evaluator {
       if (max.compareTo(MoveKind.SIMPLY_IMPLIED) <= 0) return true;
       return minimizeForSimplicityTest(gridMarks, i) != null;
     }
-  }
-
-  private static Result result(double seconds, boolean complete, boolean singlePass) {
-    return new Result(CURRENT_VERSION, seconds, complete, singlePass);
   }
 
   private static boolean isSimpleAntecedent(Insight insight) {
