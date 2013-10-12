@@ -6,6 +6,14 @@
       should improve fit to Poisson distribution.  (Though it will probably cut
       the amount of data down by a large amount -- and so may not be useful as
       the source for timing numbers.)
+    - Actually, let's try studying these often correlated moves:
+      - Change InsightMeasurer to emit the number of same-numeral direct flb's
+        available at each step, the number of open blocks for that numeral, and
+        whether the move is one of them
+      - Look at the distributions for:
+        - moves without any same-numeral direct flb's
+        - moves that are same-numeral direct flb's
+        - moves that have same-numeral direct flb's
 
 ** Getting games with history from a sqlite db into a tsv file:
 sqlite3 phone-2012-07-08.db <<END

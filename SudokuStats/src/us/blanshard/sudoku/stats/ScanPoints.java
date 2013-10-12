@@ -53,12 +53,13 @@ public class ScanPoints {
       List<Pattern> found = Pattern.listFromString(iter.next());
       long ms = Long.parseLong(iter.next());
       int openCount = Integer.parseInt(iter.next());
-      iter.next();  // numAssignments
-//      iter.next();  // numTargets
       int numTargets = Integer.parseInt(iter.next());
-      iter.next();  // numNonElimTargets
+      boolean isBlockNumeralMove = Boolean.parseBoolean(iter.next());
+      int numBlockNumeralMoves = Integer.parseInt(iter.next());
+      int numOpenBlockNumerals = Integer.parseInt(iter.next());
       List<List<Pattern>> missed = Pattern.combinationsFromString(iter.next());
-      reporter.take(found, missed, ms, openCount, numTargets);
+      reporter.take(found, missed, ms, openCount, numTargets, isBlockNumeralMove,
+          numBlockNumeralMoves, numOpenBlockNumerals);
     }
     in.close();
     reporter.reportSummaries(System.out);
@@ -193,7 +194,8 @@ public class ScanPoints {
   static final Predicate<Pattern> matchSimplyImpliedFlsAndEasyFns = simplyImplied(matchFlsAndEasyFns, 20);
 
   interface Consumer {
-    void take(List<Pattern> found, List<List<Pattern>> missed, long ms, int openCount, int numTargets);
+    void take(List<Pattern> found, List<List<Pattern>> missed, long ms, int openCount, int numTargets,
+              boolean isBlockNumeralMove, int numBlockNumeralMoves, int numOpenBlockNumerals);
   }
 
   static class Reporter implements Consumer {
@@ -271,14 +273,19 @@ public class ScanPoints {
     }
 
     @Override public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
-        int openCount, int numTargets) {
+        int openCount, int numTargets,
+        boolean isBlockNumeralMove, int numBlockNumeralMoves, int numOpenBlockNumerals) {
       for (Process p : processes)
-        p.take(found, missed, ms, openCount, numTargets);
+        p.take(found, missed, ms, openCount, numTargets, isBlockNumeralMove, numBlockNumeralMoves,
+            numOpenBlockNumerals);
     }
   }
 
   static class Process implements Consumer {
-    private final ProcessCounter counter = new ProcessCounter();
+    private final ProcessCounter counterNoBlockNumerals = new ProcessCounter();
+    private final ProcessCounter counterWithBlockNumerals = new ProcessCounter();
+    private final ProcessCounter counterIsBlockNumeral = new ProcessCounter();
+    private final ProcessCounter counterNotBlockNumeral = new ProcessCounter();
     private final String description;
     private final Predicate<List<Pattern>> foundMatches;
     private final Predicate<List<Pattern>> missedMatches;
@@ -295,7 +302,8 @@ public class ScanPoints {
     }
 
     @Override public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
-        int openCount, int numTargets) {
+        int openCount, int numTargets,
+        boolean isBlockNumeralMove, int numBlockNumeralMoves, int numOpenBlockNumerals) {
       if (found.isEmpty()) return;
 
       boolean foundLocationMatches = foundMatches.apply(found);
@@ -316,13 +324,29 @@ public class ScanPoints {
       ++movesIncluded;
       double seconds = ms / 1000.0;
       double pointsScanned = openCount * 4.0 / numTargets;
-      counter.count(seconds, pointsScanned);
+      if (numBlockNumeralMoves == 0)
+        counterNoBlockNumerals.count(seconds, pointsScanned);
+      else {
+        counterWithBlockNumerals.count(seconds, pointsScanned);
+        if (isBlockNumeralMove)
+          counterIsBlockNumeral.count(seconds, numOpenBlockNumerals / (double) numBlockNumeralMoves);
+        else
+          counterNotBlockNumeral.count(seconds, pointsScanned);
+      }
     }
 
     public void report(PrintStream out) {
       out.printf("%s: %,d moves included, %,d skipped\n", description, movesIncluded, movesSkipped);
-      counter.report(out);
+      printCounter(out, counterNoBlockNumerals, "1. No consecutive block numeral moves");
+      printCounter(out, counterWithBlockNumerals, "2. With consecutive block numeral moves");
+      printCounter(out, counterIsBlockNumeral, "3. When is a consecutive block numeral move");
+      printCounter(out, counterNotBlockNumeral, "4. When is not a consecutive block numeral move");
       out.println();
+    }
+
+    private void printCounter(PrintStream out, ProcessCounter counter, String headline) {
+      out.printf("%s (%d):%n", headline, counter.count);
+      counter.report(out);
     }
   }
 
@@ -330,8 +354,10 @@ public class ScanPoints {
     private final Multiset<Integer> pointsPerSecond = HashMultiset.create();
     private double pendingSeconds;
     private double pendingPoints;
+    int count;
 
     public void count(double seconds, double pointsScanned) {
+      ++count;
       double secondsPerPoint = seconds / pointsScanned;
       int pointsScannedFloor = (int) pointsScanned;
       for (int i = 0; i < pointsScannedFloor; ++i) {

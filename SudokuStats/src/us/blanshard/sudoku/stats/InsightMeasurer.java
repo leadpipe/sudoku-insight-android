@@ -20,10 +20,13 @@ import static us.blanshard.sudoku.game.GameJson.HISTORY_TYPE;
 
 import us.blanshard.sudoku.appengine.Schema;
 import us.blanshard.sudoku.core.Assignment;
+import us.blanshard.sudoku.core.Block;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.LocSet;
 import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Solver;
+import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
@@ -39,6 +42,7 @@ import us.blanshard.sudoku.insight.ForcedNum;
 import us.blanshard.sudoku.insight.GridMarks;
 import us.blanshard.sudoku.insight.Implication;
 import us.blanshard.sudoku.insight.Insight;
+import us.blanshard.sudoku.insight.Insight.Type;
 import us.blanshard.sudoku.insight.LockedSet;
 import us.blanshard.sudoku.insight.Overlap;
 import us.blanshard.sudoku.insight.UnitNumeral;
@@ -72,6 +76,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * Analyzes sudoku game histories to measure the time taken to make use of
@@ -138,13 +144,15 @@ public class InsightMeasurer implements Runnable {
 
   @Override public void run() {
     long prevTime = 0;
+    Numeral prevNumeral = null;
     for (Move move : history) {
-      applyMove(move, prevTime);
+      applyMove(move, prevTime, prevNumeral);
       prevTime = move.timestamp;
+      prevNumeral = move.getNumeral();
     }
   }
 
-  private void applyMove(Move move, long prevTime) {
+  private void applyMove(Move move, long prevTime, @Nullable Numeral prevNumeral) {
     noteMistakes(move);
     if (move instanceof Move.Set
         && !undoDetector.isUndoOrRedo(move)
@@ -153,7 +161,7 @@ public class InsightMeasurer implements Runnable {
       if (grid.containsKey(move.getLocation()))
         grid = grid.toBuilder().remove(move.getLocation()).build();
       GridMarks gridMarks = new GridMarks(grid);
-      Collector collector = new Collector(gridMarks, move.getAssignment());
+      Collector collector = new Collector(gridMarks, move.getAssignment(), prevNumeral);
       Analyzer.analyze(gridMarks, collector, true);
       long elapsed = move.timestamp - prevTime;
       try {
@@ -163,12 +171,15 @@ public class InsightMeasurer implements Runnable {
             .append('\t')
             .append(String.valueOf(Location.COUNT - grid.size()))
             .append('\t')
-            .append(String.valueOf(collector.locsWithAssignments.size()))
-            .append('\t')
             .append(String.valueOf(collector.getNumTargets()))
             .append('\t')
-            .append(String.valueOf(collector.getNumNonElimTargets()))
-            .append('\t');
+            .append(String.valueOf(collector.isBlockNumeralMove()))
+            .append('\t')
+            .append(String.valueOf(collector.getNumBlockNumeralMoves()))
+            .append('\t')
+            .append(String.valueOf(collector.getNumOpenBlockNumerals()))
+            .append('\t')
+            ;
         Pattern.appendAllTo(out, collector.missed.values());
         out.println();
       } catch (IOException e) {
@@ -189,20 +200,21 @@ public class InsightMeasurer implements Runnable {
     return mistakes.containsEntry(move.trailId, move.getLocation());
   }
 
-  class Collector implements Analyzer.Callback {
+  private class Collector implements Analyzer.Callback {
     final GridMarks gridMarks;
     final Assignment assignment;
+    final Numeral prevNumeral;
     final List<Pattern> found = Lists.newArrayList();
     final Map<Object, List<Pattern>> missed = Maps.newHashMap();
-    final LocSet locsWithAssignments = new LocSet();
     final LocSet locTargets = new LocSet();
-    final LocSet nonElimLocTargets = new LocSet();
     final Set<UnitNumeral> unitNumTargets = Sets.newHashSet();
-    final Set<UnitNumeral> nonElimUnitNumTargets = Sets.newHashSet();
+    int numBlockNumeralMoves;
+    boolean isBlockNumeralMove;
 
-    Collector(GridMarks gridMarks, Assignment assignment) {
+    Collector(GridMarks gridMarks, Assignment assignment, @Nullable Numeral prevNumeral) {
       this.gridMarks = gridMarks;
       this.assignment = assignment;
+      this.prevNumeral = prevNumeral;
     }
 
     @Override public void take(Insight insight) throws StopException {
@@ -220,10 +232,14 @@ public class InsightMeasurer implements Runnable {
           if (list == null) missed.put(a, list = Lists.newArrayList());
           list.add(pattern);
         }
-        minimized.addScanTargets(nonElimLocTargets, nonElimUnitNumTargets);
       }
-      if (a != null && a.location != assignment.location)
-        locsWithAssignments.add(a.location);
+      if (a != null && prevNumeral != null && insight.type == Type.FORCED_LOCATION) {
+        ForcedLoc fl = (ForcedLoc) insight;
+        if (fl.getUnit().getType() == Unit.Type.BLOCK && fl.getNumeral() == prevNumeral) {
+          ++numBlockNumeralMoves;
+          if (assignment.equals(a)) isBlockNumeralMove = true;
+        }
+      }
       insight.addScanTargets(locTargets, unitNumTargets);
     }
 
@@ -231,8 +247,23 @@ public class InsightMeasurer implements Runnable {
       return locTargets.size() + unitNumTargets.size();
     }
 
-    int getNumNonElimTargets() {
-      return nonElimLocTargets.size() + nonElimUnitNumTargets.size();
+    int getNumBlockNumeralMoves() {
+      return numBlockNumeralMoves;
+    }
+
+    boolean isBlockNumeralMove() {
+      return isBlockNumeralMove;
+    }
+
+    int getNumOpenBlockNumerals() {
+      if (prevNumeral == null) return 0;
+      int count = 0;
+      for (Block block : Block.ALL) {
+        UnitSubset locs = gridMarks.marks.get(block, prevNumeral);
+        if (locs.size() > 1 || locs.size() == 1 && !gridMarks.grid.containsKey(locs.get(0)))
+          ++count;
+      }
+      return count;
     }
 
     private Pattern getPattern(Insight insight) {
