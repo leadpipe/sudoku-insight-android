@@ -32,6 +32,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -181,13 +182,27 @@ public class Evaluator {
 
     void runDisproof(@Nullable Callback callback) {
       do {
-        Assignment impossible = randomErroneousAssignment();
-        GridMarks start = gridMarks;
-        gridMarks = start.toBuilder().assign(impossible).build();
-        runErrorSearch(callback);
-        gridMarks = start.toBuilder().eliminate(impossible).build();
+        eliminateOne(callback);
         runStraightShot(callback);
       } while (status == RunStatus.INCONCLUSIVE);
+    }
+
+    void eliminateOne(@Nullable Callback callback) {
+      GridMarks start = gridMarks;
+      for (Assignment a : shuffledRemainingAssignments()) {
+        if (status == RunStatus.INTERRUPTED) return;
+        gridMarks = start.toBuilder().assign(a).build();
+        runStraightShot(callback);
+        if (status == RunStatus.ERROR) {
+          gridMarks = start.toBuilder().eliminate(a).build();
+          return;
+        }
+      }
+      // This should never happen.  But if it does, do a recursive error search.
+      Assignment impossible = randomErroneousAssignment();
+      gridMarks = start.toBuilder().assign(impossible).build();
+      runErrorSearch(callback);
+      gridMarks = start.toBuilder().eliminate(impossible).build();
     }
 
     void runErrorSearch(@Nullable Callback callback) {
@@ -248,6 +263,17 @@ public class Evaluator {
           currentLoc = loc;
       }
       return currentLoc;
+    }
+
+    List<Assignment> shuffledRemainingAssignments() {
+      List<Assignment> list = Lists.newArrayList();
+      for (Location loc : Location.ALL) {
+        if (gridMarks.grid.containsKey(loc)) continue;
+        for (Numeral num : gridMarks.marks.get(loc))
+          list.add(Assignment.of(loc, num));
+      }
+      Collections.shuffle(list, random);
+      return list;
     }
   }
 
