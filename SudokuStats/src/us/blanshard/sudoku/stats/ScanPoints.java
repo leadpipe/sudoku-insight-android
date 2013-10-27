@@ -15,8 +15,6 @@ limitations under the License.
 */
 package us.blanshard.sudoku.stats;
 
-import static com.google.common.base.Predicates.and;
-
 import us.blanshard.sudoku.stats.Pattern.ForcedNum;
 import us.blanshard.sudoku.stats.Pattern.UnitCategory;
 
@@ -27,7 +25,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.TreeMultiset;
+import com.google.common.collect.Ordering;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
@@ -47,7 +45,6 @@ public class ScanPoints {
   public static void main(String[] args) throws IOException {
     BufferedReader in = new BufferedReader(new FileReader("measurer.txt"));
     Splitter splitter = Splitter.on('\t');
-    Reporter reporter = new Reporter();
     for (String line; (line = in.readLine()) != null; ) {
       Iterator<String> iter = splitter.split(line).iterator();
       List<Pattern> found = Pattern.listFromString(iter.next());
@@ -57,12 +54,14 @@ public class ScanPoints {
       boolean isBlockNumeralMove = Boolean.parseBoolean(iter.next());
       int numBlockNumeralMoves = Integer.parseInt(iter.next());
       int numOpenBlockNumerals = Integer.parseInt(iter.next());
+      boolean isTrailhead = Boolean.parseBoolean(iter.next());
+      int numTrails = Integer.parseInt(iter.next());
       List<List<Pattern>> missed = Pattern.combinationsFromString(iter.next());
-      reporter.take(found, missed, ms, openCount, numTargets, isBlockNumeralMove,
-          numBlockNumeralMoves, numOpenBlockNumerals);
+      getReporter(numTrails).take(found, missed, ms, openCount, numTargets,
+          isBlockNumeralMove, numBlockNumeralMoves, numOpenBlockNumerals, isTrailhead);
     }
     in.close();
-    reporter.reportSummaries(System.out);
+    reportSummaries(System.out);
   }
 
   static boolean hasSimpleAntecedents(Pattern.Implication p, int maxDepth) {
@@ -72,8 +71,6 @@ public class ScanPoints {
       for (Pattern a : p.getAntecedents()) {
         switch (a.getType()) {
           case OVERLAP:
-//            if (((Pattern.Overlap) a).getCategory() == Pattern.UnitCategory.LINE)
-//              return false;
             break;
           case LOCKED_SET: {
             Pattern.LockedSet l = (Pattern.LockedSet) a;
@@ -193,63 +190,59 @@ public class ScanPoints {
   static final Predicate<Pattern> matchAllImpliedFlsAndEasyFns = implied(matchFlsAndEasyFns);
   static final Predicate<Pattern> matchSimplyImpliedFlsAndEasyFns = simplyImplied(matchFlsAndEasyFns, 20);
 
-  interface Consumer {
-    void take(List<Pattern> found, List<List<Pattern>> missed, long ms, int openCount, int numTargets,
-              boolean isBlockNumeralMove, int numBlockNumeralMoves, int numOpenBlockNumerals);
-  }
-
-  static class Reporter implements Consumer {
+  static class Reporter {
     private final List<Process> processes;
+    private final ProcessCounter trailheadCounter = new ProcessCounter();
 
     public Reporter() {
       processes = ImmutableList.<Process>builder()
-          .add(make("Forced locations, no errors", matchFlsOnly))
-          .add(make("Forced locations or errors", any(matchFlsOnly), matchAnything))
-          .add(make("Forced locations everywhere", any(matchFlsOnly), any(matchFlsOnly)))
+//          .add(make("Forced locations, no errors", matchFlsOnly))
+//          .add(make("Forced locations or errors", any(matchFlsOnly), matchAnything))
+//          .add(make("Forced locations everywhere", any(matchFlsOnly), any(matchFlsOnly)))
 //          .add(make("Forced locations mostly", any(matchFlsOnly), any(matchFlsOnly), 0.8))
-          .add(make("Forced locations/block", matchFlbsOnly))
-          .add(make("Forced locations/block everywhere", any(matchFlbsOnly), any(matchFlbsOnly)))
+//          .add(make("Forced locations/block", matchFlbsOnly))
+//          .add(make("Forced locations/block everywhere", any(matchFlbsOnly), any(matchFlbsOnly)))
 //          .add(make("Forced locations/block mostly", any(matchFlbsOnly), any(matchFlbsOnly), 0.8))
-          .add(make("Forced locations/line", matchFllsOnly))
-          .add(make("Forced locations/line everywhere", any(matchFllsOnly), any(matchFllsOnly)))
+//          .add(make("Forced locations/line", matchFllsOnly))
+//          .add(make("Forced locations/line everywhere", any(matchFllsOnly), any(matchFllsOnly)))
 //          .add(make("Forced locations/line mostly", any(matchFllsOnly), any(matchFllsOnly), 0.8))
-          .add(make("Forced locations/block w/no lines or errors", and(any(matchFlbsOnly), none(matchFllsOnly)), any(matchAnyMove)))
-          .add(make("Forced locations/block w/no lines", and(any(matchFlbsOnly), none(matchFllsOnly)), matchAnything))
-          .add(make("Forced locations/block w/no indirect lines or errors", and(any(matchFlbsOnly), none(implied(matchFllsOnly))), any(matchAnyMove)))
-          .add(make("Forced locations/block w/no indirect lines", and(any(matchFlbsOnly), none(implied(matchFllsOnly))), matchAnything))
-          .add(make("Forced locations/line w/no blocks or errors", and(any(matchFllsOnly), none(matchFlbsOnly)), any(matchAnyMove)))
-          .add(make("Forced locations/line w/no blocks", and(any(matchFllsOnly), none(matchFlbsOnly)), matchAnything))
-          .add(make("Forced locations/line w/no indirect blocks or errors", and(any(matchFllsOnly), none(implied(matchFlbsOnly))), any(matchAnyMove)))
-          .add(make("Forced locations/line w/no indirect blocks", and(any(matchFllsOnly), none(implied(matchFlbsOnly))), matchAnything))
-          .add(make("Forced locations/block w/no lines anywhere", and(any(matchFlbsOnly), none(matchFllsOnly)), none(matchFllsOnly)))
+//          .add(make("Forced locations/block w/no lines or errors", and(any(matchFlbsOnly), none(matchFllsOnly)), any(matchAnyMove)))
+//          .add(make("Forced locations/block w/no lines", and(any(matchFlbsOnly), none(matchFllsOnly)), matchAnything))
+//          .add(make("Forced locations/block w/no indirect lines or errors", and(any(matchFlbsOnly), none(implied(matchFllsOnly))), any(matchAnyMove)))
+//          .add(make("Forced locations/block w/no indirect lines", and(any(matchFlbsOnly), none(implied(matchFllsOnly))), matchAnything))
+//          .add(make("Forced locations/line w/no blocks or errors", and(any(matchFllsOnly), none(matchFlbsOnly)), any(matchAnyMove)))
+//          .add(make("Forced locations/line w/no blocks", and(any(matchFllsOnly), none(matchFlbsOnly)), matchAnything))
+//          .add(make("Forced locations/line w/no indirect blocks or errors", and(any(matchFllsOnly), none(implied(matchFlbsOnly))), any(matchAnyMove)))
+//          .add(make("Forced locations/line w/no indirect blocks", and(any(matchFllsOnly), none(implied(matchFlbsOnly))), matchAnything))
+//          .add(make("Forced locations/block w/no lines anywhere", and(any(matchFlbsOnly), none(matchFllsOnly)), none(matchFllsOnly)))
 //          .add(make("Forced locations/line w/no blocks anywhere", and(any(matchFllsOnly), none(matchFlbsOnly)), none(matchFlbsOnly)))
 //          .add(make("Implied forced locations", matchAllImpliedFls))
-          .add(make("Implied forced locations/block w/no direct lines", and(any(implied(matchFlbsOnly)), none(matchFllsOnly)), any(matchAnyMove)))
-          .add(make("Implied forced locations/block w/no indirect lines", and(any(implied(matchFlbsOnly)), none(implied(matchFllsOnly))), any(matchAnyMove)))
-          .add(make("Simply-implied forced locations", matchSimplyImpliedFls))
-          .add(make("Simply-implied forced locations everywhere", any(matchSimplyImpliedFls), any(matchSimplyImpliedFls)))
+//          .add(make("Implied forced locations/block w/no direct lines", and(any(implied(matchFlbsOnly)), none(matchFllsOnly)), any(matchAnyMove)))
+//          .add(make("Implied forced locations/block w/no indirect lines", and(any(implied(matchFlbsOnly)), none(implied(matchFllsOnly))), any(matchAnyMove)))
+//          .add(make("Simply-implied forced locations", matchSimplyImpliedFls))
+//          .add(make("Simply-implied forced locations everywhere", any(matchSimplyImpliedFls), any(matchSimplyImpliedFls)))
 //          .add(make("Simply-implied forced locations/block w/no direct lines", and(any(simplyImplied(matchFlbsOnly, 2)), none(matchFllsOnly)), matchAnything))
 //          .add(make("Simply-implied forced locations/block w/no indirect lines", and(any(simplyImplied(matchFlbsOnly, 2)), none(implied(matchFllsOnly))), matchAnything))
 //          .add(make("Direct assignments", matchFlsAndFns))
-          .add(make("Direct assignments everywhere, no errors (DIRECT)", any(matchDirectMoves), any(matchDirectMoves)))
-          .add(make("Direct assignments everywhere", any(matchDirectMoves), matchAnything))
+//          .add(make("Direct assignments everywhere", any(matchDirectMoves), matchAnything))
 //          .add(make("Direct assignments mostly", any(matchFlsAndFns), any(matchFlsAndFns), 0.8))
-          .add(make("Implied assignments, no errors", matchAnyMove))
-          .add(make("Implied assignments (IMPLIED)", any(matchAnyMove), matchAnything))
+//          .add(make("Implied assignments, no errors", matchAnyMove))
 //          .add(make("Simply-implied assignments", matchSimplyImpliedFlsAndFns2))
-          .add(make("Simply-implied assignments everywhere (2)", any(matchSimplyImpliedMoves2), any(matchSimplyImpliedMoves2)))
-          .add(make("Simply-implied assignments everywhere (3)", any(matchSimplyImpliedMoves3), any(matchSimplyImpliedMoves3)))
-          .add(make("Simply-implied assignments everywhere (4)", any(matchSimplyImpliedMoves4), any(matchSimplyImpliedMoves4)))
-          .add(make("Simply-implied assignments everywhere (5) (SIMPLY_IMPLIED)", any(matchSimplyImpliedMoves5), any(matchSimplyImpliedMoves5)))
+//          .add(make("Simply-implied assignments everywhere (2)", any(matchSimplyImpliedMoves2), any(matchSimplyImpliedMoves2)))
+//          .add(make("Simply-implied assignments everywhere (3)", any(matchSimplyImpliedMoves3), any(matchSimplyImpliedMoves3)))
+//          .add(make("Simply-implied assignments everywhere (4)", any(matchSimplyImpliedMoves4), any(matchSimplyImpliedMoves4)))
 //          .add(make("Simply-implied assignments mostly", any(matchSimplyImpliedFlsAndFns2), any(matchSimplyImpliedFlsAndFns2), 0.8))
 //          .add(make("Forced locations and easy forced numerals", matchFlsAndEasyFns))
-          .add(make("Forced locations and easy forced numerals everywhere (EASY_DIRECT)", any(matchFlsAndEasyFns), any(matchFlsAndEasyFns)))
 //          .add(make("Forced locations and easy forced numerals mostly", any(matchFlsAndEasyFns), any(matchFlsAndEasyFns), 0.8))
 //          .add(make("Implied forced locations and easy forced numerals", matchAllImpliedFlsAndEasyFns))
-          .add(make("Implied forced locations and easy forced numerals everywhere (IMPLIED_EASY)", any(matchAllImpliedFlsAndEasyFns), any(matchAllImpliedFlsAndEasyFns)))
 //          .add(make("Simply-implied forced locations and easy forced numerals", matchSimplyImpliedFlsAndEasyFns))
-          .add(make("Simply-implied forced locations and easy forced numerals everywhere (SIMPLY_IMPLIED_EASY)", any(matchSimplyImpliedFlsAndEasyFns), any(matchSimplyImpliedFlsAndEasyFns)))
 //          .add(make("Simply-implied forced locations and easy forced numerals mostly", any(matchSimplyImpliedFlsAndEasyFns), any(matchSimplyImpliedFlsAndEasyFns), 0.8))
+          .add(make("Forced locations and easy forced numerals everywhere (EASY_DIRECT)", any(matchFlsAndEasyFns), any(matchFlsAndEasyFns)))
+          .add(make("Direct assignments everywhere, no errors (DIRECT)", any(matchDirectMoves), any(matchDirectMoves)))
+          .add(make("Simply-implied forced locations and easy forced numerals everywhere (SIMPLY_IMPLIED_EASY)", any(matchSimplyImpliedFlsAndEasyFns), any(matchSimplyImpliedFlsAndEasyFns)))
+          .add(make("Simply-implied assignments everywhere (5) (SIMPLY_IMPLIED)", any(matchSimplyImpliedMoves5), any(matchSimplyImpliedMoves5)))
+          .add(make("Implied forced locations and easy forced numerals everywhere (IMPLIED_EASY)", any(matchAllImpliedFlsAndEasyFns), any(matchAllImpliedFlsAndEasyFns)))
+          .add(make("Implied assignments (IMPLIED)", any(matchAnyMove), matchAnything))
           .build();
     }
 
@@ -270,22 +263,28 @@ public class ScanPoints {
     public void reportSummaries(PrintStream out) {
       for (Process p : processes)
         p.report(out);
+      out.println();
+      out.printf("Trailheads (%d):%n", trailheadCounter.count);
+      trailheadCounter.report(out);
     }
 
-    @Override public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
+    public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
         int openCount, int numTargets,
-        boolean isBlockNumeralMove, int numBlockNumeralMoves, int numOpenBlockNumerals) {
+        boolean isBlockNumeralMove, int numBlockNumeralMoves, int numOpenBlockNumerals,
+        boolean isTrailhead) {
       for (Process p : processes)
         p.take(found, missed, ms, openCount, numTargets, isBlockNumeralMove, numBlockNumeralMoves,
             numOpenBlockNumerals);
+      if (isTrailhead && found.isEmpty()) {
+        trailheadCounter.count(ms / 1000.0, 1);
+//        trailheadCounter.count(ms / 1000.0, 4.0 * openCount / (numTargets > 0 ? numTargets : 1));
+      }
     }
   }
 
-  static class Process implements Consumer {
+  static class Process {
     private final ProcessCounter counterNoBlockNumerals = new ProcessCounter();
-    private final ProcessCounter counterWithBlockNumerals = new ProcessCounter();
     private final ProcessCounter counterIsBlockNumeral = new ProcessCounter();
-    private final ProcessCounter counterNotBlockNumeral = new ProcessCounter();
     private final String description;
     private final Predicate<List<Pattern>> foundMatches;
     private final Predicate<List<Pattern>> missedMatches;
@@ -301,7 +300,7 @@ public class ScanPoints {
       this.missedMatchesMinRatio = missedMatchesMinRatio;
     }
 
-    @Override public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
+    public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
         int openCount, int numTargets,
         boolean isBlockNumeralMove, int numBlockNumeralMoves, int numOpenBlockNumerals) {
       if (found.isEmpty()) return;
@@ -326,21 +325,14 @@ public class ScanPoints {
       double pointsScanned = openCount * 4.0 / numTargets;
       if (numBlockNumeralMoves == 0)
         counterNoBlockNumerals.count(seconds, pointsScanned);
-      else {
-        counterWithBlockNumerals.count(seconds, pointsScanned);
-        if (isBlockNumeralMove)
-          counterIsBlockNumeral.count(seconds, numOpenBlockNumerals / (double) numBlockNumeralMoves);
-        else
-          counterNotBlockNumeral.count(seconds, pointsScanned);
-      }
+      else if (isBlockNumeralMove)
+        counterIsBlockNumeral.count(seconds, numOpenBlockNumerals / (double) numBlockNumeralMoves);
     }
 
     public void report(PrintStream out) {
       out.printf("%s: %,d moves included, %,d skipped\n", description, movesIncluded, movesSkipped);
       printCounter(out, counterNoBlockNumerals, "1. No consecutive block numeral moves");
-      printCounter(out, counterWithBlockNumerals, "2. With consecutive block numeral moves");
-      printCounter(out, counterIsBlockNumeral, "3. When is a consecutive block numeral move");
-      printCounter(out, counterNotBlockNumeral, "4. When is not a consecutive block numeral move");
+      printCounter(out, counterIsBlockNumeral, "2. When is a consecutive block numeral move");
       out.println();
     }
 
@@ -388,9 +380,29 @@ public class ScanPoints {
       out.printf("Seconds/scan-point: %.2f\n", 1.0 / stats.getMean());
       PoissonDistribution dist = new PoissonDistribution(stats.getMean());
       out.println("Histogram, actual vs predicted:");
-      for (Multiset.Entry<Integer> e : TreeMultiset.create(pointsPerSecond).entrySet())
-        out.printf("  %2d:%6d  |%9.2f\n", e.getElement(), e.getCount(),
-            dist.probability(e.getElement()) * stats.getN());
+      int max = pointsPerSecond.isEmpty() ? 0 : Ordering.natural().max(pointsPerSecond.elementSet());
+      for (int bucket = 0; bucket <= max || dist.probability(bucket) > 1e-10; ++bucket)
+        out.printf("  %2d:%6d  |%9.2f\n", bucket, pointsPerSecond.count(bucket),
+            dist.probability(bucket) * stats.getN());
     }
+  }
+
+  // ============================
+
+  private static Reporter baseReporter = new Reporter();
+  private static Reporter trailsReporter = new Reporter();
+
+  private static Reporter getReporter(int numTrails) {
+    return numTrails == 0 ? baseReporter : trailsReporter;
+  }
+
+  private static void reportSummaries(PrintStream out) {
+    reportSummaries(out, baseReporter, "No trails");
+    reportSummaries(out, trailsReporter, "With trails");
+  }
+
+  private static void reportSummaries(PrintStream out, Reporter reporter, String desc) {
+    out.printf("%n======================%n%s%n======================%n%n", desc);
+    reporter.reportSummaries(out);
   }
 }

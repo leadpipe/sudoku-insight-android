@@ -1,0 +1,493 @@
+
+======================
+No trails
+======================
+
+Forced locations and easy forced numerals everywhere (EASY_DIRECT): 5,079 moves included, 29,247 skipped
+1. No consecutive block numeral moves (1969):
+Scan-points/second: 0.48; var: 0.56 (116.22%)
+Seconds/scan-point: 2.09
+Histogram, actual vs predicted:
+   0:  6511  |  6539.56
+   1:  3355  |  3130.68
+   2:   506  |   749.38
+   3:   115  |   119.58
+   4:    39  |    14.31
+   5:    13  |     1.37
+   6:     6  |     0.11
+   7:     2  |     0.01
+   8:     2  |     0.00
+   9:     6  |     0.00
+  10:     0  |     0.00
+2. When is a consecutive block numeral move (2957):
+Scan-points/second: 1.30; var: 1.09 (84.12%)
+Seconds/scan-point: 0.77
+Histogram, actual vs predicted:
+   0:   673  |   923.56
+   1:  1524  |  1197.13
+   2:   871  |   775.86
+   3:   201  |   335.23
+   4:    58  |   108.63
+   5:    35  |    28.16
+   6:     5  |     6.08
+   7:     4  |     1.13
+   8:     4  |     0.18
+   9:     0  |     0.03
+  10:     1  |     0.00
+  11:     0  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+  14:     0  |     0.00
+
+Direct assignments everywhere, no errors (DIRECT): 6,785 moves included, 27,541 skipped
+1. No consecutive block numeral moves (2606):
+Scan-points/second: 0.42; var: 0.49 (117.81%)
+Seconds/scan-point: 2.41
+Histogram, actual vs predicted:
+   0: 12044  | 11974.29
+   1:  5104  |  4974.27
+   2:   724  |  1033.19
+   3:   176  |   143.07
+   4:    51  |    14.86
+   5:    26  |     1.23
+   6:     5  |     0.09
+   7:     2  |     0.01
+   8:     4  |     0.00
+   9:     4  |     0.00
+  10:     1  |     0.00
+2. When is a consecutive block numeral move (3941):
+Scan-points/second: 1.27; var: 1.19 (94.27%)
+Seconds/scan-point: 0.79
+Histogram, actual vs predicted:
+   0:  1154  |  1395.17
+   1:  2134  |  1766.24
+   2:  1156  |  1118.00
+   3:   319  |   471.78
+   4:   114  |   149.32
+   5:    40  |    37.81
+   6:    19  |     7.98
+   7:     7  |     1.44
+   8:     3  |     0.23
+   9:     2  |     0.03
+  10:     0  |     0.00
+  11:     0  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+
+Simply-implied forced locations and easy forced numerals everywhere (SIMPLY_IMPLIED_EASY): 5,772 moves included, 28,554 skipped
+1. No consecutive block numeral moves (2360):
+Scan-points/second: 0.33; var: 0.41 (124.49%)
+Seconds/scan-point: 3.07
+Histogram, actual vs predicted:
+   0: 14126  | 13903.27
+   1:  4339  |  4526.83
+   2:   577  |   736.96
+   3:   142  |    79.98
+   4:    40  |     6.51
+   5:    14  |     0.42
+   6:     6  |     0.02
+   7:     2  |     0.00
+   8:     3  |     0.00
+   9:     4  |     0.00
+  10:     1  |     0.00
+2. When is a consecutive block numeral move (3241):
+Scan-points/second: 1.34; var: 1.22 (90.67%)
+Seconds/scan-point: 0.75
+Histogram, actual vs predicted:
+   0:   768  |   996.07
+   1:  1639  |  1335.25
+   2:   995  |   894.96
+   3:   256  |   399.90
+   4:    83  |   134.02
+   5:    37  |    35.93
+   6:    15  |     8.03
+   7:     8  |     1.54
+   8:     4  |     0.26
+   9:     0  |     0.04
+  10:     1  |     0.01
+  11:     0  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+  14:     0  |     0.00
+
+Simply-implied assignments everywhere (5) (SIMPLY_IMPLIED): 8,418 moves included, 25,908 skipped
+1. No consecutive block numeral moves (3472):
+Scan-points/second: 0.31; var: 0.37 (119.37%)
+Seconds/scan-point: 3.23
+Histogram, actual vs predicted:
+   0: 24201  | 23946.68
+   1:  7277  |  7423.84
+   2:   867  |  1150.75
+   3:   201  |   118.92
+   4:    58  |     9.22
+   5:    22  |     0.57
+   6:    15  |     0.03
+   7:     2  |     0.00
+   8:     1  |     0.00
+   9:     6  |     0.00
+2. When is a consecutive block numeral move (4654):
+Scan-points/second: 1.33; var: 1.32 (99.30%)
+Seconds/scan-point: 0.75
+Histogram, actual vs predicted:
+   0:  1354  |  1622.46
+   1:  2605  |  2154.80
+   2:  1444  |  1430.91
+   3:   444  |   633.47
+   4:   153  |   210.33
+   5:    72  |    55.87
+   6:    35  |    12.37
+   7:     7  |     2.35
+   8:     6  |     0.39
+   9:     2  |     0.06
+  10:     1  |     0.01
+  11:     0  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+  14:     0  |     0.00
+
+Implied forced locations and easy forced numerals everywhere (IMPLIED_EASY): 14,186 moves included, 20,140 skipped
+1. No consecutive block numeral moves (7017):
+Scan-points/second: 0.17; var: 0.19 (113.76%)
+Seconds/scan-point: 6.05
+Histogram, actual vs predicted:
+   0: 83301  | 82881.21
+   1: 13238  | 13710.56
+   2:   987  |  1134.03
+   3:   173  |    62.53
+   4:    55  |     2.59
+   5:    19  |     0.09
+   6:     7  |     0.00
+   7:     4  |     0.00
+   8:     2  |     0.00
+   9:     5  |     0.00
+2. When is a consecutive block numeral move (6600):
+Scan-points/second: 1.34; var: 1.70 (127.43%)
+Seconds/scan-point: 0.75
+Histogram, actual vs predicted:
+   0:  2916  |  2895.73
+   1:  4339  |  3874.01
+   2:  2244  |  2591.39
+   3:   823  |  1155.62
+   4:   370  |   386.51
+   5:   179  |   103.42
+   6:    97  |    23.06
+   7:    44  |     4.41
+   8:    12  |     0.74
+   9:     6  |     0.11
+  10:     3  |     0.01
+  11:     2  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+  14:     0  |     0.00
+
+Implied assignments (IMPLIED): 34,326 moves included, 0 skipped
+1. No consecutive block numeral moves (17569):
+Scan-points/second: 0.15; var: 0.16 (105.88%)
+Seconds/scan-point: 6.57
+Histogram, actual vs predicted:
+   0:211995  |211778.99
+   1: 32284  | 32229.33
+   2:  1919  |  2452.39
+   3:   267  |   124.40
+   4:    61  |     4.73
+   5:    42  |     0.14
+   6:    14  |     0.00
+   7:     2  |     0.00
+   8:     2  |     0.00
+   9:     4  |     0.00
+2. When is a consecutive block numeral move (15103):
+Scan-points/second: 1.33; var: 1.74 (130.96%)
+Seconds/scan-point: 0.75
+Histogram, actual vs predicted:
+   0:  7902  |  7664.00
+   1: 11448  | 10155.23
+   2:  5264  |  6728.12
+   3:  2245  |  2971.71
+   4:  1039  |   984.42
+   5:   529  |   260.88
+   6:   239  |    57.61
+   7:   106  |    10.91
+   8:    48  |     1.81
+   9:    14  |     0.27
+  10:     1  |     0.04
+  11:     0  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+  14:     0  |     0.00
+
+
+Trailheads (195):
+Scan-points/second: 0.01; var: 0.01 (99.28%)
+Seconds/scan-point: 137.44
+Histogram, actual vs predicted:
+   0: 26470  | 26470.70
+   1:   194  |   192.59
+   2:     0  |     0.70
+   3:     0  |     0.00
+   4:     0  |     0.00
+
+======================
+With trails
+======================
+
+Forced locations and easy forced numerals everywhere (EASY_DIRECT): 7,878 moves included, 27,674 skipped
+1. No consecutive block numeral moves (2757):
+Scan-points/second: 0.66; var: 0.80 (122.12%)
+Seconds/scan-point: 1.52
+Histogram, actual vs predicted:
+   0:  5052  |  5091.57
+   1:  3674  |  3350.54
+   2:   776  |  1102.42
+   3:   207  |   241.82
+   4:    59  |    39.78
+   5:    37  |     5.24
+   6:    12  |     0.57
+   7:     6  |     0.05
+   8:     2  |     0.00
+   9:     5  |     0.00
+  10:     1  |     0.00
+  11:     0  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+  14:     0  |     0.00
+  15:     0  |     0.00
+  16:     0  |     0.00
+  17:     1  |     0.00
+2. When is a consecutive block numeral move (4889):
+Scan-points/second: 1.27; var: 1.10 (86.82%)
+Seconds/scan-point: 0.79
+Histogram, actual vs predicted:
+   0:  1218  |  1599.93
+   1:  2516  |  2030.75
+   2:  1466  |  1288.80
+   3:   325  |   545.28
+   4:   103  |   173.03
+   5:    29  |    43.92
+   6:    23  |     9.29
+   7:     6  |     1.68
+   8:     3  |     0.27
+   9:     2  |     0.04
+  10:     0  |     0.00
+  11:     1  |     0.00
+  12:     0  |     0.00
+  13:     1  |     0.00
+
+Direct assignments everywhere, no errors (DIRECT): 10,286 moves included, 25,266 skipped
+1. No consecutive block numeral moves (3466):
+Scan-points/second: 0.63; var: 0.79 (126.57%)
+Seconds/scan-point: 1.59
+Histogram, actual vs predicted:
+   0:  7325  |  7326.54
+   1:  4964  |  4595.25
+   2:  1006  |  1441.08
+   3:   261  |   301.28
+   4:    82  |    47.24
+   5:    33  |     5.93
+   6:    21  |     0.62
+   7:    10  |     0.06
+   8:     2  |     0.00
+   9:     9  |     0.00
+  10:     0  |     0.00
+  11:     4  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+  14:     0  |     0.00
+  15:     1  |     0.00
+2. When is a consecutive block numeral move (6456):
+Scan-points/second: 1.26; var: 1.16 (92.09%)
+Seconds/scan-point: 0.80
+Histogram, actual vs predicted:
+   0:  1873  |  2280.98
+   1:  3434  |  2865.96
+   2:  1917  |  1800.48
+   3:   533  |   754.08
+   4:   165  |   236.87
+   5:    48  |    59.52
+   6:    20  |    12.46
+   7:    13  |     2.24
+   8:     5  |     0.35
+   9:     2  |     0.05
+  10:     1  |     0.01
+  11:     2  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+
+Simply-implied forced locations and easy forced numerals everywhere (SIMPLY_IMPLIED_EASY): 8,784 moves included, 26,768 skipped
+1. No consecutive block numeral moves (3220):
+Scan-points/second: 0.60; var: 0.75 (124.86%)
+Seconds/scan-point: 1.67
+Histogram, actual vs predicted:
+   0:  6971  |  6969.80
+   1:  4491  |  4178.15
+   2:   873  |  1252.32
+   3:   216  |   250.24
+   4:    65  |    37.50
+   5:    45  |     4.50
+   6:    16  |     0.45
+   7:     8  |     0.04
+   8:     1  |     0.00
+   9:     2  |     0.00
+  10:     1  |     0.00
+  11:     2  |     0.00
+  12:     1  |     0.00
+  13:     0  |     0.00
+  14:     0  |     0.00
+  15:     0  |     0.00
+  16:     0  |     0.00
+  17:     1  |     0.00
+2. When is a consecutive block numeral move (5291):
+Scan-points/second: 1.29; var: 1.18 (91.27%)
+Seconds/scan-point: 0.78
+Histogram, actual vs predicted:
+   0:  1406  |  1749.56
+   1:  2704  |  2255.62
+   2:  1616  |  1454.02
+   3:   408  |   624.86
+   4:   132  |   201.40
+   5:    47  |    51.93
+   6:    17  |    11.16
+   7:    13  |     2.06
+   8:     2  |     0.33
+   9:     4  |     0.05
+  10:     2  |     0.01
+  11:     0  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+  14:     0  |     0.00
+
+Simply-implied assignments everywhere (5) (SIMPLY_IMPLIED): 12,249 moves included, 23,303 skipped
+1. No consecutive block numeral moves (4378):
+Scan-points/second: 0.55; var: 0.70 (128.54%)
+Seconds/scan-point: 1.83
+Histogram, actual vs predicted:
+   0: 11578  | 11441.83
+   1:  6468  |  6251.05
+   2:  1221  |  1707.58
+   3:   306  |   310.97
+   4:    95  |    42.47
+   5:    39  |     4.64
+   6:    19  |     0.42
+   7:    16  |     0.03
+   8:     7  |     0.00
+   9:     2  |     0.00
+  10:     4  |     0.00
+  11:     2  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+  14:     1  |     0.00
+  15:     0  |     0.00
+  16:     1  |     0.00
+2. When is a consecutive block numeral move (7406):
+Scan-points/second: 1.30; var: 1.28 (98.84%)
+Seconds/scan-point: 0.77
+Histogram, actual vs predicted:
+   0:  2191  |  2582.63
+   1:  3981  |  3352.39
+   2:  2240  |  2175.79
+   3:   648  |   941.43
+   4:   228  |   305.51
+   5:   107  |    79.31
+   6:    35  |    17.16
+   7:    19  |     3.18
+   8:     6  |     0.52
+   9:     1  |     0.07
+  10:     0  |     0.01
+  11:     1  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+  14:     1  |     0.00
+
+Implied forced locations and easy forced numerals everywhere (IMPLIED_EASY): 15,846 moves included, 19,706 skipped
+1. No consecutive block numeral moves (6527):
+Scan-points/second: 0.34; var: 0.43 (124.79%)
+Seconds/scan-point: 2.93
+Histogram, actual vs predicted:
+   0: 29934  | 29439.53
+   1:  9609  | 10035.06
+   2:  1398  |  1710.33
+   3:   283  |   194.33
+   4:    94  |    16.56
+   5:    42  |     1.13
+   6:    16  |     0.06
+   7:    11  |     0.00
+   8:     3  |     0.00
+   9:     3  |     0.00
+  10:     1  |     0.00
+  11:     2  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+  14:     0  |     0.00
+  15:     1  |     0.00
+2. When is a consecutive block numeral move (8651):
+Scan-points/second: 1.38; var: 1.59 (115.41%)
+Seconds/scan-point: 0.72
+Histogram, actual vs predicted:
+   0:  2891  |  3119.10
+   1:  4970  |  4303.57
+   2:  2836  |  2968.93
+   3:   959  |  1365.46
+   4:   392  |   471.00
+   5:   181  |   129.97
+   6:    94  |    29.89
+   7:    47  |     5.89
+   8:    14  |     1.02
+   9:     6  |     0.16
+  10:     4  |     0.02
+  11:     1  |     0.00
+  12:     0  |     0.00
+  13:     0  |     0.00
+  14:     0  |     0.00
+
+Implied assignments (IMPLIED): 35,552 moves included, 0 skipped
+1. No consecutive block numeral moves (14651):
+Scan-points/second: 0.27; var: 0.32 (118.43%)
+Seconds/scan-point: 3.72
+Histogram, actual vs predicted:
+   0: 80644  | 79928.54
+   1: 20871  | 21511.55
+   2:  2466  |  2894.75
+   3:   415  |   259.69
+   4:   121  |    17.47
+   5:    46  |     0.94
+   6:    18  |     0.04
+   7:    11  |     0.00
+   8:     6  |     0.00
+   9:     8  |     0.00
+  10:     2  |     0.00
+  11:     1  |     0.00
+  12:     1  |     0.00
+  13:     0  |     0.00
+  14:     2  |     0.00
+  15:     0  |     0.00
+  16:     0  |     0.00
+  17:     1  |     0.00
+2. When is a consecutive block numeral move (18836):
+Scan-points/second: 1.37; var: 1.75 (127.41%)
+Seconds/scan-point: 0.73
+Histogram, actual vs predicted:
+   0:  7803  |  7623.62
+   1: 11583  | 10474.38
+   2:  6236  |  7195.57
+   3:  2392  |  3295.42
+   4:  1109  |  1131.93
+   5:   543  |   311.04
+   6:   268  |    71.22
+   7:   126  |    13.98
+   8:    37  |     2.40
+   9:    16  |     0.37
+  10:     6  |     0.05
+  11:     1  |     0.01
+  12:     0  |     0.00
+  13:     0  |     0.00
+  14:     0  |     0.00
+
+
+Trailheads (338):
+Scan-points/second: 0.02; var: 0.02 (98.09%)
+Seconds/scan-point: 52.17
+Histogram, actual vs predicted:
+   0: 17244  | 17247.21
+   1:   337  |   330.60
+   2:     0  |     3.17
+   3:     0  |     0.02
+   4:     0  |     0.00

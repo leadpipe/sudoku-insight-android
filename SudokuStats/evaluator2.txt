@@ -1,0 +1,96 @@
+Oct 27, 2013 6:56:22 PM com.google.appengine.api.blobstore.dev.LocalBlobstoreService init
+INFO: Creating blobstore backing store at /Users/leadpipe/Downloads/datastore-backup-20130720/
+....................................................................................................
+....................................................................................................
+....................................................................................................
+....................................................................................................
+....................................................................................................
+....................................................................................................
+....................................................................................................
+....................................................................................................
+....................................................................................................
+....................................................................................................
+.........................................
+# puzzles: 1041; # won: 991; # recursive: 0
+Proportion solved in one pass: 58.22%
+MAPE: 60.76%
+
+Single-pass undershot stats (estimate less than actual; 74.18%):
+Ave Percent Errors = DescriptiveStatistics:
+n: 428
+min: 0.10894934738859129
+max: 2160.312601015357
+mean: 92.39561619152765
+std dev: 199.14322764579595
+median: 43.078056669993245
+skewness: 7.144924019779065
+kurtosis: 62.669869294934166
+Evaluator Millis = DescriptiveStatistics:
+n: 428
+min: 17.294
+max: 338.441
+mean: 39.34670093457944
+std dev: 19.381106052338442
+median: 35.737
+skewness: 9.056150654254816
+kurtosis: 133.1509089056189
+
+Single-pass overshot stats (estimate greater than actual; 25.82%):
+Ave Percent Errors = DescriptiveStatistics:
+n: 149
+min: 0.06716712767275111
+max: 165.71396437024214
+mean: 25.051031460489337
+std dev: 25.384621583622735
+median: 17.813294241348263
+skewness: 2.1337933352551373
+kurtosis: 6.809278652757557
+Evaluator Millis = DescriptiveStatistics:
+n: 149
+min: 15.443
+max: 78.249
+mean: 34.02460402684564
+std dev: 11.492376500061805
+median: 31.818
+skewness: 1.3061788333333308
+kurtosis: 2.252785965980212
+
+Multi-pass undershot stats (estimate less than actual; 37.44%):
+Ave Percent Errors = DescriptiveStatistics:
+n: 155
+min: 0.08938598080913908
+max: 539.0757533738656
+mean: 49.624990395301666
+std dev: 72.14591987761719
+median: 24.41260250629102
+skewness: 3.883475990102182
+kurtosis: 19.541416093598773
+Evaluator Millis = DescriptiveStatistics:
+n: 155
+min: 42.625
+max: 2435.982
+mean: 543.0752774193548
+std dev: 360.88678690640694
+median: 476.176
+skewness: 1.4085693756678004
+kurtosis: 4.090483461456367
+
+Multi-pass overshot stats (estimate greater than actual; 62.56%):
+Ave Percent Errors = DescriptiveStatistics:
+n: 259
+min: 0.14538438674370538
+max: 171.54534610392304
+mean: 35.67764445397248
+std dev: 27.873528265554935
+median: 29.596015976636387
+skewness: 1.4963013815994948
+kurtosis: 3.2460780643906038
+Evaluator Millis = DescriptiveStatistics:
+n: 259
+min: 41.231
+max: 2269.323
+mean: 528.3661505791506
+std dev: 397.8616990685358
+median: 447.933
+skewness: 1.0828840448634882
+kurtosis: 1.1781036102590443

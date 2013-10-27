@@ -19,6 +19,7 @@ import us.blanshard.sudoku.appengine.Schema;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.insight.Evaluator;
+import us.blanshard.sudoku.insight.Evaluator.Difficulty;
 
 import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.datastore.EmbeddedEntity;
@@ -63,6 +64,7 @@ public class EvaluatorEvaluator {
     int npuzzles = 0;
     int nwon = 0;
     int nsingle = 0;
+    int nrecursive = 0;
     double totalAbsPercentError = 0;
     Stats undershotSingle = new Stats();
     Stats undershotMultiple = new Stats();
@@ -74,9 +76,8 @@ public class EvaluatorEvaluator {
       ByteBuffer record;
       while ((record = chan.readRecord()) != null) {
         ++npuzzles;
-        out.print('.');
-        out.flush();
-        if (npuzzles % 100 == 0) out.println();
+        System.err.print('.');
+        if (npuzzles % 100 == 0) System.err.println();
         EntityProto proto = new EntityProto();
         proto.mergeFrom(record);
         Entity entity = EntityTranslator.createFromPb(proto);
@@ -91,26 +92,39 @@ public class EvaluatorEvaluator {
         Stopwatch stopwatch = new Stopwatch().start();
         Evaluator.Result result = Evaluator.evaluate(puzzle, null);
         long micros = stopwatch.elapsed(TimeUnit.MICROSECONDS);
-        if (result.singlePass) ++nsingle;
+        boolean singlePass = result.difficulty == Difficulty.NO_DISPROOFS;
+        if (singlePass) ++nsingle;
+        else if (result.difficulty == Difficulty.RECURSIVE_DISPROOFS) ++nrecursive;
         AttemptInfo info = new AttemptInfo(elapsedSeconds, result, micros);
         totalAbsPercentError += info.getAbsPercentError();
         Stats stats = info.isOvershot()
-            ? result.singlePass ? overshotSingle : overshotMultiple
-            : result.singlePass ? undershotSingle : undershotMultiple;
+            ? singlePass ? overshotSingle : overshotMultiple
+            : singlePass ? undershotSingle : undershotMultiple;
         info.addTo(stats);
       }
     }
 
     out.println();
-    out.printf("# puzzles: %d; # won: %d%n", npuzzles, nwon);
+    out.printf("# puzzles: %d; # won: %d; # recursive: %d%n", npuzzles, nwon, nrecursive);
     out.printf("Proportion solved in one pass: %.2f%%%n", 100.0 * nsingle / nwon);
     out.printf("MAPE: %.2f%%%n", totalAbsPercentError / nwon);
-    out.printf("%nSingle-pass undershot stats:%n%s", undershotSingle);
-    out.printf("%nSingle-pass overshot stats:%n%s", overshotSingle);
-    out.printf("%nMulti-pass undershot stats:%n%s", undershotMultiple);
-    out.printf("%nMulti-pass overshot stats:%n%s", overshotMultiple);
+
+    printStats(out, "Single-pass", undershotSingle, overshotSingle);
+    printStats(out, "Multi-pass", undershotMultiple, overshotMultiple);
     out.close();
     helper.tearDown();
+  }
+
+  private static void printStats(PrintWriter out, String category, Stats undershot, Stats overshot) {
+    double count = undershot.apeStats.getN() + overshot.apeStats.getN();
+    printStats(out, category, true, count, undershot);
+    printStats(out, category, false, count, overshot);
+  }
+
+  private static void printStats(PrintWriter out, String category, boolean under, double count, Stats stats) {
+    out.printf("%n%s %sshot stats (estimate %s than actual; %.2f%%):%n%s",
+        category, under ? "under" : "over", under ? "less" : "greater",
+        stats.apeStats.getN() * 100.0 / count, stats);
   }
 
   static class Stats {
@@ -118,7 +132,7 @@ public class EvaluatorEvaluator {
     final DescriptiveStatistics timeStats = new DescriptiveStatistics();
 
     @Override public String toString() {
-      return "Ave Percent Errors = " + apeStats + "Evaluator Micros = " + timeStats;
+      return "Ave Percent Errors = " + apeStats + "Evaluator Millis = " + timeStats;
     }
   }
 
@@ -136,7 +150,7 @@ public class EvaluatorEvaluator {
     }
 
     boolean isOvershot() {
-      return result.estimatedAverageSolutionSeconds < elapsedSeconds;
+      return result.estimatedAverageSolutionSeconds > elapsedSeconds;
     }
 
     double getAbsPercentError() {
@@ -149,7 +163,7 @@ public class EvaluatorEvaluator {
 
     void addTo(Stats stats) {
       stats.apeStats.addValue(getAbsPercentError());
-      stats.timeStats.addValue(micros);
+      stats.timeStats.addValue(micros / 1000.0);
     }
   }
 }

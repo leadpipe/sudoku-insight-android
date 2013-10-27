@@ -131,6 +131,7 @@ public class InsightMeasurer implements Runnable {
   private final List<Move> history;
   private final UndoDetector undoDetector;
   private final Multimap<Integer, Location> mistakes = HashMultimap.create();
+  private final Set<Integer> trails = Sets.newHashSet();
   private final PrintWriter out;
 
   private InsightMeasurer(Grid puzzle, List<Move> history, PrintWriter out) {
@@ -164,6 +165,7 @@ public class InsightMeasurer implements Runnable {
       Collector collector = new Collector(gridMarks, move.getAssignment(), prevNumeral);
       Analyzer.analyze(gridMarks, collector, true);
       long elapsed = move.timestamp - prevTime;
+      boolean isTrailhead = move.trailId >= 0 && game.getTrail(move.trailId).getSetCount() == 0;
       try {
         Pattern.appendTo(out, collector.found)
             .append('\t')
@@ -179,6 +181,10 @@ public class InsightMeasurer implements Runnable {
             .append('\t')
             .append(String.valueOf(collector.getNumOpenBlockNumerals()))
             .append('\t')
+            .append(String.valueOf(isTrailhead))
+            .append('\t')
+            .append(String.valueOf(trails.size()))
+            .append('\t')
             ;
         Pattern.appendAllTo(out, collector.missed.values());
         out.println();
@@ -187,6 +193,7 @@ public class InsightMeasurer implements Runnable {
       }
     }
     game.move(move);
+    if (move.trailId >= 0) trails.add(move.trailId);
   }
 
   private void noteMistakes(Move move) {

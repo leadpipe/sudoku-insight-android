@@ -18,6 +18,7 @@ package us.blanshard.sudoku.insight;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import us.blanshard.sudoku.core.Assignment;
+import us.blanshard.sudoku.core.Block;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.LocSet;
 import us.blanshard.sudoku.core.Location;
@@ -25,13 +26,17 @@ import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +59,20 @@ public class Evaluator {
    */
   public static final int NUM_TRIALS = 10;
 
+  /**
+   * Intrinsic degrees of difficulty for Sudokus. "No disproofs" means that the
+   * basic solution rules are sufficient to solve the puzzle. "Simple disproofs"
+   * means that disproving possible assignments using the basic solution rules
+   * is sufficient. "Recursive disproofs" means that there aren't enough simple
+   * disproofs available to solve the puzzle, so you must disprove subsequent
+   * assignments while trying to disprove initial ones.
+   */
+  public enum Difficulty {
+    NO_DISPROOFS,
+    SIMPLE_DISPROOFS,
+    RECURSIVE_DISPROOFS;
+  }
+
   /** The object returned by the evaluator. */
   public static class Result {
     /** The version of the estimation algorithm that was used for this result. */
@@ -63,18 +82,17 @@ public class Evaluator {
     /** Whether the estimate was complete; if false, the estimate is probably
         less than it would have been if allowed to finish. */
     public final boolean estimateComplete;
-    /** Whether the evaluator was able to solve the puzzle in one pass; such
-        puzzles are easier in principle, even if they take a long time. */
-    public final boolean singlePass;
+    /** The intrinsic difficulty of the puzzle. */
+    public final Difficulty difficulty;
     /** Whether the puzzle has more than one solution. */
     public final boolean improper;
 
     public Result(int algorithmVersion, double estimatedAverageSolutionSeconds,
-        boolean estimateComplete, boolean singlePass, boolean improper) {
+        boolean estimateComplete, Difficulty difficulty, boolean improper) {
       this.algorithmVersion = algorithmVersion;
       this.estimatedAverageSolutionSeconds = estimatedAverageSolutionSeconds;
       this.estimateComplete = estimateComplete;
-      this.singlePass = singlePass;
+      this.difficulty = difficulty;;
       this.improper = improper;
     }
   }
@@ -85,7 +103,7 @@ public class Evaluator {
    */
   public interface Callback {
     void updateEstimate(double minSeconds);
-    void startingMultiPass();
+    void disproofsRequired();
   }
 
   /**
@@ -124,48 +142,57 @@ public class Evaluator {
 
   public Result evaluate(@Nullable Callback callback, int trialCount) {
     checkArgument(trialCount >= 1);
-    Run outer = new Run(new GridMarks(puzzle));
+    Run outer = new Run(new GridMarks(puzzle), false);
     outer.runStraightShot(callback);
     double seconds = outer.seconds;
     boolean uninterrupted = outer.uninterrupted();
-    boolean singlePass = true;
+    Difficulty difficulty = Difficulty.NO_DISPROOFS;
     if (outer.status == RunStatus.INCONCLUSIVE) {
-      singlePass = false;
-      if (callback != null) callback.startingMultiPass();
+      difficulty = Difficulty.SIMPLE_DISPROOFS;
+      if (callback != null) callback.disproofsRequired();
       double totalSeconds = 0;
       int numEvaluations = 0;
       while (uninterrupted && numEvaluations++ < trialCount) {
-        Run inner = new Run(outer.gridMarks);
+        Run inner = new Run(outer.gridMarks, true);
         inner.runDisproof(trialCount == 1 ? callback : null);
         uninterrupted = inner.uninterrupted();
         totalSeconds += inner.seconds;
+        if (inner.recursiveDisproofs) difficulty = Difficulty.RECURSIVE_DISPROOFS;
       }
       seconds += totalSeconds / numEvaluations;
     }
-    return new Result(CURRENT_VERSION, seconds, uninterrupted, singlePass, improper);
+    return new Result(CURRENT_VERSION, seconds, uninterrupted, difficulty, improper);
   }
 
   private enum RunStatus { INTERRUPTED, COMPLETE, ERROR, INCONCLUSIVE };
 
   private class Run {
+    final boolean trails;
     GridMarks gridMarks;
     double seconds;
     RunStatus status;
+    boolean foundSolution;
+    boolean recursiveDisproofs;
 
-    Run(GridMarks gridMarks) {
+    Run(GridMarks gridMarks, boolean trails) {
       this.gridMarks = gridMarks;
+      this.trails = trails;
     }
 
     void runStraightShot(@Nullable Callback callback) {
       if (status == RunStatus.INTERRUPTED) return;
       status = null;
+      Numeral prevNumeral = null;
       do {
-        Collector collector = new Collector(gridMarks);
+        Collector collector = new Collector(gridMarks, prevNumeral, trails);
+        prevNumeral = null;
         if (Analyzer.analyze(gridMarks, collector, true)) {
           seconds += collector.getElapsedSeconds();
           if (callback != null) callback.updateEstimate(seconds);
           if (collector.hasMove()) {
-            gridMarks = gridMarks.toBuilder().apply(collector.getMove()).build();
+            Insight move = collector.getMove();
+            gridMarks = gridMarks.toBuilder().apply(move).build();
+            prevNumeral = move.getImpliedAssignment().numeral;
             if (gridMarks.grid.isSolved()) status = RunStatus.COMPLETE;
           } else if (collector.hasVisibleErrors()) {
             status = RunStatus.ERROR;
@@ -189,16 +216,23 @@ public class Evaluator {
 
     void eliminateOne(@Nullable Callback callback) {
       GridMarks start = gridMarks;
-      for (Assignment a : shuffledRemainingAssignments()) {
-        if (status == RunStatus.INTERRUPTED) return;
-        gridMarks = start.toBuilder().assign(a).build();
-        runStraightShot(callback);
-        if (status == RunStatus.ERROR) {
-          gridMarks = start.toBuilder().eliminate(a).build();
-          return;
+      if (!recursiveDisproofs) {
+        for (Assignment a : shuffledRemainingAssignments()) {
+          if (status == RunStatus.INTERRUPTED)
+            return;
+          if (foundSolution && solutionIntersection.get(a.location) == a.numeral)
+            continue;
+          gridMarks = start.toBuilder().assign(a).build();
+          runStraightShot(callback);
+          if (status == RunStatus.ERROR) {
+            gridMarks = start.toBuilder().eliminate(a).build();
+            return;
+          } else if (status == RunStatus.COMPLETE) {
+            foundSolution = true;
+          }
         }
       }
-      // This should never happen.  But if it does, do a recursive error search.
+      recursiveDisproofs = true;
       Assignment impossible = randomErroneousAssignment();
       gridMarks = start.toBuilder().assign(impossible).build();
       runErrorSearch(callback);
@@ -266,14 +300,29 @@ public class Evaluator {
     }
 
     List<Assignment> shuffledRemainingAssignments() {
-      List<Assignment> list = Lists.newArrayList();
+      Multimap<Integer, Assignment> byRank = ArrayListMultimap.create();
       for (Location loc : Location.ALL) {
         if (gridMarks.grid.containsKey(loc)) continue;
-        for (Numeral num : gridMarks.marks.get(loc))
-          list.add(Assignment.of(loc, num));
+        NumSet nums = gridMarks.marks.get(loc);
+        for (Numeral num : nums) {
+          int rank = nums.size();
+          for (Unit.Type unitType : Unit.Type.values()) {
+            UnitSubset locs = gridMarks.marks.get(loc.unit(unitType), num);
+            rank = Math.min(rank, locs.size());
+          }
+          byRank.put(rank, Assignment.of(loc, num));
+        }
       }
-      Collections.shuffle(list, random);
-      return list;
+      ArrayList<Integer> ranks = Lists.newArrayList(byRank.keySet());
+      Collections.sort(ranks);
+      List<Assignment> assignments = Lists.newArrayList();
+      for (Integer rank : ranks) {
+        int start = assignments.size();
+        assignments.addAll(byRank.get(rank));
+        // Shuffle each rank separately.
+        Collections.shuffle(assignments.subList(start, assignments.size()));
+      }
+      return assignments;
     }
   }
 
@@ -283,12 +332,12 @@ public class Evaluator {
    * hardest.
    */
   private enum MoveKind {
-    EASY_DIRECT(1.1),
-    DIRECT(1.2),
-    SIMPLY_IMPLIED_EASY(1.4),
-    SIMPLY_IMPLIED(1.5),
-    IMPLIED_EASY(2.7),
-    IMPLIED(3.2),  // catch-all, including errors
+    EASY_DIRECT(2.1, 1.5),
+    DIRECT(2.4, 1.6),
+    SIMPLY_IMPLIED_EASY(3.1, 1.7),
+    SIMPLY_IMPLIED(3.2, 1.8),
+    IMPLIED_EASY(6.0, 3.0),
+    IMPLIED(6.5, 3.8),  // catch-all, including errors
     ;
 
     /**
@@ -306,28 +355,50 @@ public class Evaluator {
      * a numeral to that location.
      */
     public final double secondsPerScanPoint;
+    public final double secondsPerScanPointWithTrails;
 
     public static final MoveKind MIN = EASY_DIRECT;
     public static final MoveKind MAX = IMPLIED;
 
-    private MoveKind(double secondsPerScanPoint) {
+    /**
+     * When there is a direct block-numeral move using the same numeral as the
+     * previous move, we count the scan points as the open block-numeral moves
+     * remaining for that numeral, and this is the scan rate for them.
+     */
+    public static final double BLOCK_NUMERAL_SECONDS_PER_SCAN_POINT = 0.75;
+
+    /**
+     * When there are no moves implied, the best model is simply to pause a
+     * fixed amount of time before looking for disproofs.
+     */
+    public static final double SECONDS_BEFORE_DISPROOF = 137.4;
+    public static final double SECONDS_BEFORE_DISPROOF_WITH_TRAILS = 52.2;
+
+    private MoveKind(double secondsPerScanPoint, double secondsPerScanPointWithTrails) {
       this.secondsPerScanPoint = secondsPerScanPoint;
+      this.secondsPerScanPointWithTrails = secondsPerScanPointWithTrails;
     }
   }
 
   private static class Collector implements Analyzer.Callback {
     private final GridMarks gridMarks;
+    @Nullable private final Numeral prevNumeral;
+    private final boolean trails;
     private final LocSet locTargets = new LocSet();
     private final Set<UnitNumeral> unitNumTargets = Sets.newHashSet();
     private final Map<Location, MoveKind> kinds = Maps.newHashMap();
     private MoveKind best = null;
-    private Insight move;
+    @Nullable private Insight move;
+    @Nullable private ForcedLoc blockNumeralMove;
     private boolean errors;
     private int numDirectMoves;
     private int numDirectErrors;
+    private int numBlockNumeralMoves;
 
-    Collector(GridMarks gridMarks) {
+    Collector(GridMarks gridMarks, @Nullable Numeral prevNumeral, boolean trails) {
       this.gridMarks = gridMarks;
+      this.prevNumeral = prevNumeral;
+      this.trails = trails;
     }
 
     @Override public void take(Insight insight) throws StopException {
@@ -342,6 +413,14 @@ public class Evaluator {
         }
         if (insight.type.isAssignment())
           ++numDirectMoves;
+        if (insight.type == Insight.Type.FORCED_LOCATION) {
+          ForcedLoc fl = (ForcedLoc) insight;
+          if (fl.getUnit().getType() == Unit.Type.BLOCK) {
+            ++numBlockNumeralMoves;
+            if (fl.getNumeral() == prevNumeral)
+              blockNumeralMove = fl;
+          }
+        }
       } else if (insight.isError()) {
         errors = true;
         if (insight.type.isError())
@@ -350,14 +429,25 @@ public class Evaluator {
     }
 
     double getElapsedSeconds() {
+      if (blockNumeralMove != null) {
+        int openMoves = 0;
+        for (Block b : Block.ALL) {
+          UnitSubset locs = gridMarks.marks.get(b, prevNumeral);
+          if (locs.size() > 1 || locs.size() == 1 && !gridMarks.grid.containsKey(locs.get(0)))
+            ++openMoves;
+        }
+        return MoveKind.BLOCK_NUMERAL_SECONDS_PER_SCAN_POINT * openMoves / numBlockNumeralMoves;
+      }
+      if (move == null)
+        return trails ? MoveKind.SECONDS_BEFORE_DISPROOF_WITH_TRAILS : MoveKind.SECONDS_BEFORE_DISPROOF;
       MoveKind kind = errors || kinds.isEmpty()
           ? MoveKind.MAX : Ordering.<MoveKind>natural().max(kinds.values());
       int openLocs = Location.COUNT - gridMarks.grid.size();
       double totalScanPoints = 4.0 * openLocs;
       int scanTargets = locTargets.size() + unitNumTargets.size();
-      // TODO: The 2 below is pure speculation
-      double scanPoints = move == null ? 2 * totalScanPoints : totalScanPoints / scanTargets;
-      return kind.secondsPerScanPoint * scanPoints;
+      double scanPoints = totalScanPoints / scanTargets;
+      double secondsPerScanPoint = trails ? kind.secondsPerScanPointWithTrails : kind.secondsPerScanPoint;
+      return secondsPerScanPoint * scanPoints;
     }
 
     boolean hasMove() {
@@ -365,11 +455,10 @@ public class Evaluator {
     }
 
     Insight getMove() {
-      return move;
+      return blockNumeralMove == null ? move : blockNumeralMove;
     }
 
     boolean hasVisibleErrors() {
-      // TODO: validate this
       return numDirectErrors > numDirectMoves;
     }
 
