@@ -1,6 +1,6 @@
 * Insights
 ** Evaluator
-*** TODO Try removing most obvious correlations from InsightMeasurer
+*** DONE Try removing most obvious correlations from InsightMeasurer
     - In particular: flb's with the same numeral as the previous move are often
       just piggybacked on the previous scan.  Removing them from the analysis
       should improve fit to Poisson distribution.  (Though it will probably cut
@@ -30,6 +30,8 @@ END
 ** Bugs
 
 ** App/UI cleanups
+*** TODO Evaluate puzzles while (or before) adding them
+*** TODO Add a dialog that shows the evaluation (in some form) and lets you skip the puzzle
 *** TODO Add a navigation drawer?
 *** TODO Do auto stream handling better
     - if the server sets the stream, explicitly skip queued puzzles from previous stream
@@ -46,6 +48,7 @@ END
 *** TODO Make translation of symmetry names possible
 *** TODO Change behavior of capture when we already have the puzzle
     - Include a link to the puzzle details
+    - Or just jump there?
 
 ** Publishing the app
 
@@ -54,6 +57,8 @@ END
     - dependent on selecting an account
 
 ** Replay cleanups
+*** TODO Do something when asked to replay a puzzle that's impervious to breadth-first solving
+*** TODO Handle improper puzzles' last moves
 *** TODO Animate insight display
     - for complex implications, this could help the visualization
 *** TODO Update screen shots?
