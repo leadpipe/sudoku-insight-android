@@ -16,6 +16,8 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static us.blanshard.sudoku.game.GameJson.JOINER;
+import static us.blanshard.sudoku.game.GameJson.SPLITTER;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Block;
@@ -38,6 +40,7 @@ import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -70,7 +73,7 @@ public class Evaluator {
   public enum Difficulty {
     NO_DISPROOFS,
     SIMPLE_DISPROOFS,
-    RECURSIVE_DISPROOFS;
+    RECURSIVE_DISPROOFS;  // Note ordinals are serialized
   }
 
   /** The object returned by the evaluator. */
@@ -94,6 +97,28 @@ public class Evaluator {
       this.estimateComplete = estimateComplete;
       this.difficulty = difficulty;;
       this.improper = improper;
+    }
+
+    /** Renders this result in a string form that can be reversed by {@link #deserialize}. */
+    public String serialize() {
+      return JOINER.join(algorithmVersion, estimatedAverageSolutionSeconds,
+          estimateComplete, difficulty.ordinal(), improper);
+    }
+
+    @Override public String toString() {
+      return "Evaluator.Result:" + serialize();
+    }
+
+    /** Restores a result previously {@link #serialize}d. */
+    public static Result deserialize(String s) {
+      Iterator<String> it = SPLITTER.split(s).iterator();
+      int algorithmVersion = Integer.parseInt(it.next());
+      double estimatedAverageSolutionSeconds = Double.parseDouble(it.next());
+      boolean estimateComplete = Boolean.parseBoolean(it.next());
+      Difficulty difficulty = Difficulty.values()[Integer.parseInt(it.next())];
+      boolean improper = Boolean.parseBoolean(it.next());
+      return new Result(algorithmVersion, estimatedAverageSolutionSeconds, estimateComplete,
+          difficulty, improper);
     }
   }
 
