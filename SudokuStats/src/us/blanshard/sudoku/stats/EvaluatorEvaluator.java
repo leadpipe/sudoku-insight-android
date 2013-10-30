@@ -20,6 +20,7 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.insight.Evaluator;
 import us.blanshard.sudoku.insight.Evaluator.Difficulty;
+import us.blanshard.sudoku.insight.Rating;
 
 import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.datastore.EmbeddedEntity;
@@ -90,7 +91,7 @@ public class EvaluatorEvaluator {
         ++nwon;
         double elapsedSeconds = ((Number) attempt.getProperty(Schema.Attempt.ELAPSED_MS)).doubleValue() / 1000.0;
         Stopwatch stopwatch = new Stopwatch().start();
-        Evaluator.Result result = Evaluator.evaluate(puzzle, null);
+        Rating result = Evaluator.evaluate(puzzle, null);
         long micros = stopwatch.elapsed(TimeUnit.MICROSECONDS);
         boolean singlePass = result.difficulty == Difficulty.NO_DISPROOFS;
         if (singlePass) ++nsingle;
@@ -138,11 +139,11 @@ public class EvaluatorEvaluator {
 
   static class AttemptInfo {
     final double elapsedSeconds;
-    final Evaluator.Result result;
+    final Rating result;
     final long micros;
     final double ape;
 
-    AttemptInfo(double elapsedSeconds, Evaluator.Result result, long micros) {
+    AttemptInfo(double elapsedSeconds, Rating result, long micros) {
       this.elapsedSeconds = elapsedSeconds;
       this.result = result;
       this.micros = micros;

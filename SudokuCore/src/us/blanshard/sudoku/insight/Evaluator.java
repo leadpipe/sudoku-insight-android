@@ -16,8 +16,6 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static us.blanshard.sudoku.game.GameJson.JOINER;
-import static us.blanshard.sudoku.game.GameJson.SPLITTER;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Block;
@@ -30,6 +28,7 @@ import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
+import us.blanshard.sudoku.insight.Rating.Difficulty;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
@@ -40,7 +39,6 @@ import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -63,66 +61,6 @@ public class Evaluator {
   public static final int NUM_TRIALS = 10;
 
   /**
-   * Intrinsic degrees of difficulty for Sudokus. "No disproofs" means that the
-   * basic solution rules are sufficient to solve the puzzle. "Simple disproofs"
-   * means that disproving possible assignments using the basic solution rules
-   * is sufficient. "Recursive disproofs" means that there aren't enough simple
-   * disproofs available to solve the puzzle, so you must disprove subsequent
-   * assignments while trying to disprove initial ones.
-   */
-  public enum Difficulty {
-    NO_DISPROOFS,
-    SIMPLE_DISPROOFS,
-    RECURSIVE_DISPROOFS;  // Note ordinals are serialized
-  }
-
-  /** The object returned by the evaluator. */
-  public static class Result {
-    /** The version of the estimation algorithm that was used for this result. */
-    public final int algorithmVersion;
-    /** How long the puzzle is estimated to take. */
-    public final double estimatedAverageSolutionSeconds;
-    /** Whether the estimate was complete; if false, the estimate is probably
-        less than it would have been if allowed to finish. */
-    public final boolean estimateComplete;
-    /** The intrinsic difficulty of the puzzle. */
-    public final Difficulty difficulty;
-    /** Whether the puzzle has more than one solution. */
-    public final boolean improper;
-
-    public Result(int algorithmVersion, double estimatedAverageSolutionSeconds,
-        boolean estimateComplete, Difficulty difficulty, boolean improper) {
-      this.algorithmVersion = algorithmVersion;
-      this.estimatedAverageSolutionSeconds = estimatedAverageSolutionSeconds;
-      this.estimateComplete = estimateComplete;
-      this.difficulty = difficulty;;
-      this.improper = improper;
-    }
-
-    /** Renders this result in a string form that can be reversed by {@link #deserialize}. */
-    public String serialize() {
-      return JOINER.join(algorithmVersion, estimatedAverageSolutionSeconds,
-          estimateComplete, difficulty.ordinal(), improper);
-    }
-
-    @Override public String toString() {
-      return "Evaluator.Result:" + serialize();
-    }
-
-    /** Restores a result previously {@link #serialize}d. */
-    public static Result deserialize(String s) {
-      Iterator<String> it = SPLITTER.split(s).iterator();
-      int algorithmVersion = Integer.parseInt(it.next());
-      double estimatedAverageSolutionSeconds = Double.parseDouble(it.next());
-      boolean estimateComplete = Boolean.parseBoolean(it.next());
-      Difficulty difficulty = Difficulty.values()[Integer.parseInt(it.next())];
-      boolean improper = Boolean.parseBoolean(it.next());
-      return new Result(algorithmVersion, estimatedAverageSolutionSeconds, estimateComplete,
-          difficulty, improper);
-    }
-  }
-
-  /**
    * Called back periodically from {@link #evaluate} with updates to the
    * estimate.
    */
@@ -138,7 +76,7 @@ public class Evaluator {
    * monotonically increasing. If the thread is interrupted, the evaluation may
    * stop early, and in that case the result object will be marked as incomplete.
    */
-  public static Result evaluate(Grid puzzle, Callback callback) {
+  public static Rating evaluate(Grid puzzle, Callback callback) {
     return new Evaluator(puzzle).evaluate(callback);
   }
 
@@ -161,11 +99,11 @@ public class Evaluator {
     this.random = random;
   }
 
-  public Result evaluate(@Nullable Callback callback) {
+  public Rating evaluate(@Nullable Callback callback) {
     return evaluate(callback, NUM_TRIALS);
   }
 
-  public Result evaluate(@Nullable Callback callback, int trialCount) {
+  public Rating evaluate(@Nullable Callback callback, int trialCount) {
     checkArgument(trialCount >= 1);
     Run outer = new Run(new GridMarks(puzzle), false);
     outer.runStraightShot(callback);
@@ -186,7 +124,7 @@ public class Evaluator {
       }
       seconds += totalSeconds / numEvaluations;
     }
-    return new Result(CURRENT_VERSION, seconds, uninterrupted, difficulty, improper);
+    return new Rating(CURRENT_VERSION, seconds, uninterrupted, difficulty, improper);
   }
 
   private enum RunStatus { INTERRUPTED, COMPLETE, ERROR, INCONCLUSIVE };
