@@ -64,7 +64,7 @@ public class Rating {
   }
 
   @Override public String toString() {
-    return "Evaluator.Result:" + serialize();
+    return "Rating:" + serialize();
   }
 
   /** Restores a result previously {@link #serialize}d. */
