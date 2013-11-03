@@ -14,7 +14,7 @@
         - moves without any same-numeral direct flb's
         - moves that are same-numeral direct flb's
         - moves that have same-numeral direct flb's
-*** TODO Investigate distribution of times for upcoming puzzles
+*** DONE Investigate distribution of times for upcoming puzzles
 *** TODO Investigate distribution of times for multiple puzzles generated from the same end state
 
 ** Getting games with history from a sqlite db into a tsv file:
