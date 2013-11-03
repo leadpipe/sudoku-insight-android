@@ -160,9 +160,10 @@ public class Generator {
   public static final int MAX_HOLES = 7;
 
   /**
-   * Generates a proper Sudoku with the given parameters, returns it as a JSON
-   * object with the properties {@link #PUZZLE_KEY}, {@link #NAME_KEY}, and
-   * either {@link #SYMMETRY_KEY} or {@link #BROKEN_SYMMETRY_KEY}.
+   * Generates a Sudoku with the given parameters, returns it as a JSON object
+   * with the properties {@link #PUZZLE_KEY}, {@link #NAME_KEY},
+   * {@link #NUM_SOLUTIONS_KEY}, and either {@link #SYMMETRY_KEY} or
+   * {@link #BROKEN_SYMMETRY_KEY}.
    */
   public static JsonObject generateBasicPuzzle(int stream, int year, int month, int counter) {
     return generatePuzzle(BASIC_VERSION, stream, year, month, counter);
