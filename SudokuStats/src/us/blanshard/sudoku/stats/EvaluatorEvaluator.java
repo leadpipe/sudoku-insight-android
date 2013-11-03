@@ -19,8 +19,8 @@ import us.blanshard.sudoku.appengine.Schema;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.insight.Evaluator;
-import us.blanshard.sudoku.insight.Evaluator.Difficulty;
 import us.blanshard.sudoku.insight.Rating;
+import us.blanshard.sudoku.insight.Rating.Difficulty;
 
 import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.datastore.EmbeddedEntity;
