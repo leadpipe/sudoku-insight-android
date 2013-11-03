@@ -17,6 +17,8 @@ package us.blanshard.sudoku.android;
 
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.insight.Evaluator;
+import us.blanshard.sudoku.insight.Rating;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -202,7 +204,8 @@ public class Database {
 
   /**
    * Adds the puzzle with the given properties to the database, and also to the
-   * captured-puzzles collection. Returns the puzzle's ID.
+   * captured-puzzles collection. Returns the puzzle's ID. Modifies the given
+   * properties object.
    */
   public long addCapturedPuzzle(JsonObject properties, String source) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
@@ -228,30 +231,39 @@ public class Database {
    * Adds the puzzle with the given clues, properties, and source to the
    * database, or updates it by merging the properties and source with what's
    * already there. If not already present creates an attempt row for it as
-   * well. Returns the puzzle's ID.
+   * well. Evaluates the puzzle if no rating already in the properties or the
+   * database, leaving the rating in the properties. Returns the puzzle's ID.
    */
   private long addOrUpdatePuzzle(JsonObject properties, String source) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
     db.beginTransaction();
     try {
       String clues = properties.remove(Generator.PUZZLE_KEY).getAsString();
+      Long puzzleId = getPuzzleId(db, clues);
+      if (puzzleId != null) {
+        Puzzle puzzle = getFullPuzzle(puzzleId);
+        JsonObject existing = new JsonParser().parse(puzzle.properties).getAsJsonObject();
+        for (Map.Entry<String, JsonElement> e : existing.entrySet())
+          if (!properties.has(e.getKey()))
+            properties.add(e.getKey(), e.getValue());
+      }
+      if (!properties.has(Generator.RATING_KEY)) {
+        Grid puzzle = Grid.fromString(clues);
+        Rating rating = Evaluator.evaluate(puzzle, null);
+        if (rating.estimateComplete)
+          properties.addProperty(Generator.RATING_KEY, rating.serialize());
+      }
+
       ContentValues values = new ContentValues();
       values.put("clues", clues);
       values.put("properties", properties.toString());
       if (source != null)
         values.put("source", source);
 
-      Long puzzleId = getPuzzleId(db, clues);
       if (puzzleId == null) {
         puzzleId = db.insertOrThrow("Puzzle", null, values);
         putUnstartedAttempt(db, puzzleId);
       } else {
-        Puzzle puzzle = getFullPuzzle(puzzleId);
-        JsonObject replacement = new JsonParser().parse(puzzle.properties).getAsJsonObject();
-        for (Map.Entry<String, JsonElement> e : properties.entrySet())
-          replacement.add(e.getKey(), e.getValue());
-        values.put("properties", replacement.toString());
-        // source: no further logic required to replace or leave an existing value.
         db.update("Puzzle", values, "[_id] = ?", new String[]{ Long.toString(puzzleId) });
       }
 
@@ -466,6 +478,23 @@ public class Database {
     Attempt answer = fetchAttempt(db, sql, Integer.toString(AttemptState.UNSTARTED.getNumber()),
         Integer.toString(AttemptState.STARTED.getNumber()));
     return startUnstartedAttempt(answer);
+  }
+
+  /**
+   * Same as {@link #getFirstOpenAttempt()}, but ensures the returned attempt's puzzle
+   * has a rating.
+   */
+  public Attempt getRatedFirstOpenAttempt() throws SQLException {
+    Attempt attempt = getFirstOpenAttempt();
+    if (attempt != null) {
+      JsonObject props = new JsonParser().parse(attempt.properties).getAsJsonObject();
+      if (!props.has(Generator.RATING_KEY)) {
+        props.addProperty(Generator.PUZZLE_KEY, attempt.clues.toFlatString());
+        addOrUpdatePuzzle(props, null);
+        attempt = getFirstOpenAttempt();
+      }
+    }
+    return attempt;
   }
 
   /**

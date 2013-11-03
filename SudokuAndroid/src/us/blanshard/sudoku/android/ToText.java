@@ -22,6 +22,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import us.blanshard.sudoku.android.Database.Attempt;
 import us.blanshard.sudoku.android.Database.AttemptState;
+import us.blanshard.sudoku.insight.Rating;
 import us.blanshard.sudoku.messages.PuzzleRpcs.PuzzleResult;
 
 import android.content.Context;
@@ -92,6 +93,41 @@ public class ToText {
   public static String collectionNameAndTimeText(Context context, Database.Element element) {
     String html = collectionNameAndTimeHtml(context, element);
     return Html.fromHtml(html).toString();
+  }
+
+  /**
+   * Returns a summary of the given puzzle rating.
+   */
+  public static String ratingSummaryHtml(Context context, Rating rating) {
+    StringBuilder sb = new StringBuilder();
+    double mins = rating.estimatedAverageSolutionSeconds / 60;
+    sb.append(context.getString(R.string.text_rating_number, mins));
+    sb.append("<br>");
+    int resourceId, numStars;
+    if (mins < 2.5) {
+      resourceId = R.string.text_rating_very_easy;
+      numStars = 1;
+    } else if (mins < 3.5) {
+      resourceId = R.string.text_rating_easy;
+      numStars = 2;
+    } else if (mins < 5) {
+      resourceId = R.string.text_rating_moderate;
+      numStars = 3;
+    } else if (mins < 10) {
+      resourceId = R.string.text_rating_hard;
+      numStars = 4;
+    } else if (mins < 20) {
+      resourceId = R.string.text_rating_very_hard;
+      numStars = 5;
+    } else {
+      resourceId = R.string.text_rating_extremely_hard;
+      numStars = 6;
+    }
+    for (int s = 0; s < 6; ++s) {
+      sb.append(s < numStars ? "&#9733;" : "&#9734;");  // black and white stars
+    }
+    sb.append("&nbsp;").append(context.getString(resourceId));
+    return sb.toString();
   }
 
   /**

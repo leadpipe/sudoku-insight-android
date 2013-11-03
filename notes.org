@@ -36,6 +36,8 @@ END
 *** TODO Add a dialog that shows the evaluation (in some form) and lets you skip the puzzle
 *** TODO Update help
     - acknowledge that the replay view can't handle all puzzles
+    - have the welcome dialog actually be a help page
+      - show (part of) it for upgraders as well as newcomers
 *** TODO Add a navigation drawer?
 *** TODO Do auto stream handling better
     - if the server sets the stream, explicitly skip queued puzzles from previous stream

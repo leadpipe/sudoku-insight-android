@@ -36,6 +36,7 @@ import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.Sudoku.State;
 import us.blanshard.sudoku.game.UndoStack;
 import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.insight.Rating;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -48,6 +49,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -71,6 +73,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.util.Calendar;
 import java.util.Collection;
@@ -155,30 +158,76 @@ public class SudokuFragment
     return mAttempt.puzzleId;
   }
 
-  private void setAttempt(Database.Attempt attempt, List<Move> history, String title, String status) {
+  private void setAttempt(Database.Attempt attempt, List<Move> history,
+      String title, String status) {
     mAttempt = attempt;
     if (attempt == null) {
       setGame(null);
+    } else if (attempt.attemptState == AttemptState.UNSTARTED) {
+      showRatingDialog(history, title, status);
+    } else {
+      finishSettingAttempt(history, title, status);
+    }
+  }
+
+  private void showRatingDialog(final List<Move> history, final String title, final String status) {
+    JsonObject props = new JsonParser().parse(mAttempt.properties).getAsJsonObject();
+    if (!props.has(Generator.RATING_KEY)) {
+      Log.d("SudokuFragment", "No rating?!");
+      finishSettingAttempt(history, title, status);
       return;
     }
-    if (attempt.attemptState == AttemptState.UNSTARTED) {
-      Database.startUnstartedAttempt(attempt);
-    }
-    new CheckNextAttempt(this).execute(attempt._id);
-    Sudoku game = new Sudoku(attempt.clues, mRegistry, history, attempt.elapsedMillis);
+    final Rating rating = Rating.deserialize(props.get(Generator.RATING_KEY).getAsString());
+    Log.d("SudokuFragment", rating.toString());
+    DialogFragment dialog = new DialogFragment() {
+      @Override public Dialog onCreateDialog(Bundle savedInstanceState) {
+        return new AlertDialog.Builder(getActivity())
+            .setMessage(Html.fromHtml(ToText.ratingSummaryHtml(getActivity(), rating)))
+            .setPositiveButton(R.string.button_play, new OnClickListener() {
+                @Override public void onClick(DialogInterface dialog, int which) {
+                  dialog.dismiss();
+                  Database.startUnstartedAttempt(mAttempt);
+                  finishSettingAttempt(history, title, status);
+                }
+            })
+            .setNegativeButton(R.string.button_skip, new OnClickListener() {
+                @Override public void onClick(DialogInterface dialog, int which) {
+                  dialog.dismiss();
+                  mProgress.setVisibility(View.VISIBLE);
+                  Database.startUnstartedAttempt(mAttempt);
+                  mAttempt.attemptState = AttemptState.SKIPPED;
+                  ThreadPolicy policy = StrictMode.allowThreadDiskWrites();
+                  try {
+                    mDb.updateAttempt(mAttempt);
+                  } finally {
+                    StrictMode.setThreadPolicy(policy);
+                  }
+                  new FetchFindOrMakePuzzle(SudokuFragment.this).execute(mAttempt._id);
+                }
+            })
+            .create();
+      }
+    };
+    dialog.show(getFragmentManager(), "puzzleRating");
+    new CheckNextAttempt(this).execute(mAttempt._id);
+  }
+
+  private void finishSettingAttempt(List<Move> history, String title, String status) {
+    new CheckNextAttempt(this).execute(mAttempt._id);
+    Sudoku game = new Sudoku(mAttempt.clues, mRegistry, history, mAttempt.elapsedMillis);
     getActivity().setTitle(title);
     setGame(game);
-    if (attempt.uiState != null) {
+    if (mAttempt.uiState != null) {
       GameJson.setFactory(game);
-      UiState uiState = GSON.fromJson(attempt.uiState, UiState.class);
+      UiState uiState = GSON.fromJson(mAttempt.uiState, UiState.class);
       GameJson.clearFactory();
       mUndoStack = uiState.undo;
       mSudokuView.setDefaultChoice(numeral(uiState.defaultChoice));
       restoreTrails(uiState.trailOrder, uiState.numVisibleTrails, uiState.numOffTrails);
       mEditTrailToggle.setChecked(uiState.trailActive);
     }
-    if (attempt.attemptState.isInPlay()) {
-      mPrefs.setCurrentAttemptIdAsync(attempt._id);
+    if (mAttempt.attemptState.isInPlay()) {
+      mPrefs.setCurrentAttemptIdAsync(mAttempt._id);
     }
     if (status != null)
       showStatus(status);
@@ -388,11 +437,14 @@ public class SudokuFragment
           prefs.getStream(), cal.get(Calendar.YEAR),
           1 + cal.get(Calendar.MONTH), counter);
       long id = db.addGeneratedPuzzle(props);
+      if (!props.has(Generator.RATING_KEY))
+        return null;  // Must have been interrupted
+      Rating rating = Rating.deserialize(props.get(Generator.RATING_KEY).getAsString());
       Database.Attempt attempt = db.getCurrentAttemptForPuzzle(id);
       if (attempt == null || !attempt.attemptState.isInPlay()) {
         // Whoops, we've already seen this puzzle: our counter got out of sync.
         // Loop around and generate the next one.
-      } else if (prefs.getProperOnly() && props.get(Generator.NUM_SOLUTIONS_KEY).getAsInt() > 1) {
+      } else if (prefs.getProperOnly() && rating.improper) {
         // Skip improper puzzles if the settings say so.
         Database.startUnstartedAttempt(attempt);
         attempt.attemptState = AttemptState.SKIPPED;
@@ -424,7 +476,7 @@ public class SudokuFragment
     @Override protected Database.Attempt doInBackground(Long... params) {
       Database.Attempt answer = mDb.getAttempt(params[0]);
       if (answer == null || !answer.attemptState.isInPlay())
-        answer = mDb.getFirstOpenAttempt();
+        answer = mDb.getRatedFirstOpenAttempt();
       if (answer == null || !answer.attemptState.isInPlay())
         answer = generateAndStorePuzzle(mDb, mPrefs);
       if (answer != null)
