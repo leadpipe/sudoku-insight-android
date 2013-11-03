@@ -53,7 +53,7 @@ public class Rating {
     this.algorithmVersion = algorithmVersion;
     this.estimatedAverageSolutionSeconds = estimatedAverageSolutionSeconds;
     this.estimateComplete = estimateComplete;
-    this.difficulty = difficulty;;
+    this.difficulty = difficulty;
     this.improper = improper;
   }
 
