@@ -28,7 +28,7 @@ import android.os.StrictMode;
 import android.util.Log;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.Queue;
@@ -37,18 +37,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * A retained fragment that manages async tasks on behalf of other fragments
- * that share its activity. The basic idea was lifted from AsyncTask; we don't
- * use that class anymore because it tends to cause problems when the
- * activity gets restarted.
+ * A retained fragment that manages async tasks on behalf of an activity and its
+ * other fragments. The basic idea was lifted from AsyncTask; we don't use that
+ * class anymore because it tends to cause problems when the activity gets
+ * restarted.
  *
  * <p>
- * The key to using {@link Task} successfully is to ensure that all access to
- * the fragment is done via the argument to the various <code>onXxx</code>
- * methods, and not via an implicit reference because the task is an inner class
- * of the fragment. In fact, to avoid running afoul of {@link StrictMode}
- * checks, it's best to make your tasks true nested classes if they are declared
- * inside a fragment class.
+ * The key to using {@link Task} and {@link ActivityTask} successfully is to
+ * ensure that all access to the fragment or activity is done via the argument
+ * to the various <code>onXxx</code> methods, and not via an implicit reference
+ * because the task is an inner class of the fragment. In fact, to avoid running
+ * afoul of {@link StrictMode} checks, it's critical to make your tasks true
+ * nested classes if they are declared inside a fragment or activity class.
  *
  * @author Luke Blanshard
  */
@@ -76,6 +76,16 @@ public class WorkerFragment extends Fragment {
     }
   }
 
+  /** Cancels all executing or pending tasks for the given activity. */
+  public static void cancelAll(Activity activity) {
+    getWorker(activity).cancelAll();
+  }
+
+  /** Cancels all executing or pending tasks for the given fragment. */
+  public static void cancelAll(Fragment fragment) {
+    getWorker(fragment).cancelAll();
+  }
+
   /**
    * The common base class for {@link Task} and {@link ActivityTask}.
    *
@@ -101,6 +111,7 @@ public class WorkerFragment extends Fragment {
             job = new Foreground() {
               @Override public void run() {
                 onPostExecute(getAnchor(), output);
+                mWorker.mTasks.remove(BaseTask.this);
               }
             };
           } catch (final Throwable t) {
@@ -108,6 +119,7 @@ public class WorkerFragment extends Fragment {
             job = new Foreground() {
               @Override public void run() {
                 onFailure(getAnchor(), t);
+                mWorker.mTasks.remove(BaseTask.this);
               }
             };
           }
@@ -115,9 +127,8 @@ public class WorkerFragment extends Fragment {
         }
       };
       onPreExecute(getAnchor());
-      mFuture = sExecutor.submit(r);
-      if (mIndependence == Independence.DEPENDENT)
-        mWorker.mDependentTasks.add(this);
+      mFuture = mWorker.mExecutor.submit(r);
+      mWorker.mTasks.add(this);
     }
 
     /**
@@ -311,9 +322,9 @@ public class WorkerFragment extends Fragment {
 
   /**
    * The executor for the background portion of worker tasks; only runs one at a
-   * time.
+   * time, per worker fragment.
    */
-  private static final ExecutorService sExecutor = Executors.newSingleThreadExecutor(
+  private final ExecutorService mExecutor = Executors.newSingleThreadExecutor(
       new ThreadFactoryBuilder().setNameFormat("WorkerFragment #%d").build());
 
   /** Our UI-thread handler looks for a Foreground object in its message and runs it. */
@@ -323,11 +334,11 @@ public class WorkerFragment extends Fragment {
     }
   };
 
-  /** Tasks that must be canceled when the activity goes away. */
-  private Queue<BaseTask<?,?,?,?>> mDependentTasks = Lists.newLinkedList();
+  /** Tasks currently running or pending. */
+  private Queue<BaseTask<?,?,?,?>> mTasks = Queues.newArrayDeque();
 
   /** Task outputs or progress notifications that came when the activity was detached. */
-  private Queue<BaseTask<?,?,?,?>.Foreground> mPendingForegroundJobs = Lists.newLinkedList();
+  private Queue<BaseTask<?,?,?,?>.Foreground> mPendingForegroundJobs = Queues.newArrayDeque();
 
   /** Finds the worker fragment for the given fragment, creating it if required. */
   static WorkerFragment getWorker(Fragment fragment) {
@@ -339,7 +350,7 @@ public class WorkerFragment extends Fragment {
     return getWorker(activity.getFragmentManager());
   }
 
-  private static WorkerFragment getWorker(FragmentManager fm) {
+  private static synchronized WorkerFragment getWorker(FragmentManager fm) {
     if (fm == null) return null;
     WorkerFragment worker = (WorkerFragment) fm.findFragmentByTag(TAG);
     if (worker == null) {
@@ -361,6 +372,12 @@ public class WorkerFragment extends Fragment {
     mPendingForegroundJobs.add(foregroundJob);
   }
 
+  /** Cancels everything, even independent tasks. */
+  private void cancelAll() {
+    while (!mTasks.isEmpty())
+      mTasks.remove().cancel();
+  }
+
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setRetainInstance(true);
@@ -375,8 +392,11 @@ public class WorkerFragment extends Fragment {
   }
 
   @Override public void onDetach() {
-    while (!mDependentTasks.isEmpty())
-      mDependentTasks.remove().cancel();
+    while (!mTasks.isEmpty()) {
+      BaseTask<?, ?, ?, ?> task = mTasks.remove();
+      if (task.mIndependence == Independence.DEPENDENT)
+        task.cancel();
+    }
     super.onDetach();
   }
 }
