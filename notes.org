@@ -16,6 +16,9 @@
         - moves that have same-numeral direct flb's
 *** DONE Investigate distribution of times for upcoming puzzles
 *** TODO Investigate distribution of times for multiple puzzles generated from the same end state
+*** TODO Performance improvements
+    - Cache atomic insights in Analyzer instance?
+    - Add phase to Analyzer callback, and stop after assignments when taking the short path?
 
 ** Getting games with history from a sqlite db into a tsv file:
 sqlite3 phone-2012-07-08.db <<END
