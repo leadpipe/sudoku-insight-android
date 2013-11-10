@@ -117,7 +117,8 @@ public class Evaluator {
       int numEvaluations = 0;
       while (uninterrupted && numEvaluations++ < trialCount) {
         Run inner = new Run(outer.gridMarks, true);
-        inner.runDisproof(trialCount == 1 ? callback : null);
+        inner.runDisproof(
+            new InnerCallback(callback, seconds + totalSeconds / trialCount, trialCount));
         uninterrupted = inner.uninterrupted();
         totalSeconds += inner.seconds;
         if (inner.recursiveDisproofs) difficulty = Difficulty.RECURSIVE_DISPROOFS;
@@ -125,6 +126,25 @@ public class Evaluator {
       seconds += totalSeconds / numEvaluations;
     }
     return new Rating(CURRENT_VERSION, seconds, uninterrupted, difficulty, improper);
+  }
+
+  private static class InnerCallback implements Callback {
+    @Nullable private final Callback callback;
+    private final double baseSeconds;
+    private final int trialCount;
+
+    InnerCallback(@Nullable Callback callback, double baseSeconds, int trialCount) {
+      this.callback = callback;
+      this.baseSeconds = baseSeconds;
+      this.trialCount = trialCount;
+    }
+
+    @Override public void updateEstimate(double minSeconds) {
+      if (callback != null)
+        callback.updateEstimate(baseSeconds + minSeconds / trialCount);
+    }
+
+    @Override public void disproofsRequired() {}
   }
 
   private enum RunStatus { INTERRUPTED, COMPLETE, ERROR, INCONCLUSIVE };
