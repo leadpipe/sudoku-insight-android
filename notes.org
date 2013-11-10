@@ -19,6 +19,8 @@
 *** TODO Performance improvements
     - Cache atomic insights in Analyzer instance?
     - Add phase to Analyzer callback, and stop after assignments when taking the short path?
+*** TODO Send estimate updates during 10-way fanout
+    - just divide the numbers by 10
 
 ** Getting games with history from a sqlite db into a tsv file:
 sqlite3 phone-2012-07-08.db <<END
@@ -36,7 +38,16 @@ END
 
 ** App/UI cleanups
 *** TODO Evaluate puzzles while (or before) adding them
+    - make a dedicated background thread that generates and evaluates puzzles well in advance
+    - have the info and list pages interact with this thread similarly to the network thread
 *** TODO Add a dialog that shows the evaluation (in some form) and lets you skip the puzzle
+    - use an overlay instead of a dialog, so menu works
+    - make it slightly harder to skip?
+*** TODO Don't send skipped puzzles to the app engine
+    - treat skipped puzzles specially, if we play them we should be changing the
+      existing attempt not making a new one
+*** TODO Show stars in title
+*** TODO Use stars instead of number in list
 *** TODO Update help
     - acknowledge that the replay view can't handle all puzzles
     - have the welcome dialog actually be a help page
