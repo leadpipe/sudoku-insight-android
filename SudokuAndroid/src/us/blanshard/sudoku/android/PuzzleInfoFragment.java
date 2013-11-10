@@ -23,9 +23,12 @@ import us.blanshard.sudoku.android.Database.AttemptState;
 import us.blanshard.sudoku.android.Database.Element;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
+import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.insight.Evaluator;
+import us.blanshard.sudoku.insight.Rating;
 import us.blanshard.sudoku.messages.PuzzleRpcs.PuzzleResult;
 
 import android.annotation.SuppressLint;
@@ -33,6 +36,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
+import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -200,6 +204,8 @@ public class PuzzleInfoFragment extends FragmentBase
 
   private void setPuzzle(Database.Puzzle puzzle) {
     mPuzzle = puzzle;
+    if (puzzle.rating == null)
+      new RatePuzzle(this).execute();
     mProperties = new JsonParser().parse(puzzle.properties).getAsJsonObject();
     mGrid.setPuzzle(puzzle.clues);
     mPuzzleIdView.setText(makeIdString());
@@ -211,7 +217,7 @@ public class PuzzleInfoFragment extends FragmentBase
     getActivity().invalidateOptionsMenu();
   }
 
-  private String makeIdString() {
+  private CharSequence makeIdString() {
     StringBuilder sb = new StringBuilder();
     if (mProperties.has(NAME_KEY))
       sb.append(getString(R.string.text_puzzle_full_name,
@@ -219,8 +225,11 @@ public class PuzzleInfoFragment extends FragmentBase
     else
       sb.append(getString(R.string.text_puzzle_full_number, mPuzzle._id));
     if (mPuzzle.source != null)
-      sb.append("\n").append(getString(R.string.text_source, mPuzzle.source));
-    return sb.toString();
+      sb.append("<br>").append(getString(R.string.text_source, mPuzzle.source));
+    if (mPuzzle.rating != null) {
+      sb.append("<br>").append(ToText.ratingSummaryHtml(getActivity(), mPuzzle.rating));
+    }
+    return Html.fromHtml(sb.toString());
   }
 
   private String makeContentHtml() {
@@ -304,6 +313,33 @@ public class PuzzleInfoFragment extends FragmentBase
 
     @Override protected void onPostExecute(PuzzleInfoFragment fragment, Database.Puzzle puzzle) {
       fragment.setPuzzle(puzzle);
+    }
+  }
+
+  private static class RatePuzzle extends WorkerFragment.Task<PuzzleInfoFragment, Void, Void, Database.Puzzle> {
+    private final Database mDb;
+    private final Grid mPuzzle;
+    private final long mId;
+
+    RatePuzzle(PuzzleInfoFragment fragment) {
+      super(fragment);
+      this.mDb = fragment.mDb;
+      this.mPuzzle = fragment.mPuzzle.clues;
+      this.mId = fragment.mPuzzleId;
+      Log.d(TAG, "RatePuzzle start");
+    }
+
+    @Override protected Database.Puzzle doInBackground(Void... params) {
+      Rating rating = Evaluator.evaluate(mPuzzle, null);
+      if (!rating.estimateComplete) return null;
+      mDb.setPuzzleRating(mId, rating);
+      return mDb.getFullPuzzle(mId);
+    }
+
+    @Override protected void onPostExecute(PuzzleInfoFragment fragment, Database.Puzzle puzzle) {
+      Log.d(TAG, "RatePuzzle end");
+      if (puzzle != null)
+        fragment.setPuzzle(puzzle);
     }
   }
 

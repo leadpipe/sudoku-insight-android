@@ -22,6 +22,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import us.blanshard.sudoku.android.Database.Attempt;
 import us.blanshard.sudoku.android.Database.AttemptState;
+import us.blanshard.sudoku.insight.Rating;
 import us.blanshard.sudoku.messages.PuzzleRpcs.PuzzleResult;
 
 import android.content.Context;
@@ -37,6 +38,8 @@ import java.util.Locale;
  * @author Luke Blanshard
  */
 public class ToText {
+  public static final String SOLID_STAR_HTML = "&#9733;";
+  public static final String HOLLOW_STAR_HTML = "&#9734;";
 
   /**
    * Formats elapsed time as hours:minutes:seconds.
@@ -92,6 +95,52 @@ public class ToText {
   public static String collectionNameAndTimeText(Context context, Database.Element element) {
     String html = collectionNameAndTimeHtml(context, element);
     return Html.fromHtml(html).toString();
+  }
+
+  /**
+   * Returns a description of the progress of rating a puzzle.
+   */
+  public static String ratingProgressHtml(Context context, double minSeconds) {
+    StringBuilder sb = new StringBuilder();
+    double num = Ratings.numericalRating(minSeconds);
+    sb.append(context.getString(R.string.text_rating_in_progress, num));
+    sb.append("&nbsp;");
+    int stars = Ratings.ratingStars(num);
+    for (int s = 0; s < stars; ++s) {
+      sb.append(SOLID_STAR_HTML);
+    }
+    return sb.toString();
+  }
+
+  /**
+   * Returns a summary of the given puzzle rating.
+   */
+  public static String ratingSummaryHtml(Context context, Rating rating) {
+    StringBuilder sb = new StringBuilder();
+    double num = Ratings.numericalRating(rating.estimatedAverageSolutionSeconds);
+    sb.append(context.getString(R.string.text_rating_number, num));
+    sb.append("<br>");
+    int stars = Ratings.ratingStars(num);
+    for (int s = 0; s < Ratings.MAX_STARS; ++s) {
+      sb.append(s < stars ? SOLID_STAR_HTML : HOLLOW_STAR_HTML);
+    }
+    int resourceId = Ratings.starsDescriptionResource(stars);
+    sb.append("&nbsp;").append(context.getString(resourceId));
+    return sb.toString();
+  }
+
+  /**
+   * Returns a short summary of the given puzzle rating.
+   */
+  public static String ratingShortSummaryHtml(Context context, Rating rating) {
+    StringBuilder sb = new StringBuilder();
+    double num = Ratings.numericalRating(rating.estimatedAverageSolutionSeconds);
+    sb.append(context.getString(R.string.text_rating_number, num));
+    sb.append(" (");
+    int stars = Ratings.ratingStars(num);
+    int resourceId = Ratings.starsDescriptionResource(stars);
+    sb.append(context.getString(resourceId)).append(")");
+    return sb.toString();
   }
 
   /**

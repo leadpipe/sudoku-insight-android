@@ -333,6 +333,11 @@ public class PuzzleListFragment extends FragmentBase implements NetworkService.S
             props.get(NAME_KEY).getAsString(), puzzle._id));
       else
         sb.append(getString(R.string.text_puzzle_number_start, puzzle._id));
+      if (puzzle.rating != null) {
+        sb.append(ToText.ratingShortSummaryHtml(getContext(), puzzle.rating));
+        sb.append(getString(R.string.text_sentence_end));
+        sb.append("  ");
+      }
       if (puzzle.vote != 0) {
         int resId = puzzle.vote < 0 ? R.string.text_vote_down : R.string.text_vote_up;
         sb.append(TextUtils.htmlEncode(getString(resId))).append("  ");

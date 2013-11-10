@@ -13,6 +13,7 @@
     <string name="button_pause">Pause</string>
     <string name="button_play">Play</string>
     <string name="button_show_solution">Show Solution</string>
+    <string name="button_skip">Skip</string>
     <string name="dialog_first_time_message">Welcome to Sudoku Insight.  There is help available via the Help menu, and there are a few settings you may wish to adjust in the Settings menu.\n\nEnjoy!</string>
     <string name="dialog_first_time_here_message">Welcome back.  If you see familiar puzzles, consider changing the stream number in Settings.</string>
     <string name="dialog_improper_message">This Sudoku has more than one solution.  Play it anyway?</string>
@@ -87,10 +88,19 @@
     <string name="text_oops">Oops!</string>
     <string name="text_puzzle_full_name">Sudoku %1$s (#%2$d on this device)</string>
     <string name="text_puzzle_full_number">Sudoku #%1$d on this device</string>
+    <string name="text_puzzle_name">Sudoku %1$s (#%2$d)</string>
     <string name="text_puzzle_name_start">"Sudoku %1$s (#%2$d): "</string>
     <string name="text_puzzle_number">#%1$d</string>
     <string name="text_puzzle_number_start">"Sudoku #%1$d: "</string>
     <string name="text_puzzle_stats_summary">Attempted by: %1$d; solved by: %2$d; avg time: %3$s.</string>
+    <string name="text_rating_easy">Easy</string>
+    <string name="text_rating_extremely_hard">Extremely Hard</string>
+    <string name="text_rating_hard">Hard</string>
+    <string name="text_rating_in_progress">Rating in progress, at least: %1$.1f</string>
+    <string name="text_rating_moderate">Moderate</string>
+    <string name="text_rating_number">Rating: %1$.1f</string>
+    <string name="text_rating_very_easy">Very Easy</string>
+    <string name="text_rating_very_hard">Very Hard</string>
     <string name="text_recommended_puzzles">Recommended puzzles</string>
     <string name="text_replay_title">Review #%1$d</string>
     <string name="text_sentence_end">.</string>

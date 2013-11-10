@@ -109,11 +109,6 @@ public class Generator {
   public static final String COUNTER_KEY = "counter";
 
   /**
-   * A JSON property key for a puzzle's rating, in string form.
-   */
-  public static final String RATING_KEY = "rating";
-
-  /**
    * Identifies the generation algorithm corresponding to {@link
    * #generateBasicPuzzle}.
    */

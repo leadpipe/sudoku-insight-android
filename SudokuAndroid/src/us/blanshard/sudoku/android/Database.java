@@ -17,6 +17,7 @@ package us.blanshard.sudoku.android;
 
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.insight.Rating;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -43,7 +44,7 @@ import java.util.Map;
 public class Database {
 
   private static final String ATTEMPT_SELECT_AND_FROM_CLAUSE =
-      "SELECT a.*, clues, properties FROM [Attempt] a JOIN [Puzzle] p ON a.puzzleId = p._id ";
+      "SELECT a.*, clues, properties, rating FROM [Attempt] a JOIN [Puzzle] p ON a.puzzleId = p._id ";
 
   public static final int ALL_PSEUDO_COLLECTION_ID = 0;
   public static final int GENERATED_COLLECTION_ID = 1;
@@ -123,6 +124,7 @@ public class Database {
     public Grid clues;
     public InstallationInfo installation;
     public String properties;
+    public Rating rating;
     public List<Element> elements;
 
     @Override public Attempt clone() {
@@ -163,6 +165,7 @@ public class Database {
     public boolean voteSaved;
     public String stats;
     public long statsTime;
+    public Rating rating;
     public List<Attempt> attempts;
     public List<Element> elements;
   }
@@ -202,7 +205,9 @@ public class Database {
 
   /**
    * Adds the puzzle with the given properties to the database, and also to the
-   * captured-puzzles collection. Returns the puzzle's ID.
+   * captured-puzzles collection.  Returns the puzzle's database ID.  Modifies
+   * the given properties object to remove its string ID and add in any
+   * properties already present in the database for the puzzle.
    */
   public long addCapturedPuzzle(JsonObject properties, String source) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
@@ -227,32 +232,39 @@ public class Database {
   /**
    * Adds the puzzle with the given clues, properties, and source to the
    * database, or updates it by merging the properties and source with what's
-   * already there. If not already present creates an attempt row for it as
-   * well. Returns the puzzle's ID.
+   * already there.  If not already present creates an attempt row for it as
+   * well.  Modifies the given JsonObject to remove the puzzle ID and add any
+   * properties already in the database that aren't in the given JsonObject.
+   * Returns the puzzle's ID.
    */
   private long addOrUpdatePuzzle(JsonObject properties, String source) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
     db.beginTransaction();
     try {
       String clues = properties.remove(Generator.PUZZLE_KEY).getAsString();
+      Long puzzleId = getPuzzleId(db, clues);
+      if (puzzleId != null) {
+        Puzzle puzzle = getFullPuzzle(puzzleId);
+        JsonObject existing = new JsonParser().parse(puzzle.properties).getAsJsonObject();
+        for (Map.Entry<String, JsonElement> e : existing.entrySet())
+          if (!properties.has(e.getKey()))
+            properties.add(e.getKey(), e.getValue());
+        if (source == null)
+          source = puzzle.source;
+      }
+
       ContentValues values = new ContentValues();
-      values.put("clues", clues);
+      if (puzzleId == null)
+        values.put("clues", clues);
       values.put("properties", properties.toString());
       if (source != null)
         values.put("source", source);
 
-      Long puzzleId = getPuzzleId(db, clues);
       if (puzzleId == null) {
         puzzleId = db.insertOrThrow("Puzzle", null, values);
         putUnstartedAttempt(db, puzzleId);
       } else {
-        Puzzle puzzle = getFullPuzzle(puzzleId);
-        JsonObject replacement = new JsonParser().parse(puzzle.properties).getAsJsonObject();
-        for (Map.Entry<String, JsonElement> e : properties.entrySet())
-          replacement.add(e.getKey(), e.getValue());
-        values.put("properties", replacement.toString());
-        // source: no further logic required to replace or leave an existing value.
-        db.update("Puzzle", values, "[_id] = ?", new String[]{ Long.toString(puzzleId) });
+        db.update("Puzzle", values, "[_id] = ?", new String[]{ puzzleId.toString() });
       }
 
       db.setTransactionSuccessful();
@@ -323,6 +335,22 @@ public class Database {
   }
 
   /**
+   * Sets a puzzle's rating.
+   */
+  public void setPuzzleRating(long puzzleId, Rating rating) {
+    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+    db.beginTransaction();
+    try {
+      ContentValues values = new ContentValues();
+      values.put("rating", rating.serialize());
+      db.update("Puzzle", values, "[_id] = ?", new String[]{ Long.toString(puzzleId) });
+      db.setTransactionSuccessful();
+    } finally {
+      db.endTransaction();
+    }
+  }
+
+  /**
    * Returns the attempt given its ID.
    */
   public Attempt getAttempt(long attemptId) throws SQLException {
@@ -348,6 +376,8 @@ public class Database {
         Attempt answer = attemptFromCursor(cursor);
         answer.clues = Grid.fromString(cursor.getString(cursor.getColumnIndexOrThrow("clues")));
         answer.properties = cursor.getString(cursor.getColumnIndexOrThrow("properties"));
+        String r = cursor.getString(cursor.getColumnIndexOrThrow("rating"));
+        if (r != null) answer.rating = Rating.deserialize(r);
         answer.elements = getPuzzleElements(db, answer.puzzleId);
         return answer;
       }
@@ -367,6 +397,9 @@ public class Database {
     answer.voteSaved = getLong(cursor, "voteSaved", 0) != 0;
     answer.stats = cursor.getString(cursor.getColumnIndexOrThrow("stats"));
     answer.statsTime = getLong(cursor, "statsTime", 0);
+    String r = cursor.getString(cursor.getColumnIndexOrThrow("rating"));
+    if (r != null)
+      answer.rating = Rating.deserialize(r);
     return answer;
   }
 
@@ -429,8 +462,7 @@ public class Database {
   /**
    * Returns the most recently modified attempt row for the given puzzle, or
    * creates a new attempt row if the existing one's state indicates it is no
-   * longer in play. If the attempt is unstarted, modifies the returned object
-   * (but not the corresponding row) to started.
+   * longer in play.
    */
   public Attempt getOpenAttemptForPuzzle(long puzzleId) throws SQLException {
     Attempt answer = getCurrentAttemptForPuzzle(puzzleId);
@@ -439,7 +471,7 @@ public class Database {
       long attemptId = putUnstartedAttempt(db, puzzleId);
       answer = getAttempt(attemptId);
     }
-    return startUnstartedAttempt(answer);
+    return answer;
   }
 
   /**
@@ -457,15 +489,14 @@ public class Database {
 
   /**
    * Returns the least recently modified open attempt row in the database, or
-   * null.  If the attempt is unstarted, modifies the returned object (but not
-   * the corresponding row) to started.
+   * null.
    */
   public Attempt getFirstOpenAttempt() throws SQLException {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
     String sql = ATTEMPT_SELECT_AND_FROM_CLAUSE + "WHERE [attemptState] IN (?, ?) ORDER BY [lastTime] ASC";
     Attempt answer = fetchAttempt(db, sql, Integer.toString(AttemptState.UNSTARTED.getNumber()),
         Integer.toString(AttemptState.STARTED.getNumber()));
-    return startUnstartedAttempt(answer);
+    return answer;
   }
 
   /**
@@ -752,7 +783,7 @@ public class Database {
     private final Context mContext;
 
     OpenHelper(Context context) {
-      super(context, "db", null, 9);
+      super(context, "db", null, 10);
       mContext = context;
     }
 
@@ -766,7 +797,8 @@ public class Database {
           + "  [vote] INTEGER  DEFAULT 0,"
           + "  [voteSaved] INTEGER  DEFAULT 1,"  // boolean
           + "  [stats] TEXT,"
-          + "  [statsTime] INTEGER  DEFAULT 0)");
+          + "  [statsTime] INTEGER  DEFAULT 0,"
+          + "  [rating] TEXT)");
       db.execSQL(""
           + "CREATE TABLE [Installation] ("
           + "  [_id] INTEGER PRIMARY KEY,"
@@ -852,6 +884,9 @@ public class Database {
         ContentValues values = new ContentValues();
         values.put("voteSaved", 0);
         db.update("Puzzle", values, "[vote] <> 0", null);
+      }
+      if (oldVersion < 10) {
+        db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [rating] TEXT");
       }
     }
   }

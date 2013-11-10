@@ -20,6 +20,7 @@ import static us.blanshard.sudoku.android.SudokuView.MAX_VISIBLE_TRAILS;
 import static us.blanshard.sudoku.core.Numeral.number;
 import static us.blanshard.sudoku.core.Numeral.numeral;
 
+import us.blanshard.sudoku.android.Database.Attempt;
 import us.blanshard.sudoku.android.Database.AttemptState;
 import us.blanshard.sudoku.android.SudokuView.OnMoveListener;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
@@ -36,6 +37,8 @@ import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.Sudoku.State;
 import us.blanshard.sudoku.game.UndoStack;
 import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.insight.Evaluator;
+import us.blanshard.sudoku.insight.Rating;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -48,7 +51,8 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
-import android.util.Log;
+import android.text.Html;
+import android.text.Spanned;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -71,6 +75,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.util.Calendar;
 import java.util.Collection;
@@ -155,30 +160,90 @@ public class SudokuFragment
     return mAttempt.puzzleId;
   }
 
-  private void setAttempt(Database.Attempt attempt, List<Move> history, String title, String status) {
+  private void setAttempt(Database.Attempt attempt, List<Move> history,
+      String title, String status) {
     mAttempt = attempt;
     if (attempt == null) {
       setGame(null);
-      return;
+    } else {
+      if (attempt.attemptState == AttemptState.UNSTARTED)
+        showRatingDialog();
+      else
+        new CheckNextAttempt(this).execute(mAttempt._id);
+      finishSettingAttempt(history, title, status);
     }
-    if (attempt.attemptState == AttemptState.UNSTARTED) {
-      Database.startUnstartedAttempt(attempt);
-    }
-    new CheckNextAttempt(this).execute(attempt._id);
-    Sudoku game = new Sudoku(attempt.clues, mRegistry, history, attempt.elapsedMillis);
+  }
+
+  private void showRatingDialog() {
+    final JsonObject props = new JsonParser().parse(mAttempt.properties).getAsJsonObject();
+    DialogFragment dialog = new DialogFragment() {
+      @Override public Dialog onCreateDialog(Bundle savedInstanceState) {
+        String title = props.has(Generator.NAME_KEY)
+            ? getString(R.string.text_puzzle_name, props.get(Generator.NAME_KEY).getAsString(), mAttempt.puzzleId)
+            : getString(R.string.text_puzzle_number, mAttempt.puzzleId);
+        Rating rating = mAttempt.rating;
+        boolean mustRate = rating == null || !rating.estimateComplete;
+        Spanned message = mustRate
+            ? Html.fromHtml(ToText.ratingProgressHtml(getActivity(), 0))
+            : Html.fromHtml(ToText.ratingSummaryHtml(getActivity(), rating));
+        AlertDialog alert = new AlertDialog.Builder(getActivity())
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton(R.string.button_play, new OnClickListener() {
+                @Override public void onClick(DialogInterface dialog, int which) {
+                  dialog.cancel();
+                }
+            })
+            .setNegativeButton(R.string.button_skip, new OnClickListener() {
+                @Override public void onClick(DialogInterface dialog, int which) {
+                  dialog.dismiss();
+                  mProgress.setVisibility(View.VISIBLE);
+                  Database.startUnstartedAttempt(mAttempt);
+                  mAttempt.attemptState = AttemptState.SKIPPED;
+                  ThreadPolicy policy = StrictMode.allowThreadDiskWrites();
+                  try {
+                    mDb.updateAttempt(mAttempt);
+                  } finally {
+                    StrictMode.setThreadPolicy(policy);
+                  }
+                  long attemptId = mAttempt._id;
+                  setAttempt(null, null, null, null);
+                  WorkerFragment.cancelAll(SudokuFragment.this);
+                  new FetchFindOrMakePuzzle(SudokuFragment.this).execute(attemptId);
+                }
+            })
+            .create();
+        if (mustRate)
+          new RatePuzzle(SudokuFragment.this, alert).execute();
+        return alert;
+      }
+
+      @Override public void onCancel(DialogInterface dialog) {
+        // Cancel means play, either by hitting the Play button or backing
+        // out of the dialog.
+        Database.startUnstartedAttempt(mAttempt);
+        new CheckNextAttempt(SudokuFragment.this).execute(mAttempt._id);
+        super.onCancel(dialog);
+      }
+    };
+    dialog.show(getFragmentManager(), "puzzleRating");
+  }
+
+  private void finishSettingAttempt(List<Move> history, String title, String status) {
+    Sudoku game = new Sudoku(mAttempt.clues, mRegistry, history, mAttempt.elapsedMillis);
     getActivity().setTitle(title);
     setGame(game);
-    if (attempt.uiState != null) {
+    if (mAttempt.uiState != null) {
       GameJson.setFactory(game);
-      UiState uiState = GSON.fromJson(attempt.uiState, UiState.class);
+      UiState uiState = GSON.fromJson(mAttempt.uiState, UiState.class);
       GameJson.clearFactory();
       mUndoStack = uiState.undo;
       mSudokuView.setDefaultChoice(numeral(uiState.defaultChoice));
       restoreTrails(uiState.trailOrder, uiState.numVisibleTrails, uiState.numOffTrails);
       mEditTrailToggle.setChecked(uiState.trailActive);
     }
-    if (attempt.attemptState.isInPlay()) {
-      mPrefs.setCurrentAttemptIdAsync(attempt._id);
+    if (mAttempt.attemptState.isInPlay()) {
+      mPrefs.setCurrentAttemptIdAsync(mAttempt._id);
     }
     if (status != null)
       showStatus(status);
@@ -312,6 +377,7 @@ public class SudokuFragment
     } else if (mPrefs.hasCurrentAttemptId()) {
       attemptId = mPrefs.getCurrentAttemptId();
     }
+    WorkerFragment.cancelAll(this);
     new FetchFindOrMakePuzzle(this).execute(attemptId);
     mProgress.setVisibility(View.VISIBLE);
   }
@@ -454,22 +520,80 @@ public class SudokuFragment
     }
   }
 
+  private static class RatePuzzle extends WorkerFragment.Task<SudokuFragment, Void, Double, Rating> {
+    private final Database mDb;
+    private final Database.Attempt mAttempt;
+    private final AlertDialog mDialog;
+
+    /**
+     * @param fragment
+     */
+    public RatePuzzle(SudokuFragment fragment, AlertDialog dialog) {
+      super(fragment, WorkerFragment.Priority.FOREGROUND, WorkerFragment.Independence.FREE);
+      mDb = fragment.mDb;
+      mAttempt = fragment.mAttempt;
+      mDialog = dialog;
+    }
+
+    @Override protected Rating doInBackground(Void... inputs) {
+      Rating rating = Evaluator.evaluate(mAttempt.clues, new Evaluator.Callback() {
+        @Override public void updateEstimate(double minSeconds) {
+          publishProgress(minSeconds);
+        }
+        @Override public void disproofsRequired() {}
+      });
+      if (rating.estimateComplete)
+        mDb.setPuzzleRating(mAttempt.puzzleId, rating);
+      return rating;
+    }
+
+    @Override protected void onProgressUpdate(SudokuFragment anchor, Double... values) {
+      mDialog.setMessage(Html.fromHtml(ToText.ratingProgressHtml(anchor.getActivity(), values[0])));
+    }
+
+    @Override protected void onPostExecute(SudokuFragment anchor, Rating output) {
+      if (output.estimateComplete) {
+        mAttempt.rating = output;
+        mDialog.setMessage(Html.fromHtml(ToText.ratingSummaryHtml(anchor.getActivity(), output)));
+        new CheckNextAttempt(anchor).execute(mAttempt._id);
+      }
+    }
+  }
+
   private static class CheckNextAttempt extends WorkerFragment.Task<SudokuFragment, Long, Void, Void> {
     private final Database mDb;
     private final Prefs mPrefs;
+    private final Grid mPuzzle;
+    private final long mPuzzleId;
 
     CheckNextAttempt(SudokuFragment fragment) {
       super(fragment);
       mDb = fragment.mDb;
       mPrefs = fragment.mPrefs;
+      if (fragment.mAttempt == null || fragment.mAttempt.rating != null) {
+        mPuzzle = null;
+        mPuzzleId = 0;
+      } else {
+        mPuzzle = fragment.mAttempt.clues;
+        mPuzzleId = fragment.mAttempt.puzzleId;
+      }
     }
 
     @Override protected Void doInBackground(Long... params) {
       int numOpenAttempts = mDb.getNumOpenAttempts();
       boolean hasNext = numOpenAttempts > 1
           || numOpenAttempts == 1 && (params[0] == null || mDb.getFirstOpenAttempt()._id != params[0]);
-      if (!hasNext)
-        generateAndStorePuzzle(mDb, mPrefs);
+      if (!hasNext) {
+        Attempt attempt = generateAndStorePuzzle(mDb, mPrefs);
+        Rating rating = Evaluator.evaluate(attempt.clues, null);
+        if (rating.estimateComplete)
+          mDb.setPuzzleRating(attempt.puzzleId, rating);
+      }
+      if (!wasCanceled() && mPuzzle != null) {
+        Rating rating = Evaluator.evaluate(mPuzzle, null);
+        if (rating.estimateComplete)
+          mDb.setPuzzleRating(mPuzzleId, rating);
+      }
       return null;
     }
   }
@@ -491,7 +615,6 @@ public class SudokuFragment
   }
 
   void gameShowing(boolean showing) {
-    Log.d("SudokuFragment", "gameShowing " + showing);
     if (mResumed = showing) {
       if (mGame != null && mState != Grid.State.SOLVED) mGame.resume();
       new CheckNextAttempt(this).execute(mAttempt == null ? null : mAttempt._id);
