@@ -1,3 +1,4 @@
 <resources>
+    <color name="rating_frame_background_color">#f4eeeeee</color>
     <color name="trail_count_color">#aaaaaa</color>
 </resources>

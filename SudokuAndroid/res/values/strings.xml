@@ -30,7 +30,7 @@
     <string name="menu_help_contents">Contents</string>
     <string name="menu_help_info">Puzzle Details</string>
     <string name="menu_help_list">Listing Puzzles</string>
-    <string name="menu_help_overview">Overview</string>
+    <string name="menu_help_overview">Welcome</string>
     <string name="menu_help_replay">Reviewing Puzzles\' Solutions</string>
     <string name="menu_help_settings">Settings Help</string>
     <string name="menu_help_sudoku">Solving Sudoku</string>
@@ -99,6 +99,7 @@
     <string name="text_rating_in_progress">Rating in progress, at least: %1$.1f</string>
     <string name="text_rating_moderate">Moderate</string>
     <string name="text_rating_number">Rating: %1$.1f</string>
+    <string name="text_rating_number_only">%1$.1f</string>
     <string name="text_rating_very_easy">Very Easy</string>
     <string name="text_rating_very_hard">Very Hard</string>
     <string name="text_recommended_puzzles">Recommended puzzles</string>
