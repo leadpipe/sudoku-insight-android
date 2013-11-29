@@ -227,7 +227,7 @@ public class PuzzleInfoFragment extends FragmentBase
     if (mPuzzle.source != null)
       sb.append("<br>").append(getString(R.string.text_source, mPuzzle.source));
     if (mPuzzle.rating != null) {
-      sb.append("<br>").append(ToText.ratingSummaryHtml(getActivity(), mPuzzle.rating));
+      sb.append("<br>").append(ToText.ratingHtml(getActivity(), mPuzzle.rating));
     }
     return Html.fromHtml(sb.toString());
   }

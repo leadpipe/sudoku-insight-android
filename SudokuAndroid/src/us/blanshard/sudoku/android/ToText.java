@@ -113,9 +113,9 @@ public class ToText {
   }
 
   /**
-   * Returns a summary of the given puzzle rating.
+   * Renders the given puzzle rating as text.
    */
-  public static String ratingSummaryHtml(Context context, Rating rating) {
+  public static String ratingHtml(Context context, Rating rating) {
     StringBuilder sb = new StringBuilder();
     double num = Ratings.numericalRating(rating.estimatedAverageSolutionSeconds);
     sb.append(context.getString(R.string.text_rating_number, num));
@@ -130,16 +130,17 @@ public class ToText {
   }
 
   /**
-   * Returns a short summary of the given puzzle rating.
+   * Returns a summary of the given puzzle rating.
    */
-  public static String ratingShortSummaryHtml(Context context, Rating rating) {
+  public static String ratingSummaryHtml(Context context, Rating rating) {
     StringBuilder sb = new StringBuilder();
     double num = Ratings.numericalRating(rating.estimatedAverageSolutionSeconds);
-    sb.append(context.getString(R.string.text_rating_number, num));
-    sb.append(" (");
+    sb.append(context.getString(R.string.text_rating_number_only, num));
+    sb.append(' ');
     int stars = Ratings.ratingStars(num);
-    int resourceId = Ratings.starsDescriptionResource(stars);
-    sb.append(context.getString(resourceId)).append(")");
+    for (int s = 0; s < stars; ++s) {
+      sb.append(SOLID_STAR_HTML);
+    }
     return sb.toString();
   }
 

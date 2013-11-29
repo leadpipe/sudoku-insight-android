@@ -59,6 +59,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
+import android.view.ViewTreeObserver;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
@@ -105,10 +107,12 @@ public class SudokuFragment
   private final Sudoku.Registry mRegistry = Sudoku.newRegistry();
   private TrailAdapter mTrailAdapter;
   private SudokuView mSudokuView;
+  private View mRatingFrame;
   private ProgressBar mProgress;
   private ToggleButton mEditTrailToggle;
   private ListView mTrailsList;
   private TextView mTimer;
+  private TextView mRating;
   private Toast mToast;
 
   private final Runnable timerUpdater = new Runnable() {
@@ -163,76 +167,97 @@ public class SudokuFragment
   private void setAttempt(Database.Attempt attempt, List<Move> history,
       String title, String status) {
     mAttempt = attempt;
+    setRatingText();
     if (attempt == null) {
       setGame(null);
     } else {
       if (attempt.attemptState == AttemptState.UNSTARTED)
-        showRatingDialog();
+        showRatingFrame();
       else
         new CheckNextAttempt(this).execute(mAttempt._id);
       finishSettingAttempt(history, title, status);
     }
   }
 
-  private void showRatingDialog() {
+  private void showRatingFrame() {
     final JsonObject props = new JsonParser().parse(mAttempt.properties).getAsJsonObject();
-    DialogFragment dialog = new DialogFragment() {
-      @Override public Dialog onCreateDialog(Bundle savedInstanceState) {
-        String title = props.has(Generator.NAME_KEY)
-            ? getString(R.string.text_puzzle_name, props.get(Generator.NAME_KEY).getAsString(), mAttempt.puzzleId)
-            : getString(R.string.text_puzzle_number, mAttempt.puzzleId);
-        Rating rating = mAttempt.rating;
-        boolean mustRate = rating == null || !rating.estimateComplete;
-        Spanned message = mustRate
-            ? Html.fromHtml(ToText.ratingProgressHtml(getActivity(), 0))
-            : Html.fromHtml(ToText.ratingSummaryHtml(getActivity(), rating));
-        AlertDialog alert = new AlertDialog.Builder(getActivity())
-            .setTitle(title)
-            .setMessage(message)
-            .setPositiveButton(R.string.button_play, new OnClickListener() {
-                @Override public void onClick(DialogInterface dialog, int which) {
-                  dialog.cancel();
-                }
-            })
-            .setNegativeButton(R.string.button_skip, new OnClickListener() {
-                @Override public void onClick(DialogInterface dialog, int which) {
-                  dialog.dismiss();
-                  mProgress.setVisibility(View.VISIBLE);
-                  Database.startUnstartedAttempt(mAttempt);
-                  mAttempt.attemptState = AttemptState.SKIPPED;
-                  ThreadPolicy policy = StrictMode.allowThreadDiskWrites();
-                  try {
-                    mDb.updateAttempt(mAttempt);
-                  } finally {
-                    StrictMode.setThreadPolicy(policy);
-                  }
-                  long attemptId = mAttempt._id;
-                  setAttempt(null, null, null, null);
-                  WorkerFragment.cancelAll(SudokuFragment.this);
-                  new FetchFindOrMakePuzzle(SudokuFragment.this).execute(attemptId);
-                }
-            })
-            .create();
-        if (mustRate)
-          new RatePuzzle(SudokuFragment.this, alert).execute();
-        return alert;
-      }
 
-      @Override public void onCancel(DialogInterface dialog) {
-        // Cancel means play, either by hitting the Play button or backing
-        // out of the dialog.
+    String ratingTitle = props.has(Generator.NAME_KEY)
+        ? getString(R.string.text_puzzle_name, props.get(Generator.NAME_KEY).getAsString(), mAttempt.puzzleId)
+        : getString(R.string.text_puzzle_number, mAttempt.puzzleId);
+    TextView titleView = (TextView) mRatingFrame.findViewById(R.id.rating_title);
+    titleView.setText(ratingTitle);
+
+    Rating rating = mAttempt.rating;
+    boolean mustRate = rating == null || !rating.estimateComplete;
+    Spanned message = mustRate
+        ? Html.fromHtml(ToText.ratingProgressHtml(getActivity(), 0))
+        : Html.fromHtml(ToText.ratingHtml(getActivity(), rating));
+    TextView textView = (TextView) mRatingFrame.findViewById(R.id.rating_text);
+    textView.setText(message);
+
+    mRatingFrame.findViewById(R.id.rating_play).setOnClickListener(new View.OnClickListener() {
+      @Override public void onClick(View v) {
         Database.startUnstartedAttempt(mAttempt);
         new CheckNextAttempt(SudokuFragment.this).execute(mAttempt._id);
-        super.onCancel(dialog);
+        mRatingFrame.setVisibility(View.GONE);
+        resumeGameIfStarted();
       }
-    };
-    dialog.show(getFragmentManager(), "puzzleRating");
+    });
+
+    mRatingFrame.findViewById(R.id.rating_skip).setOnClickListener(new View.OnClickListener() {
+      @Override public void onClick(View v) {
+        mRatingFrame.setVisibility(View.GONE);
+        mProgress.setVisibility(View.VISIBLE);
+        Database.startUnstartedAttempt(mAttempt);
+        mAttempt.attemptState = AttemptState.SKIPPED;
+        ThreadPolicy policy = StrictMode.allowThreadDiskWrites();
+        try {
+          mDb.updateAttempt(mAttempt);
+        } finally {
+          StrictMode.setThreadPolicy(policy);
+        }
+        long attemptId = mAttempt._id;
+        setAttempt(null, null, null, null);
+        WorkerFragment.cancelAll(SudokuFragment.this);
+        new FetchFindOrMakePuzzle(SudokuFragment.this).execute(attemptId);
+      }
+    });
+
+    if (mustRate)
+      new RatePuzzle(SudokuFragment.this, textView).execute();
+    else
+      new CheckNextAttempt(this).execute(mAttempt._id);
+
+    if (mSudokuView.hasGridDimensions()) {
+      updateRatingFrame();
+    } else {
+      mSudokuView.getViewTreeObserver().addOnGlobalLayoutListener(
+          new ViewTreeObserver.OnGlobalLayoutListener() {
+        @Override public void onGlobalLayout() {
+          if (mSudokuView.hasGridDimensions()) {
+            mSudokuView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+            updateRatingFrame();
+          }
+        }
+      });
+    }
+    mRatingFrame.setVisibility(View.VISIBLE);
+  }
+
+  private void updateRatingFrame() {
+    LayoutParams params = mRatingFrame.getLayoutParams();
+    params.height = mSudokuView.getGridHeight();
+    params.width = mSudokuView.getGridWidth();
+    mRatingFrame.setLayoutParams(params);
   }
 
   private void finishSettingAttempt(List<Move> history, String title, String status) {
     Sudoku game = new Sudoku(mAttempt.clues, mRegistry, history, mAttempt.elapsedMillis);
     getActivity().setTitle(title);
     setGame(game);
+    resumeGameIfStarted();
+    mProgress.setVisibility(View.GONE);
     if (mAttempt.uiState != null) {
       GameJson.setFactory(game);
       UiState uiState = GSON.fromJson(mAttempt.uiState, UiState.class);
@@ -249,25 +274,36 @@ public class SudokuFragment
       showStatus(status);
   }
 
+  private void resumeGameIfStarted() {
+    if (mAttempt.attemptState == AttemptState.STARTED) {
+      updateState();
+      if (mState != Grid.State.SOLVED && mResumed)
+        mGame.resume();
+      mSudokuView.postDelayed(attemptSaver, DB_UPDATE_MILLIS);
+      stateChanged();
+    }
+  }
+
+  void setRatingText() {
+    if (mAttempt == null || mAttempt.rating == null) {
+      mRating.setText("");
+    } else {
+      mRating.setText(Html.fromHtml(ToText.ratingSummaryHtml(getActivity(), mAttempt.rating)));
+    }
+  }
+
   private void setGame(Sudoku game) {
     mGame = game;
     mState = Grid.State.INCOMPLETE;
     mUndoStack = new UndoStack();
     mSudokuView.setGame(game);
+    mSudokuView.setDefaultChoice(Numeral.of(1));
     List<TrailItem> vis = Lists.newArrayList(), invis = Lists.newArrayList();
     if (game != null)
       for (int i = game.getNumTrails() - 1; i >= 0; --i)
         invis.add(makeTrailItem(i, false, false));
     updateTrails(vis, invis);
-    mSudokuView.setDefaultChoice(Numeral.of(1));
-    if (game != null && mAttempt.attemptState.isInPlay()) {
-      updateState();
-      if (mState != Grid.State.SOLVED && mResumed)
-        game.resume();
-      mSudokuView.postDelayed(attemptSaver, DB_UPDATE_MILLIS);
-    }
     stateChanged();
-    mProgress.setVisibility(View.GONE);
   }
 
   public void showError(String s) {
@@ -523,16 +559,16 @@ public class SudokuFragment
   private static class RatePuzzle extends WorkerFragment.Task<SudokuFragment, Void, Double, Rating> {
     private final Database mDb;
     private final Database.Attempt mAttempt;
-    private final AlertDialog mDialog;
+    private final TextView mTextView;
 
     /**
      * @param fragment
      */
-    public RatePuzzle(SudokuFragment fragment, AlertDialog dialog) {
+    public RatePuzzle(SudokuFragment fragment, TextView view) {
       super(fragment, WorkerFragment.Priority.FOREGROUND, WorkerFragment.Independence.FREE);
       mDb = fragment.mDb;
       mAttempt = fragment.mAttempt;
-      mDialog = dialog;
+      mTextView = view;
     }
 
     @Override protected Rating doInBackground(Void... inputs) {
@@ -548,23 +584,25 @@ public class SudokuFragment
     }
 
     @Override protected void onProgressUpdate(SudokuFragment anchor, Double... values) {
-      mDialog.setMessage(Html.fromHtml(ToText.ratingProgressHtml(anchor.getActivity(), values[0])));
+      mTextView.setText(Html.fromHtml(ToText.ratingProgressHtml(anchor.getActivity(), values[0])));
     }
 
     @Override protected void onPostExecute(SudokuFragment anchor, Rating output) {
       if (output.estimateComplete) {
         mAttempt.rating = output;
-        mDialog.setMessage(Html.fromHtml(ToText.ratingSummaryHtml(anchor.getActivity(), output)));
+        mTextView.setText(Html.fromHtml(ToText.ratingHtml(anchor.getActivity(), output)));
+        anchor.setRatingText();
         new CheckNextAttempt(anchor).execute(mAttempt._id);
       }
     }
   }
 
-  private static class CheckNextAttempt extends WorkerFragment.Task<SudokuFragment, Long, Void, Void> {
+  private static class CheckNextAttempt extends WorkerFragment.Task<SudokuFragment, Long, Void, Rating> {
     private final Database mDb;
     private final Prefs mPrefs;
     private final Grid mPuzzle;
     private final long mPuzzleId;
+    private final Database.Attempt mAttempt;
 
     CheckNextAttempt(SudokuFragment fragment) {
       super(fragment);
@@ -573,13 +611,15 @@ public class SudokuFragment
       if (fragment.mAttempt == null || fragment.mAttempt.rating != null) {
         mPuzzle = null;
         mPuzzleId = 0;
+        mAttempt = null;
       } else {
         mPuzzle = fragment.mAttempt.clues;
         mPuzzleId = fragment.mAttempt.puzzleId;
+        mAttempt = fragment.mAttempt;
       }
     }
 
-    @Override protected Void doInBackground(Long... params) {
+    @Override protected Rating doInBackground(Long... params) {
       int numOpenAttempts = mDb.getNumOpenAttempts();
       boolean hasNext = numOpenAttempts > 1
           || numOpenAttempts == 1 && (params[0] == null || mDb.getFirstOpenAttempt()._id != params[0]);
@@ -593,8 +633,16 @@ public class SudokuFragment
         Rating rating = Evaluator.evaluate(mPuzzle, null);
         if (rating.estimateComplete)
           mDb.setPuzzleRating(mPuzzleId, rating);
+        return rating;
       }
       return null;
+    }
+
+    @Override protected void onPostExecute(SudokuFragment anchor, Rating output) {
+      if (mAttempt != null && mAttempt == anchor.mAttempt) {
+        mAttempt.rating = output;
+        anchor.setRatingText();
+      }
     }
   }
 
@@ -615,7 +663,8 @@ public class SudokuFragment
   }
 
   void gameShowing(boolean showing) {
-    if (mResumed = showing) {
+    boolean ratingShowing = mRatingFrame.getVisibility() == View.VISIBLE;
+    if (mResumed = (showing && !ratingShowing)) {
       if (mGame != null && mState != Grid.State.SOLVED) mGame.resume();
       new CheckNextAttempt(this).execute(mAttempt == null ? null : mAttempt._id);
     } else {
@@ -731,10 +780,12 @@ public class SudokuFragment
     super.onViewCreated(view, savedInstanceState);
 
     mSudokuView = (SudokuView) view.findViewById(R.id.sudoku_view);
+    mRatingFrame = view.findViewById(R.id.rating_frame);
     mProgress = (ProgressBar) view.findViewById(R.id.progress);
     mEditTrailToggle = (ToggleButton) view.findViewById(R.id.edit_trail_toggle);
     mTrailsList = (ListView) view.findViewById(R.id.trails);
     mTimer = (TextView) view.findViewById(R.id.timer);
+    mRating = (TextView) view.findViewById(R.id.rating);
 
     mEditTrailToggle.setOnCheckedChangeListener(this);
     mEditTrailToggle.setEnabled(false);

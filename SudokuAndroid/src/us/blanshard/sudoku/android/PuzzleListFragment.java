@@ -334,7 +334,7 @@ public class PuzzleListFragment extends FragmentBase implements NetworkService.S
       else
         sb.append(getString(R.string.text_puzzle_number_start, puzzle._id));
       if (puzzle.rating != null) {
-        sb.append(ToText.ratingShortSummaryHtml(getContext(), puzzle.rating));
+        sb.append(ToText.ratingSummaryHtml(getContext(), puzzle.rating));
         sb.append(getString(R.string.text_sentence_end));
         sb.append("  ");
       }

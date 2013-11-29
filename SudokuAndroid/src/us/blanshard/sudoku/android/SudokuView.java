@@ -191,6 +191,18 @@ public class SudokuView extends View {
     return Color.BLACK;
   }
 
+  public boolean hasGridDimensions() {
+    return mOffsetsX != null;
+  }
+
+  public int getGridWidth() {
+    return mOffsetsX[9] - mOffsetsX[0];
+  }
+
+  public int getGridHeight() {
+    return mOffsetsY[9] - mOffsetsY[0];
+  }
+
   @Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     int wMode = MeasureSpec.getMode(widthMeasureSpec);
     int wSize = MeasureSpec.getSize(widthMeasureSpec);
