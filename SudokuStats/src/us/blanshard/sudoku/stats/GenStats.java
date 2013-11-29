@@ -77,7 +77,7 @@ public class GenStats {
         Grid grid = generator.generate(new Random(genSeed), symmetry);
         stopwatch.stop();
 
-        long micros = stopwatch.elapsedTime(MICROSECONDS);
+        long micros = stopwatch.elapsed(MICROSECONDS);
         if (print) System.out.printf("\t%d\t%d", grid.size(), micros);
       }
 
