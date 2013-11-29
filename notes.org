@@ -38,21 +38,21 @@ END
 
 ** App/UI cleanups
 *** TODO Evaluate puzzles while (or before) adding them
-    - make a dedicated background thread that generates and evaluates puzzles well in advance
-    - have the info and list pages interact with this thread similarly to the network thread
+    - make a dedicated background service that generates and evaluates puzzles well in advance
+    - have the info and list pages interact with this thread similarly to the network service
+    - also the play page, why not
 *** TODO Add a dialog that shows the evaluation (in some form) and lets you skip the puzzle
     - use an overlay instead of a dialog, so menu works
-    - make it slightly harder to skip?
+    - make it slightly harder to skip by accident?
 *** TODO Don't send skipped puzzles to the app engine
     - treat skipped puzzles specially, if we play them we should be changing the
       existing attempt not making a new one
-*** TODO Show stars in title
-*** TODO Use stars instead of number in list
+*** DONE Show rating on screen
+*** DONE Use stars and number, not words, in list
 *** TODO Update help
     - acknowledge that the replay view can't handle all puzzles
     - have the welcome dialog actually be a help page
       - show (part of) it for upgraders as well as newcomers
-*** TODO Add a navigation drawer?
 *** TODO Do auto stream handling better
     - if the server sets the stream, explicitly skip queued puzzles from previous stream
     - have the server send a GCM message to the younger installations to change
