@@ -41,7 +41,7 @@ END
     - make a dedicated background service that generates and evaluates puzzles well in advance
     - have the info and list pages interact with this thread similarly to the network service
     - also the play page, why not
-*** TODO Add a dialog that shows the evaluation (in some form) and lets you skip the puzzle
+*** DONE Add a dialog that shows the evaluation (in some form) and lets you skip the puzzle
     - use an overlay instead of a dialog, so menu works
     - make it slightly harder to skip by accident?
 *** TODO Don't send skipped puzzles to the app engine

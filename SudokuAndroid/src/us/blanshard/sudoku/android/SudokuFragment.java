@@ -225,10 +225,12 @@ public class SudokuFragment
       }
     });
 
-    if (mustRate)
+    if (mustRate) {
       new RatePuzzle(SudokuFragment.this, textView).execute();
-    else
+    } else {
       new CheckNextAttempt(this).execute(mAttempt._id);
+      mProgress.setVisibility(View.GONE);
+    }
 
     if (mSudokuView.hasGridDimensions()) {
       updateRatingFrame();
@@ -258,7 +260,6 @@ public class SudokuFragment
     getActivity().setTitle(title);
     setGame(game);
     resumeGameIfStarted();
-    mProgress.setVisibility(View.GONE);
     if (mAttempt.uiState != null) {
       GameJson.setFactory(game);
       UiState uiState = GSON.fromJson(mAttempt.uiState, UiState.class);
@@ -277,6 +278,7 @@ public class SudokuFragment
 
   private void resumeGameIfStarted() {
     if (mAttempt.attemptState == AttemptState.STARTED) {
+      mProgress.setVisibility(View.GONE);
       updateState();
       if (mState != Grid.State.SOLVED && mResumed)
         mGame.resume();
@@ -593,6 +595,7 @@ public class SudokuFragment
         mAttempt.rating = output;
         mTextView.setText(Html.fromHtml(ToText.ratingHtml(anchor.getActivity(), output)));
         anchor.setRatingText();
+        anchor.mProgress.setVisibility(View.GONE);
         new CheckNextAttempt(anchor).execute(mAttempt._id);
       }
     }
