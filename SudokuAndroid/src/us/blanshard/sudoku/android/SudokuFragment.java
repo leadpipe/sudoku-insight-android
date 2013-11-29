@@ -170,6 +170,7 @@ public class SudokuFragment
     setRatingText();
     if (attempt == null) {
       setGame(null);
+      getActivity().setTitle("");
     } else {
       if (attempt.attemptState == AttemptState.UNSTARTED)
         showRatingFrame();
@@ -664,7 +665,7 @@ public class SudokuFragment
 
   void gameShowing(boolean showing) {
     boolean ratingShowing = mRatingFrame.getVisibility() == View.VISIBLE;
-    if (mResumed = (showing && !ratingShowing)) {
+    if ((mResumed = showing) && !ratingShowing) {
       if (mGame != null && mState != Grid.State.SOLVED) mGame.resume();
       new CheckNextAttempt(this).execute(mAttempt == null ? null : mAttempt._id);
     } else {
