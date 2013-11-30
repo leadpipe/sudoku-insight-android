@@ -44,9 +44,12 @@ END
 *** DONE Add a dialog that shows the evaluation (in some form) and lets you skip the puzzle
     - use an overlay instead of a dialog, so menu works
     - make it slightly harder to skip by accident?
+*** TODO Add a pref for not showing ratings
+    - until after a complete attempt
 *** TODO Don't send skipped puzzles to the app engine
     - treat skipped puzzles specially, if we play them we should be changing the
       existing attempt not making a new one
+    - or at least treating the real attempt as the first attempt
 *** DONE Show rating on screen
 *** DONE Use stars and number, not words, in list
 *** TODO Update help
