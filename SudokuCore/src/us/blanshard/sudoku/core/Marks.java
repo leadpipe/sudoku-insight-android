@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -98,6 +99,22 @@ public final class Marks {
    */
   public int getBits(Unit unit, Numeral num) {
     return unitBits[unit.unitIndex() * 9 + num.index];
+  }
+
+  /**
+   * Returns the size of the set that would be returned by {@link #get(Unit, Numeral)}.
+   */
+  public int getSize(Unit unit, Numeral num) {
+    return NumSet.ofBits(getBits(unit, num)).size();
+  }
+
+  /**
+   * Returns the single location in {@link #get(Unit, Numeral)}, or null.
+   */
+  @Nullable public Location getSingleton(Unit unit, Numeral num) {
+    NumSet set = NumSet.ofBits(getBits(unit, num));
+    if (set.size() != 1) return null;
+    return unit.get(set.get(0).index);
   }
 
   @NotThreadSafe
@@ -197,7 +214,8 @@ public final class Marks {
       if ((marks().bits[loc.index] &= ~num.bit) == 0)
         answer = false;  // This location has no possibilities left
 
-      for (UnitSubset unitSubset : loc.unitSubsets.values()) {
+      for (int i = 0; i < 3; ++i) {
+        UnitSubset unitSubset = loc.unitSubsetList.get(i);
         if ((marks.unitBits[unitSubset.unit.unitIndex() * 9 + num.index] &= ~unitSubset.bits) == 0)
           answer = false;  // This numeral has no possible locations left in this unit
       }

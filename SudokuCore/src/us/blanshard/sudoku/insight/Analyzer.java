@@ -334,9 +334,9 @@ public class Analyzer {
       if (index >= 0) {
         UnitSubset set = UnitSubset.ofBits(unit, bits[index]);
         Unit overlappingUnit = set.get(0).unit(overlappingType);
-        UnitSubset overlappingSet = gridMarks.marks.get(overlappingUnit, num);
-        if (overlappingSet.size() > set.size()) {
+        if (gridMarks.marks.getSize(overlappingUnit, num) > set.size()) {
           // There's something to eliminate.
+          UnitSubset overlappingSet = gridMarks.marks.get(overlappingUnit, num);
           callback.take(new Overlap(unit, num, overlappingSet.minus(set)));
         }
       }
@@ -358,17 +358,18 @@ public class Analyzer {
   private static void findNakedSets(GridMarks gridMarks, Callback callback,
       SetState setState, Unit unit, int size, int[] indices) {
     UnitSubset inSets = setState.getLocs(unit);
-    UnitSubset toCheck = UnitSubset.of(unit);
+    int bitsToCheck = 0;
     int unsetCount = 0;
     for (Location loc : unit) {
       NumSet possible = gridMarks.marks.get(loc);
       if (possible.size() > 1) {
         ++unsetCount;
         if (possible.size() <= size && !inSets.contains(loc)) {
-          toCheck = toCheck.with(loc);
+          bitsToCheck |= loc.unitSubsets.get(unit.getType()).bits;
         }
       }
     }
+    UnitSubset toCheck = UnitSubset.ofBits(unit, bitsToCheck);
     if (toCheck.size() >= size && unsetCount > size) {
       firstSubset(size, indices);
       do {
@@ -399,10 +400,10 @@ public class Analyzer {
     NumSet toCheck = NumSet.NONE;
     int unsetCount = 0;
     for (Numeral num : Numeral.ALL) {
-      UnitSubset possible = gridMarks.marks.get(unit, num);
-      if (possible.size() > 1) {
+      int possibleSize = gridMarks.marks.getSize(unit, num);
+      if (possibleSize > 1) {
         ++unsetCount;
-        if (possible.size() <= size && !inSets.contains(num)) {
+        if (possibleSize <= size && !inSets.contains(num)) {
           toCheck = toCheck.with(num);
         }
       }
@@ -455,8 +456,7 @@ public class Analyzer {
     // unit.
     for (Unit unit : Unit.allUnits()) {
       for (Numeral num : Numeral.ALL) {
-        UnitSubset set = gridMarks.marks.get(unit, num);
-        if (set.isEmpty()) {
+        if (gridMarks.marks.getSize(unit, num) == 0) {
           callback.take(new BarredNum(unit, num));
         }
       }
@@ -479,12 +479,9 @@ public class Analyzer {
   public static void findSingletonLocations(GridMarks gridMarks, Callback callback) {
     for (Unit unit : Unit.allUnits())
       for (Numeral num : Numeral.ALL) {
-        UnitSubset set = gridMarks.marks.get(unit, num);
-        if (set.size() == 1) {
-          Location loc = set.get(0);
-          if (!gridMarks.grid.containsKey(loc))
-            callback.take(new ForcedLoc(unit, num, loc));
-        }
+        Location loc = gridMarks.marks.getSingleton(unit, num);
+        if (loc != null && !gridMarks.grid.containsKey(loc))
+          callback.take(new ForcedLoc(unit, num, loc));
       }
   }
 

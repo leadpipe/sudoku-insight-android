@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.core;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -44,6 +45,12 @@ public final class Location implements Comparable<Location> {
 
   /** The singleton subsets of this location within its 3 units: row, column, and block. */
   public final Map<Unit.Type, UnitSubset> unitSubsets;
+
+  /**
+   * The singleton subsets of this location within its 3 units: row, column, and block.
+   * Order is not guaranteed.
+   */
+  public final ImmutableList<UnitSubset> unitSubsetList;
 
   /** The 20 locations in all the units, not counting this one. */
   public final List<Location> peers;
@@ -108,11 +115,17 @@ public final class Location implements Comparable<Location> {
     this.row = Row.ofIndex(index / 9);
     this.column = Column.ofIndex(index % 9);
     this.block = Block.ofIndex(index / 27 * 3 + index % 9 / 3);
+    UnitSubset rowSubset = UnitSubset.singleton(row, this);
+    UnitSubset columnSubset = UnitSubset.singleton(column, this);
+    UnitSubset blockSubset = UnitSubset.singleton(block, this);
     Map<Unit.Type, UnitSubset> subsets = Maps.newEnumMap(Unit.Type.class);
-    subsets.put(Unit.Type.ROW, UnitSubset.singleton(row, this));
-    subsets.put(Unit.Type.COLUMN, UnitSubset.singleton(column, this));
-    subsets.put(Unit.Type.BLOCK, UnitSubset.singleton(block, this));
+    subsets.put(Unit.Type.ROW, rowSubset);
+    subsets.put(Unit.Type.COLUMN, columnSubset);
+    subsets.put(Unit.Type.BLOCK, blockSubset);
+    ImmutableList.Builder<UnitSubset> subsetsList = ImmutableList.builder();
+    subsetsList.add(rowSubset, columnSubset, blockSubset);
     this.unitSubsets = Collections.unmodifiableMap(subsets);
+    this.unitSubsetList = subsetsList.build();
     this.peersArray = new Location[20];  // Filled in later, see static block below.
     this.peers = Collections.unmodifiableList(Arrays.asList(peersArray));
   }
