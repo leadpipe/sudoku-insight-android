@@ -303,7 +303,7 @@ public class Evaluator {
         int start = assignments.size();
         assignments.addAll(byRank.get(rank));
         // Shuffle each rank separately.
-        Collections.shuffle(assignments.subList(start, assignments.size()));
+        Collections.shuffle(assignments.subList(start, assignments.size()), random);
       }
       return assignments;
     }
