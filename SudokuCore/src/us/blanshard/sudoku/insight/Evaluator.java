@@ -241,7 +241,7 @@ public class Evaluator {
     }
 
     private boolean onlyAmbiguousAssignmentsRemaining() {
-      for (Location loc : Location.ALL) {
+      for (Location loc : Location.all()) {
         if (!gridMarks.grid.containsKey(loc) && solutionIntersection.containsKey(loc))
           return false;
       }
@@ -268,7 +268,7 @@ public class Evaluator {
       int size = 9;
       int count = 0;
       Location currentLoc = null;
-      for (Location loc : Location.ALL) {
+      for (Location loc : Location.all()) {
         if (inIntersectionOnly && !solutionIntersection.containsKey(loc)) continue;
         NumSet possible = gridMarks.marks.get(loc);
         if (possible.size() < 2 || possible.size() > size) continue;
@@ -285,7 +285,7 @@ public class Evaluator {
 
     List<Assignment> shuffledRemainingAssignments() {
       Multimap<Integer, Assignment> byRank = ArrayListMultimap.create();
-      for (Location loc : Location.ALL) {
+      for (Location loc : Location.all()) {
         if (gridMarks.grid.containsKey(loc)) continue;
         NumSet nums = gridMarks.marks.get(loc);
         for (Numeral num : nums) {
@@ -416,7 +416,7 @@ public class Evaluator {
     public double getElapsedSeconds() {
       if (blockNumeralMove != null) {
         int openMoves = 0;
-        for (Block b : Block.ALL) {
+        for (Block b : Block.all()) {
           UnitSubset locs = gridMarks.marks.get(b, prevNumeral);
           if (locs.size() > 1 || locs.size() == 1 && !gridMarks.grid.containsKey(locs.get(0)))
             ++openMoves;

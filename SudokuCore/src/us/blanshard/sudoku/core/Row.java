@@ -44,7 +44,9 @@ public final class Row extends Unit {
   }
 
   /** All the rows. */
-  public static final List<Row> ALL;
+  public static final List<Row> all() {
+    return ALL;
+  }
 
   @Override public int unitIndex() {
     return 9 + index;
@@ -67,6 +69,7 @@ public final class Row extends Unit {
   }
 
   private static final Row[] instances;
+  private static final List<Row> ALL;
   static {
     instances = new Row[9];
     for (int i = 0; i < 9; ++i) {

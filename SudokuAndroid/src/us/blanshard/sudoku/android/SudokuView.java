@@ -289,7 +289,7 @@ public class SudokuView extends View {
     float toCenter = half;
 
     if (mGame != null) {
-      for (Location loc : Location.ALL) {
+      for (Location loc : Location.all()) {
         Numeral num = mPuzzleEditor ? mGame.getState().get(loc) : mGame.getPuzzle().get(loc);
         boolean given = num != null;
         if (given) {

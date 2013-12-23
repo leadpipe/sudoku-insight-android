@@ -63,7 +63,9 @@ public final class Numeral implements Comparable<Numeral> {
   }
 
   /** All the numerals. */
-  public static final List<Numeral> ALL;
+  public static final List<Numeral> all() {
+    return ALL;
+  }
 
   @Override public int compareTo(Numeral that) {
     return this.index - that.index;
@@ -88,6 +90,7 @@ public final class Numeral implements Comparable<Numeral> {
   }
 
   private static final Numeral[] instances;
+  private static final List<Numeral> ALL;
   static {
     instances = new Numeral[9];
     for (int i = 0; i < 9; ++i) {

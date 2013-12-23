@@ -64,7 +64,7 @@ public final class Marks {
 
   public Grid.Builder toGridBuilder() {
     Grid.Builder builder = Grid.builder();
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       NumSet possible = get(loc);
       if (possible.size() == 1)
         builder.put(loc, possible.iterator().next());
@@ -342,11 +342,11 @@ public final class Marks {
 
   @Override public String toString() {
     int width = 1;
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       width = Math.max(width, get(loc).size());
     }
     StringBuilder sb = new StringBuilder();
-    for (Row row : Row.ALL) {
+    for (Row row : Row.all()) {
       for (Location loc : row) {
         append(get(loc), width, sb.append(' '));
         if (loc.column.number == 3 || loc.column.number == 6)
@@ -393,7 +393,7 @@ public final class Marks {
     if (!words.isEmpty() && words.get(0).isEmpty())
       words = words.subList(1, words.size());
     checkArgument(words.size() == 81, "expected 81 words, got %s", words);
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       NumSet nums = NumSet.NONE;
       for (char c : words.get(loc.index).toCharArray()) {
         if (c >= '1' && c <= '9')

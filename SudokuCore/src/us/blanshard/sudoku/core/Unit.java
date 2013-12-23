@@ -152,9 +152,9 @@ public abstract class Unit extends AbstractCollection<Location>
     private final List<Unit> list;
     private AllUnits() {
       this.list = ImmutableList.<Unit>builder()
-          .addAll(Block.ALL)  // This order is relied on by unitIndex impls.
-          .addAll(Row.ALL)
-          .addAll(Column.ALL)
+          .addAll(Block.all())  // This order is relied on by unitIndex impls.
+          .addAll(Row.all())
+          .addAll(Column.all())
           .build();
     }
   }

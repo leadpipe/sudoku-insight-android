@@ -265,7 +265,7 @@ public class InsightMeasurer implements Runnable {
     int getNumOpenBlockNumerals() {
       if (prevNumeral == null) return 0;
       int count = 0;
-      for (Block block : Block.ALL) {
+      for (Block block : Block.all()) {
         UnitSubset locs = gridMarks.marks.get(block, prevNumeral);
         if (locs.size() > 1 || locs.size() == 1 && !gridMarks.grid.containsKey(locs.get(0)))
           ++count;

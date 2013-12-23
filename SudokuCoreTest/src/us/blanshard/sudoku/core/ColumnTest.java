@@ -20,15 +20,12 @@ import static org.junit.Assert.assertSame;
 
 import org.junit.Test;
 
-import us.blanshard.sudoku.core.Column;
-import us.blanshard.sudoku.core.Location;
-
 public class ColumnTest {
 
   @Test public void all() {
-    assertEquals(9, Column.ALL.size());
+    assertEquals(9, Column.all().size());
     int index = 0;
-    for (Column column : Column.ALL) {
+    for (Column column : Column.all()) {
       assertEquals(index, column.index);
       assertSame(column, Column.ofIndex(index));
       ++index;
@@ -46,9 +43,9 @@ public class ColumnTest {
 
   @Test public void contains() {
     int count = 0;
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       ++count;
-      for (Column column : Column.ALL) {
+      for (Column column : Column.all()) {
         assertEquals(column == loc.column, column.contains(loc));
       }
     }
@@ -57,7 +54,7 @@ public class ColumnTest {
   }
 
   @Test public void string() {
-    for (Column column : Column.ALL)
+    for (Column column : Column.all())
       assertEquals("C" + column.number, column.toString());
   }
 }

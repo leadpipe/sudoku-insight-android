@@ -57,7 +57,9 @@ public final class Block extends Unit {
   }
 
   /** All the blocks. */
-  public static final List<Block> ALL;
+  public static final List<Block> all() {
+    return ALL;
+  }
 
   @Override public int unitIndex() {
     return 0 + index;
@@ -83,6 +85,7 @@ public final class Block extends Unit {
   }
 
   private static final Block[] instances;
+  private static final List<Block> ALL;
   static {
     instances = new Block[9];
     for (int i = 0; i < 9; ++i) {

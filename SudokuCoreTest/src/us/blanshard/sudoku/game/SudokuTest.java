@@ -47,7 +47,7 @@ public class SudokuTest {
     assertEquals(0, game.getHistory().size());
     assertEquals(puzzle, game.getState().getGrid());
 
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       boolean canChange = game.getState().get(loc) == null;
       assertEquals(canChange, game.getState().set(loc, Numeral.of(1)));
       assertEquals(canChange, game.getState().set(loc, null));
@@ -67,7 +67,7 @@ public class SudokuTest {
 
     Location first = null, last = null;
 
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       boolean canChange = trail.get(loc) == null;
       if (canChange) {
         if (first == null) first = loc;
@@ -122,7 +122,7 @@ public class SudokuTest {
     assertEquals(false, game.isRunning());
 
     Location first = null;
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       assertEquals(false, game.getState().set(loc, Numeral.of(1)));
       if (first == null && puzzle.get(loc) == null) first = loc;
     }

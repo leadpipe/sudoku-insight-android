@@ -123,7 +123,7 @@ public class UnitTest {  // What're the odds?
 
   @Test public void indexOf() {
     for (Unit u : Unit.allUnits())
-      for (Location loc : Location.ALL) {
+      for (Location loc : Location.all()) {
         int i = u.indexOf(loc);
         assertEquals(i >= 0, loc.unit(u.getType()) == u);
         if (i >= 0) {

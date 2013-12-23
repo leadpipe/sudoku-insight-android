@@ -23,16 +23,16 @@ import org.junit.Test;
 public class NumeralTest {
 
   @Test public void all() {
-    assertEquals(9, Numeral.ALL.size());
+    assertEquals(9, Numeral.all().size());
     int index = 0;
-    for (Numeral numeral : Numeral.ALL) {
+    for (Numeral numeral : Numeral.all()) {
       assertEquals(index, numeral.index);
       assertSame(numeral, Numeral.ofIndex(index));
       ++index;
       assertEquals(index, numeral.number);
       assertSame(numeral, Numeral.of(index));
 
-      for (Numeral n2 : Numeral.ALL) {
+      for (Numeral n2 : Numeral.all()) {
         assertEquals(numeral == n2, numeral.equals(n2));
         assertEquals(numeral == n2, numeral.hashCode() == n2.hashCode());
       }
@@ -41,13 +41,13 @@ public class NumeralTest {
   }
 
   @Test public void string() {
-    for (Numeral numeral : Numeral.ALL)
+    for (Numeral numeral : Numeral.all())
       assertEquals(String.valueOf(numeral.number), numeral.toString());
   }
 
   @Test public void compare() {
-    for (Numeral n1 : Numeral.ALL) {
-      for (Numeral n2 : Numeral.ALL) {
+    for (Numeral n1 : Numeral.all()) {
+      for (Numeral n2 : Numeral.all()) {
         if (n1.index < n2.index) assertEquals(true, n1.compareTo(n2) < 0);
         else if (n1.index > n2.index) assertEquals(true, n1.compareTo(n2) > 0);
         else assertEquals(true, n1.compareTo(n2) == 0);

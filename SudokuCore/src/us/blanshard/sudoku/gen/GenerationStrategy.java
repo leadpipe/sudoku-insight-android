@@ -119,7 +119,7 @@ public enum GenerationStrategy {
 
   /** Returns all locations in random order. */
   public static List<Location> randomLocations(Random random) {
-    List<Location> locs = Lists.newArrayList(Location.ALL);
+    List<Location> locs = Lists.newArrayList(Location.all());
     Collections.shuffle(locs, random);
     return locs;
   }

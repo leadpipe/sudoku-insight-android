@@ -45,7 +45,7 @@ public class GenerationStrategyTest {
   @Test public void classic() {
     Grid grid = generateSimple(Symmetry.CLASSIC);
     ensureBasicProperties(grid);
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       assertEquals(grid.containsKey(loc), grid.containsKey(Location.of(80 - loc.index)));
     }
   }
@@ -53,7 +53,7 @@ public class GenerationStrategyTest {
   @Test public void mirror() {
     Grid grid = generateSimple(Symmetry.MIRROR);
     ensureBasicProperties(grid);
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       assertEquals(
           grid.containsKey(loc),
           grid.containsKey(Location.ofIndices(loc.row.index, 9 - loc.column.number)));
@@ -63,7 +63,7 @@ public class GenerationStrategyTest {
   @Test public void doubleMirror() {
     Grid grid = generateSimple(Symmetry.DOUBLE_MIRROR);
     ensureBasicProperties(grid);
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       assertEquals(
           grid.containsKey(loc),
           grid.containsKey(Location.ofIndices(loc.row.index, 9 - loc.column.number)));
@@ -76,7 +76,7 @@ public class GenerationStrategyTest {
   @Test public void diagonal() {
     Grid grid = generateSimple(Symmetry.DIAGONAL);
     ensureBasicProperties(grid);
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       assertEquals(
           grid.containsKey(loc),
           grid.containsKey(Location.ofIndices(loc.column.index, loc.row.index)));
@@ -86,7 +86,7 @@ public class GenerationStrategyTest {
   @Test public void rotational() {
     Grid grid = generateSimple(Symmetry.ROTATIONAL);
     ensureBasicProperties(grid);
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       assertEquals(
           grid.containsKey(loc),
           grid.containsKey(Location.ofIndices(loc.column.index, 8 - loc.row.index)));
@@ -96,7 +96,7 @@ public class GenerationStrategyTest {
   @Test public void blockwise() {
     Grid grid = generateSimple(Symmetry.BLOCKWISE);
     ensureBasicProperties(grid);
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       assertEquals(
           grid.containsKey(loc),
           grid.containsKey(Location.ofIndices((loc.row.index + 3) % 9,

@@ -234,7 +234,7 @@ public class ReplayView extends SudokuView {
 
     mClockX = new float[10];
     mClockY = new float[10];
-    for (Numeral num : Numeral.ALL) {
+    for (Numeral num : Numeral.all()) {
       float radians = calcRadians(num.number);
       mClockX[num.number] = h + r * (float) Math.cos(radians);
       mClockY[num.number] = h + r * (float) Math.sin(radians) + a;
@@ -253,7 +253,7 @@ public class ReplayView extends SudokuView {
     mPaint.setStrokeWidth(mThickLineWidth);
     mPaint.setTypeface(Typeface.DEFAULT);
     mPaint.setFakeBoldText(false);
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       drawSelectable(canvas, loc);
       LocDisplay locDisplay = mLocDisplays.get(loc);
       if (locDisplay == null)

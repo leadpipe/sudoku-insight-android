@@ -298,11 +298,11 @@ public class Analyzer {
   }
 
   public static void findOverlaps(GridMarks gridMarks, Callback callback) {
-    for (Numeral num : Numeral.ALL) {
-      findOverlaps(gridMarks, callback, num, Block.ALL, Unit.Type.ROW, OVERLAP_BITS);
-      findOverlaps(gridMarks, callback, num, Block.ALL, Unit.Type.COLUMN, OVERLAP_BITS_2);
-      findOverlaps(gridMarks, callback, num, Row.ALL, Unit.Type.BLOCK, OVERLAP_BITS);
-      findOverlaps(gridMarks, callback, num, Column.ALL, Unit.Type.BLOCK, OVERLAP_BITS);
+    for (Numeral num : Numeral.all()) {
+      findOverlaps(gridMarks, callback, num, Block.all(), Unit.Type.ROW, OVERLAP_BITS);
+      findOverlaps(gridMarks, callback, num, Block.all(), Unit.Type.COLUMN, OVERLAP_BITS_2);
+      findOverlaps(gridMarks, callback, num, Row.all(), Unit.Type.BLOCK, OVERLAP_BITS);
+      findOverlaps(gridMarks, callback, num, Column.all(), Unit.Type.BLOCK, OVERLAP_BITS);
     }
   }
 
@@ -399,7 +399,7 @@ public class Analyzer {
     NumSet inSets = setState.getNums(unit);
     NumSet toCheck = NumSet.NONE;
     int unsetCount = 0;
-    for (Numeral num : Numeral.ALL) {
+    for (Numeral num : Numeral.all()) {
       int possibleSize = gridMarks.marks.getSize(unit, num);
       if (possibleSize > 1) {
         ++unsetCount;
@@ -455,7 +455,7 @@ public class Analyzer {
     // Then look for numerals that have no possible assignments left in each
     // unit.
     for (Unit unit : Unit.allUnits()) {
-      for (Numeral num : Numeral.ALL) {
+      for (Numeral num : Numeral.all()) {
         if (gridMarks.marks.getSize(unit, num) == 0) {
           callback.take(new BarredNum(unit, num));
         }
@@ -463,7 +463,7 @@ public class Analyzer {
     }
 
     // Finally, look for locations that have no possible assignments left.
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       NumSet set = gridMarks.marks.get(loc);
       if (set.isEmpty()) {
         callback.take(new BarredLoc(loc));
@@ -478,7 +478,7 @@ public class Analyzer {
 
   public static void findSingletonLocations(GridMarks gridMarks, Callback callback) {
     for (Unit unit : Unit.allUnits())
-      for (Numeral num : Numeral.ALL) {
+      for (Numeral num : Numeral.all()) {
         Location loc = gridMarks.marks.getSingleton(unit, num);
         if (loc != null && !gridMarks.grid.containsKey(loc))
           callback.take(new ForcedLoc(unit, num, loc));
@@ -486,7 +486,7 @@ public class Analyzer {
   }
 
   public static void findSingletonNumerals(GridMarks gridMarks, Callback callback) {
-    for (Location loc : Location.ALL)
+    for (Location loc : Location.all())
       if (!gridMarks.grid.containsKey(loc)) {
         NumSet set = gridMarks.marks.get(loc);
         if (set.size() == 1)

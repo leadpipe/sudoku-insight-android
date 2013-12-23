@@ -32,12 +32,12 @@ public class LocationTest {
   }
 
   @Test public void string() {
-    for (Location loc : Location.ALL)
+    for (Location loc : Location.all())
       assertEquals("(" + loc.row.number + ", " + loc.column.number + ")", loc.toString());
   }
 
   @Test public void unitSubsets() {
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       assertEquals(UnitSubset.singleton(loc.row, loc), loc.unitSubsets.get(Unit.Type.ROW));
       assertEquals(UnitSubset.singleton(loc.column, loc), loc.unitSubsets.get(Unit.Type.COLUMN));
       assertEquals(UnitSubset.singleton(loc.block, loc), loc.unitSubsets.get(Unit.Type.BLOCK));
@@ -52,7 +52,7 @@ public class LocationTest {
   }
 
   @Test public void peers() {
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       for (Location peer : loc.peers) {
         assertEquals(false, loc == peer);
         assertEquals(true, (loc.row == peer.row || loc.column == peer.column
@@ -62,8 +62,8 @@ public class LocationTest {
   }
 
   @Test public void compare() {
-    for (Location l1 : Location.ALL) {
-      for (Location l2 : Location.ALL) {
+    for (Location l1 : Location.all()) {
+      for (Location l2 : Location.all()) {
         if (l1.index < l2.index) assertEquals(true, l1.compareTo(l2) < 0);
         else if (l1.index > l2.index) assertEquals(true, l1.compareTo(l2) > 0);
         else assertEquals(true, l1.compareTo(l2) == 0);

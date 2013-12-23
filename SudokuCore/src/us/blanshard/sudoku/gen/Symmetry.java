@@ -172,7 +172,7 @@ public enum Symmetry {
    * grid.
    */
   public boolean describes(Grid grid) {
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       boolean hasClue = grid.containsKey(loc);
       for (Location exp : expand(loc))
         if (hasClue != grid.containsKey(exp))
@@ -188,7 +188,7 @@ public enum Symmetry {
   public double measure(Grid grid) {
     int matchingCount = 0;
     LocSet seen = new LocSet();
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       if (seen.contains(loc)) continue;
       int nClues = 0, nBlanks = 0;
       for (Location exp : expand(loc)) {

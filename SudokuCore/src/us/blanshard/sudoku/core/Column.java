@@ -44,7 +44,9 @@ public final class Column extends Unit {
   }
 
   /** All the columns. */
-  public static final List<Column> ALL;
+  public static final List<Column> all() {
+    return ALL;
+  }
 
   @Override public int unitIndex() {
     return 18 + index;
@@ -67,6 +69,7 @@ public final class Column extends Unit {
   }
 
   private static final Column[] instances;
+  private static final List<Column> ALL;
   static {
     instances = new Column[9];
     for (int i = 0; i < 9; ++i) {

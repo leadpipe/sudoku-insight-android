@@ -23,9 +23,9 @@ import org.junit.Test;
 public class BlockTest {
 
   @Test public void all() {
-    assertEquals(9, Block.ALL.size());
+    assertEquals(9, Block.all().size());
     int index = 0;
-    for (Block block : Block.ALL) {
+    for (Block block : Block.all()) {
       assertEquals(index, block.index);
       assertSame(block, Block.ofIndex(index));
       ++index;
@@ -43,9 +43,9 @@ public class BlockTest {
 
   @Test public void contains() {
     int count = 0;
-    for (Location loc : Location.ALL) {
+    for (Location loc : Location.all()) {
       ++count;
-      for (Block block : Block.ALL) {
+      for (Block block : Block.all()) {
         assertEquals(block == loc.block, block.contains(loc));
       }
     }
@@ -54,7 +54,7 @@ public class BlockTest {
   }
 
   @Test public void string() {
-    for (Block block : Block.ALL)
+    for (Block block : Block.all())
       assertEquals("B" + block.number, block.toString());
   }
 }

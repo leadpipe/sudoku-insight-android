@@ -39,6 +39,9 @@ public final class Location implements Comparable<Location> {
   /** The number of distinct locations. */
   public static final int COUNT = 81;
 
+  /** The number of peers each location has. */
+  public static final int PEER_COUNT = 20;
+
   public final Row row;
   public final Column column;
   public final Block block;
@@ -75,10 +78,16 @@ public final class Location implements Comparable<Location> {
   }
 
   /** All locations. */
-  public static final List<Location> ALL;
+  public static final List<Location> all() {
+    return ALL;
+  }
 
   public Unit unit(Unit.Type type) {
     return unitSubsets.get(type).unit;
+  }
+
+  public Location getPeer(int index) {
+    return peersArray[index];
   }
 
   @Override public int compareTo(Location that) {
@@ -126,12 +135,13 @@ public final class Location implements Comparable<Location> {
     subsetsList.add(rowSubset, columnSubset, blockSubset);
     this.unitSubsets = Collections.unmodifiableMap(subsets);
     this.unitSubsetList = subsetsList.build();
-    this.peersArray = new Location[20];  // Filled in later, see static block below.
+    this.peersArray = new Location[PEER_COUNT];  // Filled in later, see static block below.
     this.peers = Collections.unmodifiableList(Arrays.asList(peersArray));
   }
 
   private final Location[] peersArray;
   private static final Location[] instances;
+  private static final List<Location> ALL;
   static {
     instances = new Location[81];
     for (int i = 0; i < 81; ++i) {

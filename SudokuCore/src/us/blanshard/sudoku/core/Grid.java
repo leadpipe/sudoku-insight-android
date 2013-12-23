@@ -277,7 +277,7 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
 
   @Override public String toString() {
     StringBuilder sb = new StringBuilder();
-    for (Row row : Row.ALL) {
+    for (Row row : Row.all()) {
       for (Location loc : row) {
         if (containsKey(loc)) sb.append(' ').append(get(loc).number);
         else sb.append(" .");

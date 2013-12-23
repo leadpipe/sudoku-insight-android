@@ -79,7 +79,7 @@ public class MarksTest {
     Marks.Builder builder = Marks.builder();
     Marks.Builder builder2 = Marks.builder();
     int start = 0;
-    for (Row row : Row.ALL) {
+    for (Row row : Row.all()) {
       int index = start;
       for (Location loc : row) {
         assertEquals(true, builder.assignRecursively(loc, Numeral.ofIndex(index % 9)));

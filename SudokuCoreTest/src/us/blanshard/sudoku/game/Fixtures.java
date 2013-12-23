@@ -33,7 +33,7 @@ public class Fixtures {
   private static final long SEED = 123;
 
   static final Grid puzzle = GenerationStrategy.SIMPLE.generate(new Random(SEED), Symmetry.BLOCKWISE);
-  static final Location openLocation = Iterables.find(Location.ALL, new Predicate<Location>() {
+  static final Location openLocation = Iterables.find(Location.all(), new Predicate<Location>() {
     @Override public boolean apply(Location loc) {
       return !puzzle.containsKey(loc);
     }

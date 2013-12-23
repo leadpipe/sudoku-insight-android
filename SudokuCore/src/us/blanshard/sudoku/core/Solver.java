@@ -164,7 +164,7 @@ public final class Solver implements Iterable<Grid> {
     } else {
       Marks marks = this.startMarks = builder.build();
       List<Location> locations = Lists.newArrayList();
-      for (Location loc : Location.ALL) {
+      for (Location loc : Location.all()) {
         if (marks.get(loc).size() > 1)
           locations.add(loc);
       }

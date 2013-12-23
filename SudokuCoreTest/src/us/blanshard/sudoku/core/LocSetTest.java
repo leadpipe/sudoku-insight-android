@@ -112,9 +112,9 @@ public class LocSetTest {
 
     // then
     assertEquals(Location.COUNT, set.size());
-    assertTrue(set.containsAll(Location.ALL));
-    assertTrue(Location.ALL.containsAll(set));
-    assertTrue(set.equals(new LocSet(Location.ALL)));
+    assertTrue(set.containsAll(Location.all()));
+    assertTrue(Location.all().containsAll(set));
+    assertTrue(set.equals(new LocSet(Location.all())));
   }
 
   @Test public void shouldCloneProperly() {
