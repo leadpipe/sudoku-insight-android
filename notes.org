@@ -13,10 +13,11 @@
 - add columns for the pattern that the estimator found, and patterns matching actual move
 *** TODO Performance improvements [1/4]
 - [X] Run profiler
-- [ ] Make UnitNumeral enum-like
-  - [ ] Add UnitNumSet
+- [-] Fix UnitNumeral so it doesn't consume too many resources
+  - [X] Make UnitNumeral enum-like
+  - [X] Add UnitNumSet
   - [ ] Use UnitNumeral in Marks
-  - [ ] Unit tests
+  - [X] Unit tests
 - [ ] Run profiler again
 - [ ] Add phase to Analyzer callback, and stop after assignments when taking the short path?
 *** TODO Investigate distribution of times for multiple puzzles generated from the same end state
