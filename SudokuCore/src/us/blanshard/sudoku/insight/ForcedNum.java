@@ -19,6 +19,7 @@ import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.UnitNumeral;
 
 import com.google.common.base.Objects;
 

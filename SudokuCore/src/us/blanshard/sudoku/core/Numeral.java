@@ -28,6 +28,8 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public final class Numeral implements Comparable<Numeral> {
+  /** The number of Numerals. */
+  public static final int COUNT = 9;
 
   /** The number, in the range 1..9. */
   public final int number;

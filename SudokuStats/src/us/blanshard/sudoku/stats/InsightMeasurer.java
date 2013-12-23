@@ -27,6 +27,7 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
@@ -45,7 +46,6 @@ import us.blanshard.sudoku.insight.Insight;
 import us.blanshard.sudoku.insight.Insight.Type;
 import us.blanshard.sudoku.insight.LockedSet;
 import us.blanshard.sudoku.insight.Overlap;
-import us.blanshard.sudoku.insight.UnitNumeral;
 import us.blanshard.sudoku.stats.Pattern.UnitCategory;
 
 import com.google.appengine.api.blobstore.BlobKey;

@@ -17,6 +17,7 @@ package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.UnitNumeral;
 
 import java.util.Collection;
 

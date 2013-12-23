@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.UnitNumeral;
 
 import com.google.common.base.Objects;
 
