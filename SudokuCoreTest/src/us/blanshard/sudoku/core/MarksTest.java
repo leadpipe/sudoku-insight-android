@@ -49,15 +49,15 @@ public class MarksTest {
   @Test public void get() {
     assertEquals(set(7), marks.get(loc(4, 1)));
     assertEquals(set(3, 5, 8), marks.get(loc(4, 2)));
-    assertEquals(UnitSubset.singleton(Row.of(4), loc(4, 1)), marks.get(Row.of(4), Numeral.of(7)));
-    assertEquals(UnitSubset.ofBits(Row.of(4), 0xe4), marks.get(Row.of(4), Numeral.of(4)));
+    assertEquals(UnitSubset.singleton(Row.of(4), loc(4, 1)), marks.get(UnitNumeral.of(Row.of(4), Numeral.of(7))));
+    assertEquals(UnitSubset.ofBits(Row.of(4), 0xe4), marks.get(UnitNumeral.of(Row.of(4), Numeral.of(4))));
   }
 
   @Test public void assign_failure() {
     Marks.Builder builder = marks.toBuilder();
     assertEquals(false, builder.assign(loc(1, 2), Numeral.of(1)));
     assertEquals(0, builder.get(loc(1, 2)).size());
-    assertEquals(0, builder.get(Block.of(1), Numeral.of(4)).size());
+    assertEquals(0, builder.get(UnitNumeral.of(Block.of(1), Numeral.of(4))).size());
   }
 
   @Test public void equals() {
@@ -113,7 +113,7 @@ public class MarksTest {
         "  1    8    2   |  4    9    5   |  6    7    3   ");
 
     assertEquals(set(4,5), marks.get(Location.of(8,2)));
-    assertEquals(set(3,8).bits, marks.getBits(Column.of(2), Numeral.of(4)));
-    assertEquals(set(3,8).bits, marks.getBits(Column.of(2), Numeral.of(5)));
+    assertEquals(set(3,8).bits, marks.getBits(UnitNumeral.of(Column.of(2), Numeral.of(4))));
+    assertEquals(set(3,8).bits, marks.getBits(UnitNumeral.of(Column.of(2), Numeral.of(5))));
   }
 }

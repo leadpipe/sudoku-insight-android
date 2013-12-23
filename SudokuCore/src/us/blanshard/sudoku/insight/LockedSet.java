@@ -103,7 +103,7 @@ public final class LockedSet extends Insight {
         if (!gridMarks.marks.get(loc).isSubsetOf(nums)) return false;
     } else {
       for (Numeral num : nums)
-        if (!gridMarks.marks.get(locs.unit, num).isSubsetOf(locs)) return false;
+        if (!gridMarks.marks.get(UnitNumeral.of(locs.unit, num)).isSubsetOf(locs)) return false;
     }
     return true;
   }

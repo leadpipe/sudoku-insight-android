@@ -92,7 +92,7 @@ public final class Overlap extends Insight {
   @Override public boolean isImpliedBy(GridMarks gridMarks) {
     // Ensures that all possible locations for the numeral in the unit lie in
     // the overlapping unit.
-    return gridMarks.marks.get(unit, numeral).minus(extra.unit).isEmpty();
+    return gridMarks.marks.get(UnitNumeral.of(unit, numeral)).minus(extra.unit).isEmpty();
   }
 
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {

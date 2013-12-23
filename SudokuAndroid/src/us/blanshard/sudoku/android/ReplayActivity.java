@@ -27,7 +27,7 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Solver;
-import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.game.Command;
 import us.blanshard.sudoku.game.CommandException;
@@ -1138,15 +1138,14 @@ public class ReplayActivity extends ActivityBase
     private Queue<PossibleAssignment> findPossibles(GridMarks solution, GridMarks current,
         LocSet available) {
       Queue<PossibleAssignment> possibles = Queues.newPriorityQueue();
-      for (Unit unit : Unit.allUnits())
-        for (Numeral num : Numeral.all()) {
-          UnitSubset set = current.marks.get(unit, num);
-          UnitSubset solSet = solution.marks.get(unit, num);
-          if (set.size() > 1 && solSet.size() == 1)
-            for (Location loc : available.and(set.minus(solSet))) {
-              possibles.add(new PossibleAssignment(loc, num, set.size()));
-            }
-        }
+      for (UnitNumeral unitNum : UnitNumeral.all()) {
+        UnitSubset set = current.marks.get(unitNum);
+        UnitSubset solSet = solution.marks.get(unitNum);
+        if (set.size() > 1 && solSet.size() == 1)
+          for (Location loc : available.and(set.minus(solSet))) {
+            possibles.add(new PossibleAssignment(loc, unitNum.numeral, set.size()));
+          }
+      }
       for (Location loc : available) {
         NumSet set = current.marks.get(loc);
         NumSet solSet = solution.marks.get(loc);

@@ -23,6 +23,7 @@ import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Row;
 import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
 import com.google.common.collect.ImmutableList;
@@ -330,13 +331,15 @@ public class Analyzer {
   private static void findOverlaps(GridMarks gridMarks, Callback callback, Numeral num,
       List<? extends Unit> units, Unit.Type overlappingType, int[] bits) {
     for (Unit unit : units) {
-      int index = Arrays.binarySearch(bits, gridMarks.marks.getBits(unit, num));
+      UnitNumeral unitNum = UnitNumeral.of(unit, num);
+      int index = Arrays.binarySearch(bits, gridMarks.marks.getBits(unitNum));
       if (index >= 0) {
         UnitSubset set = UnitSubset.ofBits(unit, bits[index]);
         Unit overlappingUnit = set.get(0).unit(overlappingType);
-        if (gridMarks.marks.getSize(overlappingUnit, num) > set.size()) {
+        UnitNumeral oun = UnitNumeral.of(overlappingUnit, num);
+        if (gridMarks.marks.getSize(oun) > set.size()) {
           // There's something to eliminate.
-          UnitSubset overlappingSet = gridMarks.marks.get(overlappingUnit, num);
+          UnitSubset overlappingSet = gridMarks.marks.get(oun);
           callback.take(new Overlap(unit, num, overlappingSet.minus(set)));
         }
       }
@@ -400,7 +403,7 @@ public class Analyzer {
     NumSet toCheck = NumSet.NONE;
     int unsetCount = 0;
     for (Numeral num : Numeral.all()) {
-      int possibleSize = gridMarks.marks.getSize(unit, num);
+      int possibleSize = gridMarks.marks.getSize(UnitNumeral.of(unit, num));
       if (possibleSize > 1) {
         ++unsetCount;
         if (possibleSize <= size && !inSets.contains(num)) {
@@ -415,7 +418,7 @@ public class Analyzer {
         boolean alreadyUsed = false;
         for (int i = 0; i < size; ++i) {
           Numeral num = toCheck.get(indices[i]);
-          bits |= gridMarks.marks.getBits(unit, num);
+          bits |= gridMarks.marks.getBits(UnitNumeral.of(unit, num));
           alreadyUsed |= inSets.contains(num);
         }
         if (alreadyUsed) continue;
@@ -456,7 +459,7 @@ public class Analyzer {
     // unit.
     for (Unit unit : Unit.allUnits()) {
       for (Numeral num : Numeral.all()) {
-        if (gridMarks.marks.getSize(unit, num) == 0) {
+        if (gridMarks.marks.getSize(UnitNumeral.of(unit, num)) == 0) {
           callback.take(new BarredNum(unit, num));
         }
       }
@@ -479,7 +482,7 @@ public class Analyzer {
   public static void findSingletonLocations(GridMarks gridMarks, Callback callback) {
     for (Unit unit : Unit.allUnits())
       for (Numeral num : Numeral.all()) {
-        Location loc = gridMarks.marks.getSingleton(unit, num);
+        Location loc = gridMarks.marks.getSingleton(UnitNumeral.of(unit, num));
         if (loc != null && !gridMarks.grid.containsKey(loc))
           callback.take(new ForcedLoc(unit, num, loc));
       }

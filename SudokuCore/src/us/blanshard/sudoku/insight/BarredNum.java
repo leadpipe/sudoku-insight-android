@@ -21,8 +21,6 @@ import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
 
-import com.google.common.base.Objects;
-
 import java.util.Collection;
 
 import javax.annotation.concurrent.Immutable;
@@ -35,21 +33,19 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public final class BarredNum extends Insight {
-  private final Unit unit;
-  private final Numeral numeral;
+  private final UnitNumeral unitNum;
 
   public BarredNum(Unit unit, Numeral numeral) {
     super(Type.BARRED_NUMERAL);
-    this.unit = unit;
-    this.numeral = numeral;
+    this.unitNum = UnitNumeral.of(unit, numeral);
   }
 
   public Unit getUnit() {
-    return unit;
+    return unitNum.unit;
   }
 
   public Numeral getNumeral() {
-    return numeral;
+    return unitNum.numeral;
   }
 
   @Override public void apply(GridMarks.Builder builder) {
@@ -57,31 +53,30 @@ public final class BarredNum extends Insight {
   }
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    return gridMarks.marks.get(unit, numeral).isEmpty();
+    return gridMarks.marks.get(unitNum).isEmpty();
   }
 
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {
-    return elimination.numeral == this.numeral && this.unit.contains(elimination.location);
+    return elimination.numeral == unitNum.numeral && unitNum.unit.contains(elimination.location);
   }
 
   @Override public boolean equals(Object o) {
     if (o == this) return true;
     if (o == null || o.getClass() != getClass()) return false;
     BarredNum that = (BarredNum) o;
-    return this.unit.equals(that.unit)
-        && this.numeral.equals(that.numeral);
+    return this.unitNum.equals(that.unitNum);
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(unit, numeral);
+    return unitNum.hashCode() + getClass().hashCode();
   }
 
   @Override public String toString() {
-    return numeral + " \u2209 " + unit;  // not-element-of
+    return unitNum.numeral + " \u2209 " + unitNum.unit;  // not-element-of
   }
 
   @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
-    unitNums.add(UnitNumeral.of(unit, numeral));
+    unitNums.add(unitNum);
   }
 
   @Override public int getScanTargetCount() {

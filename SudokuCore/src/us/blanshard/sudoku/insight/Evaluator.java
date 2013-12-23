@@ -291,7 +291,7 @@ public class Evaluator {
         for (Numeral num : nums) {
           int rank = nums.size();
           for (Unit.Type unitType : Unit.Type.values()) {
-            UnitSubset locs = gridMarks.marks.get(loc.unit(unitType), num);
+            UnitSubset locs = gridMarks.marks.get(UnitNumeral.of(loc.unit(unitType), num));
             rank = Math.min(rank, locs.size());
           }
           byRank.put(rank, Assignment.of(loc, num));
@@ -417,7 +417,7 @@ public class Evaluator {
       if (blockNumeralMove != null) {
         int openMoves = 0;
         for (Block b : Block.all()) {
-          UnitSubset locs = gridMarks.marks.get(b, prevNumeral);
+          UnitSubset locs = gridMarks.marks.get(UnitNumeral.of(b, prevNumeral));
           if (locs.size() > 1 || locs.size() == 1 && !gridMarks.grid.containsKey(locs.get(0)))
             ++openMoves;
         }

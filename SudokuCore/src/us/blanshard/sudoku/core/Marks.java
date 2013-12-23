@@ -90,31 +90,31 @@ public final class Marks {
    * Returns the set of locations within the given unit that could hold the
    * given numeral.
    */
-  public UnitSubset get(Unit unit, Numeral num) {
-    return UnitSubset.ofBits(unit, getBits(unit, num));
+  public UnitSubset get(UnitNumeral unitNum) {
+    return UnitSubset.ofBits(unitNum.unit, getBits(unitNum));
   }
 
   /**
-   * Returns the bit-set corresponding to {@link #get(Unit,Numeral)}.
+   * Returns the bit-set corresponding to {@link #get(UnitNumeral)}.
    */
-  public int getBits(Unit unit, Numeral num) {
-    return unitBits[unit.unitIndex() * 9 + num.index];
+  public int getBits(UnitNumeral unitNum) {
+    return unitBits[unitNum.index];
   }
 
   /**
-   * Returns the size of the set that would be returned by {@link #get(Unit, Numeral)}.
+   * Returns the size of the set that would be returned by {@link #get(UnitNumeral)}.
    */
-  public int getSize(Unit unit, Numeral num) {
-    return NumSet.ofBits(getBits(unit, num)).size();
+  public int getSize(UnitNumeral unitNum) {
+    return NumSet.ofBits(getBits(unitNum)).size();
   }
 
   /**
-   * Returns the single location in {@link #get(Unit, Numeral)}, or null.
+   * Returns the single location in {@link #get(UnitNumeral)}, or null.
    */
-  @Nullable public Location getSingleton(Unit unit, Numeral num) {
-    NumSet set = NumSet.ofBits(getBits(unit, num));
+  @Nullable public Location getSingleton(UnitNumeral unitNum) {
+    NumSet set = NumSet.ofBits(getBits(unitNum));
     if (set.size() != 1) return null;
-    return unit.get(set.get(0).index);
+    return unitNum.unit.get(set.get(0).index);
   }
 
   @NotThreadSafe
@@ -123,7 +123,7 @@ public final class Marks {
     private boolean built;
 
     private Builder() {
-      this.marks = new Marks(new short[81], new short[Unit.COUNT * 9]);
+      this.marks = new Marks(new short[Location.COUNT], new short[UnitNumeral.COUNT]);
       this.built = false;
       clear();
     }
@@ -159,12 +159,12 @@ public final class Marks {
       return marks.getBits(loc);
     }
 
-    public UnitSubset get(Unit unit, Numeral num) {
-      return marks.get(unit, num);
+    public UnitSubset get(UnitNumeral unitNum) {
+      return marks.get(unitNum);
     }
 
-    public int getBits(Unit unit, Numeral num) {
-      return marks.getBits(unit, num);
+    public int getBits(UnitNumeral unitNum) {
+      return marks.getBits(unitNum);
     }
 
     /**
@@ -216,7 +216,8 @@ public final class Marks {
 
       for (int i = 0; i < 3; ++i) {
         UnitSubset unitSubset = loc.unitSubsetList.get(i);
-        if ((marks.unitBits[unitSubset.unit.unitIndex() * 9 + num.index] &= ~unitSubset.bits) == 0)
+        int index = UnitNumeral.getIndex(unitSubset.unit, num);
+        if ((marks.unitBits[index] &= ~unitSubset.bits) == 0)
           answer = false;  // This numeral has no possible locations left in this unit
       }
 
@@ -315,14 +316,15 @@ public final class Marks {
     private boolean eliminateRecursivelyFromUnit(Numeral num, UnitSubset unitSubset) {
       // Remove this location from the possible locations within this unit
       // that this numeral may be assigned.
-      marks.unitBits[unitSubset.unit.unitIndex() * 9 + num.index] &= ~unitSubset.bits;
+      UnitNumeral unitNum = UnitNumeral.of(unitSubset.unit, num);
+      marks.unitBits[unitNum.index] &= ~unitSubset.bits;
 
-      UnitSubset remaining = get(unitSubset.unit, num);
+      UnitSubset remaining = get(unitNum);
       if (remaining.size() == 0)
         return false;  // no possibilities left in this assignment set
 
       if (remaining.size() == 1  // Last possibility left.  Assign it.
-          && !assignRecursively(remaining.iterator().next(), num))
+          && !assignRecursively(remaining.get(0), num))
         return false;
 
       return true;

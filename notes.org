@@ -17,6 +17,7 @@
   - [X] Make UnitNumeral enum-like
   - [X] Add UnitNumSet
   - [ ] Use UnitNumeral in Marks
+  - [ ] Use UnitNumSet in Insight
   - [X] Unit tests
 - [ ] Run profiler again
 - [ ] Add phase to Analyzer callback, and stop after assignments when taking the short path?

@@ -40,11 +40,15 @@ public class UnitNumeral {
   public final int index;
 
   public static UnitNumeral of(Unit unit, Numeral numeral) {
-    return instances[unit.unitIndex() * Numeral.COUNT + numeral.index];
+    return instances[getIndex(unit, numeral)];
   }
 
   public static UnitNumeral of(int index) {
     return instances[index];
+  }
+
+  public static int getIndex(Unit unit, Numeral numeral) {
+    return unit.unitIndex() * Numeral.COUNT + numeral.index;
   }
 
   public static List<UnitNumeral> all() {
