@@ -85,6 +85,12 @@ public final class Conflict extends Insight {
   }
 
   @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
-    // Conflicts are not about scanning open locations.
+    // Even though conflicts are not about scanning open locations, we add the
+    // unit-numeral in question.
+    unitNums.add(UnitNumeral.of(locations.unit, numeral));
+  }
+
+  @Override public int getScanTargetCount() {
+    return 1;
   }
 }

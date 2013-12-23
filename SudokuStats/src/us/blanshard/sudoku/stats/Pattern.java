@@ -73,7 +73,7 @@ public abstract class Pattern implements Comparable<Pattern> {
     return this;
   }
 
-  public int size() {
+  public int getScanTargetCount() {
     return 1;
   }
 
@@ -612,7 +612,7 @@ public abstract class Pattern implements Comparable<Pattern> {
       return isNaked;
     }
 
-    @Override public int size() {
+    @Override public int getScanTargetCount() {
       return setSize;
     }
 
@@ -666,8 +666,10 @@ public abstract class Pattern implements Comparable<Pattern> {
   public static class Implication extends Pattern {
     private final List<Pattern> antecedents;
     private final Pattern consequent;
+    private final int numScanTargets;
 
-    public Implication(Collection<? extends Pattern> antecedents, Pattern consequent) {
+    public Implication(Collection<? extends Pattern> antecedents, Pattern consequent,
+        int numScanTargets) {
       super(Type.IMPLICATION);
       checkArgument(antecedents.size() > 0);
       Pattern[] a = antecedents.toArray(new Pattern[antecedents.size()]);
@@ -678,6 +680,7 @@ public abstract class Pattern implements Comparable<Pattern> {
       }
       this.antecedents = Arrays.asList(a);
       this.consequent = checkNotNull(consequent);
+      this.numScanTargets = numScanTargets;
     }
 
     public List<Pattern> getAntecedents() {
@@ -692,10 +695,10 @@ public abstract class Pattern implements Comparable<Pattern> {
       return consequent.getNub();
     }
 
-    @Override public int size() {
-      int answer = 1 + consequent.size();
+    @Override public int getScanTargetCount() {
+      int answer = 1 + consequent.getScanTargetCount();
       for (Pattern a : antecedents)
-        answer += a.size();
+        answer += a.getScanTargetCount();
       return answer;
     }
 
@@ -711,7 +714,10 @@ public abstract class Pattern implements Comparable<Pattern> {
     }
 
     @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
-      Joiner.on('+').appendTo(a, antecedents).append('=');
+      Joiner.on('+').appendTo(a, antecedents)
+          .append('=')
+          .append(String.valueOf(numScanTargets))
+          .append(':');
       return consequent.appendTo(a);
     }
 
@@ -721,11 +727,13 @@ public abstract class Pattern implements Comparable<Pattern> {
     public static Implication fromString(String s) {
       Iterator<String> iter = EQUALS_SPLITTER_2.split(s).iterator();
       String as = iter.next();
+      iter = COLON_SPLITTER_2.split(iter.next()).iterator();
+      int numScanTargets = Integer.parseInt(iter.next());
       String c = iter.next();
       List<Pattern> antecedents = Lists.newArrayList();
       for (String a : PLUS_SPLITTER.split(as))
         antecedents.add(Pattern.fromString(a));
-      return new Implication(antecedents, Pattern.fromString(c));
+      return new Implication(antecedents, Pattern.fromString(c), numScanTargets);
     }
 
     @Override protected int compareToGuts(Pattern p) {
@@ -738,7 +746,8 @@ public abstract class Pattern implements Comparable<Pattern> {
     }
   }
 
-  public static Implication implication(Collection<? extends Pattern> antecedents, Pattern consequent) {
-    return new Implication(antecedents, consequent);
+  public static Implication implication(Collection<? extends Pattern> antecedents, Pattern consequent,
+      int numScanTargets) {
+    return new Implication(antecedents, consequent, numScanTargets);
   }
 }

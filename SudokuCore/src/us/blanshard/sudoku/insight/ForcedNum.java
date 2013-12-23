@@ -87,4 +87,8 @@ public final class ForcedNum extends Insight {
   @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
     locs.add(location);
   }
+
+  @Override public int getScanTargetCount() {
+    return 1;
+  }
 }

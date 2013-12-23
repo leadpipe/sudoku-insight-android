@@ -132,11 +132,13 @@ public final class LockedSet extends Insight {
   }
 
   @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
-    locs.addAll(this.locs);
-    for (Numeral n : nums) {
+    if (isNakedSet())
+      locs.addAll(this.locs);
+    else for (Numeral n : nums)
       unitNums.add(UnitNumeral.of(this.locs.unit, n));
-      if (extraElims != null)
-        unitNums.add(UnitNumeral.of(extraElims.unit, n));
-    }
+  }
+
+  @Override public int getScanTargetCount() {
+    return locs.size();
   }
 }

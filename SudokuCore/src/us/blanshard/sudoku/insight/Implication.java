@@ -19,12 +19,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import us.blanshard.sudoku.core.Assignment;
+import us.blanshard.sudoku.core.LocSet;
 import us.blanshard.sudoku.core.Location;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 
 import java.util.Collection;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -134,5 +137,12 @@ public final class Implication extends Insight {
     for (Insight a : antecedents)
       a.addScanTargets(locs, unitNums);
     consequent.addScanTargets(locs, unitNums);
+  }
+
+  @Override public int getScanTargetCount() {
+    LocSet locTargets = new LocSet();
+    Set<UnitNumeral> unitNumTargets = Sets.newHashSet();
+    addScanTargets(locTargets, unitNumTargets);
+    return locTargets.size() + unitNumTargets.size();
   }
 }

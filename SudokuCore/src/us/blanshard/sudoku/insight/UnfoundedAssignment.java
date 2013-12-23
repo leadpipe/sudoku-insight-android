@@ -73,4 +73,8 @@ public class UnfoundedAssignment extends Insight {
   @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
     // This one has nothing.
   }
+
+  @Override public int getScanTargetCount() {
+    return 0;
+  }
 }

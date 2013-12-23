@@ -73,13 +73,13 @@ public class PatternTest {
     testPattern("o:b", Pattern.overlap(UnitCategory.BLOCK));
     testPattern("s:b:4:n", Pattern.lockedSet(UnitCategory.BLOCK, 4, true));
     testPattern("s:l:2:h", Pattern.lockedSet(UnitCategory.LINE, 2, false));
-    testPattern("i:o:b+o:l=fl:b",
+    testPattern("i:o:b+o:l=3:fl:b",
         Pattern.implication(Arrays.asList(Pattern.Overlap.LINE, Pattern.Overlap.BLOCK),
-            Pattern.ForcedLoc.BLOCK));
-    testPattern("i:fl:l+o:b=i:fn:833510500:833000006:006855000+s:l:2:n=c:b",
+            Pattern.ForcedLoc.BLOCK, 3));
+    testPattern("i:fl:l+o:b=5:i:fn:833510500:833000006:006855000+s:l:2:n=3:c:b",
         Pattern.implication(Arrays.asList(Pattern.Overlap.BLOCK, Pattern.ForcedLoc.LINE),
             Pattern.implication(Arrays.asList(Pattern.lockedSet(UnitCategory.LINE, 2, true),
-                Pattern.forcedNumeral(peerMetrics(4, 1))), Pattern.Conflict.BLOCK)));
+                Pattern.forcedNumeral(peerMetrics(4, 1))), Pattern.Conflict.BLOCK, 3), 5));
   }
 
   @Test public void lists() throws Exception {

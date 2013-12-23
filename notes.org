@@ -1,32 +1,31 @@
 * Insights
 ** Evaluator
-*** DONE Try removing most obvious correlations from InsightMeasurer
-    - In particular: flb's with the same numeral as the previous move are often
-      just piggybacked on the previous scan.  Removing them from the analysis
-      should improve fit to Poisson distribution.  (Though it will probably cut
-      the amount of data down by a large amount -- and so may not be useful as
-      the source for timing numbers.)
-    - Actually, let's try studying these often correlated moves:
-      - Change InsightMeasurer to emit the number of same-numeral direct flb's
-        available at each step, the number of open blocks for that numeral, and
-        whether the move is one of them
-      - Look at the distributions for:
-        - moves without any same-numeral direct flb's
-        - moves that are same-numeral direct flb's
-        - moves that have same-numeral direct flb's
-*** DONE Investigate distribution of times for upcoming puzzles
+*** DONE Look critically at the evaluator
+- are we really doing something stupid with implications and scan points?
+- Yes.  Yeesh.
+- Also, sets.
+*** TODO Investigate speedup as the puzzle progresses
+- 3 cols: timestamp, move number, ratio of actual vs predicted time for the move
+- scatter plots: timestamp vs ratio, move number vs ratio
+- fit curves: do they decay to an asymptote?
+*** TODO Investigate recent puzzles
+- categories: estimate way too high, way too low, high, low, close to perfect
+- add columns for the pattern that the estimator found, and patterns matching actual move
+*** TODO Performance improvements [1/4]
+- [X] Run profiler
+- [ ] Make UnitNumeral enum-like
+  - [ ] Add UnitNumSet
+  - [ ] Use UnitNumeral in Marks
+  - [ ] Unit tests
+- [ ] Run profiler again
+- [ ] Add phase to Analyzer callback, and stop after assignments when taking the short path?
 *** TODO Investigate distribution of times for multiple puzzles generated from the same end state
-*** TODO Performance improvements
-    - Cache atomic insights in Analyzer instance?
-    - Add phase to Analyzer callback, and stop after assignments when taking the short path?
-*** TODO Send estimate updates during 10-way fanout
-    - just divide the numbers by 10
 
 ** Getting games with history from a sqlite db into a tsv file:
-sqlite3 phone-2012-07-08.db <<END
+sqlite3 phone-2013-12-01.db <<END
 .mode tabs
-.output games-phone-2012-07-08.tsv
-select p.puzzle, g.history from puzzle p, game g where g.puzzleId = p._id and g.gameState >= 3;
+.output games-phone-2013-12-01.tsv
+select p.clues, a.history, p.rating from puzzle p, attempt a where a.puzzleId = p._id and a.attemptState = 3;
 END
 
 * Game
@@ -35,6 +34,14 @@ END
 * App
 
 ** Bugs
+*** TODO bug: 1:1:2013-11:191 showed up with a series of different ratings, ever increasing
+- not just on the board, but in the list as well
+*** TODO bug: 1:5:2013-12:57 failed to register a completion
+- played it, finished it, reviewed it, backed out of the review page and the
+  details page, and ended up back at the play page, ready to play it again
+- backed out again; next time I started the app, the next puzzle showed.
+- but the following time, 57 showed again, from scratch
+- no remaining record of the initial play
 
 ** App/UI cleanups
 *** TODO Evaluate puzzles while (or before) adding them

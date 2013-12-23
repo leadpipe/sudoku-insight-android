@@ -52,7 +52,7 @@ import javax.annotation.Nullable;
 public class Evaluator {
 
   /** The current version of the time estimation algorithm. */
-  public static final int CURRENT_VERSION = 1;
+  public static final int CURRENT_VERSION = 2;
 
   /**
    * How many times we run the evaluator when we must make choices that could
@@ -315,12 +315,12 @@ public class Evaluator {
    * hardest.
    */
   private enum MoveKind {
-    EASY_DIRECT(2.1, 1.5),
-    DIRECT(2.4, 1.6),
-    SIMPLY_IMPLIED_EASY(3.1, 1.7),
-    SIMPLY_IMPLIED(3.2, 1.8),
-    IMPLIED_EASY(6.0, 3.0),
-    IMPLIED(6.5, 3.8),  // catch-all, including errors
+    EASY_DIRECT(1.3, 1.3),
+    DIRECT(1.4, 1.4),
+    SIMPLY_IMPLIED_EASY(1.7, 1.7),
+    SIMPLY_IMPLIED(1.8, 1.8),
+    IMPLIED_EASY(3.4, 3.4),
+    IMPLIED(4.0, 4.0),  // catch-all, including errors
     ;
 
     /**
@@ -354,8 +354,8 @@ public class Evaluator {
      * When there are no moves implied, the best model is simply to pause a
      * fixed amount of time before looking for disproofs.
      */
-    public static final double SECONDS_BEFORE_DISPROOF = 137.4;
-    public static final double SECONDS_BEFORE_DISPROOF_WITH_TRAILS = 52.2;
+    public static final double SECONDS_BEFORE_DISPROOF = 83.2;
+    public static final double SECONDS_BEFORE_DISPROOF_WITH_TRAILS = 83.2;
 
     private MoveKind(double secondsPerScanPoint, double secondsPerScanPointWithTrails) {
       this.secondsPerScanPoint = secondsPerScanPoint;
@@ -363,7 +363,7 @@ public class Evaluator {
     }
   }
 
-  private static class Collector implements Analyzer.Callback {
+  public static class Collector implements Analyzer.Callback {
     private final GridMarks gridMarks;
     @Nullable private final Numeral prevNumeral;
     private final boolean trails;
@@ -378,16 +378,16 @@ public class Evaluator {
     private int numDirectErrors;
     private int numBlockNumeralMoves;
 
-    Collector(GridMarks gridMarks, @Nullable Numeral prevNumeral, boolean trails) {
+    public Collector(GridMarks gridMarks, @Nullable Numeral prevNumeral, boolean trails) {
       this.gridMarks = gridMarks;
       this.prevNumeral = prevNumeral;
       this.trails = trails;
     }
 
     @Override public void take(Insight insight) throws StopException {
-      insight.addScanTargets(locTargets, unitNumTargets);
       Assignment a = insight.getImpliedAssignment();
       if (a != null) {
+        insight.addScanTargets(locTargets, unitNumTargets);
         MoveKind kind = kindForInsight(insight, kinds.get(a.location));
         kinds.put(a.location, kind);
         if (best == null || kind.compareTo(best) < 0) {
@@ -405,13 +405,14 @@ public class Evaluator {
           }
         }
       } else if (insight.isError()) {
+        insight.addScanTargets(locTargets, unitNumTargets);
         errors = true;
         if (insight.type.isError())
           ++numDirectErrors;
       }
     }
 
-    double getElapsedSeconds() {
+    public double getElapsedSeconds() {
       if (blockNumeralMove != null) {
         int openMoves = 0;
         for (Block b : Block.ALL) {
@@ -430,18 +431,18 @@ public class Evaluator {
       int scanTargets = locTargets.size() + unitNumTargets.size();
       double scanPoints = totalScanPoints / scanTargets;
       double secondsPerScanPoint = trails ? kind.secondsPerScanPointWithTrails : kind.secondsPerScanPoint;
-      return secondsPerScanPoint * scanPoints;
+      return secondsPerScanPoint * scanPoints * move.getScanTargetCount();
     }
 
-    boolean hasMove() {
+    public boolean hasMove() {
       return move != null;
     }
 
-    Insight getMove() {
+    public Insight getMove() {
       return blockNumeralMove == null ? move : blockNumeralMove;
     }
 
-    boolean hasVisibleErrors() {
+    public boolean hasVisibleErrors() {
       return numDirectErrors > numDirectMoves;
     }
 

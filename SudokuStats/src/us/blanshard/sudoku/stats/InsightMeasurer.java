@@ -239,6 +239,7 @@ public class InsightMeasurer implements Runnable {
           if (list == null) missed.put(a, list = Lists.newArrayList());
           list.add(pattern);
         }
+        insight.addScanTargets(locTargets, unitNumTargets);
       }
       if (a != null && prevNumeral != null && insight.type == Type.FORCED_LOCATION) {
         ForcedLoc fl = (ForcedLoc) insight;
@@ -247,7 +248,6 @@ public class InsightMeasurer implements Runnable {
           if (assignment.equals(a)) isBlockNumeralMove = true;
         }
       }
-      insight.addScanTargets(locTargets, unitNumTargets);
     }
 
     int getNumTargets() {
@@ -297,7 +297,7 @@ public class InsightMeasurer implements Runnable {
           List<Pattern> antecedents = Lists.newArrayList();
           for (Insight a : imp.getAntecedents())
             antecedents.add(getPattern(a));
-          return Pattern.implication(antecedents, getPattern(imp.getConsequent()));
+          return Pattern.implication(antecedents, getPattern(imp.getConsequent()), imp.getScanTargetCount());
         }
         default:
           throw new IllegalArgumentException(insight.toShortString());

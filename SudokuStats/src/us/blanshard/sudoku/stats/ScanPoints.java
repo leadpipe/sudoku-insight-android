@@ -322,7 +322,7 @@ public class ScanPoints {
       }
       ++movesIncluded;
       double seconds = ms / 1000.0;
-      double pointsScanned = openCount * 4.0 / numTargets;
+      double pointsScanned = openCount * 4.0 / numTargets / found.get(0).getScanTargetCount();
       if (numBlockNumeralMoves == 0)
         counterNoBlockNumerals.count(seconds, pointsScanned);
       else if (isBlockNumeralMove)
@@ -390,19 +390,20 @@ public class ScanPoints {
   // ============================
 
   private static Reporter baseReporter = new Reporter();
-  private static Reporter trailsReporter = new Reporter();
+//  private static Reporter trailsReporter = new Reporter();
 
   private static Reporter getReporter(int numTrails) {
-    return numTrails == 0 ? baseReporter : trailsReporter;
+    return baseReporter;
+//    return numTrails == 0 ? baseReporter : trailsReporter;
   }
 
   private static void reportSummaries(PrintStream out) {
     reportSummaries(out, baseReporter, "No trails");
-    reportSummaries(out, trailsReporter, "With trails");
+//    reportSummaries(out, trailsReporter, "With trails");
   }
 
   private static void reportSummaries(PrintStream out, Reporter reporter, String desc) {
-    out.printf("%n======================%n%s%n======================%n%n", desc);
+//    out.printf("%n======================%n%s%n======================%n%n", desc);
     reporter.reportSummaries(out);
   }
 }

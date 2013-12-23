@@ -95,4 +95,8 @@ public final class ForcedLoc extends Insight {
   @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
     unitNums.add(UnitNumeral.of(unit, numeral));
   }
+
+  @Override public int getScanTargetCount() {
+    return 1;
+  }
 }

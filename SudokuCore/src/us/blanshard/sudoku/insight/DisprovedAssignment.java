@@ -119,4 +119,8 @@ public final class DisprovedAssignment extends Insight {
   @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
     // This guy has nothing.
   }
+
+  @Override public int getScanTargetCount() {
+    return 0;
+  }
 }
