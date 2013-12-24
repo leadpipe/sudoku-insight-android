@@ -36,6 +36,7 @@ limitations under the License.
         android:allowBackup="true"
         android:backupAgent="InsightBackupAgent"
         >
+      <!-- android:debuggable="true" -->
         <meta-data android:name="com.google.android.backup.api_key"
     		android:value="AEdPqrEAAAAIcgFiWNrEF5s7J-j4X6pwnXmKPhmVVhhY-HPIqg" />
         <activity android:name=".SudokuActivity">
