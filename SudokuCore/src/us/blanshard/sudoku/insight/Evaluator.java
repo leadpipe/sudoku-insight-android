@@ -26,6 +26,7 @@ import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.core.UnitNumSet;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
@@ -36,14 +37,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -369,7 +368,7 @@ public class Evaluator {
     @Nullable private final Numeral prevNumeral;
     private final boolean trails;
     private final LocSet locTargets = new LocSet();
-    private final Set<UnitNumeral> unitNumTargets = Sets.newHashSet();
+    private final UnitNumSet unitNumTargets = new UnitNumSet();
     private final Map<Location, MoveKind> kinds = Maps.newHashMap();
     private MoveKind best = null;
     @Nullable private Insight move;

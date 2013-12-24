@@ -11,13 +11,13 @@
 *** TODO Investigate recent puzzles
 - categories: estimate way too high, way too low, high, low, close to perfect
 - add columns for the pattern that the estimator found, and patterns matching actual move
-*** TODO Performance improvements [1/4]
+*** TODO Performance improvements [2/4]
 - [X] Run profiler
-- [-] Fix UnitNumeral so it doesn't consume too many resources
+- [X] Fix UnitNumeral so it doesn't consume too many resources
   - [X] Make UnitNumeral enum-like
   - [X] Add UnitNumSet
-  - [ ] Use UnitNumeral in Marks
-  - [ ] Use UnitNumSet in Insight
+  - [X] Use UnitNumeral in Marks
+  - [X] Use UnitNumSet in Insight
   - [X] Unit tests
 - [ ] Run profiler again
 - [ ] Add phase to Analyzer callback, and stop after assignments when taking the short path?

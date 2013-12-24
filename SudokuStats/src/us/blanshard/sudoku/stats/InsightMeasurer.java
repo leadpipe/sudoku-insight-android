@@ -27,6 +27,7 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.core.UnitNumSet;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.game.GameJson;
@@ -214,7 +215,7 @@ public class InsightMeasurer implements Runnable {
     final List<Pattern> found = Lists.newArrayList();
     final Map<Object, List<Pattern>> missed = Maps.newHashMap();
     final LocSet locTargets = new LocSet();
-    final Set<UnitNumeral> unitNumTargets = Sets.newHashSet();
+    final UnitNumSet unitNumTargets = new UnitNumSet();
     int numBlockNumeralMoves;
     boolean isBlockNumeralMove;
 
