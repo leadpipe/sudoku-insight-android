@@ -102,7 +102,7 @@ public class ToText {
    */
   public static String ratingProgressHtml(Context context, double minSeconds) {
     StringBuilder sb = new StringBuilder();
-    double num = Ratings.numericalRating(minSeconds);
+    double num = minSeconds;
     sb.append(context.getString(R.string.text_rating_in_progress, num));
     sb.append("&nbsp;");
     int stars = Ratings.ratingStars(num);
@@ -117,10 +117,9 @@ public class ToText {
    */
   public static String ratingHtml(Context context, Rating rating) {
     StringBuilder sb = new StringBuilder();
-    double num = Ratings.numericalRating(rating.estimatedAverageSolutionSeconds);
-    sb.append(context.getString(R.string.text_rating_number, num));
+    sb.append(context.getString(R.string.text_rating_number, rating.score));
     sb.append("<br>");
-    int stars = Ratings.ratingStars(num);
+    int stars = Ratings.ratingStars(rating.score);
     for (int s = 0; s < Ratings.MAX_STARS; ++s) {
       sb.append(s < stars ? SOLID_STAR_HTML : HOLLOW_STAR_HTML);
     }
@@ -134,10 +133,9 @@ public class ToText {
    */
   public static String ratingSummaryHtml(Context context, Rating rating) {
     StringBuilder sb = new StringBuilder();
-    double num = Ratings.numericalRating(rating.estimatedAverageSolutionSeconds);
-    sb.append(context.getString(R.string.text_rating_number_only, num));
+    sb.append(context.getString(R.string.text_rating_number_only, rating.score));
     sb.append(' ');
-    int stars = Ratings.ratingStars(num);
+    int stars = Ratings.ratingStars(rating.score);
     for (int s = 0; s < stars; ++s) {
       sb.append(SOLID_STAR_HTML);
     }

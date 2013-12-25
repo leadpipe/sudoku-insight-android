@@ -45,10 +45,9 @@ public class RatingStats1 {
           int numSolutions = props.get(Generator.NUM_SOLUTIONS_KEY).getAsInt();
           Grid puzzle = Grid.fromString(props.get(Generator.PUZZLE_KEY).getAsString());
           Rating rating = Evaluator.evaluate(puzzle, null);
-          double minutes = rating.estimatedAverageSolutionSeconds / 60.0;
           int difficulty = rating.difficulty.ordinal();
           out.printf("%d,%d,%d,%d,%s,%d,%f,%d%n", stream, year, month, counter,
-              symmetry, numSolutions, minutes, difficulty);
+              symmetry, numSolutions, rating.score, difficulty);
         }
   }
 }

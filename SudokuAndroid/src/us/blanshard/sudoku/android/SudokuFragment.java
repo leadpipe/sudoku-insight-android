@@ -190,7 +190,7 @@ public class SudokuFragment
     titleView.setText(ratingTitle);
 
     Rating rating = mAttempt.rating;
-    boolean mustRate = rating == null || !rating.estimateComplete;
+    boolean mustRate = rating == null || !rating.evalComplete;
     Spanned message = mustRate
         ? Html.fromHtml(ToText.ratingProgressHtml(getActivity(), 0))
         : Html.fromHtml(ToText.ratingHtml(getActivity(), rating));
@@ -576,12 +576,12 @@ public class SudokuFragment
 
     @Override protected Rating doInBackground(Void... inputs) {
       Rating rating = Evaluator.evaluate(mAttempt.clues, new Evaluator.Callback() {
-        @Override public void updateEstimate(double minSeconds) {
-          publishProgress(minSeconds);
+        @Override public void updateEstimate(double minScore) {
+          publishProgress(minScore);
         }
         @Override public void disproofsRequired() {}
       });
-      if (rating.estimateComplete)
+      if (rating.evalComplete)
         mDb.setPuzzleRating(mAttempt.puzzleId, rating);
       return rating;
     }
@@ -591,7 +591,7 @@ public class SudokuFragment
     }
 
     @Override protected void onPostExecute(SudokuFragment anchor, Rating output) {
-      if (output.estimateComplete) {
+      if (output.evalComplete) {
         mAttempt.rating = output;
         mTextView.setText(Html.fromHtml(ToText.ratingHtml(anchor.getActivity(), output)));
         anchor.setRatingText();
@@ -630,12 +630,12 @@ public class SudokuFragment
       if (!hasNext) {
         Attempt attempt = generateAndStorePuzzle(mDb, mPrefs);
         Rating rating = Evaluator.evaluate(attempt.clues, null);
-        if (rating.estimateComplete)
+        if (rating.evalComplete)
           mDb.setPuzzleRating(attempt.puzzleId, rating);
       }
       if (!wasCanceled() && mPuzzle != null) {
         Rating rating = Evaluator.evaluate(mPuzzle, null);
-        if (rating.estimateComplete)
+        if (rating.evalComplete)
           mDb.setPuzzleRating(mPuzzleId, rating);
         return rating;
       }

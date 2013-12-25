@@ -27,24 +27,15 @@ public class Ratings {
   public static final int MAX_STARS = 6;
 
   /**
-   * Returns the rating number we show to the user, which is the estimated number
-   * of minutes it will take to solve the puzzle.
-   */
-  public static double numericalRating(double estimatedAverageSolutionSeconds) {
-    // Our numerical rating is the estimated number of minutes.
-    return estimatedAverageSolutionSeconds / 60;
-  }
-
-  /**
-   * Turns a {@link #numericalRating} into a number of stars, which is an integer
+   * Turns a {@link Rating#score} into a number of stars, which is an integer
    * between 1 and {@link #MAX_STARS} inclusive.
    */
-  public static int ratingStars(double numericalRating) {
-    if (numericalRating < 2.5) return 1;
-    if (numericalRating < 3.5) return 2;
-    if (numericalRating < 5.5) return 3;
-    if (numericalRating < 10)  return 4;
-    if (numericalRating < 20)  return 5;
+  public static int ratingStars(double score) {
+    if (score < 2.5) return 1;
+    if (score < 3.5) return 2;
+    if (score < 5.5) return 3;
+    if (score < 10)  return 4;
+    if (score < 20)  return 5;
     return 6;
   }
 

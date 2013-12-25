@@ -38,29 +38,29 @@ public class Rating {
 
   /** The version of the estimation algorithm that was used for this result. */
   public final int algorithmVersion;
-  /** How long the puzzle is estimated to take. */
-  public final double estimatedAverageSolutionSeconds;
-  /** Whether the estimate was complete; if false, the estimate is probably
+  /** The puzzle's score. This is an estimate of the expected solution time in
+      minutes. */
+  public final double score;
+  /** Whether the evaluation was complete; if false, the score is probably
       less than it would have been if allowed to finish. */
-  public final boolean estimateComplete;
+  public final boolean evalComplete;
   /** The intrinsic difficulty of the puzzle. */
   public final Difficulty difficulty;
   /** Whether the puzzle has more than one solution. */
   public final boolean improper;
 
-  public Rating(int algorithmVersion, double estimatedAverageSolutionSeconds,
-      boolean estimateComplete, Difficulty difficulty, boolean improper) {
+  public Rating(int algorithmVersion, double score, boolean evalComplete, Difficulty difficulty,
+      boolean improper) {
     this.algorithmVersion = algorithmVersion;
-    this.estimatedAverageSolutionSeconds = estimatedAverageSolutionSeconds;
-    this.estimateComplete = estimateComplete;
+    this.score = score;
+    this.evalComplete = evalComplete;
     this.difficulty = difficulty;
     this.improper = improper;
   }
 
   /** Renders this result in a string form that can be reversed by {@link #deserialize}. */
   public String serialize() {
-    return JOINER.join(algorithmVersion, estimatedAverageSolutionSeconds,
-        estimateComplete, difficulty.ordinal(), improper);
+    return JOINER.join(algorithmVersion, score, evalComplete, difficulty.ordinal(), improper);
   }
 
   @Override public String toString() {
@@ -71,11 +71,11 @@ public class Rating {
   public static Rating deserialize(String s) {
     Iterator<String> it = SPLITTER.split(s).iterator();
     int algorithmVersion = Integer.parseInt(it.next());
-    double estimatedAverageSolutionSeconds = Double.parseDouble(it.next());
-    boolean estimateComplete = Boolean.parseBoolean(it.next());
+    double score = Double.parseDouble(it.next());
+    boolean evalComplete = Boolean.parseBoolean(it.next());
     Difficulty difficulty = Difficulty.values()[Integer.parseInt(it.next())];
     boolean improper = Boolean.parseBoolean(it.next());
-    return new Rating(algorithmVersion, estimatedAverageSolutionSeconds, estimateComplete,
-        difficulty, improper);
+    if (algorithmVersion == 1) score /= 60;
+    return new Rating(algorithmVersion, score, evalComplete, difficulty, improper);
   }
 }

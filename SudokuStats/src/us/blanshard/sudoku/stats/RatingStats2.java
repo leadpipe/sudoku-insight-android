@@ -58,12 +58,12 @@ public class RatingStats2 {
    */
   private static void run(String name, Evaluator evaluator, Rating first, PrintStream out) {
     double[] cumulativeAverages = new double[NUM_RUNS];
-    cumulativeAverages[0] = first.estimatedAverageSolutionSeconds;
+    cumulativeAverages[0] = first.score;
     SummaryStatistics stat = new SummaryStatistics();
-    stat.addValue(first.estimatedAverageSolutionSeconds);
+    stat.addValue(first.score);
     for (int n = 1; n < NUM_RUNS; ++n) {
       Rating rating = evaluator.evaluate(null, 1);
-      stat.addValue(rating.estimatedAverageSolutionSeconds);
+      stat.addValue(rating.score);
       cumulativeAverages[n] = stat.getMean();
     }
     Assert.assertEquals(NUM_RUNS, stat.getN());

@@ -331,7 +331,7 @@ public class PuzzleInfoFragment extends FragmentBase
 
     @Override protected Database.Puzzle doInBackground(Void... params) {
       Rating rating = Evaluator.evaluate(mPuzzle, null);
-      if (!rating.estimateComplete) return null;
+      if (!rating.evalComplete) return null;
       mDb.setPuzzleRating(mId, rating);
       return mDb.getFullPuzzle(mId);
     }

@@ -89,14 +89,14 @@ public class EvaluatorEvaluator {
         if (!won) continue;
 
         ++nwon;
-        double elapsedSeconds = ((Number) attempt.getProperty(Schema.Attempt.ELAPSED_MS)).doubleValue() / 1000.0;
+        double elapsedMinutes = ((Number) attempt.getProperty(Schema.Attempt.ELAPSED_MS)).doubleValue() / 60000.0;
         Stopwatch stopwatch = new Stopwatch().start();
         Rating result = Evaluator.evaluate(puzzle, null);
         long micros = stopwatch.elapsed(TimeUnit.MICROSECONDS);
         boolean singlePass = result.difficulty == Difficulty.NO_DISPROOFS;
         if (singlePass) ++nsingle;
         else if (result.difficulty == Difficulty.RECURSIVE_DISPROOFS) ++nrecursive;
-        AttemptInfo info = new AttemptInfo(elapsedSeconds, result, micros);
+        AttemptInfo info = new AttemptInfo(elapsedMinutes, result, micros);
         totalAbsPercentError += info.getAbsPercentError();
         Stats stats = info.isOvershot()
             ? singlePass ? overshotSingle : overshotMultiple
@@ -138,20 +138,20 @@ public class EvaluatorEvaluator {
   }
 
   static class AttemptInfo {
-    final double elapsedSeconds;
+    final double elapsedMinutes;
     final Rating result;
     final long micros;
     final double ape;
 
-    AttemptInfo(double elapsedSeconds, Rating result, long micros) {
-      this.elapsedSeconds = elapsedSeconds;
+    AttemptInfo(double elapsedMinutes, Rating result, long micros) {
+      this.elapsedMinutes = elapsedMinutes;
       this.result = result;
       this.micros = micros;
-      this.ape = calcAbsPercentError(result.estimatedAverageSolutionSeconds, elapsedSeconds);
+      this.ape = calcAbsPercentError(result.score, elapsedMinutes);
     }
 
     boolean isOvershot() {
-      return result.estimatedAverageSolutionSeconds > elapsedSeconds;
+      return result.score > elapsedMinutes;
     }
 
     double getAbsPercentError() {

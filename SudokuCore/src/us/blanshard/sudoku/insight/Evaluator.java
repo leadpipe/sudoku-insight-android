@@ -62,10 +62,10 @@ public class Evaluator {
 
   /**
    * Called back periodically from {@link #evaluate} with updates to the
-   * estimate.
+   * estimated score.
    */
   public interface Callback {
-    void updateEstimate(double minSeconds);
+    void updateEstimate(double minScore);
     void disproofsRequired();
   }
 
@@ -107,41 +107,41 @@ public class Evaluator {
     checkArgument(trialCount >= 1);
     Run outer = new Run(new GridMarks(puzzle), false);
     outer.runStraightShot(callback);
-    double seconds = outer.seconds;
+    double score = outer.score;
     boolean uninterrupted = outer.uninterrupted();
     Difficulty difficulty = Difficulty.NO_DISPROOFS;
     if (outer.status == RunStatus.INCONCLUSIVE) {
       difficulty = Difficulty.SIMPLE_DISPROOFS;
       if (callback != null) callback.disproofsRequired();
-      double totalSeconds = 0;
+      double totalScore = 0;
       int numEvaluations = 0;
       while (uninterrupted && numEvaluations++ < trialCount) {
         Run inner = new Run(outer.gridMarks, true);
         inner.runDisproof(
-            new InnerCallback(callback, seconds + totalSeconds / trialCount, trialCount));
+            new InnerCallback(callback, score + totalScore / trialCount, trialCount));
         uninterrupted = inner.uninterrupted();
-        totalSeconds += inner.seconds;
+        totalScore += inner.score;
         if (inner.recursiveDisproofs) difficulty = Difficulty.RECURSIVE_DISPROOFS;
       }
-      seconds += totalSeconds / numEvaluations;
+      score += totalScore / numEvaluations;
     }
-    return new Rating(CURRENT_VERSION, seconds, uninterrupted, difficulty, improper);
+    return new Rating(CURRENT_VERSION, score, uninterrupted, difficulty, improper);
   }
 
   private static class InnerCallback implements Callback {
     @Nullable private final Callback callback;
-    private final double baseSeconds;
+    private final double baseScore;
     private final int trialCount;
 
-    InnerCallback(@Nullable Callback callback, double baseSeconds, int trialCount) {
+    InnerCallback(@Nullable Callback callback, double baseScore, int trialCount) {
       this.callback = callback;
-      this.baseSeconds = baseSeconds;
+      this.baseScore = baseScore;
       this.trialCount = trialCount;
     }
 
-    @Override public void updateEstimate(double minSeconds) {
+    @Override public void updateEstimate(double minScore) {
       if (callback != null)
-        callback.updateEstimate(baseSeconds + minSeconds / trialCount);
+        callback.updateEstimate(baseScore + minScore / trialCount);
     }
 
     @Override public void disproofsRequired() {}
@@ -152,7 +152,7 @@ public class Evaluator {
   private class Run {
     final boolean trails;
     GridMarks gridMarks;
-    double seconds;
+    double score;
     RunStatus status;
     boolean foundSolution;
     boolean recursiveDisproofs;
@@ -170,8 +170,8 @@ public class Evaluator {
         Collector collector = new Collector(gridMarks, prevNumeral, trails);
         prevNumeral = null;
         if (Analyzer.analyze(gridMarks, collector, true)) {
-          seconds += collector.getElapsedSeconds();
-          if (callback != null) callback.updateEstimate(seconds);
+          score += collector.getElapsedMinutes();
+          if (callback != null) callback.updateEstimate(score);
           if (collector.hasMove()) {
             Insight move = collector.getMove();
             gridMarks = gridMarks.toBuilder().apply(move).build();
@@ -324,7 +324,7 @@ public class Evaluator {
     ;
 
     /**
-     * How many seconds it takes on average to scan one "point" for this kind of
+     * How many minutes it takes on average to scan one "point" for this kind of
      * move.
      *
      * <p> The number of "points" at any given grid position is defined as the
@@ -337,8 +337,8 @@ public class Evaluator {
      * given location is the minimum move kind for all the insights that assign
      * a numeral to that location.
      */
-    public final double secondsPerScanPoint;
-    public final double secondsPerScanPointWithTrails;
+    public final double minutesPerScanPoint;
+    public final double minutesPerScanPointWithTrails;
 
     public static final MoveKind MIN = EASY_DIRECT;
     public static final MoveKind MAX = IMPLIED;
@@ -348,18 +348,18 @@ public class Evaluator {
      * previous move, we count the scan points as the open block-numeral moves
      * remaining for that numeral, and this is the scan rate for them.
      */
-    public static final double BLOCK_NUMERAL_SECONDS_PER_SCAN_POINT = 0.75;
+    public static final double BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT = 0.75 / 60;
 
     /**
      * When there are no moves implied, the best model is simply to pause a
      * fixed amount of time before looking for disproofs.
      */
-    public static final double SECONDS_BEFORE_DISPROOF = 83.2;
-    public static final double SECONDS_BEFORE_DISPROOF_WITH_TRAILS = 83.2;
+    public static final double MINUTES_BEFORE_DISPROOF = 83.2 / 60;
+    public static final double MINUTES_BEFORE_DISPROOF_WITH_TRAILS = 83.2 / 60;
 
     private MoveKind(double secondsPerScanPoint, double secondsPerScanPointWithTrails) {
-      this.secondsPerScanPoint = secondsPerScanPoint;
-      this.secondsPerScanPointWithTrails = secondsPerScanPointWithTrails;
+      this.minutesPerScanPoint = secondsPerScanPoint / 60;
+      this.minutesPerScanPointWithTrails = secondsPerScanPointWithTrails / 60;
     }
   }
 
@@ -412,7 +412,7 @@ public class Evaluator {
       }
     }
 
-    public double getElapsedSeconds() {
+    public double getElapsedMinutes() {
       if (blockNumeralMove != null) {
         int openMoves = 0;
         for (Block b : Block.all()) {
@@ -420,18 +420,18 @@ public class Evaluator {
           if (locs.size() > 1 || locs.size() == 1 && !gridMarks.grid.containsKey(locs.get(0)))
             ++openMoves;
         }
-        return MoveKind.BLOCK_NUMERAL_SECONDS_PER_SCAN_POINT * openMoves / numBlockNumeralMoves;
+        return MoveKind.BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT * openMoves / numBlockNumeralMoves;
       }
       if (move == null)
-        return trails ? MoveKind.SECONDS_BEFORE_DISPROOF_WITH_TRAILS : MoveKind.SECONDS_BEFORE_DISPROOF;
+        return trails ? MoveKind.MINUTES_BEFORE_DISPROOF_WITH_TRAILS : MoveKind.MINUTES_BEFORE_DISPROOF;
       MoveKind kind = errors || kinds.isEmpty()
           ? MoveKind.MAX : Ordering.<MoveKind>natural().max(kinds.values());
       int openLocs = Location.COUNT - gridMarks.grid.size();
       double totalScanPoints = 4.0 * openLocs;
       int scanTargets = locTargets.size() + unitNumTargets.size();
       double scanPoints = totalScanPoints / scanTargets;
-      double secondsPerScanPoint = trails ? kind.secondsPerScanPointWithTrails : kind.secondsPerScanPoint;
-      return secondsPerScanPoint * scanPoints * move.getScanTargetCount();
+      double minutesPerScanPoint = trails ? kind.minutesPerScanPointWithTrails : kind.minutesPerScanPoint;
+      return minutesPerScanPoint * scanPoints * move.getScanTargetCount();
     }
 
     public boolean hasMove() {
