@@ -22,6 +22,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import us.blanshard.sudoku.android.Database.Attempt;
 import us.blanshard.sudoku.android.Database.AttemptState;
+import us.blanshard.sudoku.insight.Evaluator;
 import us.blanshard.sudoku.insight.Rating;
 import us.blanshard.sudoku.messages.PuzzleRpcs.PuzzleResult;
 
@@ -118,6 +119,7 @@ public class ToText {
   public static String ratingHtml(Context context, Rating rating) {
     StringBuilder sb = new StringBuilder();
     sb.append(context.getString(R.string.text_rating_number, rating.score));
+    appendRatingVersion(context, rating, sb);
     sb.append("<br>");
     int stars = Ratings.ratingStars(rating.score);
     for (int s = 0; s < Ratings.MAX_STARS; ++s) {
@@ -134,12 +136,18 @@ public class ToText {
   public static String ratingSummaryHtml(Context context, Rating rating) {
     StringBuilder sb = new StringBuilder();
     sb.append(context.getString(R.string.text_rating_number_only, rating.score));
+    appendRatingVersion(context, rating, sb);
     sb.append(' ');
     int stars = Ratings.ratingStars(rating.score);
     for (int s = 0; s < stars; ++s) {
       sb.append(SOLID_STAR_HTML);
     }
     return sb.toString();
+  }
+
+  private static void appendRatingVersion(Context context, Rating rating, StringBuilder sb) {
+    if (rating.algorithmVersion < Evaluator.CURRENT_VERSION)
+      sb.append("(?)");
   }
 
   /**

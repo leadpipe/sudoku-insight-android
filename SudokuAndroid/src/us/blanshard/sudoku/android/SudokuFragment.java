@@ -190,7 +190,8 @@ public class SudokuFragment
     titleView.setText(ratingTitle);
 
     Rating rating = mAttempt.rating;
-    boolean mustRate = rating == null || !rating.evalComplete;
+    boolean mustRate = rating == null || !rating.evalComplete
+        || rating.algorithmVersion < Evaluator.CURRENT_VERSION;
     Spanned message = mustRate
         ? Html.fromHtml(ToText.ratingProgressHtml(getActivity(), 0))
         : Html.fromHtml(ToText.ratingHtml(getActivity(), rating));
