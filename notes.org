@@ -4,13 +4,16 @@
 - are we really doing something stupid with implications and scan points?
 - Yes.  Yeesh.
 - Also, sets.
-*** TODO Investigate speedup as the puzzle progresses
+*** TODO Investigate speedup as the puzzle progresses [0/1]
 - 3 cols: timestamp, move number, ratio of actual vs predicted time for the move
 - scatter plots: timestamp vs ratio, move number vs ratio
 - fit curves: do they decay to an asymptote?
+- [ ] write tool to spit out such a file
 *** TODO Investigate recent puzzles
 - categories: estimate way too high, way too low, high, low, close to perfect
 - add columns for the pattern that the estimator found, and patterns matching actual move
+*** TODO Look into keeping track of found eliminations during the course of the puzzle
+- does this help reduce the long tails?
 *** TODO Performance improvements [2/4]
 - [X] Run profiler
 - [X] Fix UnitNumeral so it doesn't consume too many resources
