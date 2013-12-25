@@ -60,9 +60,9 @@ import com.google.appengine.api.files.FileServiceFactory;
 import com.google.appengine.api.files.RecordReadChannel;
 import com.google.appengine.tools.development.testing.LocalBlobstoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
@@ -72,9 +72,7 @@ import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -187,7 +185,7 @@ public class InsightMeasurer implements Runnable {
             .append(String.valueOf(trails.size()))
             .append('\t')
             ;
-        Pattern.appendAllTo(out, collector.missed.values());
+        Pattern.appendAllTo(out, collector.missed.asMap().values());
         out.println();
       } catch (IOException e) {
         throw new AssertionError(e);
@@ -213,7 +211,7 @@ public class InsightMeasurer implements Runnable {
     final Assignment assignment;
     final Numeral prevNumeral;
     final List<Pattern> found = Lists.newArrayList();
-    final Map<Object, List<Pattern>> missed = Maps.newHashMap();
+    final Multimap<Object, Pattern> missed = ArrayListMultimap.create();
     final LocSet locTargets = new LocSet();
     final UnitNumSet unitNumTargets = new UnitNumSet();
     int numBlockNumeralMoves;
@@ -232,14 +230,11 @@ public class InsightMeasurer implements Runnable {
         Insight minimized = Analyzer.minimize(gridMarks, insight);
         Pattern pattern = getPattern(minimized);
         if (isError)
-          missed.put(new Object(), Collections.singletonList(pattern));
+          missed.put(new Object(), pattern);
         else if (assignment.equals(a))
           found.add(pattern);
-        else {
-          List<Pattern> list = missed.get(a);
-          if (list == null) missed.put(a, list = Lists.newArrayList());
-          list.add(pattern);
-        }
+        else
+          missed.put(a, pattern);
         insight.addScanTargets(locTargets, unitNumTargets);
       }
       if (a != null && prevNumeral != null && insight.type == Type.FORCED_LOCATION) {

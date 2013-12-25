@@ -136,9 +136,9 @@ public abstract class Pattern implements Comparable<Pattern> {
     return Joiner.on(',').appendTo(a, patterns);
   }
 
-  public static Appendable appendAllTo(Appendable a, Collection<List<Pattern>> patternLists) throws IOException {
+  public static Appendable appendAllTo(Appendable a, Collection<? extends Collection<Pattern>> patternLists) throws IOException {
     boolean one = false;
-    for (List<Pattern> list : patternLists) {
+    for (Collection<Pattern> list : patternLists) {
       if (one) a.append(';');
       else one = true;
       appendTo(a, list);
