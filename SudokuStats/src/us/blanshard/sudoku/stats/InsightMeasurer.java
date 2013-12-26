@@ -16,9 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.stats;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static us.blanshard.sudoku.game.GameJson.HISTORY_TYPE;
 
-import us.blanshard.sudoku.appengine.Schema;
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Block;
 import us.blanshard.sudoku.core.Grid;
@@ -30,7 +28,6 @@ import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumSet;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
-import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.UndoDetector;
@@ -49,29 +46,14 @@ import us.blanshard.sudoku.insight.LockedSet;
 import us.blanshard.sudoku.insight.Overlap;
 import us.blanshard.sudoku.stats.Pattern.UnitCategory;
 
-import com.google.appengine.api.blobstore.BlobKey;
-import com.google.appengine.api.datastore.EmbeddedEntity;
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.EntityTranslator;
-import com.google.appengine.api.datastore.Text;
-import com.google.appengine.api.files.AppEngineFile;
-import com.google.appengine.api.files.FileService;
-import com.google.appengine.api.files.FileServiceFactory;
-import com.google.appengine.api.files.RecordReadChannel;
-import com.google.appengine.tools.development.testing.LocalBlobstoreServiceTestConfig;
-import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -85,44 +67,20 @@ import javax.annotation.Nullable;
  * @author Luke Blanshard
  */
 public class InsightMeasurer implements Runnable {
-  public static final Gson GSON = GameJson.register(new GsonBuilder()).create();
-  private static final LocalBlobstoreServiceTestConfig config = new LocalBlobstoreServiceTestConfig();
-  static {
-    config.setNoStorage(false);
-    config.setBackingStoreLocation("/Users/leadpipe/Downloads/datastore-backup-20130720/");
-  }
-  private static final LocalServiceTestHelper helper = new LocalServiceTestHelper(config);
 
-  @SuppressWarnings("deprecation")
   public static void main(String[] args) throws Exception {
-    helper.setUp();
     PrintWriter out = new PrintWriter("measurer.txt");
-
-    FileService fs = FileServiceFactory.getFileService();
     int npuzzles = 0;
-    for (int shard = 0; shard < 8; ++shard) {
-      AppEngineFile file = fs.getBlobFile(new BlobKey("shard" + shard));
-      RecordReadChannel chan = fs.openRecordReadChannel(file, false);
-      ByteBuffer record;
-      while ((record = chan.readRecord()) != null) {
-        ++npuzzles;
-        EntityProto proto = new EntityProto();
-        proto.mergeFrom(record);
-        Entity entity = EntityTranslator.createFromPb(proto);
-        String puzzleString = (String) entity.getProperty(Schema.InstallationPuzzle.PUZZLE);
-        Grid puzzle = Grid.fromString(puzzleString);
-        EmbeddedEntity attempt = (EmbeddedEntity) entity.getProperty(Schema.InstallationPuzzle.FIRST_ATTEMPT);
-        Text historyString = (Text) attempt.getProperty(Schema.Attempt.MOVES);
-        List<Move> history = GSON.fromJson(historyString.getValue(), HISTORY_TYPE);
-        new InsightMeasurer(puzzle, history, out).run();
-        System.out.print('.');
-        if (npuzzles % 100 == 0) System.out.println();
-        out.flush();
-      }
+
+    for (AttemptInfo attempt : Attempts.datastoreBackup()) {
+      ++npuzzles;
+      new InsightMeasurer(attempt.clues, attempt.history, out).run();
+      System.out.print('.');
+      if (npuzzles % 100 == 0) System.out.println();
+      out.flush();
     }
 
     out.close();
-    helper.tearDown();
   }
 
   private final Grid solution;

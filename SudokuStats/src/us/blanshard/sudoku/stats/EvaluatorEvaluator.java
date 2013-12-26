@@ -15,32 +15,15 @@ limitations under the License.
 */
 package us.blanshard.sudoku.stats;
 
-import us.blanshard.sudoku.appengine.Schema;
-import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.insight.Evaluator;
 import us.blanshard.sudoku.insight.Rating;
 import us.blanshard.sudoku.insight.Rating.Difficulty;
 
-import com.google.appengine.api.blobstore.BlobKey;
-import com.google.appengine.api.datastore.EmbeddedEntity;
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.EntityTranslator;
-import com.google.appengine.api.files.AppEngineFile;
-import com.google.appengine.api.files.FileService;
-import com.google.appengine.api.files.FileServiceFactory;
-import com.google.appengine.api.files.RecordReadChannel;
-import com.google.appengine.tools.development.testing.LocalBlobstoreServiceTestConfig;
-import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.common.base.Stopwatch;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import java.io.PrintWriter;
-import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -48,20 +31,9 @@ import java.util.concurrent.TimeUnit;
  * and accumulating error stats.
  */
 public class EvaluatorEvaluator {
-  public static final Gson GSON = GameJson.register(new GsonBuilder()).create();
-  private static final LocalBlobstoreServiceTestConfig config = new LocalBlobstoreServiceTestConfig();
-  static {
-    config.setNoStorage(false);
-    config.setBackingStoreLocation("/Users/leadpipe/Downloads/datastore-backup-20130720/");
-  }
-  private static final LocalServiceTestHelper helper = new LocalServiceTestHelper(config);
 
-  @SuppressWarnings("deprecation")
   public static void main(String[] args) throws Exception {
-    helper.setUp();
     PrintWriter out = new PrintWriter(System.out);
-
-    FileService fs = FileServiceFactory.getFileService();
     int npuzzles = 0;
     int nwon = 0;
     int nsingle = 0;
@@ -71,38 +43,26 @@ public class EvaluatorEvaluator {
     Stats undershotMultiple = new Stats();
     Stats overshotSingle = new Stats();
     Stats overshotMultiple = new Stats();
-    for (int shard = 0; shard < 8; ++shard) {
-      AppEngineFile file = fs.getBlobFile(new BlobKey("shard" + shard));
-      RecordReadChannel chan = fs.openRecordReadChannel(file, false);
-      ByteBuffer record;
-      while ((record = chan.readRecord()) != null) {
-        ++npuzzles;
-        System.err.print('.');
-        if (npuzzles % 100 == 0) System.err.println();
-        EntityProto proto = new EntityProto();
-        proto.mergeFrom(record);
-        Entity entity = EntityTranslator.createFromPb(proto);
-        String puzzleString = (String) entity.getProperty(Schema.InstallationPuzzle.PUZZLE);
-        Grid puzzle = Grid.fromString(puzzleString);
-        EmbeddedEntity attempt = (EmbeddedEntity) entity.getProperty(Schema.InstallationPuzzle.FIRST_ATTEMPT);
-        boolean won = (Boolean) attempt.getProperty(Schema.Attempt.WON);
-        if (!won) continue;
 
-        ++nwon;
-        double elapsedMinutes = ((Number) attempt.getProperty(Schema.Attempt.ELAPSED_MS)).doubleValue() / 60000.0;
-        Stopwatch stopwatch = new Stopwatch().start();
-        Rating result = Evaluator.evaluate(puzzle, null);
-        long micros = stopwatch.elapsed(TimeUnit.MICROSECONDS);
-        boolean singlePass = result.difficulty == Difficulty.NO_DISPROOFS;
-        if (singlePass) ++nsingle;
-        else if (result.difficulty == Difficulty.RECURSIVE_DISPROOFS) ++nrecursive;
-        AttemptInfo info = new AttemptInfo(elapsedMinutes, result, micros);
-        totalAbsPercentError += info.getAbsPercentError();
-        Stats stats = info.isOvershot()
-            ? singlePass ? overshotSingle : overshotMultiple
-            : singlePass ? undershotSingle : undershotMultiple;
-        info.addTo(stats);
-      }
+    for (AttemptInfo attempt : Attempts.datastoreBackup()) {
+      ++npuzzles;
+      System.err.print('.');
+      if (npuzzles % 100 == 0) System.err.println();
+      if (!attempt.won) continue;
+
+      ++nwon;
+      Stopwatch stopwatch = new Stopwatch().start();
+      Rating result = Evaluator.evaluate(attempt.clues, null);
+      long micros = stopwatch.elapsed(TimeUnit.MICROSECONDS);
+      boolean singlePass = result.difficulty == Difficulty.NO_DISPROOFS;
+      if (singlePass) ++nsingle;
+      else if (result.difficulty == Difficulty.RECURSIVE_DISPROOFS) ++nrecursive;
+      Info info = new Info(attempt.elapsedMinutes, result, micros);
+      totalAbsPercentError += info.getAbsPercentError();
+      Stats stats = info.isOvershot()
+        ? singlePass ? overshotSingle : overshotMultiple
+        : singlePass ? undershotSingle : undershotMultiple;
+      info.addTo(stats);
     }
 
     out.println();
@@ -113,7 +73,6 @@ public class EvaluatorEvaluator {
     printStats(out, "Single-pass", undershotSingle, overshotSingle);
     printStats(out, "Multi-pass", undershotMultiple, overshotMultiple);
     out.close();
-    helper.tearDown();
   }
 
   private static void printStats(PrintWriter out, String category, Stats undershot, Stats overshot) {
@@ -137,13 +96,13 @@ public class EvaluatorEvaluator {
     }
   }
 
-  static class AttemptInfo {
+  static class Info {
     final double elapsedMinutes;
     final Rating result;
     final long micros;
     final double ape;
 
-    AttemptInfo(double elapsedMinutes, Rating result, long micros) {
+    Info(double elapsedMinutes, Rating result, long micros) {
       this.elapsedMinutes = elapsedMinutes;
       this.result = result;
       this.micros = micros;

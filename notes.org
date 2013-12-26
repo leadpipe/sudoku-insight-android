@@ -4,10 +4,11 @@
 - are we really doing something stupid with implications and scan points?
 - Yes.  Yeesh.
 - Also, sets.
-*** TODO Investigate speedup as the puzzle progresses [0/1]
+*** TODO Investigate speedup as the puzzle progresses [1/2]
 - 3 cols: timestamp, move number, ratio of actual vs predicted time for the move
 - scatter plots: timestamp vs ratio, move number vs ratio
 - fit curves: do they decay to an asymptote?
+- [X] consolidate history reading into a shared class
 - [ ] write tool to spit out such a file
 *** TODO Investigate recent puzzles
 - categories: estimate way too high, way too low, high, low, close to perfect
