@@ -101,15 +101,11 @@ public class ToText {
   /**
    * Returns a description of the progress of rating a puzzle.
    */
-  public static String ratingProgressHtml(Context context, double minSeconds) {
+  public static String ratingProgressHtml(Context context, double minScore) {
     StringBuilder sb = new StringBuilder();
-    double num = minSeconds;
-    sb.append(context.getString(R.string.text_rating_in_progress, num));
+    sb.append(context.getString(R.string.text_rating_in_progress, minScore));
     sb.append("&nbsp;");
-    int stars = Ratings.ratingStars(num);
-    for (int s = 0; s < stars; ++s) {
-      sb.append(SOLID_STAR_HTML);
-    }
+    appendStars(minScore, sb);
     return sb.toString();
   }
 
@@ -121,10 +117,7 @@ public class ToText {
     sb.append(context.getString(R.string.text_rating_number, rating.score));
     appendRatingVersion(context, rating, sb);
     sb.append("<br>");
-    int stars = Ratings.ratingStars(rating.score);
-    for (int s = 0; s < Ratings.MAX_STARS; ++s) {
-      sb.append(s < stars ? SOLID_STAR_HTML : HOLLOW_STAR_HTML);
-    }
+    int stars = appendStars(rating.score, sb);
     int resourceId = Ratings.starsDescriptionResource(stars);
     sb.append("&nbsp;").append(context.getString(resourceId));
     return sb.toString();
@@ -138,16 +131,21 @@ public class ToText {
     sb.append(context.getString(R.string.text_rating_number_only, rating.score));
     appendRatingVersion(context, rating, sb);
     sb.append(' ');
-    int stars = Ratings.ratingStars(rating.score);
-    for (int s = 0; s < stars; ++s) {
-      sb.append(SOLID_STAR_HTML);
-    }
+    appendStars(rating.score, sb);
     return sb.toString();
   }
 
   private static void appendRatingVersion(Context context, Rating rating, StringBuilder sb) {
     if (rating.algorithmVersion < Evaluator.CURRENT_VERSION)
       sb.append("(?)");
+  }
+
+  private static int appendStars(double score, StringBuilder sb) {
+    int stars = Ratings.ratingStars(score);
+    for (int s = 0; s < Ratings.MAX_STARS; ++s) {
+      sb.append(s < stars ? SOLID_STAR_HTML : HOLLOW_STAR_HTML);
+    }
+    return stars;
   }
 
   /**
