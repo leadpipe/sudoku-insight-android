@@ -314,7 +314,7 @@ public class Evaluator {
    * of difficulty of different insights. They are ordered from easiest to
    * hardest.
    */
-  private enum MoveKind {
+  public enum MoveKind {
     EASY_DIRECT(1.3, 1.3),
     DIRECT(1.4, 1.4),
     SIMPLY_IMPLIED_EASY(1.7, 1.7),
@@ -361,6 +361,31 @@ public class Evaluator {
       this.minutesPerScanPoint = secondsPerScanPoint / 60;
       this.minutesPerScanPointWithTrails = secondsPerScanPointWithTrails / 60;
     }
+
+    public static double calcBlockNumeralMinutes(
+        int numOpenBlockNumerals, int numBlockNumeralMoves) {
+      return BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT * numOpenBlockNumerals / numBlockNumeralMoves;
+    }
+
+    public static double calcPause(boolean trails) {
+      return trails ? MoveKind.MINUTES_BEFORE_DISPROOF_WITH_TRAILS : MoveKind.MINUTES_BEFORE_DISPROOF;
+    }
+
+    public static MoveKind maxKind(Map<Location, MoveKind> kinds, boolean errors) {
+      return errors || kinds.isEmpty()
+          ? MAX
+          : Ordering.<MoveKind>natural().max(kinds.values());
+    }
+
+    public double calcMinutes(
+        Grid grid, LocSet locTargets, UnitNumSet unitNumTargets, boolean trails, Insight move) {
+      int openLocs = Location.COUNT - grid.size();
+      double totalScanPoints = 4.0 * openLocs;
+      int scanTargets = locTargets.size() + unitNumTargets.size();
+      double scanPoints = totalScanPoints / scanTargets;
+      double perScanPoint = trails ? minutesPerScanPointWithTrails : minutesPerScanPoint;
+      return perScanPoint * scanPoints * move.getScanTargetCount();
+    }
   }
 
   public static class Collector implements Analyzer.Callback {
@@ -388,7 +413,7 @@ public class Evaluator {
       Assignment a = insight.getImpliedAssignment();
       if (a != null) {
         insight.addScanTargets(locTargets, unitNumTargets);
-        MoveKind kind = kindForInsight(insight, kinds.get(a.location));
+        MoveKind kind = kindForInsight(gridMarks, insight, kinds.get(a.location));
         kinds.put(a.location, kind);
         if (best == null || kind.compareTo(best) < 0) {
           best = kind;
@@ -420,18 +445,13 @@ public class Evaluator {
           if (locs.size() > 1 || locs.size() == 1 && !gridMarks.grid.containsKey(locs.get(0)))
             ++openMoves;
         }
-        return MoveKind.BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT * openMoves / numBlockNumeralMoves;
+        return MoveKind.calcBlockNumeralMinutes(openMoves, numBlockNumeralMoves);
       }
       if (move == null)
-        return trails ? MoveKind.MINUTES_BEFORE_DISPROOF_WITH_TRAILS : MoveKind.MINUTES_BEFORE_DISPROOF;
-      MoveKind kind = errors || kinds.isEmpty()
-          ? MoveKind.MAX : Ordering.<MoveKind>natural().max(kinds.values());
-      int openLocs = Location.COUNT - gridMarks.grid.size();
-      double totalScanPoints = 4.0 * openLocs;
-      int scanTargets = locTargets.size() + unitNumTargets.size();
-      double scanPoints = totalScanPoints / scanTargets;
-      double minutesPerScanPoint = trails ? kind.minutesPerScanPointWithTrails : kind.minutesPerScanPoint;
-      return minutesPerScanPoint * scanPoints * move.getScanTargetCount();
+        return MoveKind.calcPause(trails);
+
+      MoveKind kind = MoveKind.maxKind(kinds, errors);
+      return kind.calcMinutes(gridMarks.grid, locTargets, unitNumTargets, trails, move);
     }
 
     public boolean hasMove() {
@@ -445,88 +465,87 @@ public class Evaluator {
     public boolean hasVisibleErrors() {
       return numDirectErrors > numDirectMoves;
     }
+  }
 
-    /**
-     * Returns the appropriate MoveKind for the given insight within the given
-     * grid.  If max is given, it is the worst (most expensive) kind that
-     * should be returned.
-     */
-    private MoveKind kindForInsight(Insight insight, @Nullable MoveKind max) {
-      if (max == MoveKind.MIN) return max;
-      if (max == null) max = MoveKind.MAX;
-      switch (insight.type) {
-        case FORCED_LOCATION:
-          return MoveKind.EASY_DIRECT;
-        case FORCED_NUMERAL: {
-          ForcedNum fn = (ForcedNum) insight;
-          return isEasy(fn) ? MoveKind.EASY_DIRECT : MoveKind.DIRECT;
-        }
-        case IMPLICATION: {
-          if (max.compareTo(MoveKind.DIRECT) <= 0) return max;
-          Implication i = (Implication) insight;
-          boolean easy = isEasy(i.getNub());
-          MoveKind kind = isSimple(i, max)
-              ? easy ? MoveKind.SIMPLY_IMPLIED_EASY : MoveKind.SIMPLY_IMPLIED
-              : easy ? MoveKind.IMPLIED_EASY : MoveKind.IMPLIED;
-          return Ordering.<MoveKind>natural().min(kind, max);
-        }
-        default:
-          return max;
-      }
+  /**
+   * Returns the appropriate MoveKind for the given insight within the given
+   * grid.  If max is given, it is the worst (most expensive) kind that should
+   * be returned.
+   */
+  public static MoveKind kindForInsight(GridMarks gridMarks, Insight insight, @Nullable MoveKind max) {
+    if (max == MoveKind.MIN) return max;
+    if (max == null) max = MoveKind.MAX;
+    switch (insight.type) {
+    case FORCED_LOCATION:
+      return MoveKind.EASY_DIRECT;
+    case FORCED_NUMERAL: {
+      ForcedNum fn = (ForcedNum) insight;
+      return isEasy(gridMarks, fn) ? MoveKind.EASY_DIRECT : MoveKind.DIRECT;
     }
+    case IMPLICATION: {
+      if (max.compareTo(MoveKind.DIRECT) <= 0) return max;
+      Implication i = (Implication) insight;
+      boolean easy = isEasy(gridMarks, i.getNub());
+      MoveKind kind = isSimple(gridMarks, i, max)
+        ? easy ? MoveKind.SIMPLY_IMPLIED_EASY : MoveKind.SIMPLY_IMPLIED
+        : easy ? MoveKind.IMPLIED_EASY : MoveKind.IMPLIED;
+      return Ordering.<MoveKind>natural().min(kind, max);
+    }
+    default:
+      return max;
+    }
+  }
 
-    /**
-     * Tells whether the given forced numeral is an easy one.
-     */
-    private boolean isEasy(ForcedNum fn) {
-      // Our current definition of easy: there are at most 2 open locations
-      // in the block (not counting the target location), and the numerals
-      // assigned to at most one of the row or column are required to force the
-      // target numeral.
-      Location target = fn.getLocation();
-      int openInBlock = 0;
-      NumSet inBlock = NumSet.NONE;
-      for (Location loc : target.block) {
-        if (loc == target) continue;
-        if (gridMarks.grid.containsKey(loc))
-          inBlock = inBlock.with(gridMarks.grid.get(loc));
-        else
-          ++openInBlock;
-      }
-      if (openInBlock > 2) return false;
-      NumSet inRow = inLine(target.row, target).minus(inBlock);
-      NumSet inCol = inLine(target.column, target).minus(inBlock);
-      return inRow.minus(inCol).isEmpty() || inCol.minus(inRow).isEmpty();
+  /**
+   * Tells whether the given forced numeral is an easy one.
+   */
+  private static boolean isEasy(GridMarks gridMarks, ForcedNum fn) {
+    // Our current definition of easy: there are at most 2 open locations in the
+    // block (not counting the target location), and the numerals assigned to at
+    // most one of the row or column are required to force the target numeral.
+    Location target = fn.getLocation();
+    int openInBlock = 0;
+    NumSet inBlock = NumSet.NONE;
+    for (Location loc : target.block) {
+      if (loc == target) continue;
+      if (gridMarks.grid.containsKey(loc))
+        inBlock = inBlock.with(gridMarks.grid.get(loc));
+      else
+        ++openInBlock;
     }
+    if (openInBlock > 2) return false;
+    NumSet inRow = inLine(gridMarks, target.row, target).minus(inBlock);
+    NumSet inCol = inLine(gridMarks, target.column, target).minus(inBlock);
+    return inRow.minus(inCol).isEmpty() || inCol.minus(inRow).isEmpty();
+  }
 
-    private NumSet inLine(Unit unit, Location target) {
-      NumSet answer = NumSet.NONE;
-      for (Location loc : unit)
-        if (loc.block != target.block && gridMarks.grid.containsKey(loc))
-          answer = answer.with(gridMarks.grid.get(loc));
-      return answer;
-    }
+  private static NumSet inLine(GridMarks gridMarks, Unit unit, Location target) {
+    NumSet answer = NumSet.NONE;
+    for (Location loc : unit)
+      if (loc.block != target.block && gridMarks.grid.containsKey(loc))
+        answer = answer.with(gridMarks.grid.get(loc));
+    return answer;
+  }
 
-    /**
-     * Tells whether the given insight is an easy assignment.
-     */
-    private boolean isEasy(Insight insight) {
-      switch (insight.type) {
-        case FORCED_LOCATION: return true;
-        case FORCED_NUMERAL: return isEasy((ForcedNum) insight);
-        default: return false;
-      }
+  /**
+   * Tells whether the given insight is an easy assignment.
+   */
+  private static boolean isEasy(GridMarks gridMarks, Insight insight) {
+    switch (insight.type) {
+    case FORCED_LOCATION: return true;
+    case FORCED_NUMERAL: return isEasy(gridMarks, (ForcedNum) insight);
+    default: return false;
     }
+  }
 
-    /**
-     * Tells whether the given implication is a simple one.  Skips the test
-     * if max is already in the simple range.  May minimize the implication
-     * as part of its work.
-     */
-    private boolean isSimple(Implication i, MoveKind max) {
-      if (max.compareTo(MoveKind.SIMPLY_IMPLIED) <= 0) return true;
-      return minimizeForSimplicityTest(gridMarks, i) != null;
-    }
+  /**
+   * Tells whether the given implication is a simple one.  Skips the test if max
+   * is already in the simple range.  May minimize the implication as part of
+   * its work.
+   */
+  private static boolean isSimple(GridMarks gridMarks, Implication i, MoveKind max) {
+    if (max.compareTo(MoveKind.SIMPLY_IMPLIED) <= 0) return true;
+    return minimizeForSimplicityTest(gridMarks, i) != null;
   }
 
   private static boolean isSimpleAntecedent(Insight insight) {
