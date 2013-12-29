@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.stats;
 
 import us.blanshard.sudoku.appengine.Schema;
+import us.blanshard.sudoku.insight.Rating;
 
 import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.datastore.EmbeddedEntity;
@@ -28,12 +29,16 @@ import com.google.appengine.api.files.FileServiceFactory;
 import com.google.appengine.api.files.RecordReadChannel;
 import com.google.appengine.tools.development.testing.LocalBlobstoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -42,11 +47,6 @@ import java.util.List;
  */
 @SuppressWarnings("deprecation")
 public class Attempts {
-  private static final LocalBlobstoreServiceTestConfig config = new LocalBlobstoreServiceTestConfig();
-  static {
-    config.setNoStorage(false);
-    config.setBackingStoreLocation("/Users/leadpipe/Downloads/datastore-backup-20130720/");
-  }
 
   /**
    * Returns all the attempts from a datastore backup directory.
@@ -54,6 +54,9 @@ public class Attempts {
   public static Iterable<AttemptInfo> datastoreBackup() {
     List<AttemptInfo> answer = Lists.newArrayList();
 
+    LocalBlobstoreServiceTestConfig config = new LocalBlobstoreServiceTestConfig();
+    config.setNoStorage(false);
+    config.setBackingStoreLocation("/Users/leadpipe/Downloads/datastore-backup-20130720/");
     LocalServiceTestHelper helper = new LocalServiceTestHelper(config);
     helper.setUp();
     try {
@@ -80,6 +83,40 @@ public class Attempts {
       throw new RuntimeException("Problem reading datastore backup", e);
     } finally {
       helper.tearDown();
+    }
+
+    return answer;
+  }
+
+  /**
+   * Returns all the attempts from the 2013 phone.
+   */
+  public static Iterable<AttemptInfo> phone2013() {
+    List<AttemptInfo> answer = Lists.newArrayList();
+    String fname = "/Users/leadpipe/insight/data/games-phone-2013-12-01.tsv";
+    BufferedReader in = null;
+
+    try {
+      in = new BufferedReader(new FileReader(fname));
+      Splitter splitter = Splitter.on('\t');
+      for (String line; (line = in.readLine()) != null; ) {
+        Iterator<String> iter = splitter.split(line).iterator();
+        String cluesString = iter.next();
+        String historyString = iter.next();
+        String ratingString = iter.next();
+
+        Rating rating = null;
+        if (!ratingString.isEmpty())
+          rating = Rating.deserialize(ratingString);
+
+        answer.add(new AttemptInfo(cluesString, historyString, rating));
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Problem reading phone data", e);
+    } finally {
+      if (in != null)
+        try { in.close(); }
+        catch (IOException e) {}
     }
 
     return answer;

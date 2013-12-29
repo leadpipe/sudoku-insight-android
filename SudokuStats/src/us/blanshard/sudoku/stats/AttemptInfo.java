@@ -21,6 +21,7 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.Sudoku;
+import us.blanshard.sudoku.insight.Rating;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -28,21 +29,35 @@ import com.google.gson.GsonBuilder;
 import java.util.Date;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * Gathers information about an attempt to solve a Sudoku.
  */
 public class AttemptInfo {
   public static final Gson GSON = GameJson.register(new GsonBuilder()).create();
 
-  public final String installationId;
+  @Nullable public final String installationId;
   public final Grid clues;
   public final List<Move> history;
-  public final Date stopTime;
+  @Nullable public final Date stopTime;
   public final double elapsedMinutes;
   public final boolean won;
+  @Nullable public final Rating rating;
 
   public AttemptInfo(
       String installationId, String cluesString, String historyString, Date stopTime) {
+    this(installationId, cluesString, historyString, stopTime, null);
+  }
+
+  public AttemptInfo(
+      String cluesString, String historyString, Rating rating) {
+    this(null, cluesString, historyString, null, rating);
+  }
+
+  public AttemptInfo(
+      @Nullable String installationId, String cluesString, String historyString,
+      Date stopTime, @Nullable Rating rating) {
     this.installationId = installationId;
     this.clues = Grid.fromString(cluesString);
     this.history = GSON.fromJson(historyString, HISTORY_TYPE);
@@ -55,5 +70,6 @@ public class AttemptInfo {
 
     this.elapsedMinutes = elapsedMs / 60000.0;
     this.won = game.getState().getGrid().getState() == Grid.State.SOLVED;
+    this.rating = rating;
   }
 }
