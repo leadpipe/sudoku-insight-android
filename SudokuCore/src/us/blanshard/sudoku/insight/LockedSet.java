@@ -23,10 +23,10 @@ import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -43,7 +43,7 @@ public final class LockedSet extends Insight {
   private final UnitSubset locs;
   @Nullable private final UnitSubset extraElims;
   private final boolean isNaked;
-  private volatile Collection<Assignment> eliminations;
+  private volatile List<Assignment> eliminations;
 
   public LockedSet(NumSet nums, UnitSubset locs, boolean isNaked) {
     super(Type.LOCKED_SET);
@@ -62,14 +62,14 @@ public final class LockedSet extends Insight {
           ImmutableList.Builder<Assignment> builder = ImmutableList.builder();
           NumSet nums = isNaked ? this.nums : this.nums.not();
           UnitSubset locs = isNaked ? this.locs.not() : this.locs;
-          for (Numeral num : nums)
-            for (Location loc : locs)
-              builder.add(Assignment.of(loc, num));
+          for (int i = 0; i < nums.size(); ++i)
+            for (int j = 0; j < locs.size(); ++j)
+              builder.add(Assignment.of(locs.get(j), nums.get(i)));
           if (extraElims != null)
-            for (Numeral num : this.nums)
-              for (Location loc : extraElims)
-                builder.add(Assignment.of(loc, num));
-          eliminations = answer = builder.build();
+            for (int i = 0; i < this.nums.size(); ++i)
+              for (int j = 0; j < extraElims.size(); ++j)
+                builder.add(Assignment.of(extraElims.get(j), this.nums.get(i)));
+          answer = eliminations = builder.build();
         }
       }
     }
@@ -93,8 +93,8 @@ public final class LockedSet extends Insight {
   }
 
   @Override public void apply(GridMarks.Builder builder) {
-    for (Assignment assignment : getEliminations())
-      builder.eliminate(assignment);
+    for (int i = 0, count = getEliminations().size(); i < count; ++i)
+      builder.eliminate(eliminations.get(i));
   }
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {
@@ -125,7 +125,7 @@ public final class LockedSet extends Insight {
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(nums, locs);
+    return (nums.bits << 9) | locs.bits;
   }
 
   @Override public String toString() {
@@ -134,9 +134,10 @@ public final class LockedSet extends Insight {
 
   @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
     if (isNakedSet())
-      locs.addAll(this.locs);
-    else for (Numeral n : nums)
-      unitNums.add(UnitNumeral.of(this.locs.unit, n));
+      for (int i = 0; i < this.locs.size(); ++i)
+        locs.add(this.locs.get(i));
+    else for (int i = 0; i < this.nums.size(); ++i)
+      unitNums.add(UnitNumeral.of(this.locs.unit, this.nums.get(i)));
   }
 
   @Override public int getScanTargetCount() {

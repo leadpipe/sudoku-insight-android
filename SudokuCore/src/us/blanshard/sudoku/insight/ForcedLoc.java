@@ -22,8 +22,6 @@ import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
-import com.google.common.base.Objects;
-
 import java.util.Collection;
 
 import javax.annotation.concurrent.Immutable;
@@ -86,7 +84,9 @@ public final class ForcedLoc extends Insight {
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(unit, numeral, location);
+    return ((unit.unitIndex() + 5) << 11)
+        | ((numeral.index + 7) << 7)
+        | (location.index + 17);
   }
 
   @Override public String toString() {

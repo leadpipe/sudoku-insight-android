@@ -244,7 +244,8 @@ public class Analyzer {
 
     UnitSubset getLocs(Unit unit) {
       UnitSubset set = locs.get(unit);
-      return set == null ? UnitSubset.of(unit) : set;
+      if (set == null) locs.put(unit, (set = UnitSubset.of(unit)));
+      return set;
     }
 
     void add(NumSet nums, UnitSubset locs) {
@@ -330,7 +331,8 @@ public class Analyzer {
 
   private static void findOverlaps(GridMarks gridMarks, Callback callback, Numeral num,
       List<? extends Unit> units, Unit.Type overlappingType, int[] bits) {
-    for (Unit unit : units) {
+    for (int i = 0; i < units.size(); ++i) {
+      Unit unit = units.get(i);
       UnitNumeral unitNum = UnitNumeral.of(unit, num);
       int index = Arrays.binarySearch(bits, gridMarks.marks.getBits(unitNum));
       if (index >= 0) {
@@ -363,7 +365,8 @@ public class Analyzer {
     UnitSubset inSets = setState.getLocs(unit);
     int bitsToCheck = 0;
     int unsetCount = 0;
-    for (Location loc : unit) {
+    for (int i = 0; i < unit.size(); ++i) {
+      Location loc = unit.get(i);
       NumSet possible = gridMarks.marks.get(loc);
       if (possible.size() > 1) {
         ++unsetCount;
@@ -372,8 +375,8 @@ public class Analyzer {
         }
       }
     }
-    UnitSubset toCheck = UnitSubset.ofBits(unit, bitsToCheck);
-    if (toCheck.size() >= size && unsetCount > size) {
+    if (UnitSubset.bitsSize(bitsToCheck) >= size && unsetCount > size) {
+      UnitSubset toCheck = UnitSubset.ofBits(unit, bitsToCheck);
       firstSubset(size, indices);
       do {
         int bits = 0;
@@ -402,7 +405,8 @@ public class Analyzer {
     NumSet inSets = setState.getNums(unit);
     NumSet toCheck = NumSet.NONE;
     int unsetCount = 0;
-    for (Numeral num : Numeral.all()) {
+    for (int i = 0; i < Numeral.COUNT; ++i) {
+      Numeral num = Numeral.ofIndex(i);
       int possibleSize = gridMarks.marks.getSize(UnitNumeral.of(unit, num));
       if (possibleSize > 1) {
         ++unsetCount;
@@ -422,8 +426,8 @@ public class Analyzer {
           alreadyUsed |= inSets.contains(num);
         }
         if (alreadyUsed) continue;
-        UnitSubset locs = UnitSubset.ofBits(unit, bits);
-        if (locs.size() == size) {
+        if (UnitSubset.bitsSize(bits) == size) {
+          UnitSubset locs = UnitSubset.ofBits(unit, bits);
           NumSet nums = NumSet.NONE;
           for (int i = 0; i < size; ++i)
             nums = nums.with(toCheck.get(indices[i]));
@@ -480,20 +484,22 @@ public class Analyzer {
   }
 
   public static void findSingletonLocations(GridMarks gridMarks, Callback callback) {
-    for (Unit unit : Unit.allUnits())
-      for (Numeral num : Numeral.all()) {
-        Location loc = gridMarks.marks.getSingleton(UnitNumeral.of(unit, num));
-        if (loc != null && !gridMarks.grid.containsKey(loc))
-          callback.take(new ForcedLoc(unit, num, loc));
-      }
+    for (int i = 0; i < UnitNumeral.COUNT; ++i) {
+      UnitNumeral un = UnitNumeral.of(i);
+      Location loc = gridMarks.marks.getSingleton(un);
+      if (loc != null && !gridMarks.grid.containsKey(loc))
+        callback.take(new ForcedLoc(un.unit, un.numeral, loc));
+    }
   }
 
   public static void findSingletonNumerals(GridMarks gridMarks, Callback callback) {
-    for (Location loc : Location.all())
+    for (int i = 0; i < Location.COUNT; ++i) {
+      Location loc = Location.of(i);
       if (!gridMarks.grid.containsKey(loc)) {
         NumSet set = gridMarks.marks.get(loc);
         if (set.size() == 1)
           callback.take(new ForcedNum(loc, set.get(0)));
       }
+    }
   }
 }

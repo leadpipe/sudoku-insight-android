@@ -18,7 +18,7 @@
 - does this help reduce the long tails?
 *** TODO Look into separating kinds of scan points
 - blocks, blocks+lines, blocks+lines+locations
-*** TODO Performance improvements [2/4]
+*** TODO Performance improvements [3/4]
 - [X] Run profiler
 - [X] Fix UnitNumeral so it doesn't consume too many resources
   - [X] Make UnitNumeral enum-like
@@ -26,7 +26,7 @@
   - [X] Use UnitNumeral in Marks
   - [X] Use UnitNumSet in Insight
   - [X] Unit tests
-- [ ] Run profiler again
+- [X] Run profiler again
 - [ ] Add phase to Analyzer callback, and stop after assignments when taking the short path?
 *** TODO Investigate distribution of times for multiple puzzles generated from the same end state
 

@@ -22,7 +22,6 @@ import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
@@ -85,8 +84,8 @@ public final class Overlap extends Insight {
   }
 
   @Override public void apply(GridMarks.Builder builder) {
-    for (Location loc : extra)
-      builder.eliminate(loc, numeral);
+    for (int i = 0; i < extra.size(); ++i)
+      builder.eliminate(extra.get(i), numeral);
   }
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {
@@ -116,7 +115,9 @@ public final class Overlap extends Insight {
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(unit, numeral, extra.unit);
+    return ((unit.unitIndex() + 5) << 9)
+        | ((extra.unit.unitIndex() + 5) << 5)
+        | (numeral.index + 7);
   }
 
   @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {

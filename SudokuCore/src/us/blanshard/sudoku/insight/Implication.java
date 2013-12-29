@@ -24,7 +24,6 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.UnitNumSet;
 import us.blanshard.sudoku.core.UnitNumeral;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
@@ -126,7 +125,7 @@ public final class Implication extends Insight {
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(antecedents, consequent);
+    return antecedents.hashCode() * 31 + consequent.hashCode();
   }
 
   @Override public String toString() {
@@ -134,8 +133,8 @@ public final class Implication extends Insight {
   }
 
   @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
-    for (Insight a : antecedents)
-      a.addScanTargets(locs, unitNums);
+    for (int i = 0, count = antecedents.size(); i < count; ++i)
+      antecedents.get(i).addScanTargets(locs, unitNums);
     consequent.addScanTargets(locs, unitNums);
   }
 

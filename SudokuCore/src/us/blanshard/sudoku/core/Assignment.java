@@ -34,7 +34,7 @@ public final class Assignment {
   public final Numeral numeral;
 
   public static Assignment of(Location location, Numeral numeral) {
-    return new Assignment(location, numeral);
+    return INSTANCES[index(location, numeral)];
   }
 
   private Assignment(Location location, Numeral numeral) {
@@ -46,14 +46,15 @@ public final class Assignment {
     return numeral.number + " \u2192 " + location;  // That's a right arrow
   }
 
-  @Override public boolean equals(Object o) {
-    if (!(o instanceof Assignment)) return false;
-    Assignment that = (Assignment) o;
-    return this.location.equals(that.location)
-        && this.numeral.equals(that.numeral);
+  private static final Assignment[] INSTANCES;
+  static {
+    INSTANCES = new Assignment[Location.COUNT * Numeral.COUNT];
+    for (Location loc : Location.all())
+      for (Numeral num : Numeral.all())
+        INSTANCES[index(loc, num)] = new Assignment(loc, num);
   }
 
-  @Override public int hashCode() {
-    return location.hashCode() * 11 + numeral.hashCode();
+  private static int index(Location location, Numeral numeral) {
+    return location.index * Numeral.COUNT + numeral.index;
   }
 }

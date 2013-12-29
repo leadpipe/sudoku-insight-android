@@ -52,6 +52,11 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
     return new UnitSubset(unit, (short) bits);
   }
 
+  /** Returns the size of the set implied by the given bits. */
+  public static int bitsSize(int bits) {
+    return NumSet.ofBits(bits).size();
+  }
+
   /** Returns the set containing the given locations within the given unit. */
   public static UnitSubset of(Unit unit, Location... locs) {
     short bits = 0;

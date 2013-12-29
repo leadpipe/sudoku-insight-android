@@ -21,8 +21,6 @@ import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.UnitNumeral;
 
-import com.google.common.base.Objects;
-
 import java.util.Collection;
 
 import javax.annotation.concurrent.Immutable;
@@ -78,7 +76,8 @@ public final class ForcedNum extends Insight {
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(location, numeral);
+    return ((location.index + 17) << 4)
+        | (numeral.index + 7);
   }
 
   @Override public String toString() {
