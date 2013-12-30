@@ -55,119 +55,119 @@ END
 
 ** App/UI cleanups
 *** TODO Evaluate puzzles while (or before) adding them
-    - make a dedicated background service that generates and evaluates puzzles well in advance
-    - have the info and list pages interact with this thread similarly to the network service
-    - also the play page, why not
+- make a dedicated background service that generates and evaluates puzzles well in advance
+- have the info and list pages interact with this thread similarly to the network service
+- also the play page, why not
 *** DONE Add a dialog that shows the evaluation (in some form) and lets you skip the puzzle
-    - use an overlay instead of a dialog, so menu works
-    - make it slightly harder to skip by accident?
+- use an overlay instead of a dialog, so menu works
+- make it slightly harder to skip by accident?
 *** TODO Add a pref for not showing ratings
-    - until after a complete attempt
+- until after a complete attempt
 *** TODO Don't send skipped puzzles to the app engine
-    - treat skipped puzzles specially, if we play them we should be changing the
-      existing attempt not making a new one
-    - or at least treating the real attempt as the first attempt
+- treat skipped puzzles specially, if we play them we should be changing the
+  existing attempt not making a new one
+- or at least treating the real attempt as the first attempt
 *** DONE Show rating on screen
 *** DONE Use stars and number, not words, in list
 *** TODO Update help
-    - acknowledge that the replay view can't handle all puzzles
-    - have the welcome dialog actually be a help page
-      - show (part of) it for upgraders as well as newcomers
+- acknowledge that the replay view can't handle all puzzles
+- have the welcome dialog actually be a help page
+  - show (part of) it for upgraders as well as newcomers
 *** TODO Do auto stream handling better
-    - if the server sets the stream, explicitly skip queued puzzles from previous stream
-    - have the server send a GCM message to the younger installations to change
-      their streams, rather than changing the older installations
+- if the server sets the stream, explicitly skip queued puzzles from previous stream
+- have the server send a GCM message to the younger installations to change
+  their streams, rather than changing the older installations
 *** TODO bug: somehow wound up getting shown completed puzzles
-    - each time I started the app it advanced 3-4 in the history
-    - find and fix the bug; but also harden the fragment against future similar
-      bugs, by _not_ updating the DB when it gets a complete attempt
-    - no idea, but did try to make sure the fragment doesn't write these back to the db
-    - ok, I may have an idea: it may be that the generation counter got reset somehow
+- each time I started the app it advanced 3-4 in the history
+- find and fix the bug; but also harden the fragment against future similar
+  bugs, by _not_ updating the DB when it gets a complete attempt
+- no idea, but did try to make sure the fragment doesn't write these back to the db
+- ok, I may have an idea: it may be that the generation counter got reset somehow
 *** TODO Look into sending crash info to the app engine
 *** TODO Give visual indication when try to set an unsettable location
 *** TODO Make translation of symmetry names possible
 *** TODO Change behavior of capture when we already have the puzzle
-    - Include a link to the puzzle details
-    - Or just jump there?
+- Include a link to the puzzle details
+- Or just jump there?
 
 ** Publishing the app
 
 ** Cross-installation work
 *** TODO Add pref for whether to sync from other devices
-    - dependent on selecting an account
+- dependent on selecting an account
 
 ** Replay cleanups
 *** TODO Do something when asked to replay a puzzle that's impervious to breadth-first solving
 *** TODO Handle improper puzzles' last moves
 *** TODO Animate insight display
-    - for complex implications, this could help the visualization
+- for complex implications, this could help the visualization
 *** TODO Update screen shots?
 *** TODO Redo in exploration mode?
 *** TODO Wrong-numeral mistakes show without the error during single-step playback
-    - the error appears while running forward
-    - but maybe not when it's in a trail?
+- the error appears while running forward
+- but maybe not when it's in a trail?
 *** TODO Why does the first trail in puzzle 14 switch errors?
 *** TODO Analysis getting cropped early when use the slider
-    - Leftover thread interruption?
+- Leftover thread interruption?
 *** TODO Clearing the present insight should clear the selected location too
-    - should it also clear the error displayed?
-    - or possibly everything but the nub of the error?
+- should it also clear the error displayed?
+- or possibly everything but the nub of the error?
 
 ** List view ideas
 *** TODO Add a count to the list spinner: #puzzles in collection
 *** TODO Handle the importing of collections of puzzles
-    - Add an activity that's triggered by .sdm files
-    - Change the way we set up new attempts: look for attempt-less puzzles and queue one
-    - Still want to generate new puzzles: add a pref for how often to do this, as
-      a number between 0 and 1 (probably with 4-5 discrete choices: never,
-      occasionally, etc)
+- Add an activity that's triggered by .sdm files
+- Change the way we set up new attempts: look for attempt-less puzzles and queue one
+- Still want to generate new puzzles: add a pref for how often to do this, as a
+  number between 0 and 1 (probably with 4-5 discrete choices: never,
+  occasionally, etc)
 *** TODO Consider supporting other selection-based operations on the list: deletion, exporting
 
 
 * How to release the android app
-  - http://developer.android.com/tools/publishing/preparing.html
-  - Bump the versionCode and versionName in the manifest
-  - Turn off "Build Automatically" (this gets the DEBUG flag turned off in the released app)
-  - http://developer.android.com/tools/publishing/app-signing.html#ExportWizard
-  - File -> Export -> Android Application
-  - Name it SudokuAndroid-x.y-suffix.apk
-  - Run it using adb install -r xxx.apk (or adb -d install -r on a device)
-  - When it's all working, publish, then bump versionCode and versionName to dev numbers for next release
+- http://developer.android.com/tools/publishing/preparing.html
+- Bump the versionCode and versionName in the manifest
+- Turn off "Build Automatically" (this gets the DEBUG flag turned off in the released app)
+- http://developer.android.com/tools/publishing/app-signing.html#ExportWizard
+- File -> Export -> Android Application
+- Name it SudokuAndroid-x.y-suffix.apk
+- Run it using adb install -r xxx.apk (or adb -d install -r on a device)
+- When it's all working, publish, then bump versionCode and versionName to dev numbers for next release
 
 * App engine app
 
 ** Push notifications to phone
-   - Recommended puzzle
-   - Other installation info updated
+- Recommended puzzle
+- Other installation info updated
 
 ** The web app
-   - sample puzzles?
-   - stats? num puzzles? num installations? num users? rates of change?
-   - for logged-in users, info about their stuff
+- sample puzzles?
+- stats? num puzzles? num installations? num users? rates of change?
+- for logged-in users, info about their stuff
 
 * Math
 ** Pathological grids
-   - How bad can they get?
+- How bad can they get?
 *** TODO Solve one in the debugger, see what's going on
 
 ** Canonical grids
-   - How to compare two grids for equivalence?
-   - Possible permutations that preserve constraints:
-     - transposition
-     - permutation of numerals
-     - permutation of block-rows or block-columns
-     - permutation of rows within a block-row or columns within a block-column
-     - rotation (can it be expressed by the others? -- yes)
+- How to compare two grids for equivalence?
+- Possible permutations that preserve constraints:
+  - transposition
+    - permutation of numerals
+    - permutation of block-rows or block-columns
+    - permutation of rows within a block-row or columns within a block-column
+    - rotation (can it be expressed by the others? -- yes)
 *** TODO Re-read the "how many sudokus" paper
-    - Canonical grid?
+- Canonical grid?
 
 * References
 ** J. F. Crook: A Pencil-and-Paper Algorithm for Solving Sudoku Puzzles
-   - http://www.ams.org/notices/200904/tx090400460p.pdf
-   - The trails approach, essentially, including different colors
+- http://www.ams.org/notices/200904/tx090400460p.pdf
+- The trails approach, essentially, including different colors
 ** George A. Miller:
-   - http://en.wikipedia.org/wiki/The_Magical_Number_Seven,_Plus_or_Minus_Two
-   - ~7 chunks of information in working memory
-   - The other dimension where 7 appears is ~7 levels of absolute judgement, eg
-     loudness of a sound, or pitch, or location along a line.  This really
-     _doesn't_ apply to Sudoku.  It's all working memory.
+- http://en.wikipedia.org/wiki/The_Magical_Number_Seven,_Plus_or_Minus_Two
+- ~7 chunks of information in working memory
+- The other dimension where 7 appears is ~7 levels of absolute judgement, eg
+  loudness of a sound, or pitch, or location along a line.  This really
+  _doesn't_ apply to Sudoku.  It's all working memory.
