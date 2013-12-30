@@ -72,7 +72,7 @@ public class InsightMeasurer implements Runnable {
     PrintWriter out = new PrintWriter("measurer.txt");
     int npuzzles = 0;
 
-    for (AttemptInfo attempt : Attempts.datastoreBackup()) {
+    for (AttemptInfo attempt : Attempts.phone2013()) {
       ++npuzzles;
       new InsightMeasurer(attempt.clues, attempt.history, out).run();
       System.out.print('.');

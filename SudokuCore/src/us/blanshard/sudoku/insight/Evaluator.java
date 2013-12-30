@@ -317,10 +317,10 @@ public class Evaluator {
   public enum MoveKind {
     EASY_DIRECT(1.6, 1.1),
     DIRECT(1.7, 1.1),
-    SIMPLY_IMPLIED_EASY(2.3, 1.2),
+    SIMPLY_IMPLIED_EASY(2.1, 1.2),
     SIMPLY_IMPLIED(2.3, 1.3),
-    IMPLIED_EASY(4.5, 2.2),
-    IMPLIED(4.9, 2.8),  // catch-all, including errors
+    IMPLIED_EASY(4.3, 2.0),
+    IMPLIED(4.6, 2.6),  // catch-all, including errors
     ;
 
     /**
@@ -348,15 +348,15 @@ public class Evaluator {
      * previous move, we count the scan points as the open block-numeral moves
      * remaining for that numeral, and this is the scan rate for them.
      */
-    public static final double BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT = 0.75 / 60;
-    public static final double BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT_WITH_TRAILS = 0.73 / 60;
+    public static final double BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT = 0.68 / 60;
+    public static final double BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT_WITH_TRAILS = 0.69 / 60;
 
     /**
      * When there are no moves implied, the best model is simply to pause a
      * fixed amount of time before looking for disproofs.
      */
-    public static final double MINUTES_BEFORE_DISPROOF = 137.4 / 60;
-    public static final double MINUTES_BEFORE_DISPROOF_WITH_TRAILS = 52.2 / 60;
+    public static final double MINUTES_BEFORE_DISPROOF = 128.4 / 60;
+    public static final double MINUTES_BEFORE_DISPROOF_WITH_TRAILS = 48.2 / 60;
 
     private MoveKind(double secondsPerScanPoint, double secondsPerScanPointWithTrails) {
       this.minutesPerScanPoint = secondsPerScanPoint / 60;
