@@ -453,17 +453,16 @@ containing a value of this type.
         public static final int text_rating_moderate=0x7f06006f;
         public static final int text_rating_number=0x7f060070;
         public static final int text_rating_number_only=0x7f060071;
-        public static final int text_rating_very_easy=0x7f060072;
-        public static final int text_rating_very_hard=0x7f060073;
-        public static final int text_recommended_puzzles=0x7f060074;
-        public static final int text_replay_title=0x7f060075;
-        public static final int text_sentence_end=0x7f060076;
-        public static final int text_source=0x7f060077;
-        public static final int text_symmetry=0x7f060078;
-        public static final int text_synced_puzzles=0x7f060079;
-        public static final int text_vote_down=0x7f06007a;
-        public static final int text_vote_question=0x7f06007b;
-        public static final int text_vote_up=0x7f06007c;
+        public static final int text_rating_very_hard=0x7f060072;
+        public static final int text_recommended_puzzles=0x7f060073;
+        public static final int text_replay_title=0x7f060074;
+        public static final int text_sentence_end=0x7f060075;
+        public static final int text_source=0x7f060076;
+        public static final int text_symmetry=0x7f060077;
+        public static final int text_synced_puzzles=0x7f060078;
+        public static final int text_vote_down=0x7f060079;
+        public static final int text_vote_question=0x7f06007a;
+        public static final int text_vote_up=0x7f06007b;
     }
     public static final class xml {
         public static final int preferences=0x7f040000;

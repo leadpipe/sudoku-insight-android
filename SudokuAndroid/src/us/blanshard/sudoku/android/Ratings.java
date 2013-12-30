@@ -24,19 +24,18 @@ public class Ratings {
   /**
    * The maximum number of stars returned by {@link #ratingStars}.
    */
-  public static final int MAX_STARS = 6;
+  public static final int MAX_STARS = 5;
 
   /**
    * Turns a {@link Rating#score} into a number of stars, which is an integer
    * between 1 and {@link #MAX_STARS} inclusive.
    */
   public static int ratingStars(double score) {
-    if (score < 2.5) return 1;
-    if (score < 3.5) return 2;
-    if (score < 5.5) return 3;
-    if (score < 10)  return 4;
-    if (score < 20)  return 5;
-    return 6;
+    if (score < 3.5) return 1;
+    if (score < 5.5) return 2;
+    if (score < 10)  return 3;
+    if (score < 20)  return 4;
+    return 5;
   }
 
   /**
@@ -48,7 +47,6 @@ public class Ratings {
   }
 
   private static int[] STAR_DESCRIPTION_RESOURCE_IDS = {
-    R.string.text_rating_very_easy,
     R.string.text_rating_easy,
     R.string.text_rating_moderate,
     R.string.text_rating_hard,

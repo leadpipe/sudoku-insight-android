@@ -103,7 +103,7 @@ public class ToText {
    */
   public static String ratingProgressHtml(Context context, double minScore) {
     StringBuilder sb = new StringBuilder();
-    sb.append(context.getString(R.string.text_rating_in_progress, minScore));
+    sb.append(context.getString(R.string.text_rating_in_progress, adjustedScore(minScore)));
     sb.append("&nbsp;");
     appendStars(minScore, sb);
     return sb.toString();
@@ -114,7 +114,7 @@ public class ToText {
    */
   public static String ratingHtml(Context context, Rating rating) {
     StringBuilder sb = new StringBuilder();
-    sb.append(context.getString(R.string.text_rating_number, rating.score));
+    sb.append(context.getString(R.string.text_rating_number, adjustedScore(rating.score)));
     appendRatingVersion(context, rating, sb);
     sb.append("<br>");
     int stars = appendStars(rating.score, sb);
@@ -128,7 +128,7 @@ public class ToText {
    */
   public static String ratingSummaryHtml(Context context, Rating rating) {
     StringBuilder sb = new StringBuilder();
-    sb.append(context.getString(R.string.text_rating_number_only, rating.score));
+    sb.append(context.getString(R.string.text_rating_number_only, adjustedScore(rating.score)));
     appendRatingVersion(context, rating, sb);
     sb.append(' ');
     appendStars(rating.score, sb);
@@ -146,6 +146,12 @@ public class ToText {
       sb.append(s < stars ? SOLID_STAR_HTML : HOLLOW_STAR_HTML);
     }
     return stars;
+  }
+
+  private static double adjustedScore(double score) {
+    // Adjusts the score so when it's rounded to one decimal place it will never
+    // exceed its actual value.
+    return score - 0.05;
   }
 
   /**
