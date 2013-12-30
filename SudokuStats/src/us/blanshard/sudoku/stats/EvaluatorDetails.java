@@ -197,7 +197,7 @@ public class EvaluatorDetails implements Runnable {
 
     public double getPredictedMinutes() {
       if (isBlockNumeralMove)
-        return MoveKind.calcBlockNumeralMinutes(getNumOpenBlockNumerals(), numBlockNumeralMoves);
+        return MoveKind.calcBlockNumeralMinutes(getNumOpenBlockNumerals(), numBlockNumeralMoves, false);
 
       if (move == null)
         return MoveKind.calcPause(false);

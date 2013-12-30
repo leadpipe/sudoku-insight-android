@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.stats;
 
 import us.blanshard.sudoku.stats.Pattern.ForcedNum;
+import us.blanshard.sudoku.stats.Pattern.Realm;
 import us.blanshard.sudoku.stats.Pattern.UnitCategory;
 
 import com.google.common.base.Predicate;
@@ -50,15 +51,18 @@ public class ScanPoints {
       List<Pattern> found = Pattern.listFromString(iter.next());
       long ms = Long.parseLong(iter.next());
       int openCount = Integer.parseInt(iter.next());
-      int numTargets = Integer.parseInt(iter.next());
+      int numBlockTargets = Integer.parseInt(iter.next());
+      int numLineTargets = Integer.parseInt(iter.next());
+      int numLocTargets = Integer.parseInt(iter.next());
       boolean isBlockNumeralMove = Boolean.parseBoolean(iter.next());
       int numBlockNumeralMoves = Integer.parseInt(iter.next());
       int numOpenBlockNumerals = Integer.parseInt(iter.next());
       boolean isTrailhead = Boolean.parseBoolean(iter.next());
       int numTrails = Integer.parseInt(iter.next());
       List<List<Pattern>> missed = Pattern.combinationsFromString(iter.next());
-      getReporter(numTrails).take(found, missed, ms, openCount, numTargets,
-          isBlockNumeralMove, numBlockNumeralMoves, numOpenBlockNumerals, isTrailhead);
+      getReporter(numTrails).take(found, missed, ms, openCount, numBlockTargets, numLineTargets,
+          numLocTargets, isBlockNumeralMove, numBlockNumeralMoves, numOpenBlockNumerals,
+          isTrailhead);
     }
     in.close();
     reportSummaries(System.out);
@@ -192,6 +196,7 @@ public class ScanPoints {
 
   static class Reporter {
     private final List<Process> processes;
+    private final ProcessCounter blockNumeralCounter = new ProcessCounter();
     private final ProcessCounter trailheadCounter = new ProcessCounter();
 
     public Reporter() {
@@ -264,27 +269,31 @@ public class ScanPoints {
       for (Process p : processes)
         p.report(out);
       out.println();
+      out.printf("Consecutive block-numeral moves (%d):%n", blockNumeralCounter.count);
+      blockNumeralCounter.report(out);
+      out.println();
       out.printf("Trailheads (%d):%n", trailheadCounter.count);
       trailheadCounter.report(out);
     }
 
     public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
-        int openCount, int numTargets,
+        int openCount, int numBlockTargets, int numLineTargets, int numLocTargets,
         boolean isBlockNumeralMove, int numBlockNumeralMoves, int numOpenBlockNumerals,
         boolean isTrailhead) {
-      for (Process p : processes)
-        p.take(found, missed, ms, openCount, numTargets, isBlockNumeralMove, numBlockNumeralMoves,
-            numOpenBlockNumerals);
-      if (isTrailhead && found.isEmpty()) {
-        trailheadCounter.count(ms / 1000.0, 1);
-//        trailheadCounter.count(ms / 1000.0, 4.0 * openCount / (numTargets > 0 ? numTargets : 1));
-      }
+      double seconds = ms / 1000.0;
+      if (isBlockNumeralMove)
+        blockNumeralCounter.count(seconds, numOpenBlockNumerals / (double) numBlockNumeralMoves);
+      else for (Process p : processes)
+        p.take(found, missed, seconds, openCount, numBlockTargets, numLineTargets, numLocTargets);
+      if (isTrailhead && found.isEmpty())
+        trailheadCounter.count(seconds, 1);
     }
   }
 
   static class Process {
-    private final ProcessCounter counterNoBlockNumerals = new ProcessCounter();
-    private final ProcessCounter counterIsBlockNumeral = new ProcessCounter();
+    private final ProcessCounter blockCounter = new ProcessCounter();
+    private final ProcessCounter unitCounter = new ProcessCounter();
+    private final ProcessCounter allCounter = new ProcessCounter();
     private final String description;
     private final Predicate<List<Pattern>> foundMatches;
     private final Predicate<List<Pattern>> missedMatches;
@@ -300,9 +309,8 @@ public class ScanPoints {
       this.missedMatchesMinRatio = missedMatchesMinRatio;
     }
 
-    public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
-        int openCount, int numTargets,
-        boolean isBlockNumeralMove, int numBlockNumeralMoves, int numOpenBlockNumerals) {
+    public void take(List<Pattern> found, List<List<Pattern>> missed, double seconds,
+        int openCount, int numBlockTargets, int numLineTargets, int numLocTargets) {
       if (found.isEmpty()) return;
 
       boolean foundLocationMatches = foundMatches.apply(found);
@@ -321,18 +329,24 @@ public class ScanPoints {
         return;
       }
       ++movesIncluded;
-      double seconds = ms / 1000.0;
-      double pointsScanned = openCount * 4.0 / numTargets / found.get(0).getScanTargetCount();
-      if (numBlockNumeralMoves == 0)
-        counterNoBlockNumerals.count(seconds, pointsScanned);
-      else if (isBlockNumeralMove)
-        counterIsBlockNumeral.count(seconds, numOpenBlockNumerals / (double) numBlockNumeralMoves);
+      Pattern pattern = found.get(0);
+      Realm realm = pattern.getRealm();
+      if (realm == Realm.BLOCK)
+        blockCounter.count(seconds, pointsScanned(openCount, 1, numBlockTargets, pattern));
+      if (realm != Realm.ALL)
+        unitCounter.count(seconds, pointsScanned(openCount, 3, numBlockTargets + numLineTargets, pattern));
+      allCounter.count(seconds, pointsScanned(openCount, 4, numBlockTargets + numLineTargets + numLocTargets, pattern));
+    }
+
+    private double pointsScanned(int openCount, double factor, int numTargets, Pattern pattern) {
+      return openCount * factor / numTargets / pattern.getScanTargetCount();
     }
 
     public void report(PrintStream out) {
       out.printf("%s: %,d moves included, %,d skipped\n", description, movesIncluded, movesSkipped);
-      printCounter(out, counterNoBlockNumerals, "1. No consecutive block numeral moves");
-      printCounter(out, counterIsBlockNumeral, "2. When is a consecutive block numeral move");
+//      printCounter(out, blockCounter, "1. Block-numeral points only");
+//      printCounter(out, unitCounter, "2. Block- or line-numeral points");
+      printCounter(out, allCounter, "All scan points");
       out.println();
     }
 
@@ -381,7 +395,7 @@ public class ScanPoints {
       PoissonDistribution dist = new PoissonDistribution(stats.getMean());
       out.println("Histogram, actual vs predicted:");
       int max = pointsPerSecond.isEmpty() ? 0 : Ordering.natural().max(pointsPerSecond.elementSet());
-      for (int bucket = 0; bucket <= max || dist.probability(bucket) > 1e-10; ++bucket)
+      for (int bucket = 0; bucket <= max || dist.probability(bucket) > 1e-3; ++bucket)
         out.printf("  %2d:%6d  |%9.2f\n", bucket, pointsPerSecond.count(bucket),
             dist.probability(bucket) * stats.getN());
     }
@@ -390,20 +404,19 @@ public class ScanPoints {
   // ============================
 
   private static Reporter baseReporter = new Reporter();
-//  private static Reporter trailsReporter = new Reporter();
+  private static Reporter trailsReporter = new Reporter();
 
   private static Reporter getReporter(int numTrails) {
-    return baseReporter;
-//    return numTrails == 0 ? baseReporter : trailsReporter;
+    return numTrails == 0 ? baseReporter : trailsReporter;
   }
 
   private static void reportSummaries(PrintStream out) {
     reportSummaries(out, baseReporter, "No trails");
-//    reportSummaries(out, trailsReporter, "With trails");
+    reportSummaries(out, trailsReporter, "With trails");
   }
 
   private static void reportSummaries(PrintStream out, Reporter reporter, String desc) {
-//    out.printf("%n======================%n%s%n======================%n%n", desc);
+    out.printf("%n======================%n%s%n======================%n%n", desc);
     reporter.reportSummaries(out);
   }
 }

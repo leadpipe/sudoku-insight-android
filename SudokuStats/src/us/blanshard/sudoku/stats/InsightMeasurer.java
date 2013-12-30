@@ -83,6 +83,14 @@ public class InsightMeasurer implements Runnable {
     out.close();
   }
 
+  private static final UnitNumSet blockUnitNums;
+  static {
+    blockUnitNums = new UnitNumSet();
+    for (Block block : Block.all())
+      for (Numeral num : Numeral.all())
+        blockUnitNums.add(UnitNumeral.of(block, num));
+  }
+
   private final Grid solution;
   private final Sudoku game;
   private final List<Move> history;
@@ -123,6 +131,7 @@ public class InsightMeasurer implements Runnable {
       Analyzer.analyze(gridMarks, collector, true);
       long elapsed = move.timestamp - prevTime;
       boolean isTrailhead = move.trailId >= 0 && game.getTrail(move.trailId).getSetCount() == 0;
+      int numBlockTargets = UnitNumSet.intersect(blockUnitNums, collector.unitNumTargets).size();
       try {
         Pattern.appendTo(out, collector.found)
             .append('\t')
@@ -130,7 +139,11 @@ public class InsightMeasurer implements Runnable {
             .append('\t')
             .append(String.valueOf(Location.COUNT - grid.size()))
             .append('\t')
-            .append(String.valueOf(collector.getNumTargets()))
+            .append(String.valueOf(numBlockTargets))
+            .append('\t')
+            .append(String.valueOf(collector.unitNumTargets.size() - numBlockTargets))
+            .append('\t')
+            .append(String.valueOf(collector.locTargets.size()))
             .append('\t')
             .append(String.valueOf(collector.isBlockNumeralMove()))
             .append('\t')
@@ -202,10 +215,6 @@ public class InsightMeasurer implements Runnable {
           if (assignment.equals(a)) isBlockNumeralMove = true;
         }
       }
-    }
-
-    int getNumTargets() {
-      return locTargets.size() + unitNumTargets.size();
     }
 
     int getNumBlockNumeralMoves() {

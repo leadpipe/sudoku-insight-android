@@ -194,7 +194,12 @@ public abstract class Pattern implements Comparable<Pattern> {
       if (answer == null) throw new IllegalArgumentException();
       return answer;
     }
-  };
+  }
+
+  public enum Realm {
+    BLOCK, UNIT, ALL;
+  }
+  public abstract Realm getRealm();
 
   @Override public final String toString() {
     StringBuilder sb = new StringBuilder();
@@ -266,6 +271,10 @@ public abstract class Pattern implements Comparable<Pattern> {
 
     public UnitCategory getCategory() {
       return category;
+    }
+
+    @Override public Realm getRealm() {
+      return category == UnitCategory.BLOCK ? Realm.BLOCK : Realm.UNIT;
     }
 
     @Override public boolean equals(Object o) {
@@ -447,6 +456,10 @@ public abstract class Pattern implements Comparable<Pattern> {
 
     public PeerMetrics getMetrics() {
       return metrics;
+    }
+
+    @Override public Realm getRealm() {
+      return Realm.ALL;
     }
 
     @Override public boolean equals(Object o) {
@@ -700,6 +713,14 @@ public abstract class Pattern implements Comparable<Pattern> {
       for (Pattern a : antecedents)
         answer += a.getScanTargetCount();
       return answer;
+    }
+
+    @Override public Realm getRealm() {
+      Realm realm = consequent.getRealm();
+      Ordering<Realm> ordering = Ordering.natural();
+      for (Pattern a : antecedents)
+        realm = ordering.max(realm, a.getRealm());
+      return realm;
     }
 
     @Override public boolean equals(Object o) {

@@ -315,12 +315,12 @@ public class Evaluator {
    * hardest.
    */
   public enum MoveKind {
-    EASY_DIRECT(1.3, 1.3),
-    DIRECT(1.4, 1.4),
-    SIMPLY_IMPLIED_EASY(1.7, 1.7),
-    SIMPLY_IMPLIED(1.8, 1.8),
-    IMPLIED_EASY(3.4, 3.4),
-    IMPLIED(4.0, 4.0),  // catch-all, including errors
+    EASY_DIRECT(1.6, 1.1),
+    DIRECT(1.7, 1.1),
+    SIMPLY_IMPLIED_EASY(2.3, 1.2),
+    SIMPLY_IMPLIED(2.3, 1.3),
+    IMPLIED_EASY(4.5, 2.2),
+    IMPLIED(4.9, 2.8),  // catch-all, including errors
     ;
 
     /**
@@ -349,13 +349,14 @@ public class Evaluator {
      * remaining for that numeral, and this is the scan rate for them.
      */
     public static final double BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT = 0.75 / 60;
+    public static final double BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT_WITH_TRAILS = 0.73 / 60;
 
     /**
      * When there are no moves implied, the best model is simply to pause a
      * fixed amount of time before looking for disproofs.
      */
-    public static final double MINUTES_BEFORE_DISPROOF = 83.2 / 60;
-    public static final double MINUTES_BEFORE_DISPROOF_WITH_TRAILS = 83.2 / 60;
+    public static final double MINUTES_BEFORE_DISPROOF = 137.4 / 60;
+    public static final double MINUTES_BEFORE_DISPROOF_WITH_TRAILS = 52.2 / 60;
 
     private MoveKind(double secondsPerScanPoint, double secondsPerScanPointWithTrails) {
       this.minutesPerScanPoint = secondsPerScanPoint / 60;
@@ -363,8 +364,11 @@ public class Evaluator {
     }
 
     public static double calcBlockNumeralMinutes(
-        int numOpenBlockNumerals, int numBlockNumeralMoves) {
-      return BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT * numOpenBlockNumerals / numBlockNumeralMoves;
+        int numOpenBlockNumerals, int numBlockNumeralMoves, boolean trails) {
+      double perPoint = trails
+          ? BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT_WITH_TRAILS
+          : BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT;
+      return perPoint * numOpenBlockNumerals / numBlockNumeralMoves;
     }
 
     public static double calcPause(boolean trails) {
@@ -445,7 +449,7 @@ public class Evaluator {
           if (locs.size() > 1 || locs.size() == 1 && !gridMarks.grid.containsKey(locs.get(0)))
             ++openMoves;
         }
-        return MoveKind.calcBlockNumeralMinutes(openMoves, numBlockNumeralMoves);
+        return MoveKind.calcBlockNumeralMinutes(openMoves, numBlockNumeralMoves, trails);
       }
       if (move == null)
         return MoveKind.calcPause(trails);
