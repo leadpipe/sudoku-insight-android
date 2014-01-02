@@ -48,6 +48,9 @@ limitations under the License.
         <service android:name=".NetworkService"
             android:exported="false"
             />
+        <service android:name=".RatingService"
+            android:exported="false"
+            />
         <activity android:name=".PuzzleListActivity"/>
         <activity android:name=".PuzzleInfoActivity"/>
         <activity android:name=".ReplayActivity"/>

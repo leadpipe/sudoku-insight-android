@@ -56,11 +56,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -87,7 +85,7 @@ public class NetworkService extends IntentService {
   }
 
   public static void addStatsCallback(StatsCallback callback) {
-    statsCallbacks.add(new WeakReference<StatsCallback>(callback));
+    statsCallbacks.add(callback);
   }
 
   public static void runStartupTimeOps(Context context) {
@@ -167,8 +165,8 @@ public class NetworkService extends IntentService {
   }
 
   private static final Queue<Op> pendingOps = Queues.newConcurrentLinkedQueue();
-  private static final Collection<WeakReference<StatsCallback>> statsCallbacks =
-      Queues.newConcurrentLinkedQueue();
+  private static final WeakCallbackCollection<StatsCallback> statsCallbacks =
+      WeakCallbackCollection.create();
 
   /** The auth scope that lets the web app verify it's really the given user. */
   private static final String SCOPE = "audience:server:client_id:826990774749.apps.googleusercontent.com";
@@ -798,14 +796,8 @@ public class NetworkService extends IntentService {
     @Override public boolean process(Rpc.Response<PuzzleRpcs.PuzzleResult> res) {
       if (res.result != null) {
         mDb.setPuzzleStats(puzzle._id, GSON.toJson(res.result));
-        Iterator<WeakReference<StatsCallback>> it = statsCallbacks.iterator();
-        while (it.hasNext()) {
-          StatsCallback callback = it.next().get();
-          if (callback == null)
-            it.remove();
-          else
-            callback.statsUpdated(puzzle._id);
-        }
+        for (StatsCallback callback : statsCallbacks)
+          callback.statsUpdated(puzzle._id);
       } else if (res.error.code == Rpc.OBJECT_UNCHANGED) {
         // Just update the timestamp.
         mDb.setPuzzleStats(puzzle._id, puzzle.stats);

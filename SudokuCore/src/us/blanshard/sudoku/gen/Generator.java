@@ -33,6 +33,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.gson.JsonObject;
 
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Random;
 
@@ -211,11 +212,34 @@ public class Generator {
   }
 
   /**
+   * Constructs the name of a puzzle from its constituent parts.
+   */
+  public static String makePuzzleName(int stream, Calendar cal, int counter) {
+    return makePuzzleName(BASIC_VERSION, stream, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, counter);
+  }
+
+  /**
+   * Constructs the name of a puzzle from its constituent parts.
+   */
+  public static String makePuzzleName(int stream, int year, int month, int counter) {
+    return makePuzzleName(BASIC_VERSION, stream, year, month, counter);
+  }
+
+  /**
+   * Constructs the name of a puzzle from its constituent parts, including the
+   * algorithm version number.
+   */
+  public static String makePuzzleName(
+      int version, int stream, int year, int month, int counter) {
+    return version + ":" + stream + ":" + year + "-" + month + ":" + counter;
+  }
+
+  /**
    * Generates the puzzle with the given parameters.
    */
   public static JsonObject generatePuzzle(
       int version, int stream, int year, int month, int counter) {
-    String name = version + ":" + stream + ":" + year + "-" + month + ":" + counter;
+    String name = makePuzzleName(version, stream, year, month, counter);
     HashCode hash = Hashing.murmur3_128().hashString(name, Charsets.UTF_8);
     Random random = new Random(hash.asLong());
 

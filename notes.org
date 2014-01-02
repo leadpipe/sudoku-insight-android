@@ -16,18 +16,15 @@
 - add columns for the pattern that the estimator found, and patterns matching actual move
 *** TODO Look into keeping track of found eliminations during the course of the puzzle
 - does this help reduce the long tails?
-*** DONE Look into separating kinds of scan points
+*** TODO Look into separating kinds of scan points
 - blocks, blocks+lines, blocks+lines+locations
-- doesn't appear to be worth it
-*** TODO Performance improvements [3/4]
-- [X] Run profiler
-- [X] Fix UnitNumeral so it doesn't consume too many resources
-  - [X] Make UnitNumeral enum-like
-  - [X] Add UnitNumSet
-  - [X] Use UnitNumeral in Marks
-  - [X] Use UnitNumSet in Insight
-  - [X] Unit tests
-- [X] Run profiler again
+- doesn't appear to be worth it?
+- let's investigate this some more, especially in light of having to minimize everything
+*** TODO Minimize everything in the evaluator
+- need this given only counting scan targets in assignments
+*** TODO Look for all hidden sets before any naked ones
+*** TODO Performance improvements [0/2]
+- [ ] Run profiler after minimization change
 - [ ] Add phase to Analyzer callback, and stop after assignments when taking the short path?
 *** TODO Investigate distribution of times for multiple puzzles generated from the same end state
 
@@ -54,15 +51,17 @@ END
 - no remaining record of the initial play
 
 ** App/UI cleanups
-*** TODO Evaluate puzzles while (or before) adding them
-- make a dedicated background service that generates and evaluates puzzles well in advance
-- have the info and list pages interact with this thread similarly to the network service
-- also the play page, why not
+*** TODO Evaluate puzzles while (or before) adding them [2/4]
+- [X] make a dedicated background service that generates and evaluates puzzles well in advance
+- [X] make a new database table holding, say, 10 from this month and 10 from next month
+- [ ] have the info and list pages interact with this thread similarly to the network service
+- [ ] also the play page, why not
 *** DONE Add a dialog that shows the evaluation (in some form) and lets you skip the puzzle
 - use an overlay instead of a dialog, so menu works
 - make it slightly harder to skip by accident?
 *** TODO Add a pref for not showing ratings
 - until after a complete attempt
+- worth it?
 *** TODO Don't send skipped puzzles to the app engine
 - treat skipped puzzles specially, if we play them we should be changing the
   existing attempt not making a new one

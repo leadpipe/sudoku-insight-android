@@ -17,6 +17,7 @@ package us.blanshard.sudoku.android;
 
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.gen.Generator;
+import us.blanshard.sudoku.insight.Evaluator;
 import us.blanshard.sudoku.insight.Rating;
 
 import android.content.ContentValues;
@@ -32,6 +33,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -168,6 +170,12 @@ public class Database {
     public Rating rating;
     public List<Attempt> attempts;
     public List<Element> elements;
+  }
+
+  public static class RatingInfo {
+    public long _id;
+    public Rating rating;
+    public JsonObject properties;
   }
 
   /**
@@ -332,6 +340,36 @@ public class Database {
     } finally {
       db.endTransaction();
     }
+  }
+
+  /**
+   * Returns the IDs of puzzles either missing ratings entirely or whose ratings
+   * are obsoleted by a new version of {@link Evaluator}'s algorithm.
+   */
+  public List<Long> getPuzzlesNeedingRating(boolean checkForOldVersion) {
+    SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+    String query = checkForOldVersion
+        ? "SELECT [id_], [rating] FROM [Puzzle]"
+        : "SELECT [id_] FROM [Puzzle] WHERE [rating] IS NULL";
+    Cursor cursor = db.rawQuery(query, null);
+    List<Long> answer = Lists.newArrayList();
+    try {
+      while (cursor.moveToNext()) {
+        Long id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
+        if (checkForOldVersion) {
+          String ratingString = cursor.getString(cursor.getColumnIndexOrThrow("rating"));
+          if (ratingString != null) {
+            Rating rating = Rating.deserialize(ratingString);
+            if (rating.algorithmVersion == Evaluator.CURRENT_VERSION)
+              continue;  // Skip this guy, he's good.
+          }
+        }
+        answer.add(id);
+      }
+    } finally {
+      cursor.close();
+    }
+    return answer;
   }
 
   /**
@@ -731,6 +769,56 @@ public class Database {
     return answer;
   }
 
+  /** Returns the set of ratings we have precomputed. */
+  public List<RatingInfo> getRatingInfo() {
+    SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+    Cursor cursor = db.rawQuery("SELECT * FROM [Rating]", null);
+    List<RatingInfo> answer = Lists.newArrayList();
+    try {
+      while (cursor.moveToNext()) {
+        RatingInfo info = new RatingInfo();
+        info._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
+        info.rating = Rating.deserialize(
+            cursor.getString(cursor.getColumnIndexOrThrow("rating")));
+        info.properties = new JsonParser().parse(
+            cursor.getString(cursor.getColumnIndexOrThrow("properties"))).getAsJsonObject();
+        answer.add(info);
+      }
+    } finally {
+      cursor.close();
+    }
+    return answer;
+  }
+
+  /** Adds rating information about a puzzle. */
+  public void addRatingInfo(Rating rating, JsonObject puzzleProperties) {
+    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+    db.beginTransaction();
+    try {
+      ContentValues values = new ContentValues();
+      values.put("rating", rating.serialize());
+      values.put("properties", puzzleProperties.toString());
+      db.insertOrThrow("Rating", null, values);
+      db.setTransactionSuccessful();
+    } finally {
+      db.endTransaction();
+    }
+  }
+
+  /** Deletes no-longer-needed rating information. */
+  public void deleteRatingInfo(Collection<RatingInfo> infos) {
+    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+    db.beginTransaction();
+    try {
+      for (RatingInfo info : infos) {
+        db.delete("Rating", "[_id] = ?", new String[]{ Long.toString(info._id) });
+      }
+      db.setTransactionSuccessful();
+    } finally {
+      db.endTransaction();
+    }
+  }
+
   /** Returns the set of source strings present in the Puzzle table. */
   public List<String> getPuzzleSources() {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
@@ -783,7 +871,7 @@ public class Database {
     private final Context mContext;
 
     OpenHelper(Context context) {
-      super(context, "db", null, 10);
+      super(context, "db", null, 11);
       mContext = context;
     }
 
@@ -849,6 +937,11 @@ public class Database {
           + "CREATE INDEX [AttemptByStateAndLastTime] ON [Attempt] ("
           + "  [attemptState],"
           + "  [lastTime])");
+      db.execSQL(""
+          + "CREATE TABLE [Rating] ("
+          + "  [_id] INTEGER PRIMARY KEY,"
+          + "  [rating] TEXT  NOT NULL,"
+          + "  [properties] TEXT  NOT NULL)");
 
       ContentValues values = new ContentValues();
       values.put("_id", GENERATED_COLLECTION_ID);
@@ -887,6 +980,13 @@ public class Database {
       }
       if (oldVersion < 10) {
         db.execSQL("ALTER TABLE [Puzzle] ADD COLUMN [rating] TEXT");
+      }
+      if (oldVersion < 11) {
+        db.execSQL(""
+            + "CREATE TABLE [Rating] ("
+            + "  [_id] INTEGER PRIMARY KEY,"
+            + "  [rating] TEXT  NOT NULL,"
+            + "  [properties] TEXT  NOT NULL)");
       }
     }
   }

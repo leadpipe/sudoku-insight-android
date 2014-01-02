@@ -19,6 +19,8 @@ import static us.blanshard.sudoku.android.Extras.ATTEMPT_ID;
 import static us.blanshard.sudoku.gen.Generator.NUM_STREAMS;
 import static us.blanshard.sudoku.messages.InstallationRpcs.monthNumber;
 
+import us.blanshard.sudoku.insight.Evaluator;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.backup.BackupManager;
@@ -58,6 +60,7 @@ public class Prefs {
   private static final String DEFAULT_DEVICE_NAME = "defaultDeviceName";
   private static final String INSTALL_DATA = "installData";
   private static final String MONTH = "month";
+  private static final String RATING_VERSION = "ratingVersion";
   private static final String SEEN_NOTICE = "seenNotice";
   private static final String SORT = "sort";
   private static final String STREAM_COUNT = "streamCount";
@@ -279,6 +282,21 @@ public class Prefs {
     prefs.apply();
     prefs = mPrefs.edit();
     prefs.putBoolean(SEEN_NOTICE, true);
+    prefs.apply();
+  }
+
+  /**
+   * The {@link Evaluator} algorithm version that all rated puzzles in the
+   * database have; defaults to one less than the current version number, to
+   * signal that the database is out of sync with the code.
+   */
+  public int getRatingVersion() {
+    return mLocalPrefs.getInt(RATING_VERSION, Evaluator.CURRENT_VERSION - 1);
+  }
+
+  public void setRatingVersionAsync(int version) {
+    SharedPreferences.Editor prefs = mLocalPrefs.edit();
+    prefs.putInt(RATING_VERSION, version);
     prefs.apply();
   }
 }
