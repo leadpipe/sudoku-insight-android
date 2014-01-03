@@ -151,7 +151,7 @@ public class ToText {
   private static double adjustedScore(double score) {
     // Adjusts the score so when it's rounded to one decimal place it will never
     // exceed its actual value.
-    return score - 0.05;
+    return score < 0.05 ? score : score - 0.05;
   }
 
   /**

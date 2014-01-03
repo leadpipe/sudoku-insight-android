@@ -349,8 +349,8 @@ public class Database {
   public List<Long> getPuzzlesNeedingRating(boolean checkForOldVersion) {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
     String query = checkForOldVersion
-        ? "SELECT [id_], [rating] FROM [Puzzle]"
-        : "SELECT [id_] FROM [Puzzle] WHERE [rating] IS NULL";
+        ? "SELECT [_id], [rating] FROM [Puzzle]"
+        : "SELECT [_id] FROM [Puzzle] WHERE [rating] IS NULL";
     Cursor cursor = db.rawQuery(query, null);
     List<Long> answer = Lists.newArrayList();
     try {

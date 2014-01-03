@@ -21,6 +21,7 @@ import static us.blanshard.sudoku.gen.Generator.NAME_KEY;
 
 import us.blanshard.sudoku.android.Database.Attempt;
 import us.blanshard.sudoku.android.Database.Puzzle;
+import us.blanshard.sudoku.insight.Rating;
 import us.blanshard.sudoku.messages.PuzzleRpcs.PuzzleResult;
 
 import android.os.Bundle;
@@ -53,7 +54,8 @@ import java.util.List;
  *
  * @author Luke Blanshard
  */
-public class PuzzleListFragment extends FragmentBase implements NetworkService.StatsCallback {
+public class PuzzleListFragment extends FragmentBase
+    implements NetworkService.StatsCallback, RatingService.RatingCallback {
 
   /** How fresh we want our stats to be. */
   private static final long STATS_FRESHNESS_MS = HOURS.toMillis(1);
@@ -169,6 +171,7 @@ public class PuzzleListFragment extends FragmentBase implements NetworkService.S
     if (!getActivity().isFinishing()) {
       NetworkService.addStatsCallback(this);
       NetworkService.updateOldStats(getActivity(), System.currentTimeMillis() - STATS_FRESHNESS_MS);
+      RatingService.addCallback(this);
     }
   }
 
@@ -204,6 +207,15 @@ public class PuzzleListFragment extends FragmentBase implements NetworkService.S
     // notifications to come through first.
     mList.removeCallbacks(reloader);
     mList.postDelayed(reloader, STATS_UPDATE_PAUSE_MS);
+  }
+
+  @Override public void ratingScoreUpdated(long puzzleId, double minScore) {
+    // Ignore, we only care about completed ratings
+  }
+
+  @Override public void ratingComplete(long puzzleId, Rating rating) {
+    // Do the same thing we do on stats update.
+    statsUpdated(puzzleId);
   }
 
   public void reloadPuzzles() {
@@ -267,7 +279,8 @@ public class PuzzleListFragment extends FragmentBase implements NetworkService.S
     return false;
   }
 
-  private static class FetchPuzzles extends WorkerFragment.Task<PuzzleListFragment, Void, Void, List<Database.Puzzle>> {
+  private static class FetchPuzzles
+      extends WorkerFragment.Task<PuzzleListFragment, Void, Void, List<Database.Puzzle>> {
     private final Database mDb;
 
     FetchPuzzles(PuzzleListFragment fragment) {

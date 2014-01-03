@@ -23,11 +23,9 @@ import us.blanshard.sudoku.android.Database.AttemptState;
 import us.blanshard.sudoku.android.Database.Element;
 import us.blanshard.sudoku.android.WorkerFragment.Independence;
 import us.blanshard.sudoku.android.WorkerFragment.Priority;
-import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.game.GameJson;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.gen.Generator;
-import us.blanshard.sudoku.insight.Evaluator;
 import us.blanshard.sudoku.insight.Rating;
 import us.blanshard.sudoku.messages.PuzzleRpcs.PuzzleResult;
 
@@ -62,7 +60,7 @@ import java.util.List;
  */
 @SuppressLint("SetJavaScriptEnabled")
 public class PuzzleInfoFragment extends FragmentBase
-    implements OnCheckedChangeListener, NetworkService.StatsCallback {
+    implements OnCheckedChangeListener, NetworkService.StatsCallback, RatingService.RatingCallback {
   private static final String TAG = "PuzzleInfoFragment";
   private long mPuzzleId;
   private ActivityCallback mCallback;
@@ -109,6 +107,7 @@ public class PuzzleInfoFragment extends FragmentBase
     mDetails.setBackgroundColor(0);  // Makes the background transparent
     mDetails.setWebViewClient(new LinkHandler());
     NetworkService.addStatsCallback(this);
+    RatingService.addCallback(this);
 
     // Only go straight to the solution if the activity has no saved state.
     // Otherwise it's possible to loop.
@@ -186,6 +185,16 @@ public class PuzzleInfoFragment extends FragmentBase
     }
   }
 
+  @Override public void ratingScoreUpdated(long puzzleId, double minScore) {
+    // Ignore, we only care about completed ratings.
+    // We could update the ID string if we wanted to though.
+  }
+
+  @Override public void ratingComplete(long puzzleId, Rating rating) {
+    // Do the same thing we do on stats update.
+    statsUpdated(puzzleId);
+  }
+
   private boolean canVote() {
     if (mPuzzle != null)
       for (Database.Attempt attempt : mPuzzle.attempts)
@@ -205,7 +214,7 @@ public class PuzzleInfoFragment extends FragmentBase
   private void setPuzzle(Database.Puzzle puzzle) {
     mPuzzle = puzzle;
     if (puzzle.rating == null)
-      new RatePuzzle(this).execute();
+      RatingService.ratePuzzle(getActivity(), puzzle._id);
     mProperties = new JsonParser().parse(puzzle.properties).getAsJsonObject();
     mGrid.setPuzzle(puzzle.clues);
     mPuzzleIdView.setText(makeIdString());
@@ -313,33 +322,6 @@ public class PuzzleInfoFragment extends FragmentBase
 
     @Override protected void onPostExecute(PuzzleInfoFragment fragment, Database.Puzzle puzzle) {
       fragment.setPuzzle(puzzle);
-    }
-  }
-
-  private static class RatePuzzle extends WorkerFragment.Task<PuzzleInfoFragment, Void, Void, Database.Puzzle> {
-    private final Database mDb;
-    private final Grid mPuzzle;
-    private final long mId;
-
-    RatePuzzle(PuzzleInfoFragment fragment) {
-      super(fragment);
-      this.mDb = fragment.mDb;
-      this.mPuzzle = fragment.mPuzzle.clues;
-      this.mId = fragment.mPuzzleId;
-      Log.d(TAG, "RatePuzzle start");
-    }
-
-    @Override protected Database.Puzzle doInBackground(Void... params) {
-      Rating rating = Evaluator.evaluate(mPuzzle, null);
-      if (!rating.evalComplete) return null;
-      mDb.setPuzzleRating(mId, rating);
-      return mDb.getFullPuzzle(mId);
-    }
-
-    @Override protected void onPostExecute(PuzzleInfoFragment fragment, Database.Puzzle puzzle) {
-      Log.d(TAG, "RatePuzzle end");
-      if (puzzle != null)
-        fragment.setPuzzle(puzzle);
     }
   }
 

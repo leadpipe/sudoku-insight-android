@@ -166,6 +166,17 @@ public class Generator {
   }
 
   /**
+   * Generates a Sudoku with the given parameters, extracting the appropriate
+   * year and month from the given calendar, returns it as a JSON object with
+   * the properties {@link #PUZZLE_KEY}, {@link #NAME_KEY}, {@link
+   * #NUM_SOLUTIONS_KEY}, and either {@link #SYMMETRY_KEY} or {@link
+   * #BROKEN_SYMMETRY_KEY}.
+   */
+  public static JsonObject generateBasicPuzzle(int stream, Calendar cal, int counter) {
+    return generateBasicPuzzle(stream, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, counter);
+  }
+
+  /**
    * Splits a puzzle name as returned by {@link #generatePuzzle} into its
    * constituent properties {@link #VERSION_KEY}, {@link #STREAM_KEY},
    * {@link #YEAR_KEY}, {@link #MONTH_KEY}, and {@link #COUNTER_KEY}.

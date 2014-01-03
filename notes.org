@@ -51,14 +51,18 @@ END
 - no remaining record of the initial play
 
 ** App/UI cleanups
-*** TODO Evaluate puzzles while (or before) adding them [2/4]
+*** DONE Evaluate puzzles while (or before) adding them [4/4]
 - [X] make a dedicated background service that generates and evaluates puzzles well in advance
 - [X] make a new database table holding, say, 10 from this month and 10 from next month
-- [ ] have the info and list pages interact with this thread similarly to the network service
-- [ ] also the play page, why not
+- [X] have the info and list pages interact with this thread similarly to the network service
+- [X] also the play page, why not
 *** DONE Add a dialog that shows the evaluation (in some form) and lets you skip the puzzle
 - use an overlay instead of a dialog, so menu works
 - make it slightly harder to skip by accident?
+*** TODO Fix the list fragment so it maintains current scroll on update
+- currently jumps back to selected item, not always what you want (in
+  particular, not when stats or rating has been updated, or on resume)
+*** TODO Add prefs for only showing easy puzzles?
 *** TODO Add a pref for not showing ratings
 - until after a complete attempt
 - worth it?

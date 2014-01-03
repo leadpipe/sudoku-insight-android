@@ -106,6 +106,9 @@ public class Prefs {
     }
     // Kick off all required save ops at startup time.
     NetworkService.runStartupTimeOps(mAppContext);
+
+    // While we're here, start up the rating service as well.
+    RatingService.start(mAppContext);
   }
 
   public static synchronized Prefs instance(Context context) {
@@ -118,6 +121,10 @@ public class Prefs {
     if (!answer.toLowerCase(Locale.US).startsWith(Build.MANUFACTURER.toLowerCase(Locale.US)))
       answer = Build.MANUFACTURER + " " + answer;
     return answer;
+  }
+
+  public Context getContext() {
+    return mAppContext;
   }
 
   public boolean hasCurrentAttemptId() {

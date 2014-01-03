@@ -72,6 +72,7 @@ public class RatingService extends Service {
   /** Adds a callback that will be notified whenever a puzzle has been rated or
       its score updated. */
   public static void addCallback(RatingCallback callback) {
+    Log.d(TAG, "Adding callback " + callback);
     sCallbacks.add(callback);
   }
 
@@ -139,8 +140,9 @@ public class RatingService extends Service {
   @Override public int onStartCommand(Intent intent, int flags, int startId) {
     if (intent.hasExtra(Extras.PUZZLE_ID)) {
       synchronized (mLock) {
-        mNewPuzzleId = intent.getExtras().getLong(Extras.PUZZLE_ID);
-        if (mCurrentPuzzleId != mNewPuzzleId) {
+        long puzzleId = intent.getExtras().getLong(Extras.PUZZLE_ID);
+        if (mCurrentPuzzleId != puzzleId) {
+          mNewPuzzleId = puzzleId;
           mThread.interrupt();
           Log.d(TAG, "Interrupted rating thread to do " + mNewPuzzleId + " instead of " + mCurrentPuzzleId);
         }
@@ -167,7 +169,7 @@ public class RatingService extends Service {
     abstract void rate();
 
     boolean wasInterrupted() {
-      return rating != null && !rating.evalComplete;
+      return rating == null || !rating.evalComplete;
     }
   }
 
@@ -222,9 +224,12 @@ public class RatingService extends Service {
   private void addNewPuzzleIdJob(List<RatingJob> jobs) {
     synchronized (mLock) {
       Thread.interrupted();  // Clear any interruption
-      if (mNewPuzzleId != mCurrentPuzzleId) {
+      if (mNewPuzzleId != -1) {
+        Log.d(TAG, "Found new puzzle ID to rate: " + mNewPuzzleId);
         mCurrentPuzzleId = mNewPuzzleId;
         jobs.add(new IdRatingJob(mNewPuzzleId));
+      } else {
+        Log.d(TAG, "No new puzzle ID to rate");
       }
     }
   }
@@ -236,7 +241,7 @@ public class RatingService extends Service {
     Set<String> names = Sets.newLinkedHashSet();
     int stream = mPrefs.getStream();
     Calendar cal = Calendar.getInstance();
-    int counter = mPrefs.getNextCounter(cal);
+    int counter = Math.max(1, mPrefs.getNextCounter(cal) - 1);
     for (int i = 0; i < NUM_PRECOMPUTES; ++i) {
       // We precompute a set number of puzzles for the current month...
       names.add(Generator.makePuzzleName(stream, cal, counter + i));
@@ -283,7 +288,9 @@ public class RatingService extends Service {
   }
 
   private boolean isValidRating(Rating rating) {
-    return rating != null && rating.algorithmVersion == Evaluator.CURRENT_VERSION;
+    return rating != null
+        && rating.evalComplete
+        && rating.algorithmVersion == Evaluator.CURRENT_VERSION;
   }
 
   private Rating rateNamedPuzzle(String name) {
@@ -292,8 +299,10 @@ public class RatingService extends Service {
     sPuzzleProperties.put(name, props);
     Grid clues = Grid.fromString(props.get(Generator.PUZZLE_KEY).getAsString());
     Rating rating = Evaluator.evaluate(clues, null);
-    mDb.addRatingInfo(rating, props);
-    mRatings.put(name, rating);
+    if (rating.evalComplete) {
+      mDb.addRatingInfo(rating, props);
+      mRatings.put(name, rating);
+    }
     return rating;
   }
 
@@ -322,13 +331,14 @@ public class RatingService extends Service {
               @Override public void disproofsRequired() {}
             };
         }
-        Grid clues = Grid.fromString(props.get(Generator.PUZZLE_KEY).getAsString());
-        rating = Evaluator.evaluate(clues, callback);
+        rating = Evaluator.evaluate(puzzle.clues, callback);
       }
       if (rating.evalComplete) {
         mDb.setPuzzleRating(puzzleId, rating);
-        for (RatingCallback rc : sCallbacks)
-          rc.ratingComplete(puzzleId, rating);
+        if (name != null) {
+          mDb.addRatingInfo(rating, props);
+          mRatings.put(name, rating);
+        }
       }
     }
     synchronized (mLock) {
@@ -336,6 +346,11 @@ public class RatingService extends Service {
       if (mNewPuzzleId == puzzleId)
         mNewPuzzleId = -1;
     }
+    if (rating.evalComplete)
+      for (RatingCallback rc : sCallbacks) {
+        rc.ratingComplete(puzzleId, rating);
+        Log.d(TAG, "Rating complete sent to " + rc);
+      }
     return rating;
   }
 }
