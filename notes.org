@@ -14,20 +14,24 @@
 *** TODO Investigate recent puzzles
 - categories: estimate way too high, way too low, high, low, close to perfect
 - add columns for the pattern that the estimator found, and patterns matching actual move
-*** TODO Look into keeping track of found eliminations during the course of the puzzle
-- does this help reduce the long tails?
-*** TODO I think the one-move-at-a-time approach is unworkable
-- look into using multiple moves found by a single scan
-*** TODO Look into separating kinds of scan points
-- blocks, blocks+lines, blocks+lines+locations
-- doesn't appear to be worth it?
-- let's investigate this some more, especially in light of having to minimize everything
-*** TODO Minimize everything in the evaluator
-- need this given only counting scan targets in assignments
+*** TODO New evaluator algorithm [0/3]
+- [ ] Rework InsightMeasurer to track buckets of insights
+  - bucket axes: easy/hard, and direct/simply-implied/complexly-implied
+  - [ ] divide by realm -- let's look at block/line/location as independent bits
+  - [ ] list each bucket containing a move corresponding to assignment made
+    - each bucket has realm vector and scan-target count vector (indexed by realm)
+- [ ] Rework ScanPoints to keep pace, and measure params
+- [ ] Rewrite Evaluator to handle a whole bucket of insights per scan
+  - [ ] When bucket is of implications, must minimize them all before accumulating scan targets
+  - [ ] Look into keeping track of found eliminations (per trail) and applying
+    them all before every successive scan
+    - how to measure the value of this?  via comparing results against historical times I guess
+  - [ ] Look into skipping moves when the cheapest move in a bucket is more
+    expensive than the new-trail wait
 *** TODO Look for all hidden sets before any naked ones
 *** TODO Performance improvements [0/2]
-- [ ] Run profiler after minimization change
-- [ ] Add phase to Analyzer callback, and stop after assignments when taking the short path?
+- [ ] Run profiler after evaluator change
+- [ ] Add phase to Analyzer callback, and stop after assignments when taking a short path?
 *** TODO Investigate distribution of times for multiple puzzles generated from the same end state
 
 ** Getting games with history from a sqlite db into a tsv file:
