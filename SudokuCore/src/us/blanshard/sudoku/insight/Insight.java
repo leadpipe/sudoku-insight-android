@@ -17,6 +17,7 @@ package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
 
 import java.util.Collection;
@@ -70,6 +71,23 @@ public abstract class Insight {
     }
   }
 
+  /**
+   * A basic categorization of simple insights, combined for compound ones.
+   */
+  public enum Realm {
+    BLOCK, LINE, LOCATION;
+    public final int bit = 1 << ordinal();
+
+    /** Tells whether this realm is included in the given bit vector. */
+    public boolean isIn(int vector) {
+      return (vector & bit) != 0;
+    }
+
+    public static Realm of(Unit unit) {
+      return unit.getType() == Unit.Type.BLOCK ? BLOCK : LINE;
+    }
+  }
+
   public final Type type;
 
   protected Insight(Type type) {
@@ -115,6 +133,12 @@ public abstract class Insight {
   public int getCount() {
     return 1;
   }
+
+  /**
+   * Returns the set of realms that this insight inhabits, expressed as a bit
+   * vector.
+   */
+  public abstract int getRealmVector();
 
   /** Returns an abbreviated string form of this insight. */
   public String toShortString() {

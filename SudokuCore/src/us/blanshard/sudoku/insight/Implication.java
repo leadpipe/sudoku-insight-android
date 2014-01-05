@@ -48,6 +48,14 @@ public final class Implication extends Insight {
     this.consequent = checkNotNull(consequent);
   }
 
+  public ImmutableList<Insight> getAntecedents() {
+    return antecedents;
+  }
+
+  public Insight getConsequent() {
+    return consequent;
+  }
+
   @Override public boolean isError() {
     return consequent.isError();
   }
@@ -83,16 +91,15 @@ public final class Implication extends Insight {
     return count;
   }
 
+  @Override public int getRealmVector() {
+    int answer = consequent.getRealmVector();
+    for (int i = 0, count = antecedents.size(); i < count; ++i)
+      answer |= antecedents.get(i).getRealmVector();
+    return answer;
+  }
+
   @Override public String toShortString() {
     return getNub() + " \u2235 \u2026 [" + getDepth() + "]";
-  }
-
-  public ImmutableList<Insight> getAntecedents() {
-    return antecedents;
-  }
-
-  public Insight getConsequent() {
-    return consequent;
   }
 
   @Override public void apply(GridMarks.Builder builder) {

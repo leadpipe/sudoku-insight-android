@@ -83,6 +83,10 @@ public final class Overlap extends Insight {
     return unit + ":" + numeral + ":" + extra.unit;
   }
 
+  @Override public int getRealmVector() {
+    return Realm.of(unit).bit;
+  }
+
   @Override public void apply(GridMarks.Builder builder) {
     for (int i = 0; i < extra.size(); ++i)
       builder.eliminate(extra.get(i), numeral);

@@ -92,6 +92,10 @@ public final class LockedSet extends Insight {
     return locs;
   }
 
+  @Override public int getRealmVector() {
+    return isNaked ? Realm.LOCATION.bit : Realm.of(locs.unit).bit;
+  }
+
   @Override public void apply(GridMarks.Builder builder) {
     for (int i = 0, count = getEliminations().size(); i < count; ++i)
       builder.eliminate(eliminations.get(i));

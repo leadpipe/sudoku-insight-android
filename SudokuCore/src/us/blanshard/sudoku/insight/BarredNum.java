@@ -48,6 +48,10 @@ public final class BarredNum extends Insight {
     return unitNum.numeral;
   }
 
+  @Override public int getRealmVector() {
+    return Realm.of(getUnit()).bit;
+  }
+
   @Override public void apply(GridMarks.Builder builder) {
     // Nothing to do, it's an error.
   }

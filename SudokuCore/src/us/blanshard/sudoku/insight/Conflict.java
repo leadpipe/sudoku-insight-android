@@ -53,6 +53,10 @@ public final class Conflict extends Insight {
     return locations;
   }
 
+  @Override public int getRealmVector() {
+    return Realm.of(locations.unit).bit;
+  }
+
   @Override public void apply(GridMarks.Builder builder) {
     // Nothing to do, it's an error.
   }

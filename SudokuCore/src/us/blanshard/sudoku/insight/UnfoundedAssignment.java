@@ -40,6 +40,10 @@ public class UnfoundedAssignment extends Insight {
     this.assignment = checkNotNull(assignment);
   }
 
+  @Override public int getRealmVector() {
+    return 0;
+  }
+
   @Override public Assignment getImpliedAssignment() {
     return assignment;
   }

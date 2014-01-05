@@ -61,6 +61,10 @@ public final class ForcedLoc extends Insight {
     return Assignment.of(location, numeral);
   }
 
+  @Override public int getRealmVector() {
+    return Realm.of(unit).bit;
+  }
+
   @Override public void apply(GridMarks.Builder builder) {
     builder.assign(location, numeral);
   }

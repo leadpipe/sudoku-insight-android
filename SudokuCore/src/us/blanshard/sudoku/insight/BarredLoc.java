@@ -42,6 +42,10 @@ public final class BarredLoc extends Insight {
     return location;
   }
 
+  @Override public int getRealmVector() {
+    return Realm.LOCATION.bit;
+  }
+
   @Override public void apply(GridMarks.Builder builder) {
     // Nothing to do, it's an error.
   }

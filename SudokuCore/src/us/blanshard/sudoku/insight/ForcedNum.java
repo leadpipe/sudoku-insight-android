@@ -54,6 +54,10 @@ public final class ForcedNum extends Insight {
     return Assignment.of(location, numeral);
   }
 
+  @Override public int getRealmVector() {
+    return Realm.LOCATION.bit;
+  }
+
   @Override public void apply(GridMarks.Builder builder) {
     builder.assign(location, numeral);
   }

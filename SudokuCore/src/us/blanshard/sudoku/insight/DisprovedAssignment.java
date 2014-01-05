@@ -78,6 +78,11 @@ public final class DisprovedAssignment extends Insight {
   @Override public int getCount() {
     return 1 + resultingError.getCount();
   }
+
+  @Override public int getRealmVector() {
+    return resultingError.getRealmVector();
+  }
+
   @Override public String toShortString() {
     return getPrefix() + resultingError.toShortString();
   }
