@@ -3,807 +3,314 @@
 No trails
 ======================
 
-Forced locations and easy forced numerals everywhere (EASY_DIRECT): 2,689 moves included, 21,131 skipped
-All scan points (2689):
-Scan-points/second: 0.63; var: 1.63 (258.54%)
-Seconds/scan-point: 1.59
-Histogram, actual vs predicted:
-   0:  7794  |  7503.16
-   1:  5003  |  4733.37
-   2:   879  |  1493.03
-   3:   223  |   313.96
-   4:    67  |    49.52
-   5:    49  |     6.25
-   6:    21  |     0.66
-   7:    15  |     0.06
-   8:     4  |     0.00
-   9:    14  |     0.00
-  10:    10  |     0.00
-  11:     3  |     0.00
-  12:     0  |     0.00
-  13:     0  |     0.00
-  14:     2  |     0.00
-  15:     2  |     0.00
-  16:     1  |     0.00
-  17:     1  |     0.00
-  18:     2  |     0.00
-  19:     0  |     0.00
-  20:     1  |     0.00
-  21:     0  |     0.00
-  22:     0  |     0.00
-  23:     0  |     0.00
-  24:     0  |     0.00
-  25:     0  |     0.00
-  26:     1  |     0.00
-  27:     2  |     0.00
-  28:     2  |     0.00
-  29:     0  |     0.00
-  30:     0  |     0.00
-  31:     0  |     0.00
-  32:     0  |     0.00
-  33:     0  |     0.00
-  34:     0  |     0.00
-  35:     0  |     0.00
-  36:     1  |     0.00
-  37:     3  |     0.00
+Easy direct moves: 5,218 moves included, 38,064 skipped
+1. Block-numeral points only (5129):
+Scan-points/second: 1.23; var: 3.83 (312.15%)
+Seconds/scan-point: 0.815
+2. Block- or line-numeral points (5210):
+Scan-points/second: 1.13; var: 4.11 (364.28%)
+Seconds/scan-point: 0.886
+3. All scan points (5218):
+Scan-points/second: 1.09; var: 3.54 (326.15%)
+Seconds/scan-point: 0.921
 
-Direct assignments everywhere, no errors (DIRECT): 3,535 moves included, 20,285 skipped
-All scan points (3535):
-Scan-points/second: 0.58; var: 1.36 (235.43%)
-Seconds/scan-point: 1.73
-Histogram, actual vs predicted:
-   0: 13752  | 13185.29
-   1:  7747  |  7600.67
-   2:  1330  |  2190.71
-   3:   314  |   420.95
-   4:   130  |    60.66
-   5:    62  |     6.99
-   6:    33  |     0.67
-   7:    38  |     0.06
-   8:     7  |     0.00
-   9:    10  |     0.00
-  10:    14  |     0.00
-  11:     6  |     0.00
-  12:     0  |     0.00
-  13:     0  |     0.00
-  14:     3  |     0.00
-  15:     2  |     0.00
-  16:     1  |     0.00
-  17:     3  |     0.00
-  18:     1  |     0.00
-  19:     1  |     0.00
-  20:     0  |     0.00
-  21:     0  |     0.00
-  22:     1  |     0.00
-  23:     1  |     0.00
-  24:     0  |     0.00
-  25:     0  |     0.00
-  26:     0  |     0.00
-  27:     3  |     0.00
-  28:     0  |     0.00
-  29:     2  |     0.00
-  30:     1  |     0.00
-  31:     0  |     0.00
-  32:     1  |     0.00
-  33:     0  |     0.00
-  34:     0  |     0.00
-  35:     0  |     0.00
-  36:     1  |     0.00
-  37:     2  |     0.00
+Hard direct moves: 33 moves included, 43,249 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+3. All scan points (33):
+Scan-points/second: 0.15; var: 0.18 (117.49%)
+Seconds/scan-point: 6.563
 
-Simply-implied forced locations and easy forced numerals everywhere (SIMPLY_IMPLIED_EASY): 3,209 moves included, 20,611 skipped
-All scan points (3209):
-Scan-points/second: 0.47; var: 1.14 (243.68%)
-Seconds/scan-point: 2.14
-Histogram, actual vs predicted:
-   0: 15144  | 14416.72
-   1:  6354  |  6752.30
-   2:  1046  |  1581.27
-   3:   255  |   246.87
-   4:   110  |    28.91
-   5:    35  |     2.71
-   6:    19  |     0.21
-   7:    17  |     0.01
-   8:     5  |     0.00
-   9:    13  |     0.00
-  10:     9  |     0.00
-  11:     1  |     0.00
-  12:     0  |     0.00
-  13:     3  |     0.00
-  14:     1  |     0.00
-  15:     3  |     0.00
-  16:     1  |     0.00
-  17:     1  |     0.00
-  18:     0  |     0.00
-  19:     1  |     0.00
-  20:     2  |     0.00
-  21:     0  |     0.00
-  22:     0  |     0.00
-  23:     0  |     0.00
-  24:     0  |     0.00
-  25:     1  |     0.00
-  26:     0  |     0.00
-  27:     4  |     0.00
-  28:     0  |     0.00
-  29:     0  |     0.00
-  30:     0  |     0.00
-  31:     0  |     0.00
-  32:     0  |     0.00
-  33:     0  |     0.00
-  34:     0  |     0.00
-  35:     0  |     0.00
-  36:     2  |     0.00
-  37:     2  |     0.00
+Simply-implied FLs, not direct: 23 moves included, 43,259 skipped
+1. Block-numeral points only (14):
+Scan-points/second: 0.06; var: 0.06 (94.27%)
+Seconds/scan-point: 16.808
+2. Block- or line-numeral points (23):
+Scan-points/second: 0.06; var: 0.05 (94.42%)
+Seconds/scan-point: 17.618
+3. All scan points (23):
+Scan-points/second: 0.05; var: 0.05 (95.14%)
+Seconds/scan-point: 20.188
 
-Simply-implied assignments everywhere (5) (SIMPLY_IMPLIED): 4,771 moves included, 19,049 skipped
-All scan points (4771):
-Scan-points/second: 0.44; var: 0.94 (212.15%)
-Seconds/scan-point: 2.27
-Histogram, actual vs predicted:
-   0: 27286  | 26289.17
-   1: 11158  | 11599.17
-   2:  1667  |  2558.86
-   3:   399  |   376.34
-   4:   151  |    41.51
-   5:    75  |     3.66
-   6:    35  |     0.27
-   7:    31  |     0.02
-   8:     8  |     0.00
-   9:    15  |     0.00
-  10:    14  |     0.00
-  11:     9  |     0.00
-  12:     1  |     0.00
-  13:     0  |     0.00
-  14:     2  |     0.00
-  15:     2  |     0.00
-  16:     1  |     0.00
-  17:     2  |     0.00
-  18:     1  |     0.00
-  19:     1  |     0.00
-  20:     1  |     0.00
-  21:     0  |     0.00
-  22:     0  |     0.00
-  23:     0  |     0.00
-  24:     0  |     0.00
-  25:     0  |     0.00
-  26:     0  |     0.00
-  27:     3  |     0.00
-  28:     1  |     0.00
-  29:     1  |     0.00
-  30:     0  |     0.00
-  31:     0  |     0.00
-  32:     0  |     0.00
-  33:     0  |     0.00
-  34:     1  |     0.00
-  35:     0  |     0.00
-  36:     1  |     0.00
-  37:     2  |     0.00
-  38:     0  |     0.00
-  39:     0  |     0.00
-  40:     1  |     0.00
+Simply-implied FNs, not direct: 2 moves included, 43,280 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+3. All scan points (2):
+Scan-points/second: 0.03; var: 0.03 (98.11%)
+Seconds/scan-point: 35.667
 
-Implied forced locations and easy forced numerals everywhere (IMPLIED_EASY): 9,663 moves included, 14,157 skipped
-All scan points (9663):
-Scan-points/second: 0.23; var: 0.39 (166.91%)
-Seconds/scan-point: 4.30
-Histogram, actual vs predicted:
-   0: 98323  | 96827.79
-   1: 21068  | 22534.25
-   2:  2057  |  2622.14
-   3:   459  |   203.41
-   4:   136  |    11.83
-   5:    61  |     0.55
-   6:    29  |     0.02
-   7:    20  |     0.00
-   8:     8  |     0.00
-   9:    12  |     0.00
-  10:     5  |     0.00
-  11:     2  |     0.00
-  12:     1  |     0.00
-  13:     1  |     0.00
-  14:     1  |     0.00
-  15:     2  |     0.00
-  16:     1  |     0.00
-  17:     2  |     0.00
-  18:     0  |     0.00
-  19:     0  |     0.00
-  20:     1  |     0.00
-  21:     1  |     0.00
-  22:     0  |     0.00
-  23:     0  |     0.00
-  24:     1  |     0.00
-  25:     0  |     0.00
-  26:     1  |     0.00
-  27:     3  |     0.00
-  28:     0  |     0.00
-  29:     0  |     0.00
-  30:     0  |     0.00
-  31:     0  |     0.00
-  32:     0  |     0.00
-  33:     0  |     0.00
-  34:     1  |     0.00
-  35:     0  |     0.00
-  36:     1  |     0.00
-  37:     2  |     0.00
-  38:     1  |     0.00
+Implied FLs, not simply: 7 moves included, 43,275 skipped
+1. Block-numeral points only (2):
+Scan-points/second: 0.05; var: 0.05 (97.30%)
+Seconds/scan-point: 19.000
+2. Block- or line-numeral points (7):
+Scan-points/second: 0.03; var: 0.03 (97.01%)
+Seconds/scan-point: 30.455
+3. All scan points (7):
+Scan-points/second: 0.02; var: 0.02 (97.90%)
+Seconds/scan-point: 41.875
 
-Implied assignments (IMPLIED): 23,820 moves included, 0 skipped
-All scan points (23820):
-Scan-points/second: 0.22; var: 0.30 (137.56%)
-Seconds/scan-point: 4.59
-Histogram, actual vs predicted:
-   0:242006  |240148.31
-   1: 50908  | 52321.51
-   2:  4385  |  5699.69
-   3:   841  |   413.93
-   4:   214  |    22.55
-   5:   101  |     0.98
-   6:    46  |     0.04
-   7:    39  |     0.00
-   8:    10  |     0.00
-   9:    11  |     0.00
-  10:    16  |     0.00
-  11:     8  |     0.00
-  12:     0  |     0.00
-  13:     2  |     0.00
-  14:     2  |     0.00
-  15:     1  |     0.00
-  16:     2  |     0.00
-  17:     1  |     0.00
-  18:     1  |     0.00
-  19:     0  |     0.00
-  20:     1  |     0.00
-  21:     0  |     0.00
-  22:     1  |     0.00
-  23:     0  |     0.00
-  24:     1  |     0.00
-  25:     1  |     0.00
-  26:     0  |     0.00
-  27:     3  |     0.00
-  28:     1  |     0.00
-  29:     1  |     0.00
-  30:     0  |     0.00
-  31:     0  |     0.00
-  32:     0  |     0.00
-  33:     0  |     0.00
-  34:     0  |     0.00
-  35:     0  |     0.00
-  36:     1  |     0.00
-  37:     2  |     0.00
-  38:     0  |     0.00
-  39:     0  |     0.00
-  40:     0  |     0.00
-  41:     0  |     0.00
-  42:     0  |     0.00
-  43:     0  |     0.00
-  44:     0  |     0.00
-  45:     1  |     0.00
+Implied FNs, not simply: 0 moves included, 43,282 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+3. All scan points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
 
 
 Consecutive block-numeral moves (19462):
 Scan-points/second: 1.48; var: 1.92 (129.85%)
-Seconds/scan-point: 0.68
-Histogram, actual vs predicted:
-   0:  7377  |  7529.04
-   1: 13336  | 11152.84
-   2:  6678  |  8260.40
-   3:  2977  |  4078.74
-   4:  1422  |  1510.47
-   5:   662  |   447.49
-   6:   391  |   110.48
-   7:   163  |    23.38
-   8:    82  |     4.33
-   9:    15  |     0.71
-  10:    10  |     0.11
-  11:     3  |     0.01
-  12:     0  |     0.00
-  13:     2  |     0.00
+Seconds/scan-point: 0.675
 
 Trailheads (247):
 Scan-points/second: 0.01; var: 0.01 (99.22%)
-Seconds/scan-point: 128.40
-Histogram, actual vs predicted:
-   0: 31340  | 31340.96
-   1:   246  |   244.09
+Seconds/scan-point: 128.398
 
 ======================
-With trails
+With 1 trail
 ======================
 
-Forced locations and easy forced numerals everywhere (EASY_DIRECT): 3,712 moves included, 17,342 skipped
-All scan points (3712):
-Scan-points/second: 0.93; var: 3.29 (354.44%)
-Seconds/scan-point: 1.08
-Histogram, actual vs predicted:
-   0:  5141  |  4847.33
-   1:  5145  |  4504.62
-   2:  1279  |  2093.07
-   3:   346  |   648.36
-   4:   148  |   150.63
-   5:    68  |    28.00
-   6:    35  |     4.34
-   7:    24  |     0.58
-   8:    19  |     0.07
-   9:    18  |     0.01
-  10:    11  |     0.00
-  11:     6  |     0.00
-  12:     2  |     0.00
-  13:     3  |     0.00
-  14:     2  |     0.00
-  15:     3  |     0.00
-  16:     3  |     0.00
-  17:     3  |     0.00
-  18:     3  |     0.00
-  19:     0  |     0.00
-  20:     1  |     0.00
-  21:     0  |     0.00
-  22:     0  |     0.00
-  23:     0  |     0.00
-  24:     2  |     0.00
-  25:     4  |     0.00
-  26:     3  |     0.00
-  27:     2  |     0.00
-  28:     0  |     0.00
-  29:     1  |     0.00
-  30:     1  |     0.00
-  31:     0  |     0.00
-  32:     0  |     0.00
-  33:     0  |     0.00
-  34:     1  |     0.00
-  35:     0  |     0.00
-  36:     0  |     0.00
-  37:     0  |     0.00
-  38:     0  |     0.00
-  39:     0  |     0.00
-  40:     0  |     0.00
-  41:     0  |     0.00
-  42:     0  |     0.00
-  43:     0  |     0.00
-  44:     0  |     0.00
-  45:     0  |     0.00
-  46:     0  |     0.00
-  47:     0  |     0.00
-  48:     0  |     0.00
-  49:     0  |     0.00
-  50:     0  |     0.00
-  51:     1  |     0.00
-  52:     0  |     0.00
-  53:     0  |     0.00
-  54:     0  |     0.00
-  55:     0  |     0.00
-  56:     0  |     0.00
-  57:     0  |     0.00
-  58:     0  |     0.00
-  59:     0  |     0.00
-  60:     0  |     0.00
-  61:     0  |     0.00
-  62:     0  |     0.00
-  63:     1  |     0.00
-  64:     0  |     0.00
-  65:     0  |     0.00
-  66:     0  |     0.00
-  67:     0  |     0.00
-  68:     0  |     0.00
-  69:     0  |     0.00
-  70:     0  |     0.00
-  71:     0  |     0.00
-  72:     1  |     0.00
+Easy direct moves: 1,725 moves included, 9,428 skipped
+1. Block-numeral points only (1696):
+Scan-points/second: 1.48; var: 4.81 (324.93%)
+Seconds/scan-point: 0.675
+2. Block- or line-numeral points (1723):
+Scan-points/second: 1.42; var: 5.08 (356.46%)
+Seconds/scan-point: 0.702
+3. All scan points (1725):
+Scan-points/second: 1.36; var: 4.28 (314.39%)
+Seconds/scan-point: 0.734
 
-Direct assignments everywhere, no errors (DIRECT): 4,809 moves included, 16,245 skipped
-All scan points (4809):
-Scan-points/second: 0.90; var: 2.65 (292.80%)
-Seconds/scan-point: 1.11
-Histogram, actual vs predicted:
-   0:  7446  |  7097.53
-   1:  7232  |  6421.80
-   2:  1840  |  2905.21
-   3:   513  |   876.20
-   4:   220  |   198.20
-   5:   105  |    35.87
-   6:    50  |     5.41
-   7:    32  |     0.70
-   8:    13  |     0.08
-   9:    26  |     0.01
-  10:    13  |     0.00
-  11:     9  |     0.00
-  12:     3  |     0.00
-  13:     1  |     0.00
-  14:     4  |     0.00
-  15:     3  |     0.00
-  16:     4  |     0.00
-  17:     4  |     0.00
-  18:     3  |     0.00
-  19:     0  |     0.00
-  20:     2  |     0.00
-  21:     2  |     0.00
-  22:     3  |     0.00
-  23:     0  |     0.00
-  24:     2  |     0.00
-  25:     2  |     0.00
-  26:     4  |     0.00
-  27:     0  |     0.00
-  28:     0  |     0.00
-  29:     1  |     0.00
-  30:     0  |     0.00
-  31:     1  |     0.00
-  32:     0  |     0.00
-  33:     0  |     0.00
-  34:     1  |     0.00
-  35:     0  |     0.00
-  36:     0  |     0.00
-  37:     0  |     0.00
-  38:     0  |     0.00
-  39:     0  |     0.00
-  40:     0  |     0.00
-  41:     0  |     0.00
-  42:     0  |     0.00
-  43:     0  |     0.00
-  44:     0  |     0.00
-  45:     0  |     0.00
-  46:     0  |     0.00
-  47:     0  |     0.00
-  48:     0  |     0.00
-  49:     0  |     0.00
-  50:     0  |     0.00
-  51:     0  |     0.00
-  52:     0  |     0.00
-  53:     0  |     0.00
-  54:     0  |     0.00
-  55:     0  |     0.00
-  56:     0  |     0.00
-  57:     0  |     0.00
-  58:     0  |     0.00
-  59:     0  |     0.00
-  60:     0  |     0.00
-  61:     0  |     0.00
-  62:     0  |     0.00
-  63:     0  |     0.00
-  64:     0  |     0.00
-  65:     0  |     0.00
-  66:     0  |     0.00
-  67:     0  |     0.00
-  68:     0  |     0.00
-  69:     0  |     0.00
-  70:     0  |     0.00
-  71:     0  |     0.00
-  72:     2  |     0.00
+Hard direct moves: 5 moves included, 11,148 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+3. All scan points (5):
+Scan-points/second: 0.45; var: 0.70 (156.36%)
+Seconds/scan-point: 2.220
 
-Simply-implied forced locations and easy forced numerals everywhere (SIMPLY_IMPLIED_EASY): 4,297 moves included, 16,757 skipped
-All scan points (4297):
-Scan-points/second: 0.84; var: 2.77 (328.14%)
-Seconds/scan-point: 1.19
-Histogram, actual vs predicted:
-   0:  7183  |  6758.80
-   1:  6243  |  5702.44
-   2:  1479  |  2405.59
-   3:   407  |   676.54
-   4:   161  |   142.70
-   5:    86  |    24.08
-   6:    45  |     3.39
-   7:    28  |     0.41
-   8:    15  |     0.04
-   9:    19  |     0.00
-  10:     5  |     0.00
-  11:     3  |     0.00
-  12:     0  |     0.00
-  13:     4  |     0.00
-  14:     3  |     0.00
-  15:     3  |     0.00
-  16:     3  |     0.00
-  17:     3  |     0.00
-  18:     4  |     0.00
-  19:     1  |     0.00
-  20:     2  |     0.00
-  21:     1  |     0.00
-  22:     0  |     0.00
-  23:     0  |     0.00
-  24:     3  |     0.00
-  25:     3  |     0.00
-  26:     2  |     0.00
-  27:     0  |     0.00
-  28:     0  |     0.00
-  29:     0  |     0.00
-  30:     3  |     0.00
-  31:     2  |     0.00
-  32:     0  |     0.00
-  33:     0  |     0.00
-  34:     0  |     0.00
-  35:     0  |     0.00
-  36:     0  |     0.00
-  37:     1  |     0.00
-  38:     0  |     0.00
-  39:     0  |     0.00
-  40:     0  |     0.00
-  41:     0  |     0.00
-  42:     0  |     0.00
-  43:     0  |     0.00
-  44:     0  |     0.00
-  45:     0  |     0.00
-  46:     0  |     0.00
-  47:     0  |     0.00
-  48:     0  |     0.00
-  49:     0  |     0.00
-  50:     0  |     0.00
-  51:     0  |     0.00
-  52:     0  |     0.00
-  53:     0  |     0.00
-  54:     0  |     0.00
-  55:     0  |     0.00
-  56:     0  |     0.00
-  57:     0  |     0.00
-  58:     0  |     0.00
-  59:     0  |     0.00
-  60:     0  |     0.00
-  61:     0  |     0.00
-  62:     0  |     0.00
-  63:     0  |     0.00
-  64:     0  |     0.00
-  65:     0  |     0.00
-  66:     0  |     0.00
-  67:     0  |     0.00
-  68:     0  |     0.00
-  69:     0  |     0.00
-  70:     0  |     0.00
-  71:     0  |     0.00
-  72:     2  |     0.00
+Simply-implied FLs, not direct: 7 moves included, 11,146 skipped
+1. Block-numeral points only (4):
+Scan-points/second: 0.20; var: 0.16 (82.50%)
+Seconds/scan-point: 5.125
+2. Block- or line-numeral points (7):
+Scan-points/second: 0.21; var: 0.17 (79.63%)
+Seconds/scan-point: 4.739
+3. All scan points (7):
+Scan-points/second: 0.15; var: 0.13 (86.11%)
+Seconds/scan-point: 6.813
 
-Simply-implied assignments everywhere (5) (SIMPLY_IMPLIED): 5,959 moves included, 15,095 skipped
-All scan points (5959):
-Scan-points/second: 0.78; var: 2.11 (271.92%)
-Seconds/scan-point: 1.29
-Histogram, actual vs predicted:
-   0: 12198  | 11486.47
-   1:  9351  |  8917.92
-   2:  2216  |  3461.87
-   3:   647  |   895.91
-   4:   235  |   173.89
-   5:   132  |    27.00
-   6:    46  |     3.49
-   7:    36  |     0.39
-   8:    22  |     0.04
-   9:    23  |     0.00
-  10:    10  |     0.00
-  11:     5  |     0.00
-  12:     8  |     0.00
-  13:     2  |     0.00
-  14:     2  |     0.00
-  15:     3  |     0.00
-  16:     0  |     0.00
-  17:     5  |     0.00
-  18:     3  |     0.00
-  19:     0  |     0.00
-  20:     4  |     0.00
-  21:     2  |     0.00
-  22:     2  |     0.00
-  23:     2  |     0.00
-  24:     2  |     0.00
-  25:     2  |     0.00
-  26:     2  |     0.00
-  27:     0  |     0.00
-  28:     1  |     0.00
-  29:     0  |     0.00
-  30:     1  |     0.00
-  31:     1  |     0.00
-  32:     1  |     0.00
-  33:     1  |     0.00
-  34:     0  |     0.00
-  35:     0  |     0.00
-  36:     0  |     0.00
-  37:     0  |     0.00
-  38:     0  |     0.00
-  39:     0  |     0.00
-  40:     0  |     0.00
-  41:     0  |     0.00
-  42:     0  |     0.00
-  43:     0  |     0.00
-  44:     0  |     0.00
-  45:     0  |     0.00
-  46:     0  |     0.00
-  47:     0  |     0.00
-  48:     0  |     0.00
-  49:     0  |     0.00
-  50:     0  |     0.00
-  51:     0  |     0.00
-  52:     0  |     0.00
-  53:     0  |     0.00
-  54:     0  |     0.00
-  55:     0  |     0.00
-  56:     0  |     0.00
-  57:     0  |     0.00
-  58:     0  |     0.00
-  59:     0  |     0.00
-  60:     0  |     0.00
-  61:     0  |     0.00
-  62:     0  |     0.00
-  63:     0  |     0.00
-  64:     0  |     0.00
-  65:     0  |     0.00
-  66:     0  |     0.00
-  67:     0  |     0.00
-  68:     0  |     0.00
-  69:     0  |     0.00
-  70:     0  |     0.00
-  71:     0  |     0.00
-  72:     2  |     0.00
+Simply-implied FNs, not direct: 2 moves included, 11,151 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+3. All scan points (2):
+Scan-points/second: 0.07; var: 0.06 (95.56%)
+Seconds/scan-point: 15.333
 
-Implied forced locations and easy forced numerals everywhere (IMPLIED_EASY): 8,875 moves included, 12,179 skipped
-All scan points (8875):
-Scan-points/second: 0.49; var: 1.21 (244.13%)
-Seconds/scan-point: 2.02
-Histogram, actual vs predicted:
-   0: 31983  | 30327.84
-   1: 13933  | 15007.54
-   2:  2637  |  3713.19
-   3:   682  |   612.48
-   4:   231  |    75.77
-   5:   107  |     7.50
-   6:    44  |     0.62
-   7:    39  |     0.04
-   8:    14  |     0.00
-   9:    14  |     0.00
-  10:    12  |     0.00
-  11:     6  |     0.00
-  12:     5  |     0.00
-  13:     5  |     0.00
-  14:     2  |     0.00
-  15:     4  |     0.00
-  16:     1  |     0.00
-  17:     3  |     0.00
-  18:     3  |     0.00
-  19:     0  |     0.00
-  20:     2  |     0.00
-  21:     2  |     0.00
-  22:     1  |     0.00
-  23:     0  |     0.00
-  24:     2  |     0.00
-  25:     4  |     0.00
-  26:     2  |     0.00
-  27:     1  |     0.00
-  28:     0  |     0.00
-  29:     1  |     0.00
-  30:     1  |     0.00
-  31:     0  |     0.00
-  32:     1  |     0.00
-  33:     0  |     0.00
-  34:     0  |     0.00
-  35:     0  |     0.00
-  36:     0  |     0.00
-  37:     0  |     0.00
-  38:     0  |     0.00
-  39:     0  |     0.00
-  40:     0  |     0.00
-  41:     0  |     0.00
-  42:     0  |     0.00
-  43:     1  |     0.00
-  44:     0  |     0.00
-  45:     0  |     0.00
-  46:     0  |     0.00
-  47:     0  |     0.00
-  48:     0  |     0.00
-  49:     0  |     0.00
-  50:     0  |     0.00
-  51:     0  |     0.00
-  52:     0  |     0.00
-  53:     0  |     0.00
-  54:     0  |     0.00
-  55:     0  |     0.00
-  56:     0  |     0.00
-  57:     0  |     0.00
-  58:     0  |     0.00
-  59:     0  |     0.00
-  60:     0  |     0.00
-  61:     0  |     0.00
-  62:     0  |     0.00
-  63:     0  |     0.00
-  64:     0  |     0.00
-  65:     0  |     0.00
-  66:     0  |     0.00
-  67:     0  |     0.00
-  68:     0  |     0.00
-  69:     0  |     0.00
-  70:     0  |     0.00
-  71:     0  |     0.00
-  72:     2  |     0.00
+Implied FLs, not simply: 2 moves included, 11,151 skipped
+1. Block-numeral points only (1):
+Scan-points/second: 0.00; var: 0.00 (NaN%)
+Seconds/scan-point: Infinity
+2. Block- or line-numeral points (2):
+Scan-points/second: 0.01; var: 0.01 (100.00%)
+Seconds/scan-point: 89.000
+3. All scan points (2):
+Scan-points/second: 0.01; var: 0.01 (100.00%)
+Seconds/scan-point: 89.000
 
-Implied assignments (IMPLIED): 21,054 moves included, 0 skipped
-All scan points (21054):
-Scan-points/second: 0.38; var: 0.68 (179.14%)
-Seconds/scan-point: 2.64
-Histogram, actual vs predicted:
-   0: 95065  | 92376.28
-   1: 32772  | 35028.82
-   2:  5228  |  6641.41
-   3:  1175  |   839.47
-   4:   372  |    79.58
-   5:   156  |     6.04
-   6:    65  |     0.38
-   7:    32  |     0.02
-   8:    19  |     0.00
-   9:    18  |     0.00
-  10:    12  |     0.00
-  11:    12  |     0.00
-  12:     5  |     0.00
-  13:     5  |     0.00
-  14:     3  |     0.00
-  15:     4  |     0.00
-  16:     2  |     0.00
-  17:     7  |     0.00
-  18:     2  |     0.00
-  19:     0  |     0.00
-  20:     2  |     0.00
-  21:     1  |     0.00
-  22:     0  |     0.00
-  23:     0  |     0.00
-  24:     2  |     0.00
-  25:     4  |     0.00
-  26:     3  |     0.00
-  27:     0  |     0.00
-  28:     0  |     0.00
-  29:     0  |     0.00
-  30:     2  |     0.00
-  31:     0  |     0.00
-  32:     0  |     0.00
-  33:     1  |     0.00
-  34:     0  |     0.00
-  35:     0  |     0.00
-  36:     0  |     0.00
-  37:     0  |     0.00
-  38:     0  |     0.00
-  39:     0  |     0.00
-  40:     0  |     0.00
-  41:     0  |     0.00
-  42:     0  |     0.00
-  43:     0  |     0.00
-  44:     0  |     0.00
-  45:     0  |     0.00
-  46:     0  |     0.00
-  47:     0  |     0.00
-  48:     0  |     0.00
-  49:     0  |     0.00
-  50:     0  |     0.00
-  51:     0  |     0.00
-  52:     0  |     0.00
-  53:     0  |     0.00
-  54:     1  |     0.00
-  55:     0  |     0.00
-  56:     0  |     0.00
-  57:     0  |     0.00
-  58:     0  |     0.00
-  59:     0  |     0.00
-  60:     1  |     0.00
-  61:     0  |     0.00
-  62:     0  |     0.00
-  63:     0  |     0.00
-  64:     0  |     0.00
-  65:     0  |     0.00
-  66:     0  |     0.00
-  67:     0  |     0.00
-  68:     0  |     0.00
-  69:     0  |     0.00
-  70:     0  |     0.00
-  71:     0  |     0.00
-  72:     1  |     0.00
+Implied FNs, not simply: 0 moves included, 11,153 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+3. All scan points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
 
 
-Consecutive block-numeral moves (24127):
-Scan-points/second: 1.45; var: 1.80 (124.03%)
-Seconds/scan-point: 0.69
-Histogram, actual vs predicted:
-   0:  8596  |  8587.40
-   1: 14118  | 12483.32
-   2:  7929  |  9073.37
-   3:  3203  |  4396.59
-   4:  1563  |  1597.81
-   5:   765  |   464.54
-   6:   340  |   112.55
-   7:   154  |    23.37
-   8:    55  |     4.25
-   9:    16  |     0.69
-  10:     5  |     0.10
+Consecutive block-numeral moves (5928):
+Scan-points/second: 1.49; var: 1.91 (127.61%)
+Seconds/scan-point: 0.670
 
-Trailheads (418):
-Scan-points/second: 0.02; var: 0.02 (97.93%)
-Seconds/scan-point: 48.20
-Histogram, actual vs predicted:
-   0: 19684  | 19688.30
-   1:   417  |   408.44
+Trailheads (137):
+Scan-points/second: 0.02; var: 0.02 (98.09%)
+Seconds/scan-point: 51.846
+
+======================
+With 2 trails
+======================
+
+Easy direct moves: 1,790 moves included, 8,823 skipped
+1. Block-numeral points only (1750):
+Scan-points/second: 1.37; var: 4.26 (310.70%)
+Seconds/scan-point: 0.729
+2. Block- or line-numeral points (1786):
+Scan-points/second: 1.30; var: 3.90 (299.19%)
+Seconds/scan-point: 0.767
+3. All scan points (1790):
+Scan-points/second: 1.28; var: 4.28 (332.90%)
+Seconds/scan-point: 0.778
+
+Hard direct moves: 1 moves included, 10,612 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+3. All scan points (1):
+Scan-points/second: 0.50; var: 0.27 (53.33%)
+Seconds/scan-point: 2.000
+
+Simply-implied FLs, not direct: 1 moves included, 10,612 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (1):
+Scan-points/second: 0.07; var: 0.07 (96.43%)
+Seconds/scan-point: 14.500
+3. All scan points (1):
+Scan-points/second: 0.07; var: 0.07 (96.43%)
+Seconds/scan-point: 14.500
+
+Simply-implied FNs, not direct: 0 moves included, 10,613 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+3. All scan points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+
+Implied FLs, not simply: 0 moves included, 10,613 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+3. All scan points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+
+Implied FNs, not simply: 0 moves included, 10,613 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+3. All scan points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+
+
+Consecutive block-numeral moves (5696):
+Scan-points/second: 1.48; var: 1.78 (120.07%)
+Seconds/scan-point: 0.675
+
+Trailheads (85):
+Scan-points/second: 0.02; var: 0.02 (97.86%)
+Seconds/scan-point: 46.214
+
+======================
+With 3 or more trails
+======================
+
+Easy direct moves: 4,058 moves included, 19,357 skipped
+1. Block-numeral points only (3952):
+Scan-points/second: 1.43; var: 5.91 (413.26%)
+Seconds/scan-point: 0.700
+2. Block- or line-numeral points (4052):
+Scan-points/second: 1.41; var: 6.57 (467.50%)
+Seconds/scan-point: 0.711
+3. All scan points (4058):
+Scan-points/second: 1.37; var: 7.76 (565.40%)
+Seconds/scan-point: 0.728
+
+Hard direct moves: 15 moves included, 23,400 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+3. All scan points (15):
+Scan-points/second: 0.30; var: 0.41 (136.96%)
+Seconds/scan-point: 3.333
+
+Simply-implied FLs, not direct: 12 moves included, 23,403 skipped
+1. Block-numeral points only (8):
+Scan-points/second: 0.14; var: 0.12 (86.81%)
+Seconds/scan-point: 7.077
+2. Block- or line-numeral points (12):
+Scan-points/second: 0.20; var: 0.16 (80.92%)
+Seconds/scan-point: 5.077
+3. All scan points (12):
+Scan-points/second: 0.17; var: 0.14 (83.97%)
+Seconds/scan-point: 6.000
+
+Simply-implied FNs, not direct: 0 moves included, 23,415 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+3. All scan points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+
+Implied FLs, not simply: 9 moves included, 23,406 skipped
+1. Block-numeral points only (2):
+Scan-points/second: 0.02; var: 0.02 (98.86%)
+Seconds/scan-point: 44.500
+2. Block- or line-numeral points (9):
+Scan-points/second: 0.07; var: 0.07 (93.24%)
+Seconds/scan-point: 13.938
+3. All scan points (9):
+Scan-points/second: 0.06; var: 0.06 (94.59%)
+Seconds/scan-point: 17.154
+
+Implied FNs, not simply: 0 moves included, 23,415 skipped
+1. Block-numeral points only (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+2. Block- or line-numeral points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+3. All scan points (0):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+
+
+Consecutive block-numeral moves (12503):
+Scan-points/second: 1.42; var: 1.76 (123.55%)
+Seconds/scan-point: 0.703
+
+Trailheads (196):
+Scan-points/second: 0.02; var: 0.02 (97.88%)
+Seconds/scan-point: 47.005

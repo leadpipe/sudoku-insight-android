@@ -16,6 +16,8 @@
 - add columns for the pattern that the estimator found, and patterns matching actual move
 *** TODO Look into keeping track of found eliminations during the course of the puzzle
 - does this help reduce the long tails?
+*** TODO I think the one-move-at-a-time approach is unworkable
+- look into using multiple moves found by a single scan
 *** TODO Look into separating kinds of scan points
 - blocks, blocks+lines, blocks+lines+locations
 - doesn't appear to be worth it?

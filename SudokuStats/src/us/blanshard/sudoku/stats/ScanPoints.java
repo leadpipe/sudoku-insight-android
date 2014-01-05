@@ -15,6 +15,9 @@ limitations under the License.
 */
 package us.blanshard.sudoku.stats;
 
+import static com.google.common.base.Predicates.and;
+import static com.google.common.base.Predicates.not;
+
 import us.blanshard.sudoku.stats.Pattern.ForcedNum;
 import us.blanshard.sudoku.stats.Pattern.Realm;
 import us.blanshard.sudoku.stats.Pattern.UnitCategory;
@@ -115,12 +118,20 @@ public class ScanPoints {
     };
   }
 
+  static Predicate<List<Pattern>> first(final Predicate<Pattern> pred) {
+    return new Predicate<List<Pattern>>() {
+      @Override public boolean apply(List<Pattern> list) {
+        return list.size() > 0 && pred.apply(list.get(0));
+      }
+    };
+  }
+
   static Predicate<List<Pattern>> none(Predicate<Pattern> pred) {
-    return all(Predicates.not(pred));
+    return all(not(pred));
   }
 
   static Predicate<List<Pattern>> notAll(Predicate<Pattern> pred) {
-    return Predicates.not(all(pred));
+    return not(all(pred));
   }
 
   static final Predicate<List<Pattern>> matchAnything = Predicates.alwaysTrue();
@@ -128,6 +139,12 @@ public class ScanPoints {
   static final Predicate<Pattern> matchFlsOnly = new Predicate<Pattern>() {
     @Override public boolean apply(Pattern p) {
       return p.getType() == Pattern.Type.FORCED_LOCATION;
+    }
+  };
+
+  static final Predicate<Pattern> matchFnsOnly = new Predicate<Pattern>() {
+    @Override public boolean apply(Pattern p) {
+      return p.getType() == Pattern.Type.FORCED_NUMERAL;
     }
   };
 
@@ -202,7 +219,7 @@ public class ScanPoints {
     public Reporter() {
       processes = ImmutableList.<Process>builder()
 //          .add(make("Forced locations, no errors", matchFlsOnly))
-//          .add(make("Forced locations or errors", any(matchFlsOnly), matchAnything))
+//          .add(make("Forced locations, just found", any(matchFlsOnly), matchAnything))
 //          .add(make("Forced locations everywhere", any(matchFlsOnly), any(matchFlsOnly)))
 //          .add(make("Forced locations mostly", any(matchFlsOnly), any(matchFlsOnly), 0.8))
 //          .add(make("Forced locations/block", matchFlbsOnly))
@@ -242,17 +259,28 @@ public class ScanPoints {
 //          .add(make("Implied forced locations and easy forced numerals", matchAllImpliedFlsAndEasyFns))
 //          .add(make("Simply-implied forced locations and easy forced numerals", matchSimplyImpliedFlsAndEasyFns))
 //          .add(make("Simply-implied forced locations and easy forced numerals mostly", any(matchSimplyImpliedFlsAndEasyFns), any(matchSimplyImpliedFlsAndEasyFns), 0.8))
-          .add(make("Forced locations and easy forced numerals everywhere (EASY_DIRECT)", any(matchFlsAndEasyFns), any(matchFlsAndEasyFns)))
-          .add(make("Direct assignments everywhere, no errors (DIRECT)", any(matchDirectMoves), any(matchDirectMoves)))
-          .add(make("Simply-implied forced locations and easy forced numerals everywhere (SIMPLY_IMPLIED_EASY)", any(matchSimplyImpliedFlsAndEasyFns), any(matchSimplyImpliedFlsAndEasyFns)))
-          .add(make("Simply-implied assignments everywhere (5) (SIMPLY_IMPLIED)", any(matchSimplyImpliedMoves5), any(matchSimplyImpliedMoves5)))
-          .add(make("Implied forced locations and easy forced numerals everywhere (IMPLIED_EASY)", any(matchAllImpliedFlsAndEasyFns), any(matchAllImpliedFlsAndEasyFns)))
-          .add(make("Implied assignments (IMPLIED)", any(matchAnyMove), matchAnything))
+//          .add(make("Forced locations and easy forced numerals everywhere (EASY_DIRECT)", any(matchFlsAndEasyFns), any(matchFlsAndEasyFns)))
+//          .add(make("Direct assignments everywhere, no errors (DIRECT)", any(matchDirectMoves), any(matchDirectMoves)))
+//          .add(make("Simply-implied forced locations and easy forced numerals everywhere (SIMPLY_IMPLIED_EASY)", any(matchSimplyImpliedFlsAndEasyFns), any(matchSimplyImpliedFlsAndEasyFns)))
+//          .add(make("Simply-implied assignments everywhere (5) (SIMPLY_IMPLIED)", any(matchSimplyImpliedMoves5), any(matchSimplyImpliedMoves5)))
+//          .add(make("Implied forced locations and easy forced numerals everywhere (IMPLIED_EASY)", any(matchAllImpliedFlsAndEasyFns), any(matchAllImpliedFlsAndEasyFns)))
+//          .add(make("Implied assignments (IMPLIED)", any(matchAnyMove), matchAnything))
+//          .add(make("Hard forced numerals or simply implied easy moves, just found", and(any(matchDirectMoves), none(matchFlsAndEasyFns)), matchAnything))
+          .add(makeFirst("Easy direct moves", matchFlsAndEasyFns))
+          .add(makeFirst("Hard direct moves", and(matchDirectMoves, not(matchFlsAndEasyFns))))
+          .add(makeFirst("Simply-implied FLs, not direct", and(simplyImplied(matchFlsOnly, 20), not(matchDirectMoves))))
+          .add(makeFirst("Simply-implied FNs, not direct", and(simplyImplied(matchFnsOnly, 20), not(matchDirectMoves))))
+          .add(makeFirst("Implied FLs, not simply", and(implied(matchFlsOnly), not(simplyImplied(matchFlsOnly, 20)))))
+          .add(makeFirst("Implied FNs, not simply", and(implied(matchFnsOnly), not(simplyImplied(matchFnsOnly, 20)))))
           .build();
     }
 
-    private static Process make(String description, Predicate<Pattern> matches) {
-      return make(description, any(matches), any(matchAnyMove));
+//    private static Process make(String description, Predicate<Pattern> matches) {
+//      return make(description, any(matches), any(matchAnyMove));
+//    }
+
+    private static Process makeFirst(String description, Predicate<Pattern> matches) {
+      return make(description, first(matches), all(matches));
     }
 
     private static Process make(String description, Predicate<List<Pattern>> foundMatches,
@@ -283,7 +311,7 @@ public class ScanPoints {
       double seconds = ms / 1000.0;
       if (isBlockNumeralMove)
         blockNumeralCounter.count(seconds, numOpenBlockNumerals / (double) numBlockNumeralMoves);
-      else for (Process p : processes)
+      for (Process p : processes)
         p.take(found, missed, seconds, openCount, numBlockTargets, numLineTargets, numLocTargets);
       if (isTrailhead && found.isEmpty())
         trailheadCounter.count(seconds, 1);
@@ -344,9 +372,9 @@ public class ScanPoints {
 
     public void report(PrintStream out) {
       out.printf("%s: %,d moves included, %,d skipped\n", description, movesIncluded, movesSkipped);
-//      printCounter(out, blockCounter, "1. Block-numeral points only");
-//      printCounter(out, unitCounter, "2. Block- or line-numeral points");
-      printCounter(out, allCounter, "All scan points");
+      printCounter(out, blockCounter, "1. Block-numeral points only");
+      printCounter(out, unitCounter, "2. Block- or line-numeral points");
+      printCounter(out, allCounter, "3. All scan points");
       out.println();
     }
 
@@ -385,34 +413,60 @@ public class ScanPoints {
       }
     }
 
+    @SuppressWarnings("unused")
     public void report(PrintStream out) {
       SummaryStatistics stats = new SummaryStatistics();
       for (int points : pointsPerSecond)
         stats.addValue(points);
       out.printf("Scan-points/second: %.2f; var: %.2f (%.2f%%)\n", stats.getMean(),
           stats.getVariance(), 100 * stats.getVariance() / stats.getMean());
-      out.printf("Seconds/scan-point: %.2f\n", 1.0 / stats.getMean());
-      PoissonDistribution dist = new PoissonDistribution(stats.getMean());
-      out.println("Histogram, actual vs predicted:");
-      int max = pointsPerSecond.isEmpty() ? 0 : Ordering.natural().max(pointsPerSecond.elementSet());
-      for (int bucket = 0; bucket <= max || dist.probability(bucket) > 1e-3; ++bucket)
-        out.printf("  %2d:%6d  |%9.2f\n", bucket, pointsPerSecond.count(bucket),
-            dist.probability(bucket) * stats.getN());
+      out.printf("Seconds/scan-point: %.3f\n", 1.0 / stats.getMean());
+      if (false) {
+        PoissonDistribution dist = new PoissonDistribution(stats.getMean());
+        out.println("Histogram, actual vs predicted:");
+        int max =
+            pointsPerSecond.isEmpty() ? 0 : Ordering.natural().max(pointsPerSecond.elementSet());
+        for (int bucket = 0; bucket <= max || dist.probability(bucket) > 1e-3; ++bucket)
+          out.printf("  %2d:%6d  |%9.2f\n", bucket, pointsPerSecond.count(bucket),
+              dist.probability(bucket) * stats.getN());
+      }
     }
   }
 
   // ============================
 
-  private static Reporter baseReporter = new Reporter();
-  private static Reporter trailsReporter = new Reporter();
+  private static final int COUNT = 4;
+  private static final Reporter[] reporters = new Reporter[COUNT];
 
   private static Reporter getReporter(int numTrails) {
-    return numTrails == 0 ? baseReporter : trailsReporter;
+    int index = 0;
+    switch (numTrails) {
+      case 0: break;
+      case 1: index = 1; break;
+      case 2: index = 2; break;
+      default: index = 3; break;
+    }
+    Reporter answer = reporters[index];
+    if (answer == null)
+      reporters[index] = answer = new Reporter();
+    return answer;
   }
 
   private static void reportSummaries(PrintStream out) {
-    reportSummaries(out, baseReporter, "No trails");
-    reportSummaries(out, trailsReporter, "With trails");
+    for (int i = 0; i < COUNT; ++i) {
+      Reporter r = reporters[i];
+      if (r != null)
+        reportSummaries(out, r, headline(i));
+    }
+  }
+
+  private static String headline(int i) {
+    switch (i) {
+      case 0: return "No trails";
+      case 1: return "With 1 trail";
+      case 2: return "With 2 trails";
+      default: return "With 3 or more trails";
+    }
   }
 
   private static void reportSummaries(PrintStream out, Reporter reporter, String desc) {
