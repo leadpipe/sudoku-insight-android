@@ -15,19 +15,16 @@ limitations under the License.
 */
 package us.blanshard.sudoku.stats;
 
-import static com.google.common.base.Predicates.and;
-import static com.google.common.base.Predicates.not;
+import us.blanshard.sudoku.insight.Evaluator.MoveKind;
+import us.blanshard.sudoku.insight.Insight.Realm;
+import us.blanshard.sudoku.stats.Pattern.Coll;
 
-import us.blanshard.sudoku.stats.Pattern.ForcedNum;
-import us.blanshard.sudoku.stats.Pattern.Realm;
-import us.blanshard.sudoku.stats.Pattern.UnitCategory;
-
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
 
@@ -38,8 +35,10 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Analyzes the output from {@link InsightMeasurer} to look for Poisson
@@ -51,251 +50,47 @@ public class ScanPoints {
     Splitter splitter = Splitter.on('\t');
     for (String line; (line = in.readLine()) != null; ) {
       Iterator<String> iter = splitter.split(line).iterator();
-      List<Pattern> found = Pattern.listFromString(iter.next());
+      List<Coll> matched = Pattern.collsFromString(iter.next());
+      List<Coll> missed = Pattern.collsFromString(iter.next());
+      String firstKindString = iter.next();
+      MoveKind firstKind = firstKindString.isEmpty() ? null : MoveKind.valueOf(firstKindString);
+      int moveNumber = Integer.parseInt(iter.next());
+      int effectiveMoveNumber = Integer.parseInt(iter.next());
+      long timestamp = Long.parseLong(iter.next());
+      long effectiveTimestamp = Long.parseLong(iter.next());
+      int minOpen = Integer.parseInt(iter.next());
       long ms = Long.parseLong(iter.next());
       int openCount = Integer.parseInt(iter.next());
-      int numBlockTargets = Integer.parseInt(iter.next());
-      int numLineTargets = Integer.parseInt(iter.next());
-      int numLocTargets = Integer.parseInt(iter.next());
       boolean isBlockNumeralMove = Boolean.parseBoolean(iter.next());
       int numBlockNumeralMoves = Integer.parseInt(iter.next());
       int numOpenBlockNumerals = Integer.parseInt(iter.next());
       boolean isTrailhead = Boolean.parseBoolean(iter.next());
       int numTrails = Integer.parseInt(iter.next());
-      List<List<Pattern>> missed = Pattern.combinationsFromString(iter.next());
-      getReporter(numTrails).take(found, missed, ms, openCount, numBlockTargets, numLineTargets,
-          numLocTargets, isBlockNumeralMove, numBlockNumeralMoves, numOpenBlockNumerals,
-          isTrailhead);
+      getReporter(numTrails, moveNumber, effectiveMoveNumber, timestamp, effectiveTimestamp, minOpen)
+          .take(matched, missed, firstKind, isTrailhead, ms, openCount,
+                isBlockNumeralMove, numBlockNumeralMoves, numOpenBlockNumerals);
     }
     in.close();
     reportSummaries(System.out);
   }
 
-  static boolean hasSimpleAntecedents(Pattern.Implication p, int maxDepth) {
-    int depth = 0;
-    do {
-      if (++depth > maxDepth) return false;
-      for (Pattern a : p.getAntecedents()) {
-        switch (a.getType()) {
-          case OVERLAP:
-            break;
-          case LOCKED_SET: {
-            Pattern.LockedSet l = (Pattern.LockedSet) a;
-            if (l.isNaked() || l.getCategory() == Pattern.UnitCategory.LINE
-                || l.getSetSize() > 3)
-              return false;
-            break;
-          }
-          default:
-            return false;
-        }
-      }
-      p = p.getConsequent().getType() == Pattern.Type.IMPLICATION
-          ? (Pattern.Implication) p.getConsequent()
-          : null;
-    } while (p != null);
-    return true;
-  }
-
-  static boolean isEasyFn(Pattern.ForcedNum p) {
-    Sp.PeerMetrics pm = new Sp.PeerMetrics(p.getMetrics());
-    return pm.openInBlock < 3 && !pm.bothLinesRequired;
-  }
-
-  static Predicate<List<Pattern>> any(final Predicate<Pattern> pred) {
-    return new Predicate<List<Pattern>>() {
-      @Override public boolean apply(List<Pattern> list) {
-        return Iterables.any(list, pred);
-      }
-    };
-  }
-
-  static Predicate<List<Pattern>> all(final Predicate<Pattern> pred) {
-    return new Predicate<List<Pattern>>() {
-      @Override public boolean apply(List<Pattern> list) {
-        return Iterables.all(list, pred);
-      }
-    };
-  }
-
-  static Predicate<List<Pattern>> first(final Predicate<Pattern> pred) {
-    return new Predicate<List<Pattern>>() {
-      @Override public boolean apply(List<Pattern> list) {
-        return list.size() > 0 && pred.apply(list.get(0));
-      }
-    };
-  }
-
-  static Predicate<List<Pattern>> none(Predicate<Pattern> pred) {
-    return all(not(pred));
-  }
-
-  static Predicate<List<Pattern>> notAll(Predicate<Pattern> pred) {
-    return not(all(pred));
-  }
-
-  static final Predicate<List<Pattern>> matchAnything = Predicates.alwaysTrue();
-
-  static final Predicate<Pattern> matchFlsOnly = new Predicate<Pattern>() {
-    @Override public boolean apply(Pattern p) {
-      return p.getType() == Pattern.Type.FORCED_LOCATION;
-    }
-  };
-
-  static final Predicate<Pattern> matchFnsOnly = new Predicate<Pattern>() {
-    @Override public boolean apply(Pattern p) {
-      return p.getType() == Pattern.Type.FORCED_NUMERAL;
-    }
-  };
-
-  static final Predicate<Pattern> matchFlbsOnly = new Predicate<Pattern>() {
-    @Override public boolean apply(Pattern p) {
-      if (p.getType() != Pattern.Type.FORCED_LOCATION) return false;
-      Pattern.ForcedLoc fl = (Pattern.ForcedLoc) p;
-      return fl.getCategory() == UnitCategory.BLOCK;
-    }
-  };
-
-  static final Predicate<Pattern> matchFllsOnly = new Predicate<Pattern>() {
-    @Override public boolean apply(Pattern p) {
-      if (p.getType() != Pattern.Type.FORCED_LOCATION) return false;
-      Pattern.ForcedLoc fl = (Pattern.ForcedLoc) p;
-      return fl.getCategory() == UnitCategory.LINE;
-    }
-  };
-
-  static Predicate<Pattern> implied(final Predicate<Pattern> pred) {
-    return new Predicate<Pattern>() {
-      @Override public boolean apply(Pattern p) {
-        return pred.apply(p.getNub());
-      }
-    };
-  }
-
-  static Predicate<Pattern> simplyImplied(final Predicate<Pattern> pred, final int maxDepth) {
-    return new Predicate<Pattern>() {
-      @Override public boolean apply(Pattern p) {
-        if (pred.apply(p)) return true;
-        if (!pred.apply(p.getNub())) return false;
-        if (p.getType() != Pattern.Type.IMPLICATION) return false;
-        return hasSimpleAntecedents((Pattern.Implication) p, maxDepth);
-      }
-    };
-  }
-
-  static final Predicate<Pattern> matchAllImpliedFls = implied(matchFlsOnly);
-  static final Predicate<Pattern> matchSimplyImpliedFls = simplyImplied(matchFlsOnly, 2);
-
-  static final Predicate<Pattern> matchDirectMoves = new Predicate<Pattern>() {
-    @Override public boolean apply(Pattern p) {
-      return p.isDirectAssignment();
-    }
-  };
-
-  static final Predicate<Pattern> matchAnyMove = implied(matchDirectMoves);
-  static final Predicate<Pattern> matchSimplyImpliedMoves2 = simplyImplied(matchDirectMoves, 2);
-  static final Predicate<Pattern> matchSimplyImpliedMoves3 = simplyImplied(matchDirectMoves, 3);
-  static final Predicate<Pattern> matchSimplyImpliedMoves4 = simplyImplied(matchDirectMoves, 4);
-  static final Predicate<Pattern> matchSimplyImpliedMoves5 = simplyImplied(matchDirectMoves, 5);
-
-  static final Predicate<Pattern> matchFlsAndEasyFns = new Predicate<Pattern>() {
-    @Override public boolean apply(Pattern p) {
-      switch (p.getType()) {
-        case FORCED_LOCATION: return true;
-        case FORCED_NUMERAL: return isEasyFn((ForcedNum) p);
-        default: return false;
-      }
-    }
-  };
-
-  static final Predicate<Pattern> matchAllImpliedFlsAndEasyFns = implied(matchFlsAndEasyFns);
-  static final Predicate<Pattern> matchSimplyImpliedFlsAndEasyFns = simplyImplied(matchFlsAndEasyFns, 20);
-
   static class Reporter {
-    private final List<Process> processes;
+    private final LoadingCache<MoveKind, KindProcess> processes;
     private final ProcessCounter blockNumeralCounter = new ProcessCounter();
     private final ProcessCounter trailheadCounter = new ProcessCounter();
 
     public Reporter() {
-      processes = ImmutableList.<Process>builder()
-//          .add(make("Forced locations, no errors", matchFlsOnly))
-//          .add(make("Forced locations, just found", any(matchFlsOnly), matchAnything))
-//          .add(make("Forced locations everywhere", any(matchFlsOnly), any(matchFlsOnly)))
-//          .add(make("Forced locations mostly", any(matchFlsOnly), any(matchFlsOnly), 0.8))
-//          .add(make("Forced locations/block", matchFlbsOnly))
-//          .add(make("Forced locations/block everywhere", any(matchFlbsOnly), any(matchFlbsOnly)))
-//          .add(make("Forced locations/block mostly", any(matchFlbsOnly), any(matchFlbsOnly), 0.8))
-//          .add(make("Forced locations/line", matchFllsOnly))
-//          .add(make("Forced locations/line everywhere", any(matchFllsOnly), any(matchFllsOnly)))
-//          .add(make("Forced locations/line mostly", any(matchFllsOnly), any(matchFllsOnly), 0.8))
-//          .add(make("Forced locations/block w/no lines or errors", and(any(matchFlbsOnly), none(matchFllsOnly)), any(matchAnyMove)))
-//          .add(make("Forced locations/block w/no lines", and(any(matchFlbsOnly), none(matchFllsOnly)), matchAnything))
-//          .add(make("Forced locations/block w/no indirect lines or errors", and(any(matchFlbsOnly), none(implied(matchFllsOnly))), any(matchAnyMove)))
-//          .add(make("Forced locations/block w/no indirect lines", and(any(matchFlbsOnly), none(implied(matchFllsOnly))), matchAnything))
-//          .add(make("Forced locations/line w/no blocks or errors", and(any(matchFllsOnly), none(matchFlbsOnly)), any(matchAnyMove)))
-//          .add(make("Forced locations/line w/no blocks", and(any(matchFllsOnly), none(matchFlbsOnly)), matchAnything))
-//          .add(make("Forced locations/line w/no indirect blocks or errors", and(any(matchFllsOnly), none(implied(matchFlbsOnly))), any(matchAnyMove)))
-//          .add(make("Forced locations/line w/no indirect blocks", and(any(matchFllsOnly), none(implied(matchFlbsOnly))), matchAnything))
-//          .add(make("Forced locations/block w/no lines anywhere", and(any(matchFlbsOnly), none(matchFllsOnly)), none(matchFllsOnly)))
-//          .add(make("Forced locations/line w/no blocks anywhere", and(any(matchFllsOnly), none(matchFlbsOnly)), none(matchFlbsOnly)))
-//          .add(make("Implied forced locations", matchAllImpliedFls))
-//          .add(make("Implied forced locations/block w/no direct lines", and(any(implied(matchFlbsOnly)), none(matchFllsOnly)), any(matchAnyMove)))
-//          .add(make("Implied forced locations/block w/no indirect lines", and(any(implied(matchFlbsOnly)), none(implied(matchFllsOnly))), any(matchAnyMove)))
-//          .add(make("Simply-implied forced locations", matchSimplyImpliedFls))
-//          .add(make("Simply-implied forced locations everywhere", any(matchSimplyImpliedFls), any(matchSimplyImpliedFls)))
-//          .add(make("Simply-implied forced locations/block w/no direct lines", and(any(simplyImplied(matchFlbsOnly, 2)), none(matchFllsOnly)), matchAnything))
-//          .add(make("Simply-implied forced locations/block w/no indirect lines", and(any(simplyImplied(matchFlbsOnly, 2)), none(implied(matchFllsOnly))), matchAnything))
-//          .add(make("Direct assignments", matchFlsAndFns))
-//          .add(make("Direct assignments everywhere", any(matchDirectMoves), matchAnything))
-//          .add(make("Direct assignments mostly", any(matchFlsAndFns), any(matchFlsAndFns), 0.8))
-//          .add(make("Implied assignments, no errors", matchAnyMove))
-//          .add(make("Simply-implied assignments", matchSimplyImpliedFlsAndFns2))
-//          .add(make("Simply-implied assignments everywhere (2)", any(matchSimplyImpliedMoves2), any(matchSimplyImpliedMoves2)))
-//          .add(make("Simply-implied assignments everywhere (3)", any(matchSimplyImpliedMoves3), any(matchSimplyImpliedMoves3)))
-//          .add(make("Simply-implied assignments everywhere (4)", any(matchSimplyImpliedMoves4), any(matchSimplyImpliedMoves4)))
-//          .add(make("Simply-implied assignments mostly", any(matchSimplyImpliedFlsAndFns2), any(matchSimplyImpliedFlsAndFns2), 0.8))
-//          .add(make("Forced locations and easy forced numerals", matchFlsAndEasyFns))
-//          .add(make("Forced locations and easy forced numerals mostly", any(matchFlsAndEasyFns), any(matchFlsAndEasyFns), 0.8))
-//          .add(make("Implied forced locations and easy forced numerals", matchAllImpliedFlsAndEasyFns))
-//          .add(make("Simply-implied forced locations and easy forced numerals", matchSimplyImpliedFlsAndEasyFns))
-//          .add(make("Simply-implied forced locations and easy forced numerals mostly", any(matchSimplyImpliedFlsAndEasyFns), any(matchSimplyImpliedFlsAndEasyFns), 0.8))
-//          .add(make("Forced locations and easy forced numerals everywhere (EASY_DIRECT)", any(matchFlsAndEasyFns), any(matchFlsAndEasyFns)))
-//          .add(make("Direct assignments everywhere, no errors (DIRECT)", any(matchDirectMoves), any(matchDirectMoves)))
-//          .add(make("Simply-implied forced locations and easy forced numerals everywhere (SIMPLY_IMPLIED_EASY)", any(matchSimplyImpliedFlsAndEasyFns), any(matchSimplyImpliedFlsAndEasyFns)))
-//          .add(make("Simply-implied assignments everywhere (5) (SIMPLY_IMPLIED)", any(matchSimplyImpliedMoves5), any(matchSimplyImpliedMoves5)))
-//          .add(make("Implied forced locations and easy forced numerals everywhere (IMPLIED_EASY)", any(matchAllImpliedFlsAndEasyFns), any(matchAllImpliedFlsAndEasyFns)))
-//          .add(make("Implied assignments (IMPLIED)", any(matchAnyMove), matchAnything))
-//          .add(make("Hard forced numerals or simply implied easy moves, just found", and(any(matchDirectMoves), none(matchFlsAndEasyFns)), matchAnything))
-          .add(makeFirst("Easy direct moves", matchFlsAndEasyFns))
-          .add(makeFirst("Hard direct moves", and(matchDirectMoves, not(matchFlsAndEasyFns))))
-          .add(makeFirst("Simply-implied FLs, not direct", and(simplyImplied(matchFlsOnly, 20), not(matchDirectMoves))))
-          .add(makeFirst("Simply-implied FNs, not direct", and(simplyImplied(matchFnsOnly, 20), not(matchDirectMoves))))
-          .add(makeFirst("Implied FLs, not simply", and(implied(matchFlsOnly), not(simplyImplied(matchFlsOnly, 20)))))
-          .add(makeFirst("Implied FNs, not simply", and(implied(matchFnsOnly), not(simplyImplied(matchFnsOnly, 20)))))
-          .build();
-    }
-
-//    private static Process make(String description, Predicate<Pattern> matches) {
-//      return make(description, any(matches), any(matchAnyMove));
-//    }
-
-    private static Process makeFirst(String description, Predicate<Pattern> matches) {
-      return make(description, first(matches), all(matches));
-    }
-
-    private static Process make(String description, Predicate<List<Pattern>> foundMatches,
-        Predicate<List<Pattern>> missedMatches) {
-      return make(description, foundMatches, missedMatches, 1.0);
-    }
-
-    private static Process make(String description, Predicate<List<Pattern>> foundMatches,
-        Predicate<List<Pattern>> missedMatches, double missedMatchesMinRatio) {
-      return new Process(description, foundMatches, missedMatches, missedMatchesMinRatio);
+      processes = CacheBuilder.newBuilder().build(new CacheLoader<MoveKind, KindProcess>() {
+        @Override public KindProcess load(MoveKind kind) {
+          return new KindProcess(kind);
+        }
+      });
     }
 
     public void reportSummaries(PrintStream out) {
-      for (Process p : processes)
-        p.report(out);
+      for (MoveKind kind : MoveKind.values())
+        if (processes.asMap().containsKey(kind))
+          processes.getUnchecked(kind).report(out);
       out.println();
       out.printf("Consecutive block-numeral moves (%d):%n", blockNumeralCounter.count);
       blockNumeralCounter.report(out);
@@ -304,91 +99,139 @@ public class ScanPoints {
       trailheadCounter.report(out);
     }
 
-    public void take(List<Pattern> found, List<List<Pattern>> missed, long ms,
-        int openCount, int numBlockTargets, int numLineTargets, int numLocTargets,
-        boolean isBlockNumeralMove, int numBlockNumeralMoves, int numOpenBlockNumerals,
-        boolean isTrailhead) {
+    public void take(List<Coll> matched, List<Coll> missed, MoveKind firstKind, boolean isTrailhead,
+                     long ms, int openCount, boolean isBlockNumeralMove, int numBlockNumeralMoves,
+                     int numOpenBlockNumerals) {
       double seconds = ms / 1000.0;
       if (isBlockNumeralMove)
         blockNumeralCounter.count(seconds, numOpenBlockNumerals / (double) numBlockNumeralMoves);
-      for (Process p : processes)
-        p.take(found, missed, seconds, openCount, numBlockTargets, numLineTargets, numLocTargets);
-      if (isTrailhead && found.isEmpty())
+      if (isTrailhead) {
         trailheadCounter.count(seconds, 1);
+      } else {
+        for (Coll m : matched)
+          processes.getUnchecked(m.kind).take(m, missed, m.kind == firstKind, seconds, openCount);
+      }
     }
   }
 
-  static class Process {
-    private final ProcessCounter blockCounter = new ProcessCounter();
-    private final ProcessCounter unitCounter = new ProcessCounter();
-    private final ProcessCounter allCounter = new ProcessCounter();
-    private final String description;
-    private final Predicate<List<Pattern>> foundMatches;
-    private final Predicate<List<Pattern>> missedMatches;
-    private final double missedMatchesMinRatio;
-    private long movesIncluded;
-    private long movesSkipped;
+  static class KindProcess {
+    private final MoveKind kind;
+    private final LoadingCache<Integer, ProcessCounter> firstBucketCounters;
+    private final LoadingCache<Integer, ProcessCounter> otherBucketCounters;
+    private final LoadingCache<Integer, ProcessCounter> eitherCounters;
+    private final ProcessCounter firstBucketCounter = new ProcessCounter();
+    private final ProcessCounter otherBucketCounter = new ProcessCounter();
+    private final ProcessCounter eitherCounter = new ProcessCounter();
+    private final ProcessCounter flatFirstBucketCounter = new ProcessCounter();
+    private final ProcessCounter flatOtherBucketCounter = new ProcessCounter();
+    private final ProcessCounter flatEitherCounter = new ProcessCounter();
+    private int movesIncluded;
+    private int movesFirstBucket;
 
-    public Process(String description, Predicate<List<Pattern>> foundMatches,
-        Predicate<List<Pattern>> missedMatches, double missedMatchesMinRatio) {
-      this.description = description;
-      this.foundMatches = foundMatches;
-      this.missedMatches = missedMatches;
-      this.missedMatchesMinRatio = missedMatchesMinRatio;
+    public KindProcess(MoveKind kind) {
+      this.kind = kind;
+      CacheLoader<Integer, ProcessCounter> loader = new CacheLoader<Integer, ProcessCounter>() {
+        @Override public ProcessCounter load(Integer realmVector) {
+          return new ProcessCounter();
+        }
+      };
+      this.firstBucketCounters = CacheBuilder.newBuilder().build(loader);
+      this.otherBucketCounters = CacheBuilder.newBuilder().build(loader);
+      this.eitherCounters = CacheBuilder.newBuilder().build(loader);
     }
 
-    public void take(List<Pattern> found, List<List<Pattern>> missed, double seconds,
-        int openCount, int numBlockTargets, int numLineTargets, int numLocTargets) {
-      if (found.isEmpty()) return;
-
-      boolean foundLocationMatches = foundMatches.apply(found);
-
-      int missedLocations = 0;
-      int matchingMissedLocations = 0;
-      for (List<Pattern> list : missed) {
-        ++missedLocations;
-        if (missedMatches.apply(list)) ++matchingMissedLocations;
-      }
-
-      if (!foundLocationMatches
-          || (missedLocations > 0
-              && matchingMissedLocations / (double) missedLocations < missedMatchesMinRatio)) {
-        ++movesSkipped;
-        return;
-      }
+    public void take(Coll bucket, List<Coll> missed, boolean firstBucket, double seconds, int openCount) {
+      double realmPoints = pointsScanned(openCount, bucket);
+      double flatPoints = pointsScanned(openCount, 4, bucket);
+      (firstBucket ? firstBucketCounters : otherBucketCounters).getUnchecked(bucket.realmVector)
+          .count(seconds, realmPoints);
+      (firstBucket ? firstBucketCounter : otherBucketCounter).count(seconds, realmPoints);
+      (firstBucket ? flatFirstBucketCounter : flatOtherBucketCounter).count(seconds, flatPoints);
+      eitherCounters.getUnchecked(bucket.realmVector).count(seconds, realmPoints);
+      eitherCounter.count(seconds, realmPoints);
+      flatEitherCounter.count(seconds, flatPoints);
       ++movesIncluded;
-      Pattern pattern = found.get(0);
-      Realm realm = pattern.getRealm();
-      if (realm == Realm.BLOCK)
-        blockCounter.count(seconds, pointsScanned(openCount, 1, numBlockTargets, pattern));
-      if (realm != Realm.ALL)
-        unitCounter.count(seconds, pointsScanned(openCount, 3, numBlockTargets + numLineTargets, pattern));
-      allCounter.count(seconds, pointsScanned(openCount, 4, numBlockTargets + numLineTargets + numLocTargets, pattern));
+      if (firstBucket) ++movesFirstBucket;
     }
 
-    private double pointsScanned(int openCount, double factor, int numTargets, Pattern pattern) {
-      return openCount * factor / numTargets / pattern.getScanTargetCount();
+    private double pointsScanned(int openCount, int factor, Coll bucket) {
+      // Factor is the number of "scan points" per open location.  So the first
+      // product yields the total number of scan points in the grid.  We divide
+      // by the total number of "scan targets" in the bucket, to get points per
+      // target.  Then we multiply by the number of targets in the first insight
+      // that matched the move made, to get the number of points scanned in
+      // finding the insight.
+      return openCount * factor / bucket.numScanTargets * bucket.patterns.get(0).getScanTargetCount();
+    }
+
+    private double pointsScanned(int openCount, Coll bucket) {
+      return pointsScanned(openCount, factor(bucket.realmVector), bucket);
+    }
+
+    private int factor(int realmVector) {
+      // Explanation: bits 0 and 1 have weights 1 and 2 respectively (they
+      // correspond to blocks and lines).  Bit 2 is back to a weight of 1 (it
+      // corresponds to locations).  The vector is > 3 when bit 2 is on, so we
+      // subtract away the excess over the weight.
+      return realmVector > 3 ? realmVector - 3 : realmVector;
     }
 
     public void report(PrintStream out) {
-      out.printf("%s: %,d moves included, %,d skipped\n", description, movesIncluded, movesSkipped);
-      printCounter(out, blockCounter, "1. Block-numeral points only");
-      printCounter(out, unitCounter, "2. Block- or line-numeral points");
-      printCounter(out, allCounter, "3. All scan points");
+      out.printf("%s: %,d moves included, %,d the first bucket\n", kind, movesIncluded, movesFirstBucket);
+      printCounters(out, flatFirstBucketCounter, firstBucketCounter,
+                    firstBucketCounters, "1. When it was the first bucket");
+//      printCounters(out, flatOtherBucketCounter, otherBucketCounter,
+//                    otherBucketCounters, "2. When it was a later bucket");
+//      printCounters(out, flatEitherCounter, eitherCounter, eitherCounters, "3. All moves");
       out.println();
     }
 
-    private void printCounter(PrintStream out, ProcessCounter counter, String headline) {
-      out.printf("%s (%d):%n", headline, counter.count);
-      counter.report(out);
+    private static final List<Set<Realm>> vectorToSet;
+    static {
+      Realm[] all = Realm.values();
+      ImmutableList.Builder<Set<Realm>> builder = ImmutableList.builder();
+      for (int v = 0; v < 8; ++v) {
+        Set<Realm> set = EnumSet.noneOf(Realm.class);
+        for (Realm r : all)
+          if (r.isIn(v))
+            set.add(r);
+        builder.add(set);
+      }
+      vectorToSet = builder.build();
+    }
+
+    private void printCounters(PrintStream out, ProcessCounter flatCounter, ProcessCounter realmCounter,
+                               LoadingCache<Integer, ProcessCounter> realmCounters,
+                               String headline) {
+      out.printf("%s:%n", headline);
+      // out.printf(" Disregarding realms (%,d moves):%n", flatCounter.count);
+      // flatCounter.report(out);
+      out.printf(" All realms (%,d moves):%n", realmCounter.count);
+      realmCounter.report(out);
+      // for (int v = 0; v < vectorToSet.size(); ++v) {
+      //   if (realmCounters.asMap().containsKey(v)) {
+      //     ProcessCounter counter = realmCounters.getUnchecked(v);
+      //     out.printf(" Realms: %s (%,d moves)%n", vectorToSet.get(v), counter.count);
+      //     counter.report(out);
+      //   }
+      // }
     }
   }
 
   static class ProcessCounter {
+    private final boolean reportHistogram;
     private final Multiset<Integer> pointsPerSecond = HashMultiset.create();
     private double pendingSeconds;
     private double pendingPoints;
     int count;
+
+    public ProcessCounter() {
+      this(false);
+    }
+
+    public ProcessCounter(boolean reportHistogram) {
+      this.reportHistogram = reportHistogram;
+    }
 
     public void count(double seconds, double pointsScanned) {
       ++count;
@@ -413,7 +256,6 @@ public class ScanPoints {
       }
     }
 
-    @SuppressWarnings("unused")
     public void report(PrintStream out) {
       SummaryStatistics stats = new SummaryStatistics();
       for (int points : pointsPerSecond)
@@ -421,7 +263,7 @@ public class ScanPoints {
       out.printf("Scan-points/second: %.2f; var: %.2f (%.2f%%)\n", stats.getMean(),
           stats.getVariance(), 100 * stats.getVariance() / stats.getMean());
       out.printf("Seconds/scan-point: %.3f\n", 1.0 / stats.getMean());
-      if (false) {
+      if (reportHistogram) {
         PoissonDistribution dist = new PoissonDistribution(stats.getMean());
         out.println("Histogram, actual vs predicted:");
         int max =
@@ -435,17 +277,13 @@ public class ScanPoints {
 
   // ============================
 
-  private static final int COUNT = 4;
+  private static final int COUNT = 6;
   private static final Reporter[] reporters = new Reporter[COUNT];
 
-  private static Reporter getReporter(int numTrails) {
-    int index = 0;
-    switch (numTrails) {
-      case 0: break;
-      case 1: index = 1; break;
-      case 2: index = 2; break;
-      default: index = 3; break;
-    }
+  private static Reporter getReporter(
+      int numTrails, int moveNumber, int effectiveMoveNumber,
+      long timestamp, long effectiveTimestamp, int minOpen) {
+    int index = Math.min(COUNT - 1, minOpen / 10);
     Reporter answer = reporters[index];
     if (answer == null)
       reporters[index] = answer = new Reporter();
@@ -453,7 +291,7 @@ public class ScanPoints {
   }
 
   private static void reportSummaries(PrintStream out) {
-    for (int i = 0; i < COUNT; ++i) {
+    for (int i = COUNT - 1; i >= 0; --i) {
       Reporter r = reporters[i];
       if (r != null)
         reportSummaries(out, r, headline(i));
@@ -461,12 +299,11 @@ public class ScanPoints {
   }
 
   private static String headline(int i) {
-    switch (i) {
-      case 0: return "No trails";
-      case 1: return "With 1 trail";
-      case 2: return "With 2 trails";
-      default: return "With 3 or more trails";
-    }
+    int min = i * 10;
+    int max = min + 9;
+    if (i == COUNT - 1)
+      return String.format("Minimum open: %d or more", min);
+    return String.format("Minimum open: %d - %d", min, max);
   }
 
   private static void reportSummaries(PrintStream out, Reporter reporter, String desc) {

@@ -36,6 +36,8 @@ import us.blanshard.sudoku.insight.Analyzer.StopException;
 import us.blanshard.sudoku.insight.BarredLoc;
 import us.blanshard.sudoku.insight.BarredNum;
 import us.blanshard.sudoku.insight.Conflict;
+import us.blanshard.sudoku.insight.Evaluator;
+import us.blanshard.sudoku.insight.Evaluator.MoveKind;
 import us.blanshard.sudoku.insight.ForcedLoc;
 import us.blanshard.sudoku.insight.ForcedNum;
 import us.blanshard.sudoku.insight.GridMarks;
@@ -44,16 +46,19 @@ import us.blanshard.sudoku.insight.Insight;
 import us.blanshard.sudoku.insight.Insight.Type;
 import us.blanshard.sudoku.insight.LockedSet;
 import us.blanshard.sudoku.insight.Overlap;
+import us.blanshard.sudoku.stats.Pattern.Coll;
 import us.blanshard.sudoku.stats.Pattern.UnitCategory;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -99,6 +104,13 @@ public class InsightMeasurer implements Runnable {
   private final Set<Integer> trails = Sets.newHashSet();
   private final PrintWriter out;
 
+  private int moveNumber = 0;
+  private int numSkippedMoves = 0;
+  private long prevTime = 0;
+  private long skippedTime = 0;
+  private Numeral prevNumeral = null;
+  private int minOpen;
+
   private InsightMeasurer(Grid puzzle, List<Move> history, PrintWriter out) {
     Solver.Result result = Solver.solve(puzzle, 10, new Random());
     this.solution = checkNotNull(result.intersection);
@@ -106,44 +118,57 @@ public class InsightMeasurer implements Runnable {
     this.history = history;
     this.undoDetector = new UndoDetector(game);
     this.out = out;
+    this.minOpen = puzzle.getNumOpenLocations();
   }
 
   @Override public void run() {
-    long prevTime = 0;
-    Numeral prevNumeral = null;
     for (Move move : history) {
-      applyMove(move, prevTime, prevNumeral);
+      applyMove(move);
+      ++moveNumber;
       prevTime = move.timestamp;
       prevNumeral = move.getNumeral();
     }
   }
 
-  private void applyMove(Move move, long prevTime, @Nullable Numeral prevNumeral) {
+  private void applyMove(Move move) {
     noteMistakes(move);
+    long elapsed = move.timestamp - prevTime;
     if (move instanceof Move.Set
         && !undoDetector.isUndoOrRedo(move)
         && !isApparentCorrection(move)) {
       Grid grid = game.getState(move.trailId).getGrid();
       if (grid.containsKey(move.getLocation()))
         grid = grid.toBuilder().remove(move.getLocation()).build();
+      int numOpen = grid.getNumOpenLocations();
+      if (numOpen < minOpen)
+        minOpen = numOpen;
       GridMarks gridMarks = new GridMarks(grid);
       Collector collector = new Collector(gridMarks, move.getAssignment(), prevNumeral);
       Analyzer.analyze(gridMarks, collector, true);
-      long elapsed = move.timestamp - prevTime;
       boolean isTrailhead = move.trailId >= 0 && game.getTrail(move.trailId).getSetCount() == 0;
-      int numBlockTargets = UnitNumSet.intersect(blockUnitNums, collector.unitNumTargets).size();
+      List<Coll> matched = Lists.newArrayList();
+      List<Coll> missed = Lists.newArrayList();
+      collector.makeColls(matched, missed);
       try {
-        Pattern.appendTo(out, collector.found)
+        Pattern.appendAllTo(out, matched)
+            .append('\t');
+        Pattern.appendAllTo(out, missed)
+            .append('\t')
+            .append(collector.firstKind == null ? "" : collector.firstKind.toString())
+            .append('\t')
+            .append(String.valueOf(moveNumber))
+            .append('\t')
+            .append(String.valueOf(moveNumber - numSkippedMoves))
+            .append('\t')
+            .append(String.valueOf(move.timestamp))
+            .append('\t')
+            .append(String.valueOf(move.timestamp - skippedTime))
+            .append('\t')
+            .append(String.valueOf(minOpen))
             .append('\t')
             .append(String.valueOf(elapsed))
             .append('\t')
-            .append(String.valueOf(Location.COUNT - grid.size()))
-            .append('\t')
-            .append(String.valueOf(numBlockTargets))
-            .append('\t')
-            .append(String.valueOf(collector.unitNumTargets.size() - numBlockTargets))
-            .append('\t')
-            .append(String.valueOf(collector.locTargets.size()))
+            .append(String.valueOf(numOpen))
             .append('\t')
             .append(String.valueOf(collector.isBlockNumeralMove()))
             .append('\t')
@@ -154,13 +179,14 @@ public class InsightMeasurer implements Runnable {
             .append(String.valueOf(isTrailhead))
             .append('\t')
             .append(String.valueOf(trails.size()))
-            .append('\t')
             ;
-        Pattern.appendAllTo(out, collector.missed.asMap().values());
         out.println();
       } catch (IOException e) {
         throw new AssertionError(e);
       }
+    } else {
+      ++numSkippedMoves;
+      skippedTime += elapsed;
     }
     game.move(move);
     if (move.trailId >= 0) trails.add(move.trailId);
@@ -181,10 +207,10 @@ public class InsightMeasurer implements Runnable {
     final GridMarks gridMarks;
     final Assignment assignment;
     final Numeral prevNumeral;
-    final List<Pattern> found = Lists.newArrayList();
-    final Multimap<Object, Pattern> missed = ArrayListMultimap.create();
-    final LocSet locTargets = new LocSet();
-    final UnitNumSet unitNumTargets = new UnitNumSet();
+    final ListMultimap<MoveKind, Insight> insights = ArrayListMultimap.create();
+    final ListMultimap<MoveKind, Pattern> patterns = ArrayListMultimap.create();
+    final Set<MoveKind> found = EnumSet.noneOf(MoveKind.class);
+    MoveKind firstKind;
     int numBlockNumeralMoves;
     boolean isBlockNumeralMove;
 
@@ -198,15 +224,18 @@ public class InsightMeasurer implements Runnable {
       Assignment a = insight.getImpliedAssignment();
       boolean isError = insight.isError();
       if (isError || a != null) {
-        Insight minimized = Analyzer.minimize(gridMarks, insight);
-        Pattern pattern = getPattern(minimized);
-        if (isError)
-          missed.put(new Object(), pattern);
-        else if (assignment.equals(a))
-          found.add(pattern);
-        else
-          missed.put(a, pattern);
-        insight.addScanTargets(locTargets, unitNumTargets);
+        insight = minimize(gridMarks, insight);
+        MoveKind kind = Evaluator.kindForInsight(gridMarks, insight, null);
+        insights.put(kind, insight);
+        if (firstKind == null) firstKind = kind;
+
+        Pattern pattern = getPattern(insight);
+        if (assignment.equals(a)) {
+          int index = found.add(kind) ? 0 : 1;
+          patterns.get(kind).add(index, pattern);  // Put the first one first.
+        } else {
+          patterns.put(kind, pattern);
+        }
       }
       if (a != null && prevNumeral != null && insight.type == Type.FORCED_LOCATION) {
         ForcedLoc fl = (ForcedLoc) insight;
@@ -234,6 +263,28 @@ public class InsightMeasurer implements Runnable {
           ++count;
       }
       return count;
+    }
+
+    void makeColls(List<Coll> matched, List<Coll> missed) {
+      for (MoveKind kind : insights.keySet()) {
+        LocSet locTargets = new LocSet();
+        UnitNumSet unitNumTargets = new UnitNumSet();
+        int realmVector = 0;
+        for (Insight insight : insights.get(kind)) {
+          insight.addScanTargets(locTargets, unitNumTargets);
+          realmVector |= insight.getRealmVector();
+        }
+        Coll coll = new Coll(patterns.get(kind), kind, realmVector,
+            unitNumTargets.size() + locTargets.size());
+        (found.contains(kind) ? matched : missed).add(coll);
+      }
+    }
+
+    private Insight minimize(GridMarks gridMarks, Insight insight) {
+      if (insight.type != Type.IMPLICATION) return insight;
+      Implication i = (Implication) insight;
+      i = Evaluator.minimizeForSimplicityTest(gridMarks, i);
+      return Analyzer.minimize(gridMarks, i == null ? insight : i);
     }
 
     private Pattern getPattern(Insight insight) {

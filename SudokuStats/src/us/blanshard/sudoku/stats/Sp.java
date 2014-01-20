@@ -107,7 +107,7 @@ public abstract class Sp implements Comparable<Sp> {
     }
   }
 
-  public static Sp fromList(List<Pattern> patterns, int openCount, int numAssignments) {
+  public static Sp fromList(List<? extends Pattern> patterns, int openCount, int numAssignments) {
     if (patterns.isEmpty()) return NONE;
     if (patterns.size() == 1) return fromPattern(patterns.get(0), openCount, numAssignments);
     return combination2(patterns, openCount, numAssignments);
@@ -660,7 +660,7 @@ public abstract class Sp implements Comparable<Sp> {
     }
   }
 
-  public static Combination2 combination2(List<Pattern> parts, final int openCount,
+  public static Combination2 combination2(List<? extends Pattern> parts, final int openCount,
       final int numAssignments) {
     return new Combination2(
         openCount,

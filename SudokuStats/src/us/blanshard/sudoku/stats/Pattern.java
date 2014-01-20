@@ -23,6 +23,7 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.insight.Evaluator.MoveKind;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -56,6 +57,7 @@ public abstract class Pattern implements Comparable<Pattern> {
 
   private static final Splitter COLON_SPLITTER = Splitter.on(':');
   private static final Splitter COLON_SPLITTER_2 = COLON_SPLITTER.limit(2);
+  private static final Splitter COLON_SPLITTER_4 = COLON_SPLITTER.limit(4);
   private static final Splitter COMMA_SPLITTER = Splitter.on(',').omitEmptyStrings();
   private static final Splitter SEMI_SPLITTER = Splitter.on(';').omitEmptyStrings();
 
@@ -132,32 +134,43 @@ public abstract class Pattern implements Comparable<Pattern> {
     }
   }
 
-  public static Appendable appendTo(Appendable a, Iterable<? extends Pattern> patterns) throws IOException {
-    return Joiner.on(',').appendTo(a, patterns);
+  public static Appendable appendTo(Appendable a, Coll coll) throws IOException {
+    a.append(coll.kind.toString())
+        .append(':')
+        .append(Integer.toString(coll.realmVector))
+        .append(':')
+        .append(Integer.toString(coll.numScanTargets))
+        .append(':')
+        ;
+    return Joiner.on(',').appendTo(a, coll.patterns);
   }
 
-  public static Appendable appendAllTo(Appendable a, Collection<? extends Collection<Pattern>> patternLists) throws IOException {
+  public static Appendable appendAllTo(Appendable a, Iterable<Coll> colls) throws IOException {
     boolean one = false;
-    for (Collection<Pattern> list : patternLists) {
+    for (Coll coll : colls) {
       if (one) a.append(';');
-      else one = true;
-      appendTo(a, list);
+      appendTo(a, coll);
+      one = true;
     }
     return a;
   }
 
-  public static List<Pattern> listFromString(String s) {
+  public static Coll collFromString(String s) {
+    Iterator<String> pieces = COLON_SPLITTER_4.split(s).iterator();
+    MoveKind kind = MoveKind.valueOf(pieces.next());
+    int realmVector = Integer.parseInt(pieces.next());
+    int numScanTargets = Integer.parseInt(pieces.next());
     ImmutableList.Builder<Pattern> builder = ImmutableList.builder();
-    for (String piece : COMMA_SPLITTER.split(s)) {
+    for (String piece : COMMA_SPLITTER.split(pieces.next())) {
       builder.add(fromString(piece));
     }
-    return builder.build();
+    return new Coll(builder.build(), kind, realmVector, numScanTargets);
   }
 
-  public static List<List<Pattern>> combinationsFromString(String s) {
-    ImmutableList.Builder<List<Pattern>> builder = ImmutableList.builder();
+  public static List<Coll> collsFromString(String s) {
+    ImmutableList.Builder<Coll> builder = ImmutableList.builder();
     for (String piece : SEMI_SPLITTER.split(s)) {
-      builder.add(listFromString(piece));
+      builder.add(collFromString(piece));
     }
     return builder.build();
   }
@@ -196,11 +209,6 @@ public abstract class Pattern implements Comparable<Pattern> {
     }
   }
 
-  public enum Realm {
-    BLOCK, UNIT, ALL;
-  }
-  public abstract Realm getRealm();
-
   @Override public final String toString() {
     StringBuilder sb = new StringBuilder();
     appendTo(sb);
@@ -218,6 +226,20 @@ public abstract class Pattern implements Comparable<Pattern> {
 
   protected abstract Appendable appendGutsTo(Appendable a) throws IOException;
   protected abstract int compareToGuts(Pattern that);
+
+  public static class Coll {
+    public final List<? extends Pattern> patterns;
+    public final MoveKind kind;
+    public final int realmVector;
+    public final int numScanTargets;
+
+    public Coll(List<? extends Pattern> patterns, MoveKind kind, int realmVector, int numScanTargets) {
+      this.patterns = patterns;
+      this.kind = kind;
+      this.realmVector = realmVector;
+      this.numScanTargets = numScanTargets;
+    }
+  }
 
   /**
    * Many patterns refer to {@linkplain Unit units} on the Sudoku board; a given
@@ -271,10 +293,6 @@ public abstract class Pattern implements Comparable<Pattern> {
 
     public UnitCategory getCategory() {
       return category;
-    }
-
-    @Override public Realm getRealm() {
-      return category == UnitCategory.BLOCK ? Realm.BLOCK : Realm.UNIT;
     }
 
     @Override public boolean equals(Object o) {
@@ -421,7 +439,7 @@ public abstract class Pattern implements Comparable<Pattern> {
     NumSet[] unitNums = {NumSet.NONE, NumSet.NONE, NumSet.NONE};
     for (Unit.Type type : Unit.Type.values())
       for (Location peer : loc.unit(type))
-        if (grid.containsKey(peer))
+        if (peer != loc && grid.containsKey(peer))
           unitNums[type.ordinal()] = unitNums[type.ordinal()].with(grid.get(peer));
 
     byte[] categories = new byte[27];
@@ -456,10 +474,6 @@ public abstract class Pattern implements Comparable<Pattern> {
 
     public PeerMetrics getMetrics() {
       return metrics;
-    }
-
-    @Override public Realm getRealm() {
-      return Realm.ALL;
     }
 
     @Override public boolean equals(Object o) {
@@ -715,12 +729,29 @@ public abstract class Pattern implements Comparable<Pattern> {
       return answer;
     }
 
-    @Override public Realm getRealm() {
-      Realm realm = consequent.getRealm();
-      Ordering<Realm> ordering = Ordering.natural();
-      for (Pattern a : antecedents)
-        realm = ordering.max(realm, a.getRealm());
-      return realm;
+    public boolean hasSimpleAntecedents() {
+      Implication p = this;
+      do {
+        for (Pattern a : p.getAntecedents()) {
+          switch (a.getType()) {
+          case OVERLAP:
+            break;
+          case LOCKED_SET: {
+            Pattern.LockedSet l = (Pattern.LockedSet) a;
+            if (l.isNaked() || l.getCategory() == Pattern.UnitCategory.LINE
+                || l.getSetSize() > 3)
+              return false;
+            break;
+          }
+          default:
+            return false;
+          }
+        }
+        p = p.getConsequent().getType() == Pattern.Type.IMPLICATION
+          ? (Pattern.Implication) p.getConsequent()
+          : null;
+      } while (p != null);
+      return true;
     }
 
     @Override public boolean equals(Object o) {

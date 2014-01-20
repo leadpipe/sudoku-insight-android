@@ -49,15 +49,15 @@ public class PatternCounter {
     Splitter splitter = Splitter.on('\t');
     for (String line; (line = in.readLine()) != null; ) {
       Iterator<String> iter = splitter.split(line).iterator();
-      List<Pattern> found = Pattern.listFromString(iter.next());
+      Pattern.Coll found = Pattern.collFromString(iter.next());
       long ms = Long.parseLong(iter.next());
       int openCount = Integer.parseInt(iter.next());
       int numAssignments = Integer.parseInt(iter.next());
-      List<List<Pattern>> missed = Pattern.combinationsFromString(iter.next());
-      Sp sp = Sp.fromList(found, openCount, numAssignments);
+      List<Pattern.Coll> missed = Pattern.collsFromString(iter.next());
+      Sp sp = Sp.fromList(found.patterns, openCount, numAssignments);
       noteFound(sp, ms, missed, openCount, numAssignments);
-      for (List<Pattern> list : missed)
-        for (Pattern p : list)
+      for (Pattern.Coll coll : missed)
+        for (Pattern p : coll.patterns)
           noteMissed(Sp.fromPattern(p, openCount, numAssignments), ms);
     }
     in.close();
@@ -124,13 +124,13 @@ public class PatternCounter {
    * Notes that the given pattern (or NONE) was seen in the given number
    * of milliseconds.
    */
-  private static void noteFound(Sp p, long ms, List<List<Pattern>> missed, int openCount, int numAssignments) {
+  private static void noteFound(Sp p, long ms, List<Pattern.Coll> missed, int openCount, int numAssignments) {
     noteSp(p, ms, foundOnce, found);
     if (!COMPARE.contains(p.getType())) return;
     if (p.getType() != Sp.Type.NONE)
       noteAhead(p, Sp.NONE, 1);
-    for (List<Pattern> list : missed) {
-      Sp p2 = Sp.fromList(list, openCount, numAssignments);
+    for (Pattern.Coll coll : missed) {
+      Sp p2 = Sp.fromList(coll.patterns, openCount, numAssignments);
       if (!COMPARE.contains(p2.getType())) continue;
       if (p2.equals(p)) continue;
       noteAhead(p, p2, 1);

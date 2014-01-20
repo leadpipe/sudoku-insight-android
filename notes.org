@@ -1,34 +1,44 @@
 * Insights
 ** Evaluator
-*** DONE Look critically at the evaluator
-- are we really doing something stupid with implications and scan points?
-- Yes.  Yeesh.
-- Also, sets.
-*** DONE Investigate speedup as the puzzle progresses [2/2]
-- 3 cols: timestamp, move number, ratio of actual vs predicted time for the move
-- scatter plots: timestamp vs ratio, move number vs ratio
-- fit curves: do they decay to an asymptote?
-- [X] consolidate history reading into a shared class
-- [X] write tool to spit out such a file
-- result: there is really no correlation I can find, damn it
 *** TODO Investigate recent puzzles
 - categories: estimate way too high, way too low, high, low, close to perfect
 - add columns for the pattern that the estimator found, and patterns matching actual move
-*** TODO New evaluator algorithm [0/3]
-- [ ] Rework InsightMeasurer to track buckets of insights
+*** TODO New evaluator algorithm [2/6]
+- [X] Rework InsightMeasurer to track buckets of insights
   - bucket axes: easy/hard, and direct/simply-implied/complexly-implied
-  - [ ] divide by realm -- let's look at block/line/location as independent bits
-  - [ ] list each bucket containing a move corresponding to assignment made
+  - [X] divide by realm -- let's look at block/line/location as independent bits
+  - [X] list each bucket containing a move corresponding to assignment made
     - each bucket has realm vector and scan-target count vector (indexed by realm)
-- [ ] Rework ScanPoints to keep pace, and measure params
-- [ ] Rewrite Evaluator to handle a whole bucket of insights per scan
+- [X] Rework ScanPoints to keep pace, and measure params
+  - Unfortunately, this demonstrates that these buckets do not form anything
+    like a Poisson process.
+  - On the plus side, we see that minOpen (low-water-mark for unset locations,
+    across all trails) has a nice correlation with the mean of the very Poisson
+    time-waiting-before-starting-new-trail.
+  - Also noteworthy: the fact that the IMPLIED bucket has _zero_ instances where
+    it was the only bucket describing the move made.  This means that the only
+    cases where that actually happened, I started a trail.
+- [ ] Another thing to try: trailhead time per minOpen
+- So try a different approach:
+- [ ] Try replicating the old way, to some extent: find everything and include
+  the total target count.  However, count by min kind of the move made, not max
+  of mins of all moves.
+- [ ] Or, try just easy-direct and simply-easy (with expanded def of easy).
+- [ ] (This is now called into question.  The premise of this approach appears to be false.)
+      Rewrite Evaluator to handle a whole bucket of insights per scan
   - [ ] When bucket is of implications, must minimize them all before accumulating scan targets
   - [ ] Look into keeping track of found eliminations (per trail) and applying
     them all before every successive scan
     - how to measure the value of this?  via comparing results against historical times I guess
   - [ ] Look into skipping moves when the cheapest move in a bucket is more
     expensive than the new-trail wait
-*** TODO Look for all hidden sets before any naked ones
+*** TODO Fix up some things before running next experiments for evaluator improvements [0/3]
+- [ ] Look for all hidden sets before any naked ones
+- [ ] Fix the "easy" test
+  - [ ] need to track which units are involved in eliminations, to tell which units are required
+  - [ ] s/b any unit with 6 assignments, not just the block
+  - [ ] try out rule change: >=6 assignments in one unit, OR 2 units sufficient to cover all possibilities
+- [ ] Fix the "simple" test: a hidden set can only be in the outermost implication
 *** TODO Performance improvements [0/2]
 - [ ] Run profiler after evaluator change
 - [ ] Add phase to Analyzer callback, and stop after assignments when taking a short path?
@@ -57,14 +67,6 @@ END
 - no remaining record of the initial play
 
 ** App/UI cleanups
-*** DONE Evaluate puzzles while (or before) adding them [4/4]
-- [X] make a dedicated background service that generates and evaluates puzzles well in advance
-- [X] make a new database table holding, say, 10 from this month and 10 from next month
-- [X] have the info and list pages interact with this thread similarly to the network service
-- [X] also the play page, why not
-*** DONE Add a dialog that shows the evaluation (in some form) and lets you skip the puzzle
-- use an overlay instead of a dialog, so menu works
-- make it slightly harder to skip by accident?
 *** TODO Fix the list fragment so it maintains current scroll on update
 - currently jumps back to selected item, not always what you want (in
   particular, not when stats or rating has been updated, or on resume)
@@ -76,8 +78,6 @@ END
 - treat skipped puzzles specially, if we play them we should be changing the
   existing attempt not making a new one
 - or at least treating the real attempt as the first attempt
-*** DONE Show rating on screen
-*** DONE Use stars and number, not words, in list
 *** TODO Update help
 - acknowledge that the replay view can't handle all puzzles
 - have the welcome dialog actually be a help page

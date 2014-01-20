@@ -310,8 +310,8 @@ public class Evaluator {
   }
 
   /**
-   * A classification of assignment insights based on empirical study of degrees
-   * of difficulty of different insights. They are ordered from easiest to
+   * A classification of insights based on empirical study of degrees of
+   * difficulty of different insights.  They are ordered from easiest to
    * hardest.
    */
   public enum MoveKind {
@@ -480,34 +480,39 @@ public class Evaluator {
     if (max == MoveKind.MIN) return max;
     if (max == null) max = MoveKind.MAX;
     switch (insight.type) {
-    case FORCED_LOCATION:
-      return MoveKind.EASY_DIRECT;
-    case FORCED_NUMERAL: {
-      ForcedNum fn = (ForcedNum) insight;
-      return isEasy(gridMarks, fn) ? MoveKind.EASY_DIRECT : MoveKind.DIRECT;
-    }
-    case IMPLICATION: {
-      if (max.compareTo(MoveKind.DIRECT) <= 0) return max;
-      Implication i = (Implication) insight;
-      boolean easy = isEasy(gridMarks, i.getNub());
-      MoveKind kind = isSimple(gridMarks, i, max)
-        ? easy ? MoveKind.SIMPLY_IMPLIED_EASY : MoveKind.SIMPLY_IMPLIED
-        : easy ? MoveKind.IMPLIED_EASY : MoveKind.IMPLIED;
-      return Ordering.<MoveKind>natural().min(kind, max);
-    }
-    default:
-      return max;
+      case CONFLICT:
+      case BARRED_LOCATION:
+      case BARRED_NUMERAL:
+      case FORCED_LOCATION:
+      case FORCED_NUMERAL:
+        return isEasy(gridMarks, insight) ? MoveKind.EASY_DIRECT : MoveKind.DIRECT;
+      case IMPLICATION: {
+        if (max.compareTo(MoveKind.DIRECT) <= 0) return max;
+        Implication i = (Implication) insight;
+        boolean easy = isEasy(gridMarks, i.getNub());
+        MoveKind kind = isSimple(gridMarks, i, max)
+          ? easy ? MoveKind.SIMPLY_IMPLIED_EASY : MoveKind.SIMPLY_IMPLIED
+          : easy ? MoveKind.IMPLIED_EASY : MoveKind.IMPLIED;
+        return Ordering.<MoveKind>natural().min(kind, max);
+      }
+      case OVERLAP:
+      case LOCKED_SET:
+      case DISPROVED_ASSIGNMENT:
+      case UNFOUNDED_ASSIGNMENT:
+        return max;
+      default:
+        throw new AssertionError();
     }
   }
 
   /**
-   * Tells whether the given forced numeral is an easy one.
+   * Tells whether an insight that relies on the set of numerals in a location's
+   * peers is an easy one.
    */
-  private static boolean isEasy(GridMarks gridMarks, ForcedNum fn) {
+  private static boolean isEasy(GridMarks gridMarks, Location target) {
     // Our current definition of easy: there are at most 2 open locations in the
     // block (not counting the target location), and the numerals assigned to at
     // most one of the row or column are required to force the target numeral.
-    Location target = fn.getLocation();
     int openInBlock = 0;
     NumSet inBlock = NumSet.NONE;
     for (Location loc : target.block) {
@@ -536,9 +541,19 @@ public class Evaluator {
    */
   private static boolean isEasy(GridMarks gridMarks, Insight insight) {
     switch (insight.type) {
-    case FORCED_LOCATION: return true;
-    case FORCED_NUMERAL: return isEasy(gridMarks, (ForcedNum) insight);
-    default: return false;
+    case FORCED_LOCATION:
+    case BARRED_NUMERAL:
+    case CONFLICT:
+      return true;
+
+    case FORCED_NUMERAL:
+      return isEasy(gridMarks, ((ForcedNum) insight).getLocation());
+
+    case BARRED_LOCATION:
+      return isEasy(gridMarks, ((BarredLoc) insight).getLocation());
+
+    default:
+      return false;
     }
   }
 
@@ -568,7 +583,7 @@ public class Evaluator {
     return true;
   }
 
-  @Nullable private static Insight minimizeForSimplicityTest(GridMarks gridMarks, Implication implication) {
+  @Nullable public static Implication minimizeForSimplicityTest(GridMarks gridMarks, Implication implication) {
     Insight consequent = implication.getConsequent();
     if (consequent instanceof Implication) {
       consequent = minimizeForSimplicityTest(

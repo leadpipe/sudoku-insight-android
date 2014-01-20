@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.insight.Evaluator.MoveKind;
+import us.blanshard.sudoku.stats.Pattern.Coll;
 import us.blanshard.sudoku.stats.Pattern.PeerMetrics;
 import us.blanshard.sudoku.stats.Pattern.UnitCategory;
 
@@ -82,37 +84,44 @@ public class PatternTest {
                 Pattern.forcedNumeral(peerMetrics(4, 1))), Pattern.Conflict.BLOCK, 3), 5));
   }
 
-  @Test public void lists() throws Exception {
-    List<Pattern> list = Pattern.listFromString("");
-    assertEquals(0, list.size());
+  @Test public void coll() throws Exception {
+    Coll coll = Pattern.collFromString("DIRECT:7:123:");
+    assertEquals(0, coll.patterns.size());
+    assertEquals(MoveKind.DIRECT, coll.kind);
+    assertEquals(7, coll.realmVector);
+    assertEquals(123, coll.numScanTargets);
     StringBuilder sb = new StringBuilder();
-    Pattern.appendTo(sb, list);
-    assertEquals(0, sb.length());
+    Pattern.appendTo(sb, coll);
+    assertEquals("DIRECT:7:123:", sb.toString());
 
-    String string = "c:b,s:b:4:n";
-    list = Pattern.listFromString(string);
-    assertEquals(2, list.size());
-    assertEquals(Pattern.Conflict.BLOCK, list.get(0));
-    assertEquals(Pattern.lockedSet(UnitCategory.BLOCK, 4, true), list.get(1));
-    Pattern.appendTo(sb, list);
+    String string = "EASY_DIRECT:2:5:c:b,s:b:4:n";
+    coll = Pattern.collFromString(string);
+    assertEquals(2, coll.patterns.size());
+    assertEquals(MoveKind.EASY_DIRECT, coll.kind);
+    assertEquals(2, coll.realmVector);
+    assertEquals(5, coll.numScanTargets);
+    assertEquals(Pattern.Conflict.BLOCK, coll.patterns.get(0));
+    assertEquals(Pattern.lockedSet(UnitCategory.BLOCK, 4, true), coll.patterns.get(1));
+    sb.setLength(0);
+    Pattern.appendTo(sb, coll);
     assertEquals(string, sb.toString());
   }
 
-  @Test public void combos() throws Exception {
-    List<List<Pattern>> multi = Pattern.combinationsFromString("");
+  @Test public void colls() throws Exception {
+    List<Coll> multi = Pattern.collsFromString("");
     assertEquals(0, multi.size());
     StringBuilder sb = new StringBuilder();
     Pattern.appendAllTo(sb, multi);
     assertEquals(0, sb.length());
 
-    String string = "c:b;s:b:4:n;fl:b,fl:l";
-    multi = Pattern.combinationsFromString(string);
+    String string = "SIMPLY_IMPLIED:4:1:c:b;SIMPLY_IMPLIED:4:4:s:b:4:n;SIMPLY_IMPLIED:4:2:fl:b,fl:l";
+    multi = Pattern.collsFromString(string);
     assertEquals(3, multi.size());
-    assertEquals(Collections.singletonList(Pattern.Conflict.BLOCK), multi.get(0));
+    assertEquals(Collections.singletonList(Pattern.Conflict.BLOCK), multi.get(0).patterns);
     assertEquals(Collections.singletonList(Pattern.lockedSet(UnitCategory.BLOCK, 4, true)),
-        multi.get(1));
+        multi.get(1).patterns);
     assertEquals(Arrays.asList(Pattern.forcedLocation(UnitCategory.BLOCK),
-        Pattern.forcedLocation(UnitCategory.LINE)), multi.get(2));
+        Pattern.forcedLocation(UnitCategory.LINE)), multi.get(2).patterns);
     Pattern.appendAllTo(sb, multi);
     assertEquals(string, sb.toString());
   }

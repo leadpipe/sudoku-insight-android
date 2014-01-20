@@ -1,316 +1,294 @@
 
 ======================
-No trails
+Minimum open: 50 or more
 ======================
 
-Easy direct moves: 5,218 moves included, 38,064 skipped
-1. Block-numeral points only (5129):
-Scan-points/second: 1.23; var: 3.83 (312.15%)
-Seconds/scan-point: 0.815
-2. Block- or line-numeral points (5210):
-Scan-points/second: 1.13; var: 4.11 (364.28%)
-Seconds/scan-point: 0.886
-3. All scan points (5218):
-Scan-points/second: 1.09; var: 3.54 (326.15%)
-Seconds/scan-point: 0.921
+EASY_DIRECT: 7,992 moves included, 7,988 the first bucket
+1. When it was the first bucket:
+ All realms (7,988 moves):
+Scan-points/second: 3.23; var: 26.29 (813.47%)
+Seconds/scan-point: 0.309
 
-Hard direct moves: 33 moves included, 43,249 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-3. All scan points (33):
-Scan-points/second: 0.15; var: 0.18 (117.49%)
-Seconds/scan-point: 6.563
+DIRECT: 302 moves included, 72 the first bucket
+1. When it was the first bucket:
+ All realms (72 moves):
+Scan-points/second: 0.77; var: 3.25 (420.13%)
+Seconds/scan-point: 1.293
 
-Simply-implied FLs, not direct: 23 moves included, 43,259 skipped
-1. Block-numeral points only (14):
-Scan-points/second: 0.06; var: 0.06 (94.27%)
-Seconds/scan-point: 16.808
-2. Block- or line-numeral points (23):
-Scan-points/second: 0.06; var: 0.05 (94.42%)
-Seconds/scan-point: 17.618
-3. All scan points (23):
-Scan-points/second: 0.05; var: 0.05 (95.14%)
-Seconds/scan-point: 20.188
+SIMPLY_IMPLIED_EASY: 4,805 moves included, 38 the first bucket
+1. When it was the first bucket:
+ All realms (38 moves):
+Scan-points/second: 2.90; var: 40.66 (1400.50%)
+Seconds/scan-point: 0.344
 
-Simply-implied FNs, not direct: 2 moves included, 43,280 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-3. All scan points (2):
-Scan-points/second: 0.03; var: 0.03 (98.11%)
-Seconds/scan-point: 35.667
+SIMPLY_IMPLIED: 69 moves included, 1 the first bucket
+1. When it was the first bucket:
+ All realms (1 moves):
+Scan-points/second: 3.50; var: 0.26 (7.34%)
+Seconds/scan-point: 0.286
 
-Implied FLs, not simply: 7 moves included, 43,275 skipped
-1. Block-numeral points only (2):
-Scan-points/second: 0.05; var: 0.05 (97.30%)
-Seconds/scan-point: 19.000
-2. Block- or line-numeral points (7):
-Scan-points/second: 0.03; var: 0.03 (97.01%)
-Seconds/scan-point: 30.455
-3. All scan points (7):
-Scan-points/second: 0.02; var: 0.02 (97.90%)
-Seconds/scan-point: 41.875
+IMPLIED_EASY: 1,763 moves included, 20 the first bucket
+1. When it was the first bucket:
+ All realms (20 moves):
+Scan-points/second: 0.75; var: 3.88 (515.71%)
+Seconds/scan-point: 1.330
 
-Implied FNs, not simply: 0 moves included, 43,282 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-3. All scan points (0):
+IMPLIED: 4,707 moves included, 0 the first bucket
+1. When it was the first bucket:
+ All realms (0 moves):
 Scan-points/second: NaN; var: NaN (NaN%)
 Seconds/scan-point: NaN
 
 
-Consecutive block-numeral moves (19462):
-Scan-points/second: 1.48; var: 1.92 (129.85%)
-Seconds/scan-point: 0.675
-
-Trailheads (247):
-Scan-points/second: 0.01; var: 0.01 (99.22%)
-Seconds/scan-point: 128.398
-
-======================
-With 1 trail
-======================
-
-Easy direct moves: 1,725 moves included, 9,428 skipped
-1. Block-numeral points only (1696):
-Scan-points/second: 1.48; var: 4.81 (324.93%)
-Seconds/scan-point: 0.675
-2. Block- or line-numeral points (1723):
-Scan-points/second: 1.42; var: 5.08 (356.46%)
-Seconds/scan-point: 0.702
-3. All scan points (1725):
-Scan-points/second: 1.36; var: 4.28 (314.39%)
-Seconds/scan-point: 0.734
-
-Hard direct moves: 5 moves included, 11,148 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-3. All scan points (5):
-Scan-points/second: 0.45; var: 0.70 (156.36%)
-Seconds/scan-point: 2.220
-
-Simply-implied FLs, not direct: 7 moves included, 11,146 skipped
-1. Block-numeral points only (4):
-Scan-points/second: 0.20; var: 0.16 (82.50%)
-Seconds/scan-point: 5.125
-2. Block- or line-numeral points (7):
-Scan-points/second: 0.21; var: 0.17 (79.63%)
-Seconds/scan-point: 4.739
-3. All scan points (7):
-Scan-points/second: 0.15; var: 0.13 (86.11%)
-Seconds/scan-point: 6.813
-
-Simply-implied FNs, not direct: 2 moves included, 11,151 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-3. All scan points (2):
-Scan-points/second: 0.07; var: 0.06 (95.56%)
-Seconds/scan-point: 15.333
-
-Implied FLs, not simply: 2 moves included, 11,151 skipped
-1. Block-numeral points only (1):
-Scan-points/second: 0.00; var: 0.00 (NaN%)
-Seconds/scan-point: Infinity
-2. Block- or line-numeral points (2):
-Scan-points/second: 0.01; var: 0.01 (100.00%)
-Seconds/scan-point: 89.000
-3. All scan points (2):
-Scan-points/second: 0.01; var: 0.01 (100.00%)
-Seconds/scan-point: 89.000
-
-Implied FNs, not simply: 0 moves included, 11,153 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-3. All scan points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-
-
-Consecutive block-numeral moves (5928):
-Scan-points/second: 1.49; var: 1.91 (127.61%)
-Seconds/scan-point: 0.670
-
-Trailheads (137):
-Scan-points/second: 0.02; var: 0.02 (98.09%)
-Seconds/scan-point: 51.846
-
-======================
-With 2 trails
-======================
-
-Easy direct moves: 1,790 moves included, 8,823 skipped
-1. Block-numeral points only (1750):
-Scan-points/second: 1.37; var: 4.26 (310.70%)
-Seconds/scan-point: 0.729
-2. Block- or line-numeral points (1786):
-Scan-points/second: 1.30; var: 3.90 (299.19%)
-Seconds/scan-point: 0.767
-3. All scan points (1790):
-Scan-points/second: 1.28; var: 4.28 (332.90%)
-Seconds/scan-point: 0.778
-
-Hard direct moves: 1 moves included, 10,612 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-3. All scan points (1):
-Scan-points/second: 0.50; var: 0.27 (53.33%)
-Seconds/scan-point: 2.000
-
-Simply-implied FLs, not direct: 1 moves included, 10,612 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (1):
-Scan-points/second: 0.07; var: 0.07 (96.43%)
-Seconds/scan-point: 14.500
-3. All scan points (1):
-Scan-points/second: 0.07; var: 0.07 (96.43%)
-Seconds/scan-point: 14.500
-
-Simply-implied FNs, not direct: 0 moves included, 10,613 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-3. All scan points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-
-Implied FLs, not simply: 0 moves included, 10,613 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-3. All scan points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-
-Implied FNs, not simply: 0 moves included, 10,613 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-3. All scan points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-
-
-Consecutive block-numeral moves (5696):
-Scan-points/second: 1.48; var: 1.78 (120.07%)
-Seconds/scan-point: 0.675
-
-Trailheads (85):
-Scan-points/second: 0.02; var: 0.02 (97.86%)
-Seconds/scan-point: 46.214
-
-======================
-With 3 or more trails
-======================
-
-Easy direct moves: 4,058 moves included, 19,357 skipped
-1. Block-numeral points only (3952):
-Scan-points/second: 1.43; var: 5.91 (413.26%)
-Seconds/scan-point: 0.700
-2. Block- or line-numeral points (4052):
-Scan-points/second: 1.41; var: 6.57 (467.50%)
+Consecutive block-numeral moves (2672):
+Scan-points/second: 1.41; var: 1.80 (128.20%)
 Seconds/scan-point: 0.711
-3. All scan points (4058):
-Scan-points/second: 1.37; var: 7.76 (565.40%)
-Seconds/scan-point: 0.728
 
-Hard direct moves: 15 moves included, 23,400 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-3. All scan points (15):
-Scan-points/second: 0.30; var: 0.41 (136.96%)
-Seconds/scan-point: 3.333
+Trailheads (69):
+Scan-points/second: 0.01; var: 0.01 (99.32%)
+Seconds/scan-point: 143.882
 
-Simply-implied FLs, not direct: 12 moves included, 23,403 skipped
-1. Block-numeral points only (8):
-Scan-points/second: 0.14; var: 0.12 (86.81%)
-Seconds/scan-point: 7.077
-2. Block- or line-numeral points (12):
-Scan-points/second: 0.20; var: 0.16 (80.92%)
-Seconds/scan-point: 5.077
-3. All scan points (12):
-Scan-points/second: 0.17; var: 0.14 (83.97%)
-Seconds/scan-point: 6.000
+======================
+Minimum open: 40 - 49
+======================
 
-Simply-implied FNs, not direct: 0 moves included, 23,415 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-3. All scan points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
+EASY_DIRECT: 10,462 moves included, 10,440 the first bucket
+1. When it was the first bucket:
+ All realms (10,440 moves):
+Scan-points/second: 4.11; var: 45.49 (1106.41%)
+Seconds/scan-point: 0.243
 
-Implied FLs, not simply: 9 moves included, 23,406 skipped
-1. Block-numeral points only (2):
-Scan-points/second: 0.02; var: 0.02 (98.86%)
-Seconds/scan-point: 44.500
-2. Block- or line-numeral points (9):
-Scan-points/second: 0.07; var: 0.07 (93.24%)
-Seconds/scan-point: 13.938
-3. All scan points (9):
-Scan-points/second: 0.06; var: 0.06 (94.59%)
-Seconds/scan-point: 17.154
+DIRECT: 1,114 moves included, 177 the first bucket
+1. When it was the first bucket:
+ All realms (177 moves):
+Scan-points/second: 0.84; var: 2.71 (323.21%)
+Seconds/scan-point: 1.194
 
-Implied FNs, not simply: 0 moves included, 23,415 skipped
-1. Block-numeral points only (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-2. Block- or line-numeral points (0):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-3. All scan points (0):
+SIMPLY_IMPLIED_EASY: 6,145 moves included, 94 the first bucket
+1. When it was the first bucket:
+ All realms (94 moves):
+Scan-points/second: 2.81; var: 29.59 (1053.81%)
+Seconds/scan-point: 0.356
+
+SIMPLY_IMPLIED: 317 moves included, 4 the first bucket
+1. When it was the first bucket:
+ All realms (4 moves):
+Scan-points/second: 6.73; var: 195.37 (2900.81%)
+Seconds/scan-point: 0.148
+
+IMPLIED_EASY: 3,998 moves included, 40 the first bucket
+1. When it was the first bucket:
+ All realms (40 moves):
+Scan-points/second: 1.14; var: 5.98 (525.06%)
+Seconds/scan-point: 0.879
+
+IMPLIED: 5,369 moves included, 0 the first bucket
+1. When it was the first bucket:
+ All realms (0 moves):
 Scan-points/second: NaN; var: NaN (NaN%)
 Seconds/scan-point: NaN
 
 
-Consecutive block-numeral moves (12503):
-Scan-points/second: 1.42; var: 1.76 (123.55%)
+Consecutive block-numeral moves (4335):
+Scan-points/second: 1.47; var: 2.27 (154.82%)
+Seconds/scan-point: 0.681
+
+Trailheads (212):
+Scan-points/second: 0.01; var: 0.01 (99.93%)
+Seconds/scan-point: 98.104
+
+======================
+Minimum open: 30 - 39
+======================
+
+EASY_DIRECT: 11,358 moves included, 11,296 the first bucket
+1. When it was the first bucket:
+ All realms (11,296 moves):
+Scan-points/second: 4.00; var: 35.38 (885.38%)
+Seconds/scan-point: 0.250
+
+DIRECT: 1,232 moves included, 89 the first bucket
+1. When it was the first bucket:
+ All realms (89 moves):
+Scan-points/second: 0.70; var: 2.01 (287.27%)
+Seconds/scan-point: 1.427
+
+SIMPLY_IMPLIED_EASY: 5,588 moves included, 42 the first bucket
+1. When it was the first bucket:
+ All realms (42 moves):
+Scan-points/second: 2.84; var: 26.16 (920.64%)
+Seconds/scan-point: 0.352
+
+SIMPLY_IMPLIED: 455 moves included, 4 the first bucket
+1. When it was the first bucket:
+ All realms (4 moves):
+Scan-points/second: 2.92; var: 2.54 (86.91%)
+Seconds/scan-point: 0.343
+
+IMPLIED_EASY: 3,962 moves included, 30 the first bucket
+1. When it was the first bucket:
+ All realms (30 moves):
+Scan-points/second: 0.90; var: 3.50 (389.40%)
+Seconds/scan-point: 1.112
+
+IMPLIED: 3,834 moves included, 0 the first bucket
+1. When it was the first bucket:
+ All realms (0 moves):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+
+
+Consecutive block-numeral moves (5182):
+Scan-points/second: 1.61; var: 2.56 (159.16%)
+Seconds/scan-point: 0.621
+
+Trailheads (174):
+Scan-points/second: 0.01; var: 0.01 (99.75%)
+Seconds/scan-point: 70.699
+
+======================
+Minimum open: 20 - 29
+======================
+
+EASY_DIRECT: 13,456 moves included, 13,372 the first bucket
+1. When it was the first bucket:
+ All realms (13,372 moves):
+Scan-points/second: 3.46; var: 24.75 (715.67%)
+Seconds/scan-point: 0.289
+
+DIRECT: 1,284 moves included, 40 the first bucket
+1. When it was the first bucket:
+ All realms (40 moves):
+Scan-points/second: 0.77; var: 1.59 (205.97%)
+Seconds/scan-point: 1.294
+
+SIMPLY_IMPLIED_EASY: 4,821 moves included, 39 the first bucket
+1. When it was the first bucket:
+ All realms (39 moves):
+Scan-points/second: 5.09; var: 37.23 (731.41%)
+Seconds/scan-point: 0.196
+
+SIMPLY_IMPLIED: 347 moves included, 6 the first bucket
+1. When it was the first bucket:
+ All realms (6 moves):
+Scan-points/second: 1.74; var: 5.64 (325.12%)
+Seconds/scan-point: 0.576
+
+IMPLIED_EASY: 3,442 moves included, 12 the first bucket
+1. When it was the first bucket:
+ All realms (12 moves):
+Scan-points/second: 7.09; var: 23.97 (338.18%)
+Seconds/scan-point: 0.141
+
+IMPLIED: 2,731 moves included, 0 the first bucket
+1. When it was the first bucket:
+ All realms (0 moves):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+
+
+Consecutive block-numeral moves (7134):
+Scan-points/second: 1.52; var: 2.04 (134.74%)
+Seconds/scan-point: 0.659
+
+Trailheads (131):
+Scan-points/second: 0.02; var: 0.02 (98.30%)
+Seconds/scan-point: 58.269
+
+======================
+Minimum open: 10 - 19
+======================
+
+EASY_DIRECT: 15,730 moves included, 15,689 the first bucket
+1. When it was the first bucket:
+ All realms (15,689 moves):
+Scan-points/second: 2.53; var: 16.46 (649.89%)
+Seconds/scan-point: 0.395
+
+DIRECT: 1,253 moves included, 33 the first bucket
+1. When it was the first bucket:
+ All realms (33 moves):
+Scan-points/second: 1.32; var: 6.41 (484.11%)
+Seconds/scan-point: 0.755
+
+SIMPLY_IMPLIED_EASY: 3,271 moves included, 6 the first bucket
+1. When it was the first bucket:
+ All realms (6 moves):
+Scan-points/second: 5.78; var: 21.39 (370.05%)
+Seconds/scan-point: 0.173
+
+SIMPLY_IMPLIED: 201 moves included, 2 the first bucket
+1. When it was the first bucket:
+ All realms (2 moves):
+Scan-points/second: 4.07; var: 9.34 (229.78%)
+Seconds/scan-point: 0.246
+
+IMPLIED_EASY: 2,313 moves included, 7 the first bucket
+1. When it was the first bucket:
+ All realms (7 moves):
+Scan-points/second: 1.42; var: 11.60 (816.14%)
 Seconds/scan-point: 0.703
 
-Trailheads (196):
-Scan-points/second: 0.02; var: 0.02 (97.88%)
-Seconds/scan-point: 47.005
+IMPLIED: 1,534 moves included, 0 the first bucket
+1. When it was the first bucket:
+ All realms (0 moves):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+
+
+Consecutive block-numeral moves (9345):
+Scan-points/second: 1.39; var: 1.47 (106.20%)
+Seconds/scan-point: 0.722
+
+Trailheads (80):
+Scan-points/second: 0.02; var: 0.02 (97.73%)
+Seconds/scan-point: 43.481
+
+======================
+Minimum open: 0 - 9
+======================
+
+EASY_DIRECT: 24,957 moves included, 24,851 the first bucket
+1. When it was the first bucket:
+ All realms (24,851 moves):
+Scan-points/second: 2.97; var: 24.63 (830.80%)
+Seconds/scan-point: 0.337
+
+DIRECT: 1,281 moves included, 41 the first bucket
+1. When it was the first bucket:
+ All realms (41 moves):
+Scan-points/second: 1.03; var: 3.09 (299.83%)
+Seconds/scan-point: 0.970
+
+SIMPLY_IMPLIED_EASY: 4,011 moves included, 21 the first bucket
+1. When it was the first bucket:
+ All realms (21 moves):
+Scan-points/second: 5.77; var: 96.63 (1674.39%)
+Seconds/scan-point: 0.173
+
+SIMPLY_IMPLIED: 274 moves included, 3 the first bucket
+1. When it was the first bucket:
+ All realms (3 moves):
+Scan-points/second: 3.25; var: 18.12 (556.70%)
+Seconds/scan-point: 0.307
+
+IMPLIED_EASY: 2,886 moves included, 20 the first bucket
+1. When it was the first bucket:
+ All realms (20 moves):
+Scan-points/second: 4.05; var: 68.52 (1692.62%)
+Seconds/scan-point: 0.247
+
+IMPLIED: 2,315 moves included, 0 the first bucket
+1. When it was the first bucket:
+ All realms (0 moves):
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+
+
+Consecutive block-numeral moves (14921):
+Scan-points/second: 1.43; var: 1.43 (99.82%)
+Seconds/scan-point: 0.697
+
+Trailheads (49):
+Scan-points/second: 0.03; var: 0.03 (97.47%)
+Seconds/scan-point: 38.750
