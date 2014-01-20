@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.core;
 
+import static us.blanshard.sudoku.core.Location.COUNT;
 import static us.blanshard.sudoku.core.Numeral.numeral;
 
 import java.util.AbstractMap;
@@ -47,7 +48,7 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
     this.squares = squares;
   }
 
-  public static final Grid BLANK = new Grid(new byte[81]);
+  public static final Grid BLANK = new Grid(new byte[COUNT]);
 
   /** Returns a new Builder. */
   public static Builder builder() {
@@ -69,11 +70,15 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
   public State getState() {
     if (getBrokenLocations().size() > 0)
       return State.BROKEN;
-    return size() < 81 ? State.INCOMPLETE : State.SOLVED;
+    return size() < COUNT ? State.INCOMPLETE : State.SOLVED;
   }
 
   public boolean isSolved() {
     return getState() == State.SOLVED;
+  }
+
+  public int getNumOpenLocations() {
+    return COUNT - size();
   }
 
   /**
@@ -315,9 +320,9 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
       else if (c == '0' || c == '.')
         ++index;
     }
-    if (index != 81) {
+    if (index != COUNT) {
       throw new IllegalArgumentException(
-          String.format("Grid.fromString requires 81 locations, got %d in %s", index, s));
+          String.format("Grid.fromString requires %d locations, got %d in %s", COUNT, index, s));
     }
     return builder.build();
   }
@@ -371,11 +376,11 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
     }
 
     @Override public boolean hasNext() {
-      return nextIndex < 81 && squares[nextIndex] > 0;
+      return nextIndex < COUNT && squares[nextIndex] > 0;
     }
 
     @Override public Entry<Location, Numeral> next() {
-      if (nextIndex >= 81)
+      if (nextIndex >= COUNT)
         throw new NoSuchElementException();
       GridEntry answer = new GridEntry(nextIndex++);
       stepIndex();
@@ -383,7 +388,7 @@ public final class Grid extends AbstractMap<Location, Numeral> implements Map<Lo
     }
 
     private void stepIndex() {
-      while (nextIndex < 81 && squares[nextIndex] == 0)
+      while (nextIndex < COUNT && squares[nextIndex] == 0)
         ++nextIndex;
     }
 
