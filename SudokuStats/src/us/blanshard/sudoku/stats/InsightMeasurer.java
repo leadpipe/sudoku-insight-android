@@ -224,8 +224,8 @@ public class InsightMeasurer implements Runnable {
       Assignment a = insight.getImpliedAssignment();
       boolean isError = insight.isError();
       if (isError || a != null) {
-        insight = minimize(gridMarks, insight);
-        MoveKind kind = Evaluator.kindForInsight(gridMarks, insight, null);
+        insight = Analyzer.minimize(gridMarks, insight);
+        MoveKind kind = Evaluator.kindForInsight(gridMarks.grid, insight, null);
         insights.put(kind, insight);
         if (firstKind == null) firstKind = kind;
 
@@ -278,13 +278,6 @@ public class InsightMeasurer implements Runnable {
             unitNumTargets.size() + locTargets.size());
         (found.contains(kind) ? matched : missed).add(coll);
       }
-    }
-
-    private Insight minimize(GridMarks gridMarks, Insight insight) {
-      if (insight.type != Type.IMPLICATION) return insight;
-      Implication i = (Implication) insight;
-      i = Evaluator.minimizeForSimplicityTest(gridMarks, i);
-      return Analyzer.minimize(gridMarks, i == null ? insight : i);
     }
 
     private Pattern getPattern(Insight insight) {

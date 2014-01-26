@@ -351,10 +351,14 @@ public class Analyzer {
   public static void findSets(GridMarks gridMarks, Callback callback) {
     SetState setState = new SetState();
     int[] indices = new int[MAX_SET_SIZE];
+    // We look for hidden sets first.
     for (int size = 2; size <= MAX_SET_SIZE; ++size) {
       for (Unit unit : Unit.allUnits()) {
-        // Hidden sets are typically easier to see than naked ones.
         findHiddenSets(gridMarks, callback, setState, unit, size, indices);
+      }
+    }
+    for (int size = 2; size <= MAX_SET_SIZE; ++size) {
+      for (Unit unit : Unit.allUnits()) {
         findNakedSets(gridMarks, callback, setState, unit, size, indices);
       }
     }

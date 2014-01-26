@@ -315,12 +315,12 @@ public class Evaluator {
    * hardest.
    */
   public enum MoveKind {
-    EASY_DIRECT(1.6, 1.1),
-    DIRECT(1.7, 1.1),
-    SIMPLY_IMPLIED_EASY(2.1, 1.2),
-    SIMPLY_IMPLIED(2.3, 1.3),
-    IMPLIED_EASY(4.3, 2.0),
-    IMPLIED(4.6, 2.6),  // catch-all, including errors
+    DIRECT_EASY(1.6, 1.1, 0, 0),
+    DIRECT_HARD(1.7, 1.1, 1, 0),
+    SIMPLY_IMPLIED_EASY(2.1, 1.2, 0, 1),
+    SIMPLY_IMPLIED_HARD(2.3, 1.3, 1, 1),
+    COMPLEXLY_IMPLIED_EASY(4.3, 2.0, 0, 2),
+    COMPLEXLY_IMPLIED_HARD(4.6, 2.6, 1, 2),
     ;
 
     /**
@@ -340,8 +340,11 @@ public class Evaluator {
     public final double minutesPerScanPoint;
     public final double minutesPerScanPointWithTrails;
 
-    public static final MoveKind MIN = EASY_DIRECT;
-    public static final MoveKind MAX = IMPLIED;
+    private final int difficulty;
+    private final int complexity;
+
+    public static final MoveKind MIN = DIRECT_EASY;
+    public static final MoveKind MAX = COMPLEXLY_IMPLIED_HARD;
 
     /**
      * When there is a direct block-numeral move using the same numeral as the
@@ -358,9 +361,12 @@ public class Evaluator {
     public static final double MINUTES_BEFORE_DISPROOF = 128.4 / 60;
     public static final double MINUTES_BEFORE_DISPROOF_WITH_TRAILS = 48.2 / 60;
 
-    private MoveKind(double secondsPerScanPoint, double secondsPerScanPointWithTrails) {
+    private MoveKind(double secondsPerScanPoint, double secondsPerScanPointWithTrails,
+        int difficulty, int complexity) {
       this.minutesPerScanPoint = secondsPerScanPoint / 60;
       this.minutesPerScanPointWithTrails = secondsPerScanPointWithTrails / 60;
+      this.difficulty = difficulty;
+      this.complexity = complexity;
     }
 
     public static double calcBlockNumeralMinutes(
@@ -390,6 +396,14 @@ public class Evaluator {
       double perScanPoint = trails ? minutesPerScanPointWithTrails : minutesPerScanPoint;
       return perScanPoint * scanPoints * move.getScanTargetCount();
     }
+
+    public Integer partialCompare(MoveKind that) {
+      if (this.difficulty < that.difficulty)
+        return this.complexity <= that.complexity ? -1 : null;
+      if (this.difficulty > that.difficulty)
+        return this.complexity >= that.complexity ? 1 : null;
+      return this.complexity - that.complexity;
+    }
   }
 
   public static class Collector implements Analyzer.Callback {
@@ -417,7 +431,7 @@ public class Evaluator {
       Assignment a = insight.getImpliedAssignment();
       if (a != null) {
         insight.addScanTargets(locTargets, unitNumTargets);
-        MoveKind kind = kindForInsight(gridMarks, insight, kinds.get(a.location));
+        MoveKind kind = kindForInsight(gridMarks.grid, insight, kinds.get(a.location));
         kinds.put(a.location, kind);
         if (best == null || kind.compareTo(best) < 0) {
           best = kind;
@@ -476,7 +490,7 @@ public class Evaluator {
    * grid.  If max is given, it is the worst (most expensive) kind that should
    * be returned.
    */
-  public static MoveKind kindForInsight(GridMarks gridMarks, Insight insight, @Nullable MoveKind max) {
+  public static MoveKind kindForInsight(Grid grid, Insight insight, @Nullable MoveKind max) {
     if (max == MoveKind.MIN) return max;
     if (max == null) max = MoveKind.MAX;
     switch (insight.type) {
@@ -485,14 +499,14 @@ public class Evaluator {
       case BARRED_NUMERAL:
       case FORCED_LOCATION:
       case FORCED_NUMERAL:
-        return isEasy(gridMarks, insight) ? MoveKind.EASY_DIRECT : MoveKind.DIRECT;
+        return isEasy(grid, insight) ? MoveKind.DIRECT_EASY : MoveKind.DIRECT_HARD;
       case IMPLICATION: {
-        if (max.compareTo(MoveKind.DIRECT) <= 0) return max;
-        Implication i = (Implication) insight;
-        boolean easy = isEasy(gridMarks, i.getNub());
-        MoveKind kind = isSimple(gridMarks, i, max)
-          ? easy ? MoveKind.SIMPLY_IMPLIED_EASY : MoveKind.SIMPLY_IMPLIED
-          : easy ? MoveKind.IMPLIED_EASY : MoveKind.IMPLIED;
+        if (max.compareTo(MoveKind.DIRECT_HARD) <= 0) return max;
+        Implication imp = insight.asImplication();
+        boolean easy = isEasy(grid, imp);
+        MoveKind kind = isSimple(imp)
+          ? easy ? MoveKind.SIMPLY_IMPLIED_EASY : MoveKind.SIMPLY_IMPLIED_HARD
+          : easy ? MoveKind.COMPLEXLY_IMPLIED_EASY : MoveKind.COMPLEXLY_IMPLIED_HARD;
         return Ordering.<MoveKind>natural().min(kind, max);
       }
       case OVERLAP:
@@ -500,46 +514,63 @@ public class Evaluator {
       case DISPROVED_ASSIGNMENT:
       case UNFOUNDED_ASSIGNMENT:
         return max;
-      default:
-        throw new AssertionError();
     }
+    throw new AssertionError();
   }
 
   /**
    * Tells whether an insight that relies on the set of numerals in a location's
    * peers is an easy one.
    */
-  private static boolean isEasy(GridMarks gridMarks, Location target) {
-    // Our current definition of easy: there are at most 2 open locations in the
-    // block (not counting the target location), and the numerals assigned to at
-    // most one of the row or column are required to force the target numeral.
-    int openInBlock = 0;
-    NumSet inBlock = NumSet.NONE;
-    for (Location loc : target.block) {
-      if (loc == target) continue;
-      if (gridMarks.grid.containsKey(loc))
-        inBlock = inBlock.with(gridMarks.grid.get(loc));
-      else
-        ++openInBlock;
-    }
-    if (openInBlock > 2) return false;
-    NumSet inRow = inLine(gridMarks, target.row, target).minus(inBlock);
-    NumSet inCol = inLine(gridMarks, target.column, target).minus(inBlock);
-    return inRow.minus(inCol).isEmpty() || inCol.minus(inRow).isEmpty();
+  private static boolean isEasy(Grid grid, Location target) {
+    // Our current definition of easy: there are at least 6 assignments in any
+    // unit (not counting the target location); or at most two of the units are
+    // required to force the target numeral.
+    return isAnyUnitFull(grid, target)
+        || areTwoUnitsSufficient(inUnits(grid, target));
   }
 
-  private static NumSet inLine(GridMarks gridMarks, Unit unit, Location target) {
-    NumSet answer = NumSet.NONE;
+  private static int numAssigned(Grid grid, Unit unit, Location target) {
+    int answer = 0;
     for (Location loc : unit)
-      if (loc.block != target.block && gridMarks.grid.containsKey(loc))
-        answer = answer.with(gridMarks.grid.get(loc));
+      if (loc != target && grid.containsKey(loc))
+        ++answer;
     return answer;
   }
 
+  private static boolean isAnyUnitFull(Grid grid, Location target) {
+    return numAssigned(grid, target.block, target) >= 6
+        || numAssigned(grid, target.row, target) >= 6
+        || numAssigned(grid, target.column, target) >= 6;
+  }
+
+  private static NumSet inUnit(Grid grid, Unit unit, Location target) {
+    NumSet answer = NumSet.NONE;
+    for (Location loc : unit)
+      if (loc != target && grid.containsKey(loc))
+        answer = answer.with(grid.get(loc));
+    return answer;
+  }
+
+  private static NumSet[] inUnits(Grid grid, Location target) {
+    NumSet[] answer = new NumSet[3];
+    answer[Unit.Type.BLOCK.ordinal()] = inUnit(grid, target.block, target);
+    answer[Unit.Type.ROW.ordinal()] = inUnit(grid, target.row, target);
+    answer[Unit.Type.COLUMN.ordinal()] = inUnit(grid, target.column, target);
+    return answer;
+  }
+
+  private static boolean areTwoUnitsSufficient(NumSet[] sets) {
+    NumSet a = sets[0], b = sets[1], c = sets[2];
+    return a.isSubsetOf(b.or(c))
+        || b.isSubsetOf(c.or(a))
+        || c.isSubsetOf(a.or(b));
+  }
+
   /**
-   * Tells whether the given insight is an easy assignment.
+   * Tells whether the given insight is an easy assignment or error.
    */
-  private static boolean isEasy(GridMarks gridMarks, Insight insight) {
+  private static boolean isEasy(Grid grid, Insight insight) {
     switch (insight.type) {
     case FORCED_LOCATION:
     case BARRED_NUMERAL:
@@ -547,10 +578,10 @@ public class Evaluator {
       return true;
 
     case FORCED_NUMERAL:
-      return isEasy(gridMarks, ((ForcedNum) insight).getLocation());
+      return isEasy(grid, ((ForcedNum) insight).getLocation());
 
     case BARRED_LOCATION:
-      return isEasy(gridMarks, ((BarredLoc) insight).getLocation());
+      return isEasy(grid, ((BarredLoc) insight).getLocation());
 
     default:
       return false;
@@ -558,20 +589,85 @@ public class Evaluator {
   }
 
   /**
-   * Tells whether the given implication is a simple one.  Skips the test if max
-   * is already in the simple range.  May minimize the implication as part of
-   * its work.
+   * Tells whether the given insight is an implication that leads to an easy
+   * assignment or error.
    */
-  private static boolean isSimple(GridMarks gridMarks, Implication i, MoveKind max) {
-    if (max.compareTo(MoveKind.SIMPLY_IMPLIED) <= 0) return true;
-    return minimizeForSimplicityTest(gridMarks, i) != null;
+  private static boolean isEasy(Grid grid, Implication imp) {
+    Location target;
+    Insight nub = imp.getNub();
+    switch (nub.type) {
+      case FORCED_LOCATION:
+      case BARRED_NUMERAL:
+      case CONFLICT:
+        return true;
+
+      case FORCED_NUMERAL:
+        target = ((ForcedNum) nub).getLocation();
+        break;
+
+      case BARRED_LOCATION:
+        target = ((BarredLoc) nub).getLocation();
+        break;
+
+      default:
+        return false;
+    }
+
+    if (isAnyUnitFull(grid, target)) return true;
+
+    NumSet[] sets = inUnits(grid, target);
+
+    while (imp != null) {
+      for (Insight a : imp.getAntecedents()) {
+        switch (a.type) {
+          case OVERLAP: {
+            Overlap o = (Overlap) a;
+            Unit u = o.getUnit();
+            if (u.contains(target)) {
+              int i = u.getType().ordinal();
+              sets[i] = sets[i].with(o.getNumeral());
+            }
+            break;
+          }
+          case LOCKED_SET: {
+            LockedSet s = (LockedSet) a;
+            Unit u = s.getLocations().unit;
+            if (u.contains(target)) {
+              int i = u.getType().ordinal();
+              sets[i] = sets[i].or(s.getNumerals());
+            }
+            break;
+          }
+          default:
+            break;
+        }
+      }
+      imp = imp.getConsequent().asImplication();
+    }
+
+    return areTwoUnitsSufficient(sets);
   }
 
-  private static boolean isSimpleAntecedent(Insight insight) {
+  /**
+   * Tells whether the given implication is a simple one.
+   */
+  private static boolean isSimple(Implication imp) {
+    boolean outermost = true;
+    while (imp != null) {
+      for (Insight a : imp.getAntecedents())
+        if (!isSimpleAntecedent(a, outermost)) return false;
+      outermost = false;
+      imp = imp.getConsequent().asImplication();
+    }
+    return true;
+  }
+
+  private static boolean isSimpleAntecedent(Insight insight, boolean outermost) {
     switch (insight.type) {
       case OVERLAP:
         break;
       case LOCKED_SET: {
+        if (!outermost) return false;
         LockedSet s = (LockedSet) insight;
         if (s.isNakedSet() || s.getLocations().unit.getType() != Unit.Type.BLOCK
             || s.getLocations().size() > 3)
@@ -581,24 +677,5 @@ public class Evaluator {
       default: return false;
     }
     return true;
-  }
-
-  @Nullable public static Implication minimizeForSimplicityTest(GridMarks gridMarks, Implication implication) {
-    Insight consequent = implication.getConsequent();
-    if (consequent instanceof Implication) {
-      consequent = minimizeForSimplicityTest(
-          gridMarks.toBuilder().apply(implication.getAntecedents()).build(),
-          (Implication) consequent);
-      if (consequent == null) return null;
-    }
-
-    List<Insight> simpleAntecedents = Lists.newArrayList();
-    for (Insight a : implication.getAntecedents())
-      if (isSimpleAntecedent(a))
-        simpleAntecedents.add(a);
-    GridMarks simpleOnly = gridMarks.toBuilder().apply(simpleAntecedents).build();
-    if (consequent.isImpliedBy(simpleOnly))
-      return new Implication(simpleAntecedents, consequent);
-    return null;
   }
 }

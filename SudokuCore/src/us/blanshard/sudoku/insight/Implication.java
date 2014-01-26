@@ -80,6 +80,10 @@ public final class Implication extends Insight {
     return consequent.getNub();
   }
 
+  @Override public Implication asImplication() {
+    return this;
+  }
+
   @Override public int getDepth() {
     return 1 + consequent.getDepth();
   }

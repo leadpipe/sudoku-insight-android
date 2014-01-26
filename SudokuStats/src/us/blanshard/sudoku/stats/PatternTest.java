@@ -85,19 +85,19 @@ public class PatternTest {
   }
 
   @Test public void coll() throws Exception {
-    Coll coll = Pattern.collFromString("DIRECT:7:123:");
+    Coll coll = Pattern.collFromString("DIRECT_HARD:7:123:");
     assertEquals(0, coll.patterns.size());
-    assertEquals(MoveKind.DIRECT, coll.kind);
+    assertEquals(MoveKind.DIRECT_HARD, coll.kind);
     assertEquals(7, coll.realmVector);
     assertEquals(123, coll.numScanTargets);
     StringBuilder sb = new StringBuilder();
     Pattern.appendTo(sb, coll);
-    assertEquals("DIRECT:7:123:", sb.toString());
+    assertEquals("DIRECT_HARD:7:123:", sb.toString());
 
-    String string = "EASY_DIRECT:2:5:c:b,s:b:4:n";
+    String string = "DIRECT_EASY:2:5:c:b,s:b:4:n";
     coll = Pattern.collFromString(string);
     assertEquals(2, coll.patterns.size());
-    assertEquals(MoveKind.EASY_DIRECT, coll.kind);
+    assertEquals(MoveKind.DIRECT_EASY, coll.kind);
     assertEquals(2, coll.realmVector);
     assertEquals(5, coll.numScanTargets);
     assertEquals(Pattern.Conflict.BLOCK, coll.patterns.get(0));
@@ -114,7 +114,7 @@ public class PatternTest {
     Pattern.appendAllTo(sb, multi);
     assertEquals(0, sb.length());
 
-    String string = "SIMPLY_IMPLIED:4:1:c:b;SIMPLY_IMPLIED:4:4:s:b:4:n;SIMPLY_IMPLIED:4:2:fl:b,fl:l";
+    String string = "SIMPLY_IMPLIED_HARD:4:1:c:b;SIMPLY_IMPLIED_HARD:4:4:s:b:4:n;SIMPLY_IMPLIED_HARD:4:2:fl:b,fl:l";
     multi = Pattern.collsFromString(string);
     assertEquals(3, multi.size());
     assertEquals(Collections.singletonList(Pattern.Conflict.BLOCK), multi.get(0).patterns);

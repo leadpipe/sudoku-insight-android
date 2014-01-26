@@ -178,7 +178,7 @@ public class EvaluatorDetails implements Runnable {
       if (isError)
         errors = true;
       else if (a != null)
-        kinds.put(a.location, kindForInsight(gridMarks, insight, kinds.get(a.location)));
+        kinds.put(a.location, kindForInsight(gridMarks.grid, insight, kinds.get(a.location)));
       if (isError || a != null) {
         if (move == null && assignment.equals(a)) {
           move = Analyzer.minimize(gridMarks, insight);

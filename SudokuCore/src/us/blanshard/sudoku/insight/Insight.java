@@ -119,9 +119,14 @@ public abstract class Insight {
     return Collections.<Assignment>emptySet();
   }
 
-  /** Returns the "nub" of this insight. */
+  /** Returns the "nub" of this insight, ie the ultimate consequent insight. */
   public Insight getNub() {
     return this;
+  }
+
+  /** Returns this object as an Implication if it is one, or null if not. */
+  @Nullable public Implication asImplication() {
+    return null;
   }
 
   /** Returns the number of levels of implication this insight embodies. */
