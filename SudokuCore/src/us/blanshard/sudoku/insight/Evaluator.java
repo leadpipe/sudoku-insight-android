@@ -406,6 +406,13 @@ public class Evaluator {
     }
   }
 
+  public static final PartialComparator<MoveKind> KIND_COMPARE = new PartialComparator<MoveKind>() {
+    @Override public Integer partialCompare(MoveKind a, MoveKind b) {
+      return a.partialCompare(b);
+    }
+  };
+  public static final PartialComparator<MoveKind> KIND_REVERSE = PartialComparators.reverse(KIND_COMPARE);
+
   public static class Collector implements Analyzer.Callback {
     private final GridMarks gridMarks;
     @Nullable private final Numeral prevNumeral;
