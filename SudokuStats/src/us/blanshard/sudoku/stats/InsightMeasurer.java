@@ -15,55 +15,38 @@ limitations under the License.
  */
 package us.blanshard.sudoku.stats;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static us.blanshard.sudoku.insight.Evaluator.KIND_COMPARE;
+import static us.blanshard.sudoku.insight.Evaluator.KIND_REVERSE;
+import static us.blanshard.sudoku.insight.Evaluator.kindForInsight;
+import static us.blanshard.sudoku.insight.PartialComparators.updateMinima;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Block;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.LocSet;
-import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
-import us.blanshard.sudoku.core.Solver;
-import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumSet;
 import us.blanshard.sudoku.core.UnitNumeral;
-import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.UndoDetector;
 import us.blanshard.sudoku.insight.Analyzer;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
-import us.blanshard.sudoku.insight.BarredLoc;
-import us.blanshard.sudoku.insight.BarredNum;
-import us.blanshard.sudoku.insight.Conflict;
-import us.blanshard.sudoku.insight.Evaluator;
 import us.blanshard.sudoku.insight.Evaluator.MoveKind;
-import us.blanshard.sudoku.insight.ForcedLoc;
-import us.blanshard.sudoku.insight.ForcedNum;
 import us.blanshard.sudoku.insight.GridMarks;
-import us.blanshard.sudoku.insight.Implication;
 import us.blanshard.sudoku.insight.Insight;
-import us.blanshard.sudoku.insight.Insight.Type;
-import us.blanshard.sudoku.insight.LockedSet;
-import us.blanshard.sudoku.insight.Overlap;
-import us.blanshard.sudoku.stats.Pattern.Coll;
-import us.blanshard.sudoku.stats.Pattern.UnitCategory;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
-import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 /**
  * Analyzes sudoku game histories to measure the time taken to make use of
@@ -96,24 +79,21 @@ public class InsightMeasurer implements Runnable {
         blockUnitNums.add(UnitNumeral.of(block, num));
   }
 
-  private final Grid solution;
   private final Sudoku game;
   private final List<Move> history;
   private final UndoDetector undoDetector;
-  private final Multimap<Integer, Location> mistakes = HashMultimap.create();
   private final Set<Integer> trails = Sets.newHashSet();
   private final PrintWriter out;
+
+  private final Collection<Batch> openBatches = Sets.newLinkedHashSet();
 
   private int moveNumber = 0;
   private int numSkippedMoves = 0;
   private long prevTime = 0;
   private long skippedTime = 0;
-  private Numeral prevNumeral = null;
   private int minOpen;
 
   private InsightMeasurer(Grid puzzle, List<Move> history, PrintWriter out) {
-    Solver.Result result = Solver.solve(puzzle, 10, new Random());
-    this.solution = checkNotNull(result.intersection);
     this.game = new Sudoku(puzzle).resume();
     this.history = history;
     this.undoDetector = new UndoDetector(game);
@@ -126,16 +106,14 @@ public class InsightMeasurer implements Runnable {
       applyMove(move);
       ++moveNumber;
       prevTime = move.timestamp;
-      prevNumeral = move.getNumeral();
     }
   }
 
   private void applyMove(Move move) {
-    noteMistakes(move);
     long elapsed = move.timestamp - prevTime;
-    if (move instanceof Move.Set
-        && !undoDetector.isUndoOrRedo(move)
-        && !isApparentCorrection(move)) {
+    Collection<Batch> finishedBatches = Lists.newArrayList();
+    Batch newBatch = null;
+    if (move instanceof Move.Set && !undoDetector.isUndoOrRedo(move)) {
       Grid grid = game.getState(move.trailId).getGrid();
       if (grid.containsKey(move.getLocation()))
         grid = grid.toBuilder().remove(move.getLocation()).build();
@@ -143,172 +121,243 @@ public class InsightMeasurer implements Runnable {
       if (numOpen < minOpen)
         minOpen = numOpen;
       GridMarks gridMarks = new GridMarks(grid);
-      Collector collector = new Collector(gridMarks, move.getAssignment(), prevNumeral);
+      Collector collector = new Collector(gridMarks);
       Analyzer.analyze(gridMarks, collector, true);
-      boolean isTrailhead = move.trailId >= 0 && game.getTrail(move.trailId).getSetCount() == 0;
-      List<Coll> matched = Lists.newArrayList();
-      List<Coll> missed = Lists.newArrayList();
-      collector.makeColls(matched, missed);
-      try {
-        Pattern.appendAllTo(out, matched)
-            .append('\t');
-        Pattern.appendAllTo(out, missed)
-            .append('\t')
-            .append(collector.firstKind == null ? "" : collector.firstKind.toString())
-            .append('\t')
-            .append(String.valueOf(moveNumber))
-            .append('\t')
-            .append(String.valueOf(moveNumber - numSkippedMoves))
-            .append('\t')
-            .append(String.valueOf(move.timestamp))
-            .append('\t')
-            .append(String.valueOf(move.timestamp - skippedTime))
-            .append('\t')
-            .append(String.valueOf(minOpen))
-            .append('\t')
-            .append(String.valueOf(elapsed))
-            .append('\t')
-            .append(String.valueOf(numOpen))
-            .append('\t')
-            .append(String.valueOf(collector.isBlockNumeralMove()))
-            .append('\t')
-            .append(String.valueOf(collector.getNumBlockNumeralMoves()))
-            .append('\t')
-            .append(String.valueOf(collector.getNumOpenBlockNumerals()))
-            .append('\t')
-            .append(String.valueOf(isTrailhead))
-            .append('\t')
-            .append(String.valueOf(trails.size()))
-            ;
-        out.println();
-      } catch (IOException e) {
-        throw new AssertionError(e);
+      collector.extendElims();
+      boolean isTrailhead = move.trailId >= 0
+          && (game.getTrail(move.trailId).getTrailhead() == null
+              || game.getTrail(move.trailId).getTrailhead() == move.getLocation());
+      if (isTrailhead) {
+        Set<MoveKind> minima = getMinima(collector.moves.values());
+        emitTrailheadLine(elapsed, numOpen, move.timestamp, minima);
+      } else if (collector.moves.containsKey(move.getAssignment())) {
+        newBatch = new Batch(collector, move, elapsed, numOpen);
+        for (Batch b : openBatches) {
+          if (!b.extendWith(move, elapsed, newBatch))
+            finishedBatches.add(b);
+        }
+        openBatches.add(newBatch);
       }
-    } else {
-      ++numSkippedMoves;
-      skippedTime += elapsed;
+    }
+    if (newBatch == null) {
+      finishedBatches.addAll(openBatches);
+    }
+    for (Batch b : finishedBatches) {
+      emitBatch(b);
+      openBatches.remove(b);
     }
     game.move(move);
     if (move.trailId >= 0) trails.add(move.trailId);
-  }
-
-  private void noteMistakes(Move move) {
-    if (solution.containsKey(move.getLocation())
-        && solution.get(move.getLocation()) != move.getNumeral()) {
-      mistakes.put(move.trailId, move.getLocation());
+    if (newBatch == null) {
+      ++numSkippedMoves;
+      skippedTime += elapsed;
     }
   }
 
-  private boolean isApparentCorrection(Move move) {
-    return mistakes.containsEntry(move.trailId, move.getLocation());
+  static EnumSet<MoveKind> getMinima(Collection<WrappedInsight> wrappedInsights) {
+    EnumSet<MoveKind> minima = EnumSet.noneOf(MoveKind.class);
+    for (WrappedInsight w : wrappedInsights) {
+      updateMinima(minima, w.kind(), KIND_COMPARE);
+    }
+    return minima;
+  }
+
+  private void emitTrailheadLine(long elapsed, int numOpen, long timestamp, Set<MoveKind> minima) {
+    startLine(true, elapsed, numOpen, timestamp, minima);
+    endLine();
+  }
+
+  private void emitBatch(Batch b) {
+    startLine(false, b.totalElapsed, b.numOpen, b.firstMove.timestamp, b.minima);
+    emit(b.assignments.size());
+    emit(Joiner.on(';').join(b.maxOfMins));
+    b.emitUniverse();
+    endLine();
+  }
+
+  private void startLine(boolean isTrailhead, long elapsed, int numOpen,
+      long timestamp, Set<MoveKind> minima) {
+    out.print(isTrailhead);
+    emit(elapsed);
+    emit(numOpen);
+    emit(minOpen);
+    emit(trails.size());
+    emit(timestamp);
+    emit(timestamp - skippedTime);
+    emit(moveNumber);
+    emit(moveNumber - numSkippedMoves);
+    emit(Joiner.on(';').join(minima));
+  }
+
+  private void endLine() {
+    out.println();
+  }
+
+  private void emit(String s) {
+    out.print('\t');
+    out.print(s);
+  }
+
+  private void emit(int i) {
+    emit(String.valueOf(i));
+  }
+
+  private void emit(long i) {
+    emit(String.valueOf(i));
+  }
+
+  private void emitUniverse(Universe u) {
+    emit(u.numerator());
+    emit(u.denominator());
+    emit(u.realmVector());
   }
 
   private class Collector implements Analyzer.Callback {
     final GridMarks gridMarks;
-    final Assignment assignment;
-    final Numeral prevNumeral;
-    final ListMultimap<MoveKind, Insight> insights = ArrayListMultimap.create();
-    final ListMultimap<MoveKind, Pattern> patterns = ArrayListMultimap.create();
-    final Set<MoveKind> found = EnumSet.noneOf(MoveKind.class);
-    MoveKind firstKind;
-    int numBlockNumeralMoves;
-    boolean isBlockNumeralMove;
+    final Multimap<Assignment, WrappedInsight> moves = ArrayListMultimap.create();
+    final Collection<WrappedInsight> errors = Lists.newArrayList();
+    final Set<Insight> elims = Sets.newLinkedHashSet();
 
-    Collector(GridMarks gridMarks, Assignment assignment, @Nullable Numeral prevNumeral) {
+    Collector(GridMarks gridMarks) {
       this.gridMarks = gridMarks;
-      this.assignment = assignment;
-      this.prevNumeral = prevNumeral;
     }
 
     @Override public void take(Insight insight) throws StopException {
+      insight = Analyzer.minimize(gridMarks, insight);
       Assignment a = insight.getImpliedAssignment();
-      boolean isError = insight.isError();
-      if (isError || a != null) {
-        insight = Analyzer.minimize(gridMarks, insight);
-        MoveKind kind = Evaluator.kindForInsight(gridMarks.grid, insight, null);
-        insights.put(kind, insight);
-        if (firstKind == null) firstKind = kind;
-
-        Pattern pattern = getPattern(insight);
-        if (assignment.equals(a)) {
-          int index = found.add(kind) ? 0 : 1;
-          patterns.get(kind).add(index, pattern);  // Put the first one first.
-        } else {
-          patterns.put(kind, pattern);
-        }
-      }
-      if (a != null && prevNumeral != null && insight.type == Type.FORCED_LOCATION) {
-        ForcedLoc fl = (ForcedLoc) insight;
-        if (fl.getUnit().getType() == Unit.Type.BLOCK && fl.getNumeral() == prevNumeral) {
-          ++numBlockNumeralMoves;
-          if (assignment.equals(a)) isBlockNumeralMove = true;
-        }
-      }
+      if (a != null)
+        moves.put(a, new WrappedInsight(gridMarks, insight));
+      else if (insight.isError())
+        errors.add(new WrappedInsight(gridMarks, insight));
+      else
+        elims.add(insight);
     }
 
-    int getNumBlockNumeralMoves() {
-      return numBlockNumeralMoves;
-    }
-
-    boolean isBlockNumeralMove() {
-      return isBlockNumeralMove;
-    }
-
-    int getNumOpenBlockNumerals() {
-      if (prevNumeral == null) return 0;
-      int count = 0;
-      for (Block block : Block.all()) {
-        UnitSubset locs = gridMarks.marks.get(UnitNumeral.of(block, prevNumeral));
-        if (locs.size() > 1 || locs.size() == 1 && !gridMarks.grid.containsKey(locs.get(0)))
-          ++count;
-      }
-      return count;
-    }
-
-    void makeColls(List<Coll> matched, List<Coll> missed) {
-      for (MoveKind kind : insights.keySet()) {
-        LocSet locTargets = new LocSet();
-        UnitNumSet unitNumTargets = new UnitNumSet();
-        int realmVector = 0;
-        for (Insight insight : insights.get(kind)) {
-          insight.addScanTargets(locTargets, unitNumTargets);
-          realmVector |= insight.getRealmVector();
-        }
-        Coll coll = new Coll(patterns.get(kind), kind, realmVector,
-            unitNumTargets.size() + locTargets.size());
-        (found.contains(kind) ? matched : missed).add(coll);
+    public void extendElims() {
+      GridMarks.Builder builder = gridMarks.toBuilder().apply(elims);
+      int count = elims.size();
+      while (count > 0) {
+        final Collection<Insight> e = Lists.newArrayList();
+        Analyzer.findOverlapsAndSets(builder.build(), new Analyzer.Callback() {
+          @Override public void take(Insight insight) throws StopException {
+            if (elims.add(insight))
+              e.add(insight);
+          }
+        });
+        count = e.size();
+        builder.apply(e);
       }
     }
+  }
 
-    private Pattern getPattern(Insight insight) {
-      switch (insight.type) {
-        case CONFLICT:
-          return Pattern.conflict(((Conflict) insight).getLocations().unit);
-        case BARRED_LOCATION:
-          return Pattern.barredLocation(gridMarks.grid, ((BarredLoc) insight).getLocation());
-        case BARRED_NUMERAL:
-          return Pattern.barredNumeral(((BarredNum) insight).getUnit());
-        case FORCED_LOCATION:
-          return Pattern.forcedLocation(((ForcedLoc) insight).getUnit());
-        case FORCED_NUMERAL:
-          return Pattern.forcedNumeral(gridMarks.grid, ((ForcedNum) insight).getLocation());
-        case OVERLAP:
-          return Pattern.overlap(((Overlap) insight).getUnit());
-        case LOCKED_SET: {
-          LockedSet ls = (LockedSet) insight;
-          UnitSubset locs = ls.getLocations();
-          return Pattern.lockedSet(UnitCategory.forUnit(locs.unit), locs.size(), ls.isNakedSet());
-        }
-        case IMPLICATION: {
-          Implication imp = (Implication) insight;
-          List<Pattern> antecedents = Lists.newArrayList();
-          for (Insight a : imp.getAntecedents())
-            antecedents.add(getPattern(a));
-          return Pattern.implication(antecedents, getPattern(imp.getConsequent()), imp.getScanTargetCount());
-        }
-        default:
-          throw new IllegalArgumentException(insight.toShortString());
+  private static class WrappedInsight {
+    final Grid grid;
+    final Insight insight;
+    private MoveKind kind;
+    WrappedInsight(GridMarks gridMarks, Insight insight) {
+      this.grid = gridMarks.grid;
+      this.insight = insight;
+    }
+    MoveKind kind() {
+      if (kind == null)
+        kind = kindForInsight(grid, insight);
+      return kind;
+    }
+  }
+
+  /**
+   * Gathers the scan targets (numerator and denominator) and realm vector
+   * for one collection of insights in a batch.
+   */
+  private static class Universe {
+    private final LocSet locTargetsNum = new LocSet();
+    private final UnitNumSet unitNumTargetsNum = new UnitNumSet();
+    private final LocSet locTargetsDenom = new LocSet();
+    private final UnitNumSet unitNumTargetsDenom = new UnitNumSet();
+    private int realmVector;
+
+    void add(Insight insight, boolean numerator) {
+      if (numerator)
+        insight.addScanTargets(locTargetsNum, unitNumTargetsNum);
+      insight.addScanTargets(locTargetsDenom, unitNumTargetsDenom);
+      realmVector |= insight.getRealmVector();
+    }
+
+    int numerator() {
+      return locTargetsNum.size() + unitNumTargetsNum.size();
+    }
+
+    int denominator() {
+      return locTargetsDenom.size() + unitNumTargetsDenom.size();
+    }
+
+    int realmVector() {
+      return realmVector;
+    }
+  }
+
+  private class Batch {
+    final Collector collector;
+    final Move firstMove;
+    final int numOpen;
+    final Set<MoveKind> minima;
+    final Set<MoveKind> firstMoveMinima;
+    final Set<MoveKind> maxOfMins;
+    final Set<Assignment> assignments = Sets.newHashSet();
+    final Universe universe = new Universe();
+    long totalElapsed;
+
+    Batch(Collector collector, Move firstMove, long elapsed, int numOpen) {
+      this.collector = collector;
+      this.firstMove = firstMove;
+      this.numOpen = numOpen;
+      this.minima = getMinima(collector.moves.values());
+      Assignment assignment = firstMove.getAssignment();
+      Collection<WrappedInsight> wrappedInsights = collector.moves.get(assignment);
+      EnumSet<MoveKind> fmin = getMinima(wrappedInsights);
+      this.firstMoveMinima = fmin;
+      this.maxOfMins = fmin.clone();
+      for (WrappedInsight w : wrappedInsights) {
+        universe.add(w.insight, true);
       }
+      assignments.add(assignment);
+      totalElapsed = elapsed;
+    }
+
+    /**
+     * Attempts to add the given move to this batch, returns true if it fits.
+     */
+    boolean extendWith(Move move, long elapsed, Batch newBatch) {
+      if (move.trailId >= 0 && move.trailId != firstMove.trailId)
+        return false;
+      Assignment a = move.getAssignment();
+      if (collector.moves.containsKey(a)) {
+        assignments.add(a);
+        totalElapsed += elapsed;
+        for (WrappedInsight w : collector.moves.get(a)) {
+          universe.add(w.insight, true);
+        }
+        for (MoveKind k : newBatch.firstMoveMinima)
+          updateMinima(maxOfMins, k, KIND_REVERSE);
+      }
+      return false;
+    }
+
+    /**
+     * The universe consists of all insights: the numerator is the number of
+     * scan targets in all insights for the moves we've made, and the
+     * denominator is the number of scan targets in all insights in the batch.
+     */
+    public void emitUniverse() {
+      for (Assignment a : collector.moves.keySet())
+        if (!assignments.contains(a))
+          for (WrappedInsight w : collector.moves.get(a))
+            universe.add(w.insight, false);
+      for (WrappedInsight w : collector.errors)
+        universe.add(w.insight, false);
+      for (Insight i : collector.elims)
+        universe.add(i, false);
+      InsightMeasurer.this.emitUniverse(universe);
     }
   }
 }

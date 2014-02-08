@@ -27,12 +27,10 @@ import javax.annotation.concurrent.NotThreadSafe;
  */
 @NotThreadSafe
 public class UndoDetector {
-  private final Sudoku game;
   private final List<MoveCommand> stack = Lists.newArrayList();
   private int position = 0;
 
   public UndoDetector(Sudoku game) {
-    this.game = game;
     if (game.getHistory().size() > 0)
       throw new IllegalArgumentException("Only unstarted games can be used");
     game.getListenerRegistry().addListener(new Sudoku.Adapter() {

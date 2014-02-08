@@ -492,6 +492,10 @@ public class Evaluator {
     }
   }
 
+  public static MoveKind kindForInsight(Grid grid, Insight insight) {
+    return kindForInsight(grid, insight, null);
+  }
+
   /**
    * Returns the appropriate MoveKind for the given insight within the given
    * grid.  If max is given, it is the worst (most expensive) kind that should

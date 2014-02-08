@@ -3,42 +3,23 @@
 *** TODO Investigate recent puzzles
 - categories: estimate way too high, way too low, high, low, close to perfect
 - add columns for the pattern that the estimator found, and patterns matching actual move
-*** TODO New evaluator algorithm [2/6]
-- [X] Rework InsightMeasurer to track buckets of insights
-  - bucket axes: easy/hard, and direct/simply-implied/complexly-implied
-  - [X] divide by realm -- let's look at block/line/location as independent bits
-  - [X] list each bucket containing a move corresponding to assignment made
-    - each bucket has realm vector and scan-target count vector (indexed by realm)
-- [X] Rework ScanPoints to keep pace, and measure params
-  - Unfortunately, this demonstrates that these buckets do not form anything
-    like a Poisson process.
-  - On the plus side, we see that minOpen (low-water-mark for unset locations,
-    across all trails) has a nice correlation with the mean of the very Poisson
-    time-waiting-before-starting-new-trail.
-  - Also noteworthy: the fact that the IMPLIED bucket has _zero_ instances where
-    it was the only bucket describing the move made.  This means that the only
-    cases where that actually happened, I started a trail.
-- [ ] Another thing to try: trailhead time per minOpen
-- So try a different approach:
-- [ ] Try replicating the old way, to some extent: find everything and include
-  the total target count.  However, count by min kind of the move made, not max
-  of mins of all moves.
-- [ ] Or, try just easy-direct and simply-easy (with expanded def of easy).
-- [ ] (This is now called into question.  The premise of this approach appears to be false.)
-      Rewrite Evaluator to handle a whole bucket of insights per scan
-  - [ ] When bucket is of implications, must minimize them all before accumulating scan targets
-  - [ ] Look into keeping track of found eliminations (per trail) and applying
-    them all before every successive scan
-    - how to measure the value of this?  via comparing results against historical times I guess
-  - [ ] Look into skipping moves when the cheapest move in a bucket is more
-    expensive than the new-trail wait
-*** DONE Fix up some things before running next experiments for evaluator improvements [3/3]
-- [X] Look for all hidden sets before any naked ones
-- [X] Fix the "easy" test
-  - [X] need to track which units are involved in eliminations, to tell which units are required
-  - [X] s/b any unit with 6 assignments, not just the block
-  - [X] try out rule change: >=6 assignments in one unit, OR 2 units sufficient to cover all possibilities
-- [X] Fix the "simple" test: a hidden set can only be in the outermost implication
+*** TODO New evaluator algorithm [2/3]
+- [X] Rework InsightMeasurer to track batches of insights
+  - Each legit move starts a new batch; the batch is tracked through successive
+    moves until something happens that is NOT one of its implied assignments.
+  - Actually we only want to count some of those implied assignments as part of
+    the batch.  Those that have insights subsumed by the min-set of the founding
+    move.
+  - 4 possible ways of counting scan targets:
+    - Small: only count insights subsumed within the min-set of the founding
+      move.
+    - Medium: same set of moves, but count all insights for those moves.
+    - Large: insights for all moves found.
+    - X-large: all insights, even eliminations.  (This is the only one that works.)
+  - Error insights: which ones are included?
+    - They also have kinds, so we can talk of them being subsumed.
+- [X] Rework ScanPoints to keep pace
+- [ ] Implement new algo based on these measurements
 *** TODO Performance improvements [0/2]
 - [ ] Run profiler after evaluator change
 - [ ] Add phase to Analyzer callback, and stop after assignments when taking a short path?

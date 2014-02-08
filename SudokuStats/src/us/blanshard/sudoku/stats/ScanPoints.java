@@ -17,7 +17,6 @@ package us.blanshard.sudoku.stats;
 
 import us.blanshard.sudoku.insight.Evaluator.MoveKind;
 import us.blanshard.sudoku.insight.Insight.Realm;
-import us.blanshard.sudoku.stats.Pattern.Coll;
 
 import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
@@ -50,122 +49,140 @@ public class ScanPoints {
     Splitter splitter = Splitter.on('\t');
     for (String line; (line = in.readLine()) != null; ) {
       Iterator<String> iter = splitter.split(line).iterator();
-      List<Coll> matched = Pattern.collsFromString(iter.next());
-      List<Coll> missed = Pattern.collsFromString(iter.next());
-      String firstKindString = iter.next();
-      MoveKind firstKind = firstKindString.isEmpty() ? null : MoveKind.valueOf(firstKindString);
-      int moveNumber = Integer.parseInt(iter.next());
-      int effectiveMoveNumber = Integer.parseInt(iter.next());
-      long timestamp = Long.parseLong(iter.next());
-      long effectiveTimestamp = Long.parseLong(iter.next());
-      int minOpen = Integer.parseInt(iter.next());
+      boolean isTrailhead = Boolean.parseBoolean(iter.next());
       long ms = Long.parseLong(iter.next());
       int openCount = Integer.parseInt(iter.next());
-      boolean isBlockNumeralMove = Boolean.parseBoolean(iter.next());
-      int numBlockNumeralMoves = Integer.parseInt(iter.next());
-      int numOpenBlockNumerals = Integer.parseInt(iter.next());
-      boolean isTrailhead = Boolean.parseBoolean(iter.next());
+      int minOpen = Integer.parseInt(iter.next());
       int numTrails = Integer.parseInt(iter.next());
-      getReporter(numTrails, moveNumber, effectiveMoveNumber, timestamp, effectiveTimestamp, minOpen)
-          .take(matched, missed, firstKind, isTrailhead, ms, openCount,
-                isBlockNumeralMove, numBlockNumeralMoves, numOpenBlockNumerals);
+      long timestamp = Long.parseLong(iter.next());
+      long effectiveTimestamp = Long.parseLong(iter.next());
+      int moveNumber = Integer.parseInt(iter.next());
+      int effectiveMoveNumber = Integer.parseInt(iter.next());
+      Set<MoveKind> minima = parseKinds(iter.next());
+
+      Reporter reporter = getReporter(
+          minOpen, numTrails, timestamp, effectiveTimestamp, moveNumber, effectiveMoveNumber);
+      double seconds = ms / 1000.0;
+      if (isTrailhead) {
+        reporter.takeTrailhead(seconds, openCount, minima);
+      } else {
+        int numMoves = Integer.parseInt(iter.next());
+        Set<MoveKind> maxOfMins = parseKinds(iter.next());
+        reporter.takeBatch(seconds, openCount, minima, numMoves, maxOfMins, new Universe(iter));
+      }
+      if (iter.hasNext()) {
+        in.close();
+        throw new IOException("Mismatch in line consumption");
+      }
     }
     in.close();
     reportSummaries(System.out);
   }
 
+  private static Set<MoveKind> parseKinds(String string) {
+    Set<MoveKind> answer = EnumSet.noneOf(MoveKind.class);
+    if (!string.isEmpty())
+      for (String s : Splitter.on(';').split(string))
+        answer.add(MoveKind.valueOf(s));
+    return answer;
+  }
+
+  static class Universe {
+    final int numerator;
+    final int denominator;
+    final int realmVector;
+    Universe(Iterator<String> iter) {
+      numerator = Integer.parseInt(iter.next());
+      denominator = Integer.parseInt(iter.next());
+      realmVector = Integer.parseInt(iter.next());
+    }
+  }
+
   static class Reporter {
-    private final LoadingCache<MoveKind, KindProcess> processes;
-    private final ProcessCounter blockNumeralCounter = new ProcessCounter();
+    private final LoadingCache<Set<MoveKind>, BatchProcess> processes;
     private final ProcessCounter trailheadCounter = new ProcessCounter();
 
     public Reporter() {
-      processes = CacheBuilder.newBuilder().build(new CacheLoader<MoveKind, KindProcess>() {
-        @Override public KindProcess load(MoveKind kind) {
-          return new KindProcess(kind);
+      processes = CacheBuilder.newBuilder().build(new CacheLoader<Set<MoveKind>, BatchProcess>() {
+        @Override public BatchProcess load(Set<MoveKind> minima) {
+          return new BatchProcess(minima);
         }
       });
     }
 
     public void reportSummaries(PrintStream out) {
-      for (MoveKind kind : MoveKind.values())
-        if (processes.asMap().containsKey(kind))
-          processes.getUnchecked(kind).report(out);
+      for (Set<MoveKind> min : kindSets)
+        if (processes.asMap().containsKey(min))
+          processes.asMap().get(min).report(out);
       out.println();
-      out.printf("Consecutive block-numeral moves (%d):%n", blockNumeralCounter.count);
-      blockNumeralCounter.report(out);
       out.println();
       out.printf("Trailheads (%d):%n", trailheadCounter.count);
       trailheadCounter.report(out);
     }
 
-    public void take(List<Coll> matched, List<Coll> missed, MoveKind firstKind, boolean isTrailhead,
-                     long ms, int openCount, boolean isBlockNumeralMove, int numBlockNumeralMoves,
-                     int numOpenBlockNumerals) {
-      double seconds = ms / 1000.0;
-      if (isBlockNumeralMove)
-        blockNumeralCounter.count(seconds, numOpenBlockNumerals / (double) numBlockNumeralMoves);
-      if (isTrailhead) {
-        trailheadCounter.count(seconds, 1);
-      } else {
-        for (Coll m : matched)
-          processes.getUnchecked(m.kind).take(m, missed, m.kind == firstKind, seconds, openCount);
-      }
+    public void takeTrailhead(double seconds, int openCount, Set<MoveKind> minima) {
+      trailheadCounter.count(seconds, 1);
+      if (!minima.isEmpty())
+        processes.getUnchecked(minima).takeTrailhead();
+    }
+
+    public void takeBatch(double seconds, int openCount, Set<MoveKind> minima,
+        int numMoves, Set<MoveKind> maxOfMins, Universe universe) {
+      processes.getUnchecked(minima).take(seconds, openCount, numMoves, maxOfMins, universe);
     }
   }
 
-  static class KindProcess {
-    private final MoveKind kind;
-    private final LoadingCache<Integer, ProcessCounter> firstBucketCounters;
-    private final LoadingCache<Integer, ProcessCounter> otherBucketCounters;
-    private final LoadingCache<Integer, ProcessCounter> eitherCounters;
-    private final ProcessCounter firstBucketCounter = new ProcessCounter();
-    private final ProcessCounter otherBucketCounter = new ProcessCounter();
-    private final ProcessCounter eitherCounter = new ProcessCounter();
-    private final ProcessCounter flatFirstBucketCounter = new ProcessCounter();
-    private final ProcessCounter flatOtherBucketCounter = new ProcessCounter();
-    private final ProcessCounter flatEitherCounter = new ProcessCounter();
+  static class BatchProcess {
+    private final Set<MoveKind> minima;
+    private final LoadingCache<Integer, ProcessCounter> realmCounters;
+    private final LoadingCache<Set<MoveKind>, ProcessCounter> maxCounters;
+    private final ProcessCounter overallCounter = new ProcessCounter();
+    private int trailheadsIncluded;
+    private int batchesIncluded;
     private int movesIncluded;
-    private int movesFirstBucket;
+    private final boolean reportByRealm = false;
 
-    public KindProcess(MoveKind kind) {
-      this.kind = kind;
-      CacheLoader<Integer, ProcessCounter> loader = new CacheLoader<Integer, ProcessCounter>() {
+    public BatchProcess(Set<MoveKind> minima) {
+      this.minima = minima;
+      realmCounters = CacheBuilder.newBuilder().build(new CacheLoader<Integer, ProcessCounter>() {
         @Override public ProcessCounter load(Integer realmVector) {
           return new ProcessCounter();
         }
-      };
-      this.firstBucketCounters = CacheBuilder.newBuilder().build(loader);
-      this.otherBucketCounters = CacheBuilder.newBuilder().build(loader);
-      this.eitherCounters = CacheBuilder.newBuilder().build(loader);
+      });
+      maxCounters = CacheBuilder.newBuilder().build(new CacheLoader<Set<MoveKind>, ProcessCounter>() {
+        @Override public ProcessCounter load(Set<MoveKind> maxOfMins) {
+          return new ProcessCounter();
+        }
+      });
     }
 
-    public void take(Coll bucket, List<Coll> missed, boolean firstBucket, double seconds, int openCount) {
-      double realmPoints = pointsScanned(openCount, bucket);
-      double flatPoints = pointsScanned(openCount, 4, bucket);
-      (firstBucket ? firstBucketCounters : otherBucketCounters).getUnchecked(bucket.realmVector)
-          .count(seconds, realmPoints);
-      (firstBucket ? firstBucketCounter : otherBucketCounter).count(seconds, realmPoints);
-      (firstBucket ? flatFirstBucketCounter : flatOtherBucketCounter).count(seconds, flatPoints);
-      eitherCounters.getUnchecked(bucket.realmVector).count(seconds, realmPoints);
-      eitherCounter.count(seconds, realmPoints);
-      flatEitherCounter.count(seconds, flatPoints);
-      ++movesIncluded;
-      if (firstBucket) ++movesFirstBucket;
+    public void takeTrailhead() {
+      ++trailheadsIncluded;
     }
 
-    private double pointsScanned(int openCount, int factor, Coll bucket) {
+    public void take(double seconds, int openCount, int numMoves,
+        Set<MoveKind> maxOfMins, Universe universe) {
+      realmCounters.getUnchecked(universe.realmVector)
+          .count(seconds, pointsScanned(openCount, universe));
+      maxCounters.getUnchecked(maxOfMins)
+          .count(seconds, pointsScanned(openCount, 4, universe));
+      overallCounter.count(seconds, pointsScanned(openCount, 4, universe));
+      ++batchesIncluded;
+      movesIncluded += numMoves;
+    }
+
+    private double pointsScanned(int openCount, int factor, Universe u) {
       // Factor is the number of "scan points" per open location.  So the first
       // product yields the total number of scan points in the grid.  We divide
-      // by the total number of "scan targets" in the bucket, to get points per
-      // target.  Then we multiply by the number of targets in the first insight
-      // that matched the move made, to get the number of points scanned in
-      // finding the insight.
-      return openCount * factor / bucket.numScanTargets * bucket.patterns.get(0).getScanTargetCount();
+      // by the total number of "scan targets" in the batch, to get points per
+      // target.  Then we multiply by the number of targets in the insights
+      // included in the batch, to get the number of points scanned in the
+      // batch.
+      return 1.0 * openCount * factor / u.denominator * u.numerator;
     }
 
-    private double pointsScanned(int openCount, Coll bucket) {
-      return pointsScanned(openCount, factor(bucket.realmVector), bucket);
+    private double pointsScanned(int openCount, Universe u) {
+      return pointsScanned(openCount, factor(u.realmVector), u);
     }
 
     private int factor(int realmVector) {
@@ -177,12 +194,34 @@ public class ScanPoints {
     }
 
     public void report(PrintStream out) {
-      out.printf("%s: %,d moves included, %,d the first bucket\n", kind, movesIncluded, movesFirstBucket);
-      printCounters(out, flatFirstBucketCounter, firstBucketCounter,
-                    firstBucketCounters, "1. When it was the first bucket");
-//      printCounters(out, flatOtherBucketCounter, otherBucketCounter,
-//                    otherBucketCounters, "2. When it was a later bucket");
-//      printCounters(out, flatEitherCounter, eitherCounter, eitherCounters, "3. All moves");
+      out.printf("%s: %,d batches (%,d moves); %,d trailheads\n",
+          minima, batchesIncluded, movesIncluded, trailheadsIncluded);
+
+      out.println(" - Overall:");
+      overallCounter.report(out);
+
+      out.println("\n - By max of minima:");
+      int count = maxCounters.asMap().size();
+      for (Set<MoveKind> max : kindSets)
+        if (maxCounters.asMap().containsKey(max)) {
+          --count;
+          ProcessCounter c = maxCounters.asMap().get(max);
+          out.printf("   %s (%,d):\n", max, c.count);
+          c.report(out);
+        }
+      if (count > 0) throw new IllegalStateException();
+
+      if (reportByRealm) {
+        out.println("\n - By realm vector:");
+        for (int v = 0; v < vectorToSet.size(); ++v) {
+          if (realmCounters.asMap().containsKey(v)) {
+            ProcessCounter c = realmCounters.getUnchecked(v);
+            out.printf("   %s (%,d):\n", vectorToSet.get(v), c.count);
+            c.report(out);
+          }
+        }
+      }
+
       out.println();
     }
 
@@ -199,24 +238,19 @@ public class ScanPoints {
       }
       vectorToSet = builder.build();
     }
-
-    private void printCounters(PrintStream out, ProcessCounter flatCounter, ProcessCounter realmCounter,
-                               LoadingCache<Integer, ProcessCounter> realmCounters,
-                               String headline) {
-      out.printf("%s:%n", headline);
-      // out.printf(" Disregarding realms (%,d moves):%n", flatCounter.count);
-      // flatCounter.report(out);
-      out.printf(" All realms (%,d moves):%n", realmCounter.count);
-      realmCounter.report(out);
-      // for (int v = 0; v < vectorToSet.size(); ++v) {
-      //   if (realmCounters.asMap().containsKey(v)) {
-      //     ProcessCounter counter = realmCounters.getUnchecked(v);
-      //     out.printf(" Realms: %s (%,d moves)%n", vectorToSet.get(v), counter.count);
-      //     counter.report(out);
-      //   }
-      // }
-    }
   }
+
+  private static final List<Set<MoveKind>> kindSets = ImmutableList.<Set<MoveKind>>builder()
+      .add(EnumSet.of(MoveKind.DIRECT_EASY))
+      .add(EnumSet.of(MoveKind.SIMPLY_IMPLIED_EASY))
+      .add(EnumSet.of(MoveKind.COMPLEXLY_IMPLIED_EASY))
+      .add(EnumSet.of(MoveKind.DIRECT_HARD, MoveKind.SIMPLY_IMPLIED_EASY))
+      .add(EnumSet.of(MoveKind.DIRECT_HARD, MoveKind.COMPLEXLY_IMPLIED_EASY))
+      .add(EnumSet.of(MoveKind.SIMPLY_IMPLIED_HARD, MoveKind.COMPLEXLY_IMPLIED_EASY))
+      .add(EnumSet.of(MoveKind.DIRECT_HARD))
+      .add(EnumSet.of(MoveKind.SIMPLY_IMPLIED_HARD))
+      .add(EnumSet.of(MoveKind.COMPLEXLY_IMPLIED_HARD))
+      .build();
 
   static class ProcessCounter {
     private final boolean reportHistogram;
@@ -279,10 +313,13 @@ public class ScanPoints {
 
   private static final int COUNT = 6;
   private static final Reporter[] reporters = new Reporter[COUNT];
+  private static final Reporter reporter = new Reporter();
+  private static boolean single = false;
 
   private static Reporter getReporter(
-      int numTrails, int moveNumber, int effectiveMoveNumber,
-      long timestamp, long effectiveTimestamp, int minOpen) {
+      int minOpen, int numTrails, long timestamp,
+      long effectiveTimestamp, int moveNumber, int effectiveMoveNumber) {
+    if (single) return reporter;
     int index = Math.min(COUNT - 1, minOpen / 10);
     Reporter answer = reporters[index];
     if (answer == null)
@@ -291,10 +328,14 @@ public class ScanPoints {
   }
 
   private static void reportSummaries(PrintStream out) {
-    for (int i = COUNT - 1; i >= 0; --i) {
-      Reporter r = reporters[i];
-      if (r != null)
-        reportSummaries(out, r, headline(i));
+    if (single) {
+      reportSummaries(out, reporter, "Single");
+    } else {
+      for (int i = COUNT - 1; i >= 0; --i) {
+        Reporter r = reporters[i];
+        if (r != null)
+          reportSummaries(out, r, headline(i));
+      }
     }
   }
 
