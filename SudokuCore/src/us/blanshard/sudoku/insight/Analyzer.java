@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Analyzes a Sudoku game state, producing a series of insights about it.
@@ -49,6 +50,29 @@ public class Analyzer {
 
   public static class StopException extends RuntimeException {
     private static final long serialVersionUID = 1L;
+  }
+
+  /**
+   * Controls the behavior of {@link #analyze}.
+   */
+  @Immutable
+  public static final class Options {
+    /**
+     * When true, uses assignment insights as antecedents when constructing
+     * implications.  When false, leaves assignments out and only follows
+     * elimination insights.
+     */
+    public final boolean followAssignments;
+    /**
+     * When true, provides all elimination insights to the callback, even
+     * those that only appear during the search for implications.
+     */
+    public final boolean returnAllEliminations;
+
+    public Options(boolean followAssignments, boolean returnAllEliminations) {
+      this.followAssignments = followAssignments;
+      this.returnAllEliminations = returnAllEliminations;
+    }
   }
 
   /**
@@ -70,19 +94,21 @@ public class Analyzer {
    * {@link #minimizeImplication} to squeeze out irrelevant antecedents.
    */
   public static boolean analyze(GridMarks gridMarks, Callback callback) {
-    return analyze(gridMarks, callback, false);
+    return analyze(gridMarks, callback, DEFAULT_OPTIONS);
   }
 
+  private static final Options DEFAULT_OPTIONS = new Options(true, false);
+
   /**
-   * Like the main version of analyze, but when elimsOnly is true, leaves
-   * assignments out of the antecedents of any implications found.
+   * Like the standard version of analyze, but lets you control the detailed
+   * behavior of the analyzer.
    */
   public static boolean analyze(
-      GridMarks gridMarks, Callback callback, boolean elimsOnly) {
+      GridMarks gridMarks, Callback callback, Options options) {
     boolean complete = false;
 
     try {
-      findInsights(gridMarks, callback, null, elimsOnly);
+      findInsights(gridMarks, callback, null, options);
       complete = true;
 
     } catch (InterruptedException e) {
@@ -119,7 +145,7 @@ public class Analyzer {
 
   private static void findInsights(
       GridMarks gridMarks, Callback callback,
-      @Nullable Set<Insight> index, boolean elimsOnly) throws InterruptedException {
+      @Nullable Set<Insight> index, Options options) throws InterruptedException {
 
     index = index == null ? Sets.<Insight>newHashSet() : Sets.newHashSet(index);
     Collector collector;
@@ -130,14 +156,14 @@ public class Analyzer {
       checkInterruption();
     }
 
-    collector = new Collector(callback, index, !elimsOnly);
+    collector = new Collector(callback, index, options.followAssignments);
 
     findSingletonLocations(gridMarks, collector);
     checkInterruption();
     findSingletonNumerals(gridMarks, collector);
     checkInterruption();
 
-    if (elimsOnly)
+    if (!options.followAssignments)
       collector = new Collector(callback, index, true);
 
     findOverlaps(gridMarks, collector);
@@ -146,16 +172,17 @@ public class Analyzer {
     checkInterruption();
 
     if (!collector.list.isEmpty()) {
-      findImplications(gridMarks, collector, callback, elimsOnly);
+      findImplications(gridMarks, collector, callback, options);
     }
   }
 
   private static void findImplications(GridMarks gridMarks, Collector antecedents,
-      Callback callback, boolean elimsOnly) throws InterruptedException {
+      Callback callback, Options options) throws InterruptedException {
 
-    Collector collector = new Collector(null, antecedents.index, true);
+    Collector collector = new Collector(options.returnAllEliminations ? callback : null,
+        antecedents.index, true);
     findInsights(gridMarks.toBuilder().apply(antecedents.list).build(), collector,
-        antecedents.index, elimsOnly);
+        antecedents.index, options);
 
     if (!collector.list.isEmpty()) {
       List<Insight> antecedentsList = ImmutableList.copyOf(antecedents.list);

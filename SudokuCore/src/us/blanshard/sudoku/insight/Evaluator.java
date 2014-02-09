@@ -18,7 +18,6 @@ package us.blanshard.sudoku.insight;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Block;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.LocSet;
 import us.blanshard.sudoku.core.Location;
@@ -30,19 +29,20 @@ import us.blanshard.sudoku.core.UnitNumSet;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
-import us.blanshard.sudoku.insight.Rating.Difficulty;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -52,7 +52,7 @@ import javax.annotation.Nullable;
 public class Evaluator {
 
   /** The current version of the time estimation algorithm. */
-  public static final int CURRENT_VERSION = 2;
+  public static final int CURRENT_VERSION = 3;
 
   /**
    * How many times we run the evaluator when we must make choices that could
@@ -105,27 +105,27 @@ public class Evaluator {
 
   public Rating evaluate(@Nullable Callback callback, int trialCount) {
     checkArgument(trialCount >= 1);
-    Run outer = new Run(new GridMarks(puzzle), false);
+    int minOpen = puzzle.getNumOpenLocations();
+    Run outer = new Run(new GridMarks(puzzle), minOpen);
     outer.runStraightShot(callback);
     double score = outer.score;
     boolean uninterrupted = outer.uninterrupted();
-    Difficulty difficulty = Difficulty.NO_DISPROOFS;
     if (outer.status == RunStatus.INCONCLUSIVE) {
-      difficulty = Difficulty.SIMPLE_DISPROOFS;
       if (callback != null) callback.disproofsRequired();
       double totalScore = 0;
       int numEvaluations = 0;
+      minOpen = outer.minOpen;
       while (uninterrupted && numEvaluations++ < trialCount) {
-        Run inner = new Run(outer.gridMarks, true);
+        Run inner = new Run(outer.gridMarks, minOpen);
         inner.runDisproof(
             new InnerCallback(callback, score + totalScore / trialCount, trialCount));
         uninterrupted = inner.uninterrupted();
         totalScore += inner.score;
-        if (inner.recursiveDisproofs) difficulty = Difficulty.RECURSIVE_DISPROOFS;
+        minOpen = inner.minOpen;
       }
       score += totalScore / numEvaluations;
     }
-    return new Rating(CURRENT_VERSION, score, uninterrupted, difficulty, improper);
+    return new Rating(CURRENT_VERSION, score, uninterrupted, improper);
   }
 
   private static class InnerCallback implements Callback {
@@ -148,39 +148,41 @@ public class Evaluator {
   }
 
   private enum RunStatus { INTERRUPTED, COMPLETE, ERROR, INCONCLUSIVE };
+  private static final Analyzer.Options OPTS = new Analyzer.Options(false, true);
 
   private class Run {
-    final boolean trails;
     GridMarks gridMarks;
+    int minOpen;
+    int numOpen;
     double score;
     RunStatus status;
     boolean foundSolution;
     boolean recursiveDisproofs;
 
-    Run(GridMarks gridMarks, boolean trails) {
+    Run(GridMarks gridMarks, int minOpen) {
       this.gridMarks = gridMarks;
-      this.trails = trails;
+      this.minOpen = minOpen;
+      this.numOpen = gridMarks.grid.getNumOpenLocations();
     }
 
     void runStraightShot(@Nullable Callback callback) {
       if (status == RunStatus.INTERRUPTED) return;
       status = null;
-      Numeral prevNumeral = null;
       do {
-        Collector collector = new Collector(gridMarks, prevNumeral, trails);
-        prevNumeral = null;
-        if (Analyzer.analyze(gridMarks, collector, true)) {
+        Collector collector = new Collector(gridMarks, minOpen, numOpen);
+        if (Analyzer.analyze(gridMarks, collector, OPTS)) {
           score += collector.getElapsedMinutes();
           if (callback != null) callback.updateEstimate(score);
-          if (collector.hasMove()) {
-            Insight move = collector.getMove();
-            gridMarks = gridMarks.toBuilder().apply(move).build();
-            prevNumeral = move.getImpliedAssignment().numeral;
+          if (collector.assignmentsWon()) {
+            GridMarks.Builder builder = gridMarks.toBuilder();
+            for (Assignment a : collector.getAssignments())
+              builder.assign(a);
+            setGridMarks(builder);
             if (gridMarks.grid.isSolved()) status = RunStatus.COMPLETE;
-          } else if (collector.hasVisibleErrors()) {
+          } else if (collector.errorsWon()) {
             status = RunStatus.ERROR;
           } else if (onlyAmbiguousAssignmentsRemaining()) {
-            gridMarks = gridMarks.toBuilder().assign(randomAssignment()).build();
+            setGridMarks(gridMarks.toBuilder().assign(randomAssignment()));
           } else {
             status = RunStatus.INCONCLUSIVE;
           }
@@ -188,6 +190,12 @@ public class Evaluator {
           status = RunStatus.INTERRUPTED;
         }
       } while (status == null);
+    }
+
+    private void setGridMarks(GridMarks.Builder builder) {
+      gridMarks = builder.build();
+      numOpen = gridMarks.grid.getNumOpenLocations();
+      if (numOpen < minOpen) minOpen = numOpen;
     }
 
     void runDisproof(@Nullable Callback callback) {
@@ -205,10 +213,10 @@ public class Evaluator {
             return;
           if (foundSolution && solutionIntersection.get(a.location) == a.numeral)
             continue;
-          gridMarks = start.toBuilder().assign(a).build();
+          setGridMarks(start.toBuilder().assign(a));
           runStraightShot(callback);
           if (status == RunStatus.ERROR) {
-            gridMarks = start.toBuilder().eliminate(a).build();
+            setGridMarks(start.toBuilder().eliminate(a));
             return;
           } else if (status == RunStatus.COMPLETE) {
             foundSolution = true;
@@ -217,9 +225,9 @@ public class Evaluator {
       }
       recursiveDisproofs = true;
       Assignment impossible = randomErroneousAssignment();
-      gridMarks = start.toBuilder().assign(impossible).build();
+      setGridMarks(start.toBuilder().assign(impossible));
       runErrorSearch(callback);
-      gridMarks = start.toBuilder().eliminate(impossible).build();
+      setGridMarks(start.toBuilder().eliminate(impossible));
     }
 
     void runErrorSearch(@Nullable Callback callback) {
@@ -230,7 +238,7 @@ public class Evaluator {
       NumSet nums = gridMarks.marks.get(loc);
       GridMarks start = gridMarks;
       for (Numeral num : nums) {
-        gridMarks = start.toBuilder().assign(Assignment.of(loc, num)).build();
+        setGridMarks(start.toBuilder().assign(Assignment.of(loc, num)));
         runErrorSearch(callback);
       }
     }
@@ -315,86 +323,46 @@ public class Evaluator {
    * hardest.
    */
   public enum MoveKind {
-    DIRECT_EASY(1.6, 1.1, 0, 0),
-    DIRECT_HARD(1.7, 1.1, 1, 0),
-    SIMPLY_IMPLIED_EASY(2.1, 1.2, 0, 1),
-    SIMPLY_IMPLIED_HARD(2.3, 1.3, 1, 1),
-    COMPLEXLY_IMPLIED_EASY(4.3, 2.0, 0, 2),
-    COMPLEXLY_IMPLIED_HARD(4.6, 2.6, 1, 2),
+    DIRECT_EASY(0, 0, 0.34, 0.36, 0.42, 0.47, 0.48, 0.48),
+    SIMPLY_IMPLIED_EASY(0, 1, 0.57, 0.61, 0.70, 0.92, 0.95, 1.0),
+    COMPLEXLY_IMPLIED_EASY(0, 2, 0.61, 0.61, 0.70, 1.08, 1.12, 1.23),
+    DIRECT_HARD(1, 0),
+    SIMPLY_IMPLIED_HARD(1, 1),
+    COMPLEXLY_IMPLIED_HARD(1, 2),
     ;
+
+    public static final MoveKind MIN = DIRECT_EASY;
+    public static final MoveKind MAX = COMPLEXLY_IMPLIED_HARD;
 
     /**
      * How many minutes it takes on average to scan one "point" for this kind of
-     * move.
+     * move, for the given minimum number of open locations.
      *
      * <p> The number of "points" at any given grid position is defined as the
      * number of potential scan targets divided by the number of targets covered
      * by one or more insights.  The number of potential scan targets is 4 times
      * the number of open locations.
      *
-     * <p> The move kind chosen for a given grid is the maximum move kind for
-     * all the locations that have assignment insights. And the move kind for a
-     * given location is the minimum move kind for all the insights that assign
-     * a numeral to that location.
+     * <p> This method throws if {@link #shouldPlay} returns false.
      */
-    public final double minutesPerScanPoint;
-    public final double minutesPerScanPointWithTrails;
-
-    private final int difficulty;
-    private final int complexity;
-
-    public static final MoveKind MIN = DIRECT_EASY;
-    public static final MoveKind MAX = COMPLEXLY_IMPLIED_HARD;
+    public double minutesPerScanPoint(int minOpen) {
+      return toMinutes(secondsPerScanPoint, minOpen);
+    }
 
     /**
-     * When there is a direct block-numeral move using the same numeral as the
-     * previous move, we count the scan points as the open block-numeral moves
-     * remaining for that numeral, and this is the scan rate for them.
+     * Tells whether an insight of this kind should be played.  If not, the evaluator
+     * should move on to a disproof.
      */
-    public static final double BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT = 0.68 / 60;
-    public static final double BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT_WITH_TRAILS = 0.69 / 60;
+    public boolean shouldPlay() {
+      return secondsPerScanPoint.length > 0;
+    }
 
     /**
      * When there are no moves implied, the best model is simply to pause a
      * fixed amount of time before looking for disproofs.
      */
-    public static final double MINUTES_BEFORE_DISPROOF = 128.4 / 60;
-    public static final double MINUTES_BEFORE_DISPROOF_WITH_TRAILS = 48.2 / 60;
-
-    private MoveKind(double secondsPerScanPoint, double secondsPerScanPointWithTrails,
-        int difficulty, int complexity) {
-      this.minutesPerScanPoint = secondsPerScanPoint / 60;
-      this.minutesPerScanPointWithTrails = secondsPerScanPointWithTrails / 60;
-      this.difficulty = difficulty;
-      this.complexity = complexity;
-    }
-
-    public static double calcBlockNumeralMinutes(
-        int numOpenBlockNumerals, int numBlockNumeralMoves, boolean trails) {
-      double perPoint = trails
-          ? BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT_WITH_TRAILS
-          : BLOCK_NUMERAL_MINUTES_PER_SCAN_POINT;
-      return perPoint * numOpenBlockNumerals / numBlockNumeralMoves;
-    }
-
-    public static double calcPause(boolean trails) {
-      return trails ? MoveKind.MINUTES_BEFORE_DISPROOF_WITH_TRAILS : MoveKind.MINUTES_BEFORE_DISPROOF;
-    }
-
-    public static MoveKind maxKind(Map<Location, MoveKind> kinds, boolean errors) {
-      return errors || kinds.isEmpty()
-          ? MAX
-          : Ordering.<MoveKind>natural().max(kinds.values());
-    }
-
-    public double calcMinutes(
-        Grid grid, LocSet locTargets, UnitNumSet unitNumTargets, boolean trails, Insight move) {
-      int openLocs = Location.COUNT - grid.size();
-      double totalScanPoints = 4.0 * openLocs;
-      int scanTargets = locTargets.size() + unitNumTargets.size();
-      double scanPoints = totalScanPoints / scanTargets;
-      double perScanPoint = trails ? minutesPerScanPointWithTrails : minutesPerScanPoint;
-      return perScanPoint * scanPoints * move.getScanTargetCount();
+    public static double minutesBeforeDisproof(int minOpen) {
+      return toMinutes(secondsBeforeTrailhead, minOpen);
     }
 
     public Integer partialCompare(MoveKind that) {
@@ -403,6 +371,25 @@ public class Evaluator {
       if (this.difficulty > that.difficulty)
         return this.complexity >= that.complexity ? 1 : null;
       return this.complexity - that.complexity;
+    }
+
+    private final int difficulty;
+    private final int complexity;
+    private final double[] secondsPerScanPoint;
+
+    private static final double[] secondsBeforeTrailhead = {
+      31.4, 44.5, 57.9, 77.1, 96.2, 139
+    };
+
+    private static double toMinutes(double[] seconds, int minOpen) {
+      int index = Math.min(minOpen / 10, seconds.length - 1);
+      return seconds[index] / 60.0;
+    }
+
+    private MoveKind(int difficulty, int complexity, double... secondsPerScanPoint) {
+      this.difficulty = difficulty;
+      this.complexity = complexity;
+      this.secondsPerScanPoint = secondsPerScanPoint;
     }
   }
 
@@ -415,80 +402,104 @@ public class Evaluator {
 
   public static class Collector implements Analyzer.Callback {
     private final GridMarks gridMarks;
-    @Nullable private final Numeral prevNumeral;
-    private final boolean trails;
+    private final int numOpen;
+    private final int minOpen;
     private final LocSet locTargets = new LocSet();
     private final UnitNumSet unitNumTargets = new UnitNumSet();
-    private final Map<Location, MoveKind> kinds = Maps.newHashMap();
-    private MoveKind best = null;
-    @Nullable private Insight move;
-    @Nullable private ForcedLoc blockNumeralMove;
-    private boolean errors;
-    private int numDirectMoves;
-    private int numDirectErrors;
-    private int numBlockNumeralMoves;
+    private final Map<Assignment, MoveKind> kinds = Maps.newHashMap();
+    private final Multimap<Assignment, Insight> moves = ArrayListMultimap.create();
+    private final Set<Assignment> assignments = Sets.newLinkedHashSet();
+    private final List<Insight> errors = Lists.newArrayList();
+    private MoveKind bestMoveKind;
+    private MoveKind bestErrorKind;
 
-    public Collector(GridMarks gridMarks, @Nullable Numeral prevNumeral, boolean trails) {
+    public Collector(GridMarks gridMarks, int numOpen, int minOpen) {
       this.gridMarks = gridMarks;
-      this.prevNumeral = prevNumeral;
-      this.trails = trails;
+      this.numOpen = numOpen;
+      this.minOpen = minOpen;
     }
 
     @Override public void take(Insight insight) throws StopException {
+      insight = Analyzer.minimize(gridMarks, insight);
+      insight.addScanTargets(locTargets, unitNumTargets);
       Assignment a = insight.getImpliedAssignment();
       if (a != null) {
-        insight.addScanTargets(locTargets, unitNumTargets);
-        MoveKind kind = kindForInsight(gridMarks.grid, insight, kinds.get(a.location));
-        kinds.put(a.location, kind);
-        if (best == null || kind.compareTo(best) < 0) {
-          best = kind;
-          move = insight;
+        moves.put(a, insight);
+        MoveKind kind = kindForInsight(gridMarks.grid, insight, kinds.get(a));
+        kinds.put(a, kind);
+        if (bestMoveKind == null || kind.compareTo(bestMoveKind) < 0) {
+          bestMoveKind = kind;
+          assignments.clear();
         }
-        if (insight.type.isAssignment())
-          ++numDirectMoves;
-        if (insight.type == Insight.Type.FORCED_LOCATION) {
-          ForcedLoc fl = (ForcedLoc) insight;
-          if (fl.getUnit().getType() == Unit.Type.BLOCK) {
-            ++numBlockNumeralMoves;
-            if (fl.getNumeral() == prevNumeral)
-              blockNumeralMove = fl;
-          }
-        }
+        if (kind == bestMoveKind)
+          assignments.add(a);
       } else if (insight.isError()) {
-        insight.addScanTargets(locTargets, unitNumTargets);
-        errors = true;
-        if (insight.type.isError())
-          ++numDirectErrors;
+        MoveKind kind = kindForInsight(gridMarks.grid, insight);
+        if (bestErrorKind == null || kind.compareTo(bestErrorKind) < 0) {
+          bestErrorKind = kind;
+          errors.clear();
+        }
+        if (kind == bestErrorKind)
+          errors.add(insight);
       }
     }
 
     public double getElapsedMinutes() {
-      if (blockNumeralMove != null) {
-        int openMoves = 0;
-        for (Block b : Block.all()) {
-          UnitSubset locs = gridMarks.marks.get(UnitNumeral.of(b, prevNumeral));
-          if (locs.size() > 1 || locs.size() == 1 && !gridMarks.grid.containsKey(locs.get(0)))
-            ++openMoves;
-        }
-        return MoveKind.calcBlockNumeralMinutes(openMoves, numBlockNumeralMoves, trails);
+      if (assignmentsWon()) {
+        // We have one or more assignments.  The elapsed minutes is calculated as:
+        //  - the total number of scan points (4 * #open locations)
+        //  - times the number of scan targets in the assignments' insights
+        //  - divided by the total number of scan targets in all insights
+        //  - times the number of minutes per scan point
+        LocSet locs = new LocSet();
+        UnitNumSet unitNums = new UnitNumSet();
+        for (Assignment a : assignments)
+          for (Insight i : moves.get(a))
+            i.addScanTargets(locs, unitNums);
+        return 4 * numOpen
+            * (locs.size() + unitNums.size())
+            / (locTargets.size() + unitNumTargets.size())
+            * bestMoveKind.minutesPerScanPoint(minOpen);
       }
-      if (move == null)
-        return MoveKind.calcPause(trails);
 
-      MoveKind kind = MoveKind.maxKind(kinds, errors);
-      return kind.calcMinutes(gridMarks.grid, locTargets, unitNumTargets, trails, move);
+      if (errorsWon()) {
+        // Errors.  Calculate elapsed time in a similar way as above.
+        LocSet locs = new LocSet();
+        UnitNumSet unitNums = new UnitNumSet();
+        for (Insight i : errors)
+          i.addScanTargets(locs, unitNums);
+        return 4 * numOpen
+            * (locs.size() + unitNums.size())
+            / (locTargets.size() + unitNumTargets.size())
+            * bestErrorKind.minutesPerScanPoint(minOpen);
+      }
+
+      // Otherwise, we start a trail.
+      return MoveKind.minutesBeforeDisproof(minOpen);
     }
 
-    public boolean hasMove() {
-      return move != null;
+    /**
+     * True when there were assignments found, and they are easy enough to play
+     * and easier than any errors found.
+     */
+    public boolean assignmentsWon() {
+      return bestMoveKind != null
+          && (bestErrorKind == null || bestMoveKind.compareTo(bestErrorKind) < 0)
+          && bestMoveKind.shouldPlay();
     }
 
-    public Insight getMove() {
-      return blockNumeralMove == null ? move : blockNumeralMove;
+    public Iterable<Assignment> getAssignments() {
+      return assignments;
     }
 
-    public boolean hasVisibleErrors() {
-      return numDirectErrors > numDirectMoves;
+    /**
+     * True when there were errors found, and they are easy enough to see
+     * and at least as easy as any moves found.
+     */
+    public boolean errorsWon() {
+      return bestErrorKind != null
+          && (bestMoveKind == null || bestMoveKind.compareTo(bestErrorKind) >= 0)
+          && bestErrorKind.shouldPlay();
     }
   }
 

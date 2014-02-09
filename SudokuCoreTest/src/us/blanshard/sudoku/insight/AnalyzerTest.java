@@ -210,11 +210,13 @@ public class AnalyzerTest {
     assertTrue(collector.taken.contains(new LockedSet(set(4,9), locs(b3, 4, 5), false)));
     LockedSet set26 = new LockedSet(set(2,6), locs(b3, 1, 3), true);
     assertTrue(collector.taken.contains(set26));
+    LockedSet set378 = new LockedSet(set(3,7,8), locs(Row.of(1), 1, 4, 6), false);
+    assertTrue(collector.taken.contains(set378));
     Implication imp = (Implication) Iterables.find(collector.taken, Predicates.instanceOf(Implication.class));
     assertEquals(new ForcedLoc(Block.of(2), Numeral.of(2), Location.of(2, 5)), imp.getConsequent());
 
     Implication imp2 = (Implication) Analyzer.minimize(gridMarks, imp);
-    assertEquals(Lists.newArrayList(set26), imp2.getAntecedents());
+    assertEquals(Lists.newArrayList(set378), imp2.getAntecedents());
   }
 
   @Test public void overlappingUnit() {

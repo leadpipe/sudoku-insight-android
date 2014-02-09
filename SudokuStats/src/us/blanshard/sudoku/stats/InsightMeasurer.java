@@ -109,6 +109,8 @@ public class InsightMeasurer implements Runnable {
     }
   }
 
+  private static final Analyzer.Options OPTS = new Analyzer.Options(false, true);
+
   private void applyMove(Move move) {
     long elapsed = move.timestamp - prevTime;
     Collection<Batch> finishedBatches = Lists.newArrayList();
@@ -122,7 +124,7 @@ public class InsightMeasurer implements Runnable {
         minOpen = numOpen;
       GridMarks gridMarks = new GridMarks(grid);
       Collector collector = new Collector(gridMarks);
-      Analyzer.analyze(gridMarks, collector, true);
+      Analyzer.analyze(gridMarks, collector, OPTS);
       collector.extendElims();
       boolean isTrailhead = move.trailId >= 0
           && (game.getTrail(move.trailId).getTrailhead() == null
