@@ -38,6 +38,7 @@ import us.blanshard.sudoku.insight.Insight;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -60,7 +61,9 @@ public class InsightMeasurer implements Runnable {
     PrintWriter out = new PrintWriter("measurer.txt");
     int npuzzles = 0;
 
-    for (AttemptInfo attempt : Attempts.phone2013()) {
+    Iterable<AttemptInfo> attempts = Iterables.concat(
+        Attempts.phone2013(), Attempts.tablet2014() /*, Attempts.datastoreBackup()*/);
+    for (AttemptInfo attempt : attempts) {
       ++npuzzles;
       new InsightMeasurer(attempt.clues, attempt.history, out).run();
       System.out.print('.');
@@ -172,7 +175,9 @@ public class InsightMeasurer implements Runnable {
   private void emitBatch(Batch b) {
     startLine(false, b.totalElapsed, b.numOpen, b.firstMove.timestamp, b.minima);
     emit(b.assignments.size());
-    emit(Joiner.on(';').join(b.maxOfMins));
+    emit(Joiner.on(';').join(b.maxOfFirstMoveMins));
+    emit(Joiner.on(';').join(b.maxOfOriginalMins));
+    emit(Joiner.on(';').join(getMinima(b.collector.errors)));
     b.emitUniverse();
     endLine();
   }
@@ -304,7 +309,8 @@ public class InsightMeasurer implements Runnable {
     final int numOpen;
     final Set<MoveKind> minima;
     final Set<MoveKind> firstMoveMinima;
-    final Set<MoveKind> maxOfMins;
+    final Set<MoveKind> maxOfFirstMoveMins;
+    final Set<MoveKind> maxOfOriginalMins;
     final Set<Assignment> assignments = Sets.newHashSet();
     final Universe universe = new Universe();
     long totalElapsed;
@@ -318,7 +324,12 @@ public class InsightMeasurer implements Runnable {
       Collection<WrappedInsight> wrappedInsights = collector.moves.get(assignment);
       EnumSet<MoveKind> fmin = getMinima(wrappedInsights);
       this.firstMoveMinima = fmin;
-      this.maxOfMins = fmin.clone();
+      this.maxOfFirstMoveMins = fmin.clone();
+      this.maxOfOriginalMins = fmin.clone();
+      for (Assignment a : collector.moves.keySet()) {
+        for (MoveKind k : getMinima(collector.moves.get(a)))
+          updateMinima(maxOfOriginalMins, k, KIND_REVERSE);
+      }
       for (WrappedInsight w : wrappedInsights) {
         universe.add(w.insight, true);
       }
@@ -340,7 +351,7 @@ public class InsightMeasurer implements Runnable {
           universe.add(w.insight, true);
         }
         for (MoveKind k : newBatch.firstMoveMinima)
-          updateMinima(maxOfMins, k, KIND_REVERSE);
+          updateMinima(maxOfFirstMoveMins, k, KIND_REVERSE);
       }
       return false;
     }

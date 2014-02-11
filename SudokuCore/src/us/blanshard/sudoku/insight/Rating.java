@@ -22,6 +22,22 @@ import java.util.Iterator;
 
 /** The object returned by the {@link Evaluator}. */
 public class Rating {
+  /**
+   * Intrinsic degrees of difficulty for Sudokus.  "No disproofs" means that the
+   * basic solution rules are sufficient to solve the puzzle.  "Simple
+   * disproofs" means that disproving possible assignments using the basic
+   * solution rules is sufficient.  "Recursive disproofs" means that there
+   * aren't enough simple disproofs available to solve the puzzle, so you must
+   * disprove subsequent assignments while trying to disprove initial ones.
+   *
+   * <p> Note that SIMPLE_DISPROOFS may not be strictly true, if there are
+   * possible moves that the evaluator considers too hard to find.
+   */
+  public enum Difficulty {
+    NO_DISPROOFS,
+    SIMPLE_DISPROOFS,
+    RECURSIVE_DISPROOFS;  // Note ordinals are serialized
+  }
 
   /** The version of the estimation algorithm that was used for this result. */
   public final int algorithmVersion;
@@ -31,19 +47,23 @@ public class Rating {
   /** Whether the evaluation was complete; if false, the score is probably
       less than it would have been if allowed to finish. */
   public final boolean evalComplete;
+  /** The intrinsic difficulty of the puzzle. */
+  public final Difficulty difficulty;
   /** Whether the puzzle has more than one solution. */
   public final boolean improper;
 
-  public Rating(int algorithmVersion, double score, boolean evalComplete, boolean improper) {
+  public Rating(int algorithmVersion, double score, boolean evalComplete, Difficulty difficulty,
+      boolean improper) {
     this.algorithmVersion = algorithmVersion;
     this.score = score;
     this.evalComplete = evalComplete;
+    this.difficulty = difficulty;
     this.improper = improper;
   }
 
   /** Renders this result in a string form that can be reversed by {@link #deserialize}. */
   public String serialize() {
-    return JOINER.join(algorithmVersion, score, evalComplete, improper);
+    return JOINER.join(algorithmVersion, score, evalComplete, difficulty.ordinal(), improper);
   }
 
   @Override public String toString() {
@@ -56,9 +76,9 @@ public class Rating {
     int algorithmVersion = Integer.parseInt(it.next());
     double score = Double.parseDouble(it.next());
     boolean evalComplete = Boolean.parseBoolean(it.next());
-    if (algorithmVersion < 3) it.next();
+    Difficulty difficulty = Difficulty.values()[Integer.parseInt(it.next())];
     boolean improper = Boolean.parseBoolean(it.next());
     if (algorithmVersion == 1) score /= 60;
-    return new Rating(algorithmVersion, score, evalComplete, improper);
+    return new Rating(algorithmVersion, score, evalComplete, difficulty, improper);
   }
 }

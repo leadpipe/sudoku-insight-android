@@ -3,7 +3,7 @@
 *** TODO Investigate recent puzzles
 - categories: estimate way too high, way too low, high, low, close to perfect
 - add columns for the pattern that the estimator found, and patterns matching actual move
-*** TODO New evaluator algorithm [2/3]
+*** DONE New evaluator algorithm [3/3]
 - [X] Rework InsightMeasurer to track batches of insights
   - Each legit move starts a new batch; the batch is tracked through successive
     moves until something happens that is NOT one of its implied assignments.
@@ -19,7 +19,7 @@
   - Error insights: which ones are included?
     - They also have kinds, so we can talk of them being subsumed.
 - [X] Rework ScanPoints to keep pace
-- [ ] Implement new algo based on these measurements
+- [X] Implement new algo based on these measurements
 *** TODO Performance improvements [0/2]
 - [ ] Run profiler after evaluator change
 - [ ] Add phase to Analyzer callback, and stop after assignments when taking a short path?

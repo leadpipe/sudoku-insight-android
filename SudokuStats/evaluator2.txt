@@ -1,4 +1,4 @@
-Oct 27, 2013 6:56:22 PM com.google.appengine.api.blobstore.dev.LocalBlobstoreService init
+Feb 09, 2014 10:22:03 PM com.google.appengine.api.blobstore.dev.LocalBlobstoreService init
 INFO: Creating blobstore backing store at /Users/leadpipe/Downloads/datastore-backup-20130720/
 ....................................................................................................
 ....................................................................................................
@@ -13,84 +13,84 @@ INFO: Creating blobstore backing store at /Users/leadpipe/Downloads/datastore-ba
 .........................................
 # puzzles: 1041; # won: 991; # recursive: 0
 Proportion solved in one pass: 58.22%
-MAPE: 60.76%
+MAPE: 69.20%
 
-Single-pass undershot stats (estimate less than actual; 74.18%):
+Single-pass undershot stats (estimate less than actual; 81.11%):
 Ave Percent Errors = DescriptiveStatistics:
-n: 428
-min: 0.10894934738859129
-max: 2160.312601015357
-mean: 92.39561619152765
-std dev: 199.14322764579595
-median: 43.078056669993245
-skewness: 7.144924019779065
-kurtosis: 62.669869294934166
+n: 468
+min: 0.10182613818057729
+max: 2702.9405579699983
+mean: 78.27329680700696
+std dev: 186.3751383254031
+median: 39.26173463968101
+skewness: 9.004595937764178
+kurtosis: 103.93627975685834
 Evaluator Millis = DescriptiveStatistics:
-n: 428
-min: 17.294
-max: 338.441
-mean: 39.34670093457944
-std dev: 19.381106052338442
-median: 35.737
-skewness: 9.056150654254816
-kurtosis: 133.1509089056189
+n: 468
+min: 3.098
+max: 275.374
+mean: 23.35899358974359
+std dev: 19.839003243021523
+median: 18.799500000000002
+skewness: 5.542122397333019
+kurtosis: 57.96648169711685
 
-Single-pass overshot stats (estimate greater than actual; 25.82%):
+Single-pass overshot stats (estimate greater than actual; 18.89%):
 Ave Percent Errors = DescriptiveStatistics:
-n: 149
-min: 0.06716712767275111
-max: 165.71396437024214
-mean: 25.051031460489337
-std dev: 25.384621583622735
-median: 17.813294241348263
-skewness: 2.1337933352551373
-kurtosis: 6.809278652757557
+n: 109
+min: 0.21238243115419478
+max: 64.14278203514591
+mean: 18.076747296809213
+std dev: 15.776251659517298
+median: 13.449908988172767
+skewness: 1.0326432927332663
+kurtosis: 0.2788114804416941
 Evaluator Millis = DescriptiveStatistics:
-n: 149
-min: 15.443
-max: 78.249
-mean: 34.02460402684564
-std dev: 11.492376500061805
-median: 31.818
-skewness: 1.3061788333333308
-kurtosis: 2.252785965980212
+n: 109
+min: 3.907
+max: 92.127
+mean: 17.58102752293578
+std dev: 13.35845373790522
+median: 13.803
+skewness: 2.6717577690057013
+kurtosis: 10.421117773982996
 
-Multi-pass undershot stats (estimate less than actual; 37.44%):
+Multi-pass undershot stats (estimate less than actual; 90.58%):
 Ave Percent Errors = DescriptiveStatistics:
-n: 155
-min: 0.08938598080913908
-max: 539.0757533738656
-mean: 49.624990395301666
-std dev: 72.14591987761719
-median: 24.41260250629102
-skewness: 3.883475990102182
-kurtosis: 19.541416093598773
+n: 375
+min: 0.31745247002081906
+max: 785.5434227775917
+mean: 78.23072370620609
+std dev: 91.36550760521031
+median: 56.35566321160314
+skewness: 3.9760048076994385
+kurtosis: 21.85208803940817
 Evaluator Millis = DescriptiveStatistics:
-n: 155
-min: 42.625
-max: 2435.982
-mean: 543.0752774193548
-std dev: 360.88678690640694
-median: 476.176
-skewness: 1.4085693756678004
-kurtosis: 4.090483461456367
+n: 375
+min: 9.843
+max: 1865.196
+mean: 298.20905866666664
+std dev: 253.96918299537597
+median: 233.39
+skewness: 1.65307374422479
+kurtosis: 5.028611301528546
 
-Multi-pass overshot stats (estimate greater than actual; 62.56%):
+Multi-pass overshot stats (estimate greater than actual; 9.42%):
 Ave Percent Errors = DescriptiveStatistics:
-n: 259
-min: 0.14538438674370538
-max: 171.54534610392304
-mean: 35.67764445397248
-std dev: 27.873528265554935
-median: 29.596015976636387
-skewness: 1.4963013815994948
-kurtosis: 3.2460780643906038
+n: 39
+min: 0.25003067259538786
+max: 57.5774967477041
+mean: 16.361496711452165
+std dev: 17.309626974743686
+median: 9.334150160551493
+skewness: 1.2087598315343768
+kurtosis: 0.20497251880197487
 Evaluator Millis = DescriptiveStatistics:
-n: 259
-min: 41.231
-max: 2269.323
-mean: 528.3661505791506
-std dev: 397.8616990685358
-median: 447.933
-skewness: 1.0828840448634882
-kurtosis: 1.1781036102590443
+n: 39
+min: 25.008
+max: 1205.645
+mean: 382.5509230769231
+std dev: 279.1424888970717
+median: 359.963
+skewness: 0.9564470622946017
+kurtosis: 0.9916366778008605

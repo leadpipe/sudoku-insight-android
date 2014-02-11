@@ -72,7 +72,10 @@ public class ScanPoints {
       } else {
         int numMoves = Integer.parseInt(iter.next());
         MoveKind worstKind = parseKinds(iter.next());
-        reporter.takeBatch(seconds, openCount, bestKind, numMoves, worstKind, new Universe(iter));
+        MoveKind worstOriginalKind = parseKinds(iter.next());
+        MoveKind bestError = parseKinds(iter.next());
+        reporter.takeBatch(seconds, openCount, bestKind, numMoves, worstKind,
+            worstOriginalKind, bestError, new Universe(iter));
       }
       if (iter.hasNext()) {
         in.close();
@@ -131,8 +134,10 @@ public class ScanPoints {
     }
 
     public void takeBatch(double seconds, int openCount, MoveKind bestKind,
-        int numMoves, MoveKind worstKind, Universe universe) {
-      processes.getUnchecked(bestKind).take(seconds, openCount, numMoves, worstKind, universe);
+        int numMoves, MoveKind worstKind, MoveKind worstOriginalKind,
+        MoveKind bestError, Universe universe) {
+      processes.getUnchecked(bestKind).take(
+          seconds, openCount, numMoves, worstKind, worstOriginalKind, bestError, universe);
     }
   }
 
@@ -140,6 +145,7 @@ public class ScanPoints {
     private final MoveKind bestKind;
     private final LoadingCache<Integer, ProcessCounter> realmCounters;
     private final LoadingCache<MoveKind, ProcessCounter> maxCounters;
+    private final LoadingCache<MoveKind, ProcessCounter> errorCounters;
     private final ProcessCounter overallCounter = new ProcessCounter();
     private int trailheadsIncluded;
     private int batchesIncluded;
@@ -153,23 +159,28 @@ public class ScanPoints {
           return new ProcessCounter();
         }
       });
-      maxCounters = CacheBuilder.newBuilder().build(new CacheLoader<MoveKind, ProcessCounter>() {
+      CacheLoader<MoveKind, ProcessCounter> loader = new CacheLoader<MoveKind, ProcessCounter>() {
         @Override public ProcessCounter load(MoveKind worstKind) {
           return new ProcessCounter();
         }
-      });
+      };
+      maxCounters = CacheBuilder.newBuilder().build(loader);
+      errorCounters = CacheBuilder.newBuilder().build(loader);
     }
 
     public void takeTrailhead() {
       ++trailheadsIncluded;
     }
 
-    public void take(double seconds, int openCount, int numMoves,
-        MoveKind worstKind, Universe universe) {
+    public void take(double seconds, int openCount, int numMoves, MoveKind worstKind,
+        MoveKind worstOriginalKind, MoveKind bestError, Universe universe) {
       realmCounters.getUnchecked(universe.realmVector)
           .count(seconds, pointsScanned(openCount, universe));
-      maxCounters.getUnchecked(worstKind)
+      maxCounters.getUnchecked(worstOriginalKind)
           .count(seconds, pointsScanned(openCount, 4, universe));
+      if (bestError != null)
+        errorCounters.getUnchecked(bestError)
+            .count(seconds, pointsScanned(openCount, 4, universe));
       overallCounter.count(seconds, pointsScanned(openCount, 4, universe));
       ++batchesIncluded;
       movesIncluded += numMoves;
@@ -204,7 +215,7 @@ public class ScanPoints {
       out.println(" - Overall:");
       overallCounter.report(out);
 
-      out.println(" - By hardest move made:");
+      out.println(" - By hardest move in batch:");
       int count = maxCounters.asMap().size();
       for (MoveKind k : allKinds)
         if (maxCounters.asMap().containsKey(k)) {
@@ -214,6 +225,14 @@ public class ScanPoints {
           c.report(out);
         }
       if (count > 0) throw new IllegalStateException();
+
+      out.println(" - By easiest error in batch:");
+      for (MoveKind k : allKinds)
+        if (errorCounters.asMap().containsKey(k)) {
+          ProcessCounter c = errorCounters.asMap().get(k);
+          out.printf("   %s (%,d):\n", k, c.count);
+          c.report(out);
+        }
 
       if (reportByRealm) {
         out.println(" - By realm vector:");

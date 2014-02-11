@@ -29,6 +29,7 @@ import us.blanshard.sudoku.core.UnitNumSet;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
+import us.blanshard.sudoku.insight.Rating.Difficulty;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
@@ -65,7 +66,13 @@ public class Evaluator {
    * estimated score.
    */
   public interface Callback {
+    /** Returns a monotonically increasing score during the evaluation. */
     void updateEstimate(double minScore);
+
+    /**
+     * Called when a trail is first started.  There may be (hard) moves
+     * still available.
+     */
     void disproofsRequired();
   }
 
@@ -110,7 +117,9 @@ public class Evaluator {
     outer.runStraightShot(callback);
     double score = outer.score;
     boolean uninterrupted = outer.uninterrupted();
+    Difficulty difficulty = Difficulty.NO_DISPROOFS;
     if (outer.status == RunStatus.INCONCLUSIVE) {
+      difficulty = Difficulty.SIMPLE_DISPROOFS;
       if (callback != null) callback.disproofsRequired();
       double totalScore = 0;
       int numEvaluations = 0;
@@ -121,11 +130,12 @@ public class Evaluator {
             new InnerCallback(callback, score + totalScore / trialCount, trialCount));
         uninterrupted = inner.uninterrupted();
         totalScore += inner.score;
+        if (inner.recursiveDisproofs) difficulty = Difficulty.RECURSIVE_DISPROOFS;
         minOpen = inner.minOpen;
       }
       score += totalScore / numEvaluations;
     }
-    return new Rating(CURRENT_VERSION, score, uninterrupted, improper);
+    return new Rating(CURRENT_VERSION, score, uninterrupted, difficulty, improper);
   }
 
   private static class InnerCallback implements Callback {
@@ -323,9 +333,9 @@ public class Evaluator {
    * hardest.
    */
   public enum MoveKind {
-    DIRECT_EASY(0, 0, 0.34, 0.36, 0.42, 0.47, 0.48, 0.48),
-    SIMPLY_IMPLIED_EASY(0, 1, 0.57, 0.61, 0.70, 0.92, 0.95, 1.0),
-    COMPLEXLY_IMPLIED_EASY(0, 2, 0.61, 0.61, 0.70, 1.08, 1.12, 1.23),
+    DIRECT_EASY(0, 0, 0.33, 0.35, 0.42, 0.46, 0.47, 0.48),
+    SIMPLY_IMPLIED_EASY(0, 1, 0.62, 0.66, 0.67, 0.73, 0.94, 1.06),
+    COMPLEXLY_IMPLIED_EASY(0, 2, 0.70, 0.70, 0.70, 0.93, 1.01, 1.27),
     DIRECT_HARD(1, 0),
     SIMPLY_IMPLIED_HARD(1, 1),
     COMPLEXLY_IMPLIED_HARD(1, 2),
@@ -378,7 +388,7 @@ public class Evaluator {
     private final double[] secondsPerScanPoint;
 
     private static final double[] secondsBeforeTrailhead = {
-      31.4, 44.5, 57.9, 77.1, 96.2, 139
+      32.1, 45.3, 56.2, 76.0, 103.3, 129.9
     };
 
     private static double toMinutes(double[] seconds, int minOpen) {

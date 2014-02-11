@@ -3,322 +3,538 @@
 Minimum open: 50 or more
 ======================
 
-DIRECT_EASY: 7,642 batches (14,745 moves); 31 trailheads
+DIRECT_EASY: 12,139 batches (23,444 moves); 54 trailheads
  - Overall:
-Scan-points/second: 1.94; var: 7.69 (396.74%)
-Seconds/scan-point: 0.516
- - By hardest move made:
-   DIRECT_EASY (6,806):
-Scan-points/second: 2.24; var: 8.98 (401.11%)
-Seconds/scan-point: 0.447
-   SIMPLY_IMPLIED_EASY (645):
-Scan-points/second: 1.01; var: 2.08 (206.51%)
-Seconds/scan-point: 0.992
-   COMPLEXLY_IMPLIED_EASY (186):
-Scan-points/second: 0.92; var: 1.24 (134.42%)
-Seconds/scan-point: 1.088
-   DIRECT_HARD (3):
-Scan-points/second: 1.17; var: 0.27 (23.23%)
-Seconds/scan-point: 0.855
-   SIMPLY_IMPLIED_HARD (2):
-Scan-points/second: 0.53; var: 0.25 (47.50%)
-Seconds/scan-point: 1.884
+Scan-points/second: 2.14; var: 8.85 (413.08%)
+Seconds/scan-point: 0.467
+ - By hardest move in batch:
+   DIRECT_EASY (339):
+Scan-points/second: 3.63; var: 36.55 (1007.53%)
+Seconds/scan-point: 0.276
+   SIMPLY_IMPLIED_EASY (288):
+Scan-points/second: 2.65; var: 11.45 (431.20%)
+Seconds/scan-point: 0.377
+   COMPLEXLY_IMPLIED_EASY (8,825):
+Scan-points/second: 2.08; var: 8.05 (388.09%)
+Seconds/scan-point: 0.482
+   DIRECT_HARD (62):
+Scan-points/second: 3.46; var: 12.39 (358.25%)
+Seconds/scan-point: 0.289
+   SIMPLY_IMPLIED_HARD (16):
+Scan-points/second: 2.47; var: 6.84 (276.89%)
+Seconds/scan-point: 0.405
+   COMPLEXLY_IMPLIED_HARD (2,609):
+Scan-points/second: 2.05; var: 6.07 (296.92%)
+Seconds/scan-point: 0.489
+ - By easiest error in batch:
+   DIRECT_EASY (30):
+Scan-points/second: 2.25; var: 14.87 (660.38%)
+Seconds/scan-point: 0.444
+   SIMPLY_IMPLIED_EASY (14):
+Scan-points/second: 3.58; var: 29.14 (814.25%)
+Seconds/scan-point: 0.279
+   COMPLEXLY_IMPLIED_EASY (68):
+Scan-points/second: 3.87; var: 38.34 (990.97%)
+Seconds/scan-point: 0.258
+   COMPLEXLY_IMPLIED_HARD (2):
+Scan-points/second: 24.50; var: 12.50 (51.02%)
+Seconds/scan-point: 0.041
 
-SIMPLY_IMPLIED_EASY: 109 batches (194 moves); 26 trailheads
+SIMPLY_IMPLIED_EASY: 158 batches (280 moves); 34 trailheads
  - Overall:
-Scan-points/second: 0.96; var: 2.41 (251.33%)
-Seconds/scan-point: 1.041
- - By hardest move made:
-   SIMPLY_IMPLIED_EASY (91):
-Scan-points/second: 1.00; var: 2.95 (294.40%)
-Seconds/scan-point: 0.999
-   COMPLEXLY_IMPLIED_EASY (18):
-Scan-points/second: 0.81; var: 0.47 (58.23%)
-Seconds/scan-point: 1.228
+Scan-points/second: 0.94; var: 2.26 (241.01%)
+Seconds/scan-point: 1.067
+ - By hardest move in batch:
+   SIMPLY_IMPLIED_EASY (13):
+Scan-points/second: 1.57; var: 6.57 (417.74%)
+Seconds/scan-point: 0.636
+   COMPLEXLY_IMPLIED_EASY (126):
+Scan-points/second: 0.90; var: 1.92 (214.15%)
+Seconds/scan-point: 1.114
+   COMPLEXLY_IMPLIED_HARD (19):
+Scan-points/second: 0.69; var: 0.72 (104.74%)
+Seconds/scan-point: 1.455
+ - By easiest error in batch:
+   COMPLEXLY_IMPLIED_EASY (1):
+Scan-points/second: 1.24; var: 0.19 (15.18%)
+Seconds/scan-point: 0.804
 
-COMPLEXLY_IMPLIED_EASY: 18 batches (31 moves); 35 trailheads
+COMPLEXLY_IMPLIED_EASY: 24 batches (39 moves); 54 trailheads
  - Overall:
-Scan-points/second: 0.71; var: 0.97 (137.79%)
-Seconds/scan-point: 1.418
- - By hardest move made:
-   COMPLEXLY_IMPLIED_EASY (18):
-Scan-points/second: 0.71; var: 0.97 (137.79%)
-Seconds/scan-point: 1.418
+Scan-points/second: 0.76; var: 1.03 (134.87%)
+Seconds/scan-point: 1.314
+ - By hardest move in batch:
+   COMPLEXLY_IMPLIED_EASY (20):
+Scan-points/second: 0.76; var: 1.10 (145.22%)
+Seconds/scan-point: 1.324
+   COMPLEXLY_IMPLIED_HARD (4):
+Scan-points/second: 0.79; var: 0.39 (49.45%)
+Seconds/scan-point: 1.266
+ - By easiest error in batch:
+
+SIMPLY_IMPLIED_HARD: 0 batches (0 moves); 1 trailheads
+ - Overall:
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
+ - By hardest move in batch:
+ - By easiest error in batch:
 
 
 
-Trailheads (152):
-Scan-points/second: 0.01; var: 0.01 (99.28%)
-Seconds/scan-point: 138.788
+Trailheads (219):
+Scan-points/second: 0.01; var: 0.01 (99.24%)
+Seconds/scan-point: 130.720
 
 ======================
 Minimum open: 40 - 49
 ======================
 
-DIRECT_EASY: 12,950 batches (24,606 moves); 102 trailheads
+DIRECT_EASY: 20,532 batches (39,031 moves); 189 trailheads
  - Overall:
-Scan-points/second: 1.85; var: 9.11 (493.71%)
-Seconds/scan-point: 0.542
- - By hardest move made:
-   DIRECT_EASY (11,193):
-Scan-points/second: 2.07; var: 10.99 (531.65%)
-Seconds/scan-point: 0.484
-   SIMPLY_IMPLIED_EASY (1,440):
-Scan-points/second: 1.24; var: 2.85 (229.89%)
-Seconds/scan-point: 0.807
-   COMPLEXLY_IMPLIED_EASY (314):
-Scan-points/second: 0.89; var: 1.68 (187.98%)
-Seconds/scan-point: 1.122
-   DIRECT_HARD (3):
-Scan-points/second: 1.34; var: 0.92 (68.48%)
-Seconds/scan-point: 0.744
-
-SIMPLY_IMPLIED_EASY: 251 batches (427 moves); 52 trailheads
- - Overall:
-Scan-points/second: 0.91; var: 3.36 (371.50%)
-Seconds/scan-point: 1.105
- - By hardest move made:
-   SIMPLY_IMPLIED_EASY (203):
-Scan-points/second: 1.05; var: 3.94 (375.53%)
-Seconds/scan-point: 0.954
-   COMPLEXLY_IMPLIED_EASY (47):
-Scan-points/second: 0.56; var: 1.88 (337.98%)
-Seconds/scan-point: 1.798
+Scan-points/second: 1.97; var: 9.83 (499.05%)
+Seconds/scan-point: 0.508
+ - By hardest move in batch:
+   DIRECT_EASY (810):
+Scan-points/second: 3.40; var: 48.09 (1415.37%)
+Seconds/scan-point: 0.294
+   SIMPLY_IMPLIED_EASY (662):
+Scan-points/second: 2.25; var: 10.75 (478.58%)
+Seconds/scan-point: 0.445
+   COMPLEXLY_IMPLIED_EASY (16,548):
+Scan-points/second: 1.90; var: 8.10 (425.94%)
+Seconds/scan-point: 0.526
+   DIRECT_HARD (22):
+Scan-points/second: 5.73; var: 31.92 (557.02%)
+Seconds/scan-point: 0.174
+   SIMPLY_IMPLIED_HARD (9):
+Scan-points/second: 4.62; var: 3.66 (79.21%)
+Seconds/scan-point: 0.216
+   COMPLEXLY_IMPLIED_HARD (2,481):
+Scan-points/second: 1.78; var: 6.22 (348.86%)
+Seconds/scan-point: 0.561
+ - By easiest error in batch:
+   DIRECT_EASY (328):
+Scan-points/second: 2.37; var: 9.60 (404.93%)
+Seconds/scan-point: 0.422
+   SIMPLY_IMPLIED_EASY (123):
+Scan-points/second: 2.49; var: 15.69 (629.70%)
+Seconds/scan-point: 0.401
+   COMPLEXLY_IMPLIED_EASY (865):
+Scan-points/second: 2.31; var: 9.39 (406.82%)
+Seconds/scan-point: 0.433
    DIRECT_HARD (1):
-Scan-points/second: 0.21; var: 0.17 (80.77%)
-Seconds/scan-point: 4.818
-
-COMPLEXLY_IMPLIED_EASY: 53 batches (86 moves); 132 trailheads
- - Overall:
-Scan-points/second: 0.99; var: 3.17 (319.45%)
-Seconds/scan-point: 1.009
- - By hardest move made:
-   COMPLEXLY_IMPLIED_EASY (52):
-Scan-points/second: 1.00; var: 3.18 (318.54%)
-Seconds/scan-point: 1.002
+Scan-points/second: 22.75; var: 0.25 (1.10%)
+Seconds/scan-point: 0.044
    SIMPLY_IMPLIED_HARD (1):
-Scan-points/second: 0.20; var: 0.17 (83.33%)
-Seconds/scan-point: 5.000
+Scan-points/second: 1.00; var: 0.00 (0.00%)
+Seconds/scan-point: 1.000
+   COMPLEXLY_IMPLIED_HARD (9):
+Scan-points/second: 4.57; var: 22.57 (494.03%)
+Seconds/scan-point: 0.219
+
+SIMPLY_IMPLIED_EASY: 388 batches (666 moves); 81 trailheads
+ - Overall:
+Scan-points/second: 0.95; var: 3.62 (380.29%)
+Seconds/scan-point: 1.051
+ - By hardest move in batch:
+   SIMPLY_IMPLIED_EASY (58):
+Scan-points/second: 1.58; var: 9.11 (578.09%)
+Seconds/scan-point: 0.634
+   COMPLEXLY_IMPLIED_EASY (293):
+Scan-points/second: 0.84; var: 2.73 (324.40%)
+Seconds/scan-point: 1.187
+   COMPLEXLY_IMPLIED_HARD (37):
+Scan-points/second: 0.90; var: 1.74 (192.40%)
+Seconds/scan-point: 1.106
+ - By easiest error in batch:
+   DIRECT_EASY (1):
+Scan-points/second: 0.07; var: 0.07 (94.03%)
+Seconds/scan-point: 13.600
+   SIMPLY_IMPLIED_EASY (1):
+Scan-points/second: 0.32; var: 0.22 (70.00%)
+Seconds/scan-point: 3.154
+   COMPLEXLY_IMPLIED_EASY (6):
+Scan-points/second: 1.33; var: 7.97 (599.73%)
+Seconds/scan-point: 0.753
+
+COMPLEXLY_IMPLIED_EASY: 79 batches (123 moves); 179 trailheads
+ - Overall:
+Scan-points/second: 1.12; var: 3.09 (276.51%)
+Seconds/scan-point: 0.896
+ - By hardest move in batch:
+   COMPLEXLY_IMPLIED_EASY (72):
+Scan-points/second: 1.09; var: 3.15 (287.76%)
+Seconds/scan-point: 0.913
+   COMPLEXLY_IMPLIED_HARD (7):
+Scan-points/second: 1.40; var: 2.14 (152.24%)
+Seconds/scan-point: 0.713
+ - By easiest error in batch:
+   SIMPLY_IMPLIED_EASY (1):
+Scan-points/second: 0.11; var: 0.10 (90.77%)
+Seconds/scan-point: 9.429
 
 
 
-Trailheads (528):
-Scan-points/second: 0.01; var: 0.01 (99.72%)
-Seconds/scan-point: 96.157
+Trailheads (819):
+Scan-points/second: 0.01; var: 0.01 (99.70%)
+Seconds/scan-point: 96.996
 
 ======================
 Minimum open: 30 - 39
 ======================
 
-DIRECT_EASY: 14,520 batches (27,444 moves); 103 trailheads
+DIRECT_EASY: 23,253 batches (43,989 moves); 182 trailheads
  - Overall:
-Scan-points/second: 1.98; var: 8.98 (452.97%)
-Seconds/scan-point: 0.505
- - By hardest move made:
-   DIRECT_EASY (13,085):
-Scan-points/second: 2.13; var: 10.05 (471.05%)
-Seconds/scan-point: 0.469
-   SIMPLY_IMPLIED_EASY (1,227):
-Scan-points/second: 1.35; var: 3.08 (227.81%)
-Seconds/scan-point: 0.740
-   COMPLEXLY_IMPLIED_EASY (207):
-Scan-points/second: 0.99; var: 2.09 (210.51%)
-Seconds/scan-point: 1.009
-   COMPLEXLY_IMPLIED_HARD (1):
-Scan-points/second: NaN; var: NaN (NaN%)
-Seconds/scan-point: NaN
-
-SIMPLY_IMPLIED_EASY: 133 batches (233 moves); 45 trailheads
- - Overall:
-Scan-points/second: 1.07; var: 3.36 (313.88%)
-Seconds/scan-point: 0.933
- - By hardest move made:
-   SIMPLY_IMPLIED_EASY (122):
-Scan-points/second: 1.08; var: 3.38 (312.00%)
-Seconds/scan-point: 0.924
-   COMPLEXLY_IMPLIED_EASY (11):
-Scan-points/second: 0.93; var: 2.91 (312.38%)
-Seconds/scan-point: 1.075
-
-COMPLEXLY_IMPLIED_EASY: 26 batches (38 moves); 70 trailheads
- - Overall:
-Scan-points/second: 1.31; var: 2.02 (153.46%)
-Seconds/scan-point: 0.761
- - By hardest move made:
-   COMPLEXLY_IMPLIED_EASY (25):
-Scan-points/second: 1.30; var: 2.08 (159.60%)
-Seconds/scan-point: 0.767
+Scan-points/second: 2.09; var: 9.93 (474.97%)
+Seconds/scan-point: 0.478
+ - By hardest move in batch:
+   DIRECT_EASY (977):
+Scan-points/second: 3.87; var: 47.95 (1239.75%)
+Seconds/scan-point: 0.259
+   SIMPLY_IMPLIED_EASY (790):
+Scan-points/second: 2.56; var: 12.33 (481.85%)
+Seconds/scan-point: 0.391
+   COMPLEXLY_IMPLIED_EASY (19,403):
+Scan-points/second: 2.01; var: 7.96 (395.98%)
+Seconds/scan-point: 0.497
+   DIRECT_HARD (20):
+Scan-points/second: 0.86; var: 3.03 (351.06%)
+Seconds/scan-point: 1.157
+   SIMPLY_IMPLIED_HARD (19):
+Scan-points/second: 3.14; var: 11.52 (366.74%)
+Seconds/scan-point: 0.318
+   COMPLEXLY_IMPLIED_HARD (2,044):
+Scan-points/second: 1.75; var: 5.65 (322.61%)
+Seconds/scan-point: 0.571
+ - By easiest error in batch:
+   DIRECT_EASY (808):
+Scan-points/second: 2.00; var: 6.36 (317.33%)
+Seconds/scan-point: 0.499
+   SIMPLY_IMPLIED_EASY (417):
+Scan-points/second: 2.12; var: 5.81 (273.63%)
+Seconds/scan-point: 0.471
+   COMPLEXLY_IMPLIED_EASY (1,887):
+Scan-points/second: 1.99; var: 5.95 (299.47%)
+Seconds/scan-point: 0.503
+   DIRECT_HARD (5):
+Scan-points/second: 2.82; var: 1.65 (58.67%)
+Seconds/scan-point: 0.355
    SIMPLY_IMPLIED_HARD (1):
-Scan-points/second: 1.64; var: 0.24 (14.49%)
-Seconds/scan-point: 0.609
+Scan-points/second: 2.00; var: 0.00 (0.00%)
+Seconds/scan-point: 0.500
+   COMPLEXLY_IMPLIED_HARD (10):
+Scan-points/second: 1.67; var: 1.69 (101.40%)
+Seconds/scan-point: 0.600
+
+SIMPLY_IMPLIED_EASY: 215 batches (377 moves); 68 trailheads
+ - Overall:
+Scan-points/second: 1.15; var: 4.04 (349.73%)
+Seconds/scan-point: 0.866
+ - By hardest move in batch:
+   SIMPLY_IMPLIED_EASY (39):
+Scan-points/second: 1.38; var: 5.89 (427.98%)
+Seconds/scan-point: 0.726
+   COMPLEXLY_IMPLIED_EASY (153):
+Scan-points/second: 1.07; var: 3.08 (288.91%)
+Seconds/scan-point: 0.938
+   COMPLEXLY_IMPLIED_HARD (23):
+Scan-points/second: 1.33; var: 6.47 (487.31%)
+Seconds/scan-point: 0.753
+ - By easiest error in batch:
+   SIMPLY_IMPLIED_EASY (1):
+Scan-points/second: 1.72; var: 0.21 (12.21%)
+Seconds/scan-point: 0.581
+   COMPLEXLY_IMPLIED_EASY (12):
+Scan-points/second: 1.01; var: 2.02 (200.71%)
+Seconds/scan-point: 0.993
+
+COMPLEXLY_IMPLIED_EASY: 40 batches (61 moves); 112 trailheads
+ - Overall:
+Scan-points/second: 1.23; var: 4.21 (340.99%)
+Seconds/scan-point: 0.810
+ - By hardest move in batch:
+   COMPLEXLY_IMPLIED_EASY (35):
+Scan-points/second: 1.19; var: 4.35 (365.50%)
+Seconds/scan-point: 0.841
+   COMPLEXLY_IMPLIED_HARD (5):
+Scan-points/second: 1.89; var: 1.97 (104.03%)
+Seconds/scan-point: 0.528
+ - By easiest error in batch:
 
 DIRECT_HARD: 0 batches (0 moves); 1 trailheads
  - Overall:
 Scan-points/second: NaN; var: NaN (NaN%)
 Seconds/scan-point: NaN
- - By hardest move made:
+ - By hardest move in batch:
+ - By easiest error in batch:
 
 
 
-Trailheads (472):
-Scan-points/second: 0.01; var: 0.01 (99.13%)
-Seconds/scan-point: 77.079
+Trailheads (735):
+Scan-points/second: 0.01; var: 0.01 (98.93%)
+Seconds/scan-point: 74.274
 
 ======================
 Minimum open: 20 - 29
 ======================
 
-DIRECT_EASY: 16,466 batches (31,079 moves); 73 trailheads
+DIRECT_EASY: 26,225 batches (49,518 moves); 137 trailheads
  - Overall:
-Scan-points/second: 2.27; var: 9.78 (429.99%)
-Seconds/scan-point: 0.440
- - By hardest move made:
-   DIRECT_EASY (15,629):
-Scan-points/second: 2.37; var: 10.35 (436.00%)
+Scan-points/second: 2.36; var: 10.06 (426.10%)
+Seconds/scan-point: 0.423
+ - By hardest move in batch:
+   DIRECT_EASY (1,526):
+Scan-points/second: 3.84; var: 45.55 (1187.67%)
+Seconds/scan-point: 0.261
+   SIMPLY_IMPLIED_EASY (1,428):
+Scan-points/second: 2.79; var: 10.26 (368.04%)
+Seconds/scan-point: 0.359
+   COMPLEXLY_IMPLIED_EASY (21,717):
+Scan-points/second: 2.25; var: 7.55 (335.06%)
+Seconds/scan-point: 0.444
+   DIRECT_HARD (24):
+Scan-points/second: 2.76; var: 23.52 (853.55%)
+Seconds/scan-point: 0.363
+   SIMPLY_IMPLIED_HARD (27):
+Scan-points/second: 2.86; var: 4.18 (146.52%)
+Seconds/scan-point: 0.350
+   COMPLEXLY_IMPLIED_HARD (1,503):
+Scan-points/second: 2.08; var: 7.28 (349.82%)
+Seconds/scan-point: 0.480
+ - By easiest error in batch:
+   DIRECT_EASY (1,584):
+Scan-points/second: 2.10; var: 5.03 (239.65%)
+Seconds/scan-point: 0.477
+   SIMPLY_IMPLIED_EASY (674):
+Scan-points/second: 2.00; var: 4.25 (212.68%)
+Seconds/scan-point: 0.501
+   COMPLEXLY_IMPLIED_EASY (1,900):
+Scan-points/second: 1.99; var: 5.35 (269.15%)
+Seconds/scan-point: 0.503
+   DIRECT_HARD (2):
+Scan-points/second: 0.89; var: 0.62 (69.29%)
+Seconds/scan-point: 1.125
+   COMPLEXLY_IMPLIED_HARD (10):
+Scan-points/second: 2.38; var: 2.19 (92.22%)
 Seconds/scan-point: 0.421
-   SIMPLY_IMPLIED_EASY (722):
-Scan-points/second: 1.42; var: 3.44 (242.14%)
-Seconds/scan-point: 0.704
-   COMPLEXLY_IMPLIED_EASY (111):
-Scan-points/second: 1.54; var: 3.59 (232.90%)
-Seconds/scan-point: 0.649
-   DIRECT_HARD (4):
-Scan-points/second: 3.00; var: 0.74 (24.56%)
-Seconds/scan-point: 0.333
 
-SIMPLY_IMPLIED_EASY: 74 batches (123 moves); 20 trailheads
+SIMPLY_IMPLIED_EASY: 109 batches (184 moves); 31 trailheads
  - Overall:
-Scan-points/second: 1.68; var: 6.45 (383.00%)
-Seconds/scan-point: 0.594
- - By hardest move made:
-   SIMPLY_IMPLIED_EASY (63):
-Scan-points/second: 1.64; var: 6.40 (390.67%)
-Seconds/scan-point: 0.610
-   COMPLEXLY_IMPLIED_EASY (11):
-Scan-points/second: 1.97; var: 9.10 (460.89%)
-Seconds/scan-point: 0.506
+Scan-points/second: 1.78; var: 7.57 (424.31%)
+Seconds/scan-point: 0.561
+ - By hardest move in batch:
+   SIMPLY_IMPLIED_EASY (20):
+Scan-points/second: 4.00; var: 29.37 (734.13%)
+Seconds/scan-point: 0.250
+   COMPLEXLY_IMPLIED_EASY (80):
+Scan-points/second: 1.47; var: 4.31 (293.58%)
+Seconds/scan-point: 0.681
+   COMPLEXLY_IMPLIED_HARD (9):
+Scan-points/second: 1.62; var: 2.49 (153.94%)
+Seconds/scan-point: 0.618
+ - By easiest error in batch:
+   COMPLEXLY_IMPLIED_EASY (3):
+Scan-points/second: 0.84; var: 0.17 (20.74%)
+Seconds/scan-point: 1.186
 
-COMPLEXLY_IMPLIED_EASY: 11 batches (16 moves); 30 trailheads
+COMPLEXLY_IMPLIED_EASY: 17 batches (24 moves); 52 trailheads
  - Overall:
-Scan-points/second: 3.37; var: 23.16 (687.95%)
-Seconds/scan-point: 0.297
- - By hardest move made:
-   COMPLEXLY_IMPLIED_EASY (11):
-Scan-points/second: 3.37; var: 23.16 (687.95%)
-Seconds/scan-point: 0.297
+Scan-points/second: 2.58; var: 15.73 (608.93%)
+Seconds/scan-point: 0.387
+ - By hardest move in batch:
+   COMPLEXLY_IMPLIED_EASY (14):
+Scan-points/second: 3.09; var: 20.86 (676.01%)
+Seconds/scan-point: 0.324
+   COMPLEXLY_IMPLIED_HARD (3):
+Scan-points/second: 1.40; var: 1.89 (134.88%)
+Seconds/scan-point: 0.712
+ - By easiest error in batch:
 
 
 
-Trailheads (314):
-Scan-points/second: 0.02; var: 0.02 (98.92%)
-Seconds/scan-point: 57.946
+Trailheads (503):
+Scan-points/second: 0.02; var: 0.02 (98.61%)
+Seconds/scan-point: 55.821
 
 ======================
 Minimum open: 10 - 19
 ======================
 
-DIRECT_EASY: 19,220 batches (36,228 moves); 51 trailheads
+DIRECT_EASY: 30,437 batches (57,382 moves); 95 trailheads
  - Overall:
-Scan-points/second: 2.77; var: 9.93 (359.08%)
-Seconds/scan-point: 0.362
- - By hardest move made:
-   DIRECT_EASY (18,694):
-Scan-points/second: 2.85; var: 10.29 (360.93%)
+Scan-points/second: 2.85; var: 10.82 (379.30%)
 Seconds/scan-point: 0.351
-   SIMPLY_IMPLIED_EASY (437):
-Scan-points/second: 1.64; var: 4.44 (270.59%)
-Seconds/scan-point: 0.609
-   COMPLEXLY_IMPLIED_EASY (87):
-Scan-points/second: 1.82; var: 5.44 (298.75%)
-Seconds/scan-point: 0.549
-   DIRECT_HARD (2):
-Scan-points/second: 2.24; var: 2.05 (91.32%)
-Seconds/scan-point: 0.446
+ - By hardest move in batch:
+   DIRECT_EASY (7,900):
+Scan-points/second: 3.73; var: 18.14 (486.76%)
+Seconds/scan-point: 0.268
+   SIMPLY_IMPLIED_EASY (3,030):
+Scan-points/second: 2.94; var: 7.65 (260.62%)
+Seconds/scan-point: 0.341
+   COMPLEXLY_IMPLIED_EASY (18,657):
+Scan-points/second: 2.62; var: 8.65 (330.65%)
+Seconds/scan-point: 0.382
+   DIRECT_HARD (12):
+Scan-points/second: 5.36; var: 17.45 (325.52%)
+Seconds/scan-point: 0.187
+   SIMPLY_IMPLIED_HARD (27):
+Scan-points/second: 3.27; var: 14.16 (433.48%)
+Seconds/scan-point: 0.306
+   COMPLEXLY_IMPLIED_HARD (811):
+Scan-points/second: 2.34; var: 9.08 (388.73%)
+Seconds/scan-point: 0.428
+ - By easiest error in batch:
+   DIRECT_EASY (2,201):
+Scan-points/second: 2.20; var: 4.89 (222.48%)
+Seconds/scan-point: 0.455
+   SIMPLY_IMPLIED_EASY (578):
+Scan-points/second: 2.10; var: 4.87 (231.66%)
+Seconds/scan-point: 0.475
+   COMPLEXLY_IMPLIED_EASY (1,332):
+Scan-points/second: 2.16; var: 5.54 (255.75%)
+Seconds/scan-point: 0.462
+   SIMPLY_IMPLIED_HARD (1):
+Scan-points/second: 1.00; var: 0.00 (0.00%)
+Seconds/scan-point: 1.000
+   COMPLEXLY_IMPLIED_HARD (3):
+Scan-points/second: 2.40; var: 0.71 (29.63%)
+Seconds/scan-point: 0.417
 
-SIMPLY_IMPLIED_EASY: 23 batches (35 moves); 11 trailheads
+SIMPLY_IMPLIED_EASY: 47 batches (77 moves); 15 trailheads
  - Overall:
-Scan-points/second: 1.30; var: 3.32 (256.02%)
-Seconds/scan-point: 0.771
- - By hardest move made:
-   SIMPLY_IMPLIED_EASY (19):
-Scan-points/second: 1.63; var: 3.89 (239.62%)
-Seconds/scan-point: 0.615
-   COMPLEXLY_IMPLIED_EASY (4):
-Scan-points/second: 0.41; var: 0.65 (160.19%)
-Seconds/scan-point: 2.465
+Scan-points/second: 1.36; var: 2.66 (195.38%)
+Seconds/scan-point: 0.734
+ - By hardest move in batch:
+   SIMPLY_IMPLIED_EASY (9):
+Scan-points/second: 2.47; var: 5.97 (241.52%)
+Seconds/scan-point: 0.405
+   COMPLEXLY_IMPLIED_EASY (30):
+Scan-points/second: 1.46; var: 2.32 (158.80%)
+Seconds/scan-point: 0.683
+   COMPLEXLY_IMPLIED_HARD (8):
+Scan-points/second: 0.63; var: 0.47 (74.08%)
+Seconds/scan-point: 1.588
+ - By easiest error in batch:
+   DIRECT_EASY (1):
+Scan-points/second: 1.08; var: 0.08 (7.36%)
+Seconds/scan-point: 0.923
+   COMPLEXLY_IMPLIED_EASY (2):
+Scan-points/second: 1.15; var: 0.22 (18.67%)
+Seconds/scan-point: 0.867
 
-COMPLEXLY_IMPLIED_EASY: 14 batches (23 moves); 22 trailheads
+COMPLEXLY_IMPLIED_EASY: 19 batches (30 moves); 34 trailheads
  - Overall:
-Scan-points/second: 2.23; var: 8.64 (387.05%)
-Seconds/scan-point: 0.448
- - By hardest move made:
-   COMPLEXLY_IMPLIED_EASY (14):
-Scan-points/second: 2.23; var: 8.64 (387.05%)
-Seconds/scan-point: 0.448
+Scan-points/second: 2.11; var: 6.61 (313.65%)
+Seconds/scan-point: 0.474
+ - By hardest move in batch:
+   COMPLEXLY_IMPLIED_EASY (18):
+Scan-points/second: 2.24; var: 7.05 (315.19%)
+Seconds/scan-point: 0.447
+   COMPLEXLY_IMPLIED_HARD (1):
+Scan-points/second: 0.77; var: 0.18 (23.08%)
+Seconds/scan-point: 1.290
+ - By easiest error in batch:
 
 DIRECT_HARD: 0 batches (0 moves); 1 trailheads
  - Overall:
 Scan-points/second: NaN; var: NaN (NaN%)
 Seconds/scan-point: NaN
- - By hardest move made:
+ - By hardest move in batch:
+ - By easiest error in batch:
 
 
 
-Trailheads (242):
-Scan-points/second: 0.02; var: 0.02 (98.59%)
-Seconds/scan-point: 44.456
+Trailheads (386):
+Scan-points/second: 0.02; var: 0.02 (98.30%)
+Seconds/scan-point: 44.909
 
 ======================
 Minimum open: 0 - 9
 ======================
 
-DIRECT_EASY: 33,266 batches (62,784 moves); 101 trailheads
+DIRECT_EASY: 53,147 batches (100,214 moves); 201 trailheads
  - Overall:
-Scan-points/second: 2.95; var: 10.88 (368.77%)
-Seconds/scan-point: 0.339
- - By hardest move made:
-   DIRECT_EASY (32,135):
-Scan-points/second: 3.09; var: 11.17 (361.76%)
-Seconds/scan-point: 0.324
-   SIMPLY_IMPLIED_EASY (893):
-Scan-points/second: 1.76; var: 6.20 (352.65%)
-Seconds/scan-point: 0.568
-   COMPLEXLY_IMPLIED_EASY (227):
-Scan-points/second: 1.63; var: 5.87 (359.43%)
-Seconds/scan-point: 0.612
-   DIRECT_HARD (3):
-Scan-points/second: 0.94; var: 0.53 (56.55%)
-Seconds/scan-point: 1.069
-   SIMPLY_IMPLIED_HARD (4):
-Scan-points/second: 2.02; var: 5.80 (287.64%)
-Seconds/scan-point: 0.496
-   COMPLEXLY_IMPLIED_HARD (4):
-Scan-points/second: 4.14; var: 3.05 (73.74%)
-Seconds/scan-point: 0.241
+Scan-points/second: 3.02; var: 11.94 (395.32%)
+Seconds/scan-point: 0.331
+ - By hardest move in batch:
+   DIRECT_EASY (25,471):
+Scan-points/second: 3.70; var: 14.90 (402.89%)
+Seconds/scan-point: 0.270
+   SIMPLY_IMPLIED_EASY (2,360):
+Scan-points/second: 3.13; var: 12.08 (386.40%)
+Seconds/scan-point: 0.320
+   COMPLEXLY_IMPLIED_EASY (23,731):
+Scan-points/second: 2.73; var: 10.33 (378.13%)
+Seconds/scan-point: 0.366
+   DIRECT_HARD (29):
+Scan-points/second: 3.88; var: 45.63 (1175.99%)
+Seconds/scan-point: 0.258
+   SIMPLY_IMPLIED_HARD (16):
+Scan-points/second: 2.76; var: 3.04 (110.10%)
+Seconds/scan-point: 0.363
+   COMPLEXLY_IMPLIED_HARD (1,540):
+Scan-points/second: 2.45; var: 8.09 (330.53%)
+Seconds/scan-point: 0.409
+ - By easiest error in batch:
+   DIRECT_EASY (3,681):
+Scan-points/second: 2.31; var: 5.50 (237.76%)
+Seconds/scan-point: 0.433
+   SIMPLY_IMPLIED_EASY (1,097):
+Scan-points/second: 2.11; var: 4.69 (221.83%)
+Seconds/scan-point: 0.473
+   COMPLEXLY_IMPLIED_EASY (3,483):
+Scan-points/second: 2.11; var: 6.24 (295.70%)
+Seconds/scan-point: 0.474
+   DIRECT_HARD (1):
+Scan-points/second: 0.75; var: 0.20 (27.27%)
+Seconds/scan-point: 1.333
+   SIMPLY_IMPLIED_HARD (1):
+Scan-points/second: 2.40; var: 0.27 (11.11%)
+Seconds/scan-point: 0.417
+   COMPLEXLY_IMPLIED_HARD (16):
+Scan-points/second: 1.56; var: 1.71 (109.18%)
+Seconds/scan-point: 0.640
 
-SIMPLY_IMPLIED_EASY: 98 batches (170 moves); 47 trailheads
+SIMPLY_IMPLIED_EASY: 151 batches (263 moves); 68 trailheads
  - Overall:
-Scan-points/second: 1.86; var: 11.27 (605.50%)
-Seconds/scan-point: 0.537
- - By hardest move made:
-   SIMPLY_IMPLIED_EASY (81):
-Scan-points/second: 1.94; var: 12.27 (632.82%)
-Seconds/scan-point: 0.516
-   COMPLEXLY_IMPLIED_EASY (17):
-Scan-points/second: 1.46; var: 2.67 (183.32%)
-Seconds/scan-point: 0.686
+Scan-points/second: 1.85; var: 11.52 (622.68%)
+Seconds/scan-point: 0.541
+ - By hardest move in batch:
+   SIMPLY_IMPLIED_EASY (25):
+Scan-points/second: 4.40; var: 37.39 (849.94%)
+Seconds/scan-point: 0.227
+   COMPLEXLY_IMPLIED_EASY (109):
+Scan-points/second: 1.69; var: 8.47 (500.10%)
+Seconds/scan-point: 0.590
+   COMPLEXLY_IMPLIED_HARD (17):
+Scan-points/second: 0.98; var: 1.98 (201.64%)
+Seconds/scan-point: 1.017
+ - By easiest error in batch:
+   DIRECT_EASY (4):
+Scan-points/second: 0.53; var: 1.87 (355.40%)
+Seconds/scan-point: 1.902
+   COMPLEXLY_IMPLIED_EASY (7):
+Scan-points/second: 0.70; var: 1.30 (184.44%)
+Seconds/scan-point: 1.419
 
-COMPLEXLY_IMPLIED_EASY: 23 batches (39 moves); 76 trailheads
+COMPLEXLY_IMPLIED_EASY: 36 batches (62 moves); 126 trailheads
  - Overall:
-Scan-points/second: 1.81; var: 6.95 (384.42%)
-Seconds/scan-point: 0.553
- - By hardest move made:
-   COMPLEXLY_IMPLIED_EASY (23):
-Scan-points/second: 1.81; var: 6.95 (384.42%)
-Seconds/scan-point: 0.553
+Scan-points/second: 1.96; var: 9.09 (464.77%)
+Seconds/scan-point: 0.511
+ - By hardest move in batch:
+   COMPLEXLY_IMPLIED_EASY (30):
+Scan-points/second: 1.93; var: 9.63 (497.96%)
+Seconds/scan-point: 0.517
+   COMPLEXLY_IMPLIED_HARD (6):
+Scan-points/second: 2.08; var: 6.27 (300.99%)
+Seconds/scan-point: 0.480
+ - By easiest error in batch:
+   COMPLEXLY_IMPLIED_EASY (1):
+Scan-points/second: 7.89; var: 0.11 (1.41%)
+Seconds/scan-point: 0.127
 
 
 
-Trailheads (627):
-Scan-points/second: 0.03; var: 0.03 (96.82%)
-Seconds/scan-point: 31.431
+Trailheads (1017):
+Scan-points/second: 0.03; var: 0.03 (97.07%)
+Seconds/scan-point: 31.961

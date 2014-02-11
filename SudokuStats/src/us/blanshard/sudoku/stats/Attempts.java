@@ -92,8 +92,18 @@ public class Attempts {
    * Returns all the attempts from the 2013 phone.
    */
   public static Iterable<AttemptInfo> phone2013() {
+    return fromTsv("/Users/leadpipe/insight/data/games-phone-2013-12-01.tsv");
+  }
+
+  /**
+   * Returns all the attempts from the tablet as of 2014-02-09.
+   */
+  public static Iterable<AttemptInfo> tablet2014() {
+    return fromTsv("/Users/leadpipe/insight/data/games-tablet-2014-02-09.tsv");
+  }
+
+  private static Iterable<AttemptInfo> fromTsv(String fname) {
     List<AttemptInfo> answer = Lists.newArrayList();
-    String fname = "/Users/leadpipe/insight/data/games-phone-2013-12-01.tsv";
     BufferedReader in = null;
 
     try {
@@ -112,7 +122,7 @@ public class Attempts {
         answer.add(new AttemptInfo(cluesString, historyString, rating));
       }
     } catch (IOException e) {
-      throw new RuntimeException("Problem reading phone data", e);
+      throw new RuntimeException("Problem reading TSV data", e);
     } finally {
       if (in != null)
         try { in.close(); }

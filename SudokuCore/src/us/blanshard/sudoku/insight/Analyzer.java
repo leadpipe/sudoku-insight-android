@@ -179,15 +179,17 @@ public class Analyzer {
   private static void findImplications(GridMarks gridMarks, Collector antecedents,
       Callback callback, Options options) throws InterruptedException {
 
-    Collector collector = new Collector(options.returnAllEliminations ? callback : null,
-        antecedents.index, true);
+    Collector collector = new Collector(null, antecedents.index, true);
     findInsights(gridMarks.toBuilder().apply(antecedents.list).build(), collector,
         antecedents.index, options);
 
     if (!collector.list.isEmpty()) {
       List<Insight> antecedentsList = ImmutableList.copyOf(antecedents.list);
       for (Insight insight : collector.list)
-        callback.take(new Implication(antecedentsList, insight));
+        if (insight.isElimination())
+          callback.take(insight);
+        else
+          callback.take(new Implication(antecedentsList, insight));
     }
   }
 
