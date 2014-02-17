@@ -20,6 +20,7 @@ import us.blanshard.sudoku.insight.Rating;
 import us.blanshard.sudoku.insight.Rating.Difficulty;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Iterables;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
@@ -27,13 +28,14 @@ import java.io.PrintWriter;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Evaluates the Evaluator class by running it over a series of puzzles
- * and accumulating error stats.
+ * Evaluates the Evaluator class by running it over a series of puzzles that
+ * have historical information and emitting a tsv for further analysis.
  */
 public class EvaluatorEvaluator {
 
   public static void main(String[] args) throws Exception {
-    PrintWriter out = new PrintWriter(System.out);
+    PrintWriter out = new PrintWriter(args[0]);
+    out.println("Puzzle\tElapsed Minutes\tEstimated Minutes\tDifficulty\tImproper");
     int npuzzles = 0;
     int nwon = 0;
     int nsingle = 0;
@@ -44,7 +46,9 @@ public class EvaluatorEvaluator {
     Stats overshotSingle = new Stats();
     Stats overshotMultiple = new Stats();
 
-    for (AttemptInfo attempt : Attempts.datastoreBackup()) {
+    Iterable<AttemptInfo> attempts = Iterables.concat(
+        Attempts.phone2013(), Attempts.tablet2014());
+    for (AttemptInfo attempt : attempts) {
       ++npuzzles;
       System.err.print('.');
       if (npuzzles % 100 == 0) System.err.println();
@@ -63,15 +67,21 @@ public class EvaluatorEvaluator {
         ? singlePass ? overshotSingle : overshotMultiple
         : singlePass ? undershotSingle : undershotMultiple;
       info.addTo(stats);
+      out.printf("%s\t%.2f\t%.2f\t%d\t%d%n",
+          attempt.clues.toFlatString(), attempt.elapsedMinutes, result.score,
+          result.difficulty.ordinal(), result.improper ? 1 : 0);
     }
 
-    out.println();
-    out.printf("# puzzles: %d; # won: %d; # recursive: %d%n", npuzzles, nwon, nrecursive);
-    out.printf("Proportion solved in one pass: %.2f%%%n", 100.0 * nsingle / nwon);
-    out.printf("MAPE: %.2f%%%n", totalAbsPercentError / nwon);
+    System.err.println();
+    System.err.printf("# puzzles: %d; # won: %d; # recursive: %d%n", npuzzles, nwon, nrecursive);
+    System.err.printf("Proportion solved in one pass: %.2f%%%n", 100.0 * nsingle / nwon);
+    System.err.printf("MAPE: %.2f%%%n", totalAbsPercentError / nwon);
 
-    printStats(out, "Single-pass", undershotSingle, overshotSingle);
-    printStats(out, "Multi-pass", undershotMultiple, overshotMultiple);
+    PrintWriter err = new PrintWriter(System.err);
+    printStats(err, "Single-pass", undershotSingle, overshotSingle);
+    printStats(err, "Multi-pass", undershotMultiple, overshotMultiple);
+
+    err.close();
     out.close();
   }
 

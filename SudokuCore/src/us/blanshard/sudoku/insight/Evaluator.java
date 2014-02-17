@@ -53,7 +53,7 @@ import javax.annotation.Nullable;
 public class Evaluator {
 
   /** The current version of the time estimation algorithm. */
-  public static final int CURRENT_VERSION = 3;
+  public static final int CURRENT_VERSION = 4;
 
   /**
    * How many times we run the evaluator when we must make choices that could
@@ -333,9 +333,9 @@ public class Evaluator {
    * hardest.
    */
   public enum MoveKind {
-    DIRECT_EASY(0, 0, 0.33, 0.35, 0.42, 0.46, 0.47, 0.48),
-    SIMPLY_IMPLIED_EASY(0, 1, 0.62, 0.66, 0.67, 0.73, 0.94, 1.06),
-    COMPLEXLY_IMPLIED_EASY(0, 2, 0.70, 0.70, 0.70, 0.93, 1.01, 1.27),
+    DIRECT_EASY(0, 0, 0.32, 0.34, 0.41, 0.44, 0.45, 0.41),
+    SIMPLY_IMPLIED_EASY(0, 1, 0.51, 0.67, 0.56, 0.84, 0.94, 1.05),
+    COMPLEXLY_IMPLIED_EASY(0, 2, 0.60, 0.55, 0.35, 0.89, 0.92, 1.31),
     DIRECT_HARD(1, 0),
     SIMPLY_IMPLIED_HARD(1, 1),
     COMPLEXLY_IMPLIED_HARD(1, 2),
@@ -363,8 +363,8 @@ public class Evaluator {
      * Tells whether an insight of this kind should be played.  If not, the evaluator
      * should move on to a disproof.
      */
-    public boolean shouldPlay() {
-      return secondsPerScanPoint.length > 0;
+    public boolean isPlayable() {
+      return difficulty == 0;
     }
 
     /**
@@ -388,7 +388,7 @@ public class Evaluator {
     private final double[] secondsPerScanPoint;
 
     private static final double[] secondsBeforeTrailhead = {
-      32.1, 45.3, 56.2, 76.0, 103.3, 129.9
+      32.0, 44.9, 55.8, 74.3, 97.0, 130.7
     };
 
     private static double toMinutes(double[] seconds, int minOpen) {
@@ -419,9 +419,10 @@ public class Evaluator {
     private final Map<Assignment, MoveKind> kinds = Maps.newHashMap();
     private final Multimap<Assignment, Insight> moves = ArrayListMultimap.create();
     private final Set<Assignment> assignments = Sets.newLinkedHashSet();
-    private final List<Insight> errors = Lists.newArrayList();
     private MoveKind bestMoveKind;
     private MoveKind bestErrorKind;
+    private int numMoveInsights;
+    private int numErrors;
 
     public Collector(GridMarks gridMarks, int numOpen, int minOpen) {
       this.gridMarks = gridMarks;
@@ -436,21 +437,28 @@ public class Evaluator {
       if (a != null) {
         moves.put(a, insight);
         MoveKind kind = kindForInsight(gridMarks.grid, insight, kinds.get(a));
-        kinds.put(a, kind);
-        if (bestMoveKind == null || kind.compareTo(bestMoveKind) < 0) {
-          bestMoveKind = kind;
-          assignments.clear();
+        if (kind.isPlayable()) {
+          kinds.put(a, kind);
+          if (bestMoveKind == null || kind.compareTo(bestMoveKind) < 0) {
+            bestMoveKind = kind;
+            assignments.clear();
+            numMoveInsights = 0;
+          }
+          if (kind == bestMoveKind) {
+            assignments.add(a);
+            ++numMoveInsights;
+          }
         }
-        if (kind == bestMoveKind)
-          assignments.add(a);
       } else if (insight.isError()) {
         MoveKind kind = kindForInsight(gridMarks.grid, insight);
-        if (bestErrorKind == null || kind.compareTo(bestErrorKind) < 0) {
-          bestErrorKind = kind;
-          errors.clear();
+        if (kind.isPlayable()) {
+          if (bestErrorKind == null || kind.compareTo(bestErrorKind) < 0) {
+            bestErrorKind = kind;
+            numErrors = 0;
+          }
+          if (kind == bestErrorKind)
+            ++numErrors;
         }
-        if (kind == bestErrorKind)
-          errors.add(insight);
       }
     }
 
@@ -473,13 +481,10 @@ public class Evaluator {
       }
 
       if (errorsWon()) {
-        // Errors.  Calculate elapsed time in a similar way as above.
-        LocSet locs = new LocSet();
-        UnitNumSet unitNums = new UnitNumSet();
-        for (Insight i : errors)
-          i.addScanTargets(locs, unitNums);
+        // Errors.  Calculate elapsed time in a similar way as above, except
+        // the number of scan targets is taken as 1 (because if errors won
+        // they are direct).
         return 4 * numOpen
-            * (locs.size() + unitNums.size())
             / (locTargets.size() + unitNumTargets.size())
             * bestErrorKind.minutesPerScanPoint(minOpen);
       }
@@ -489,13 +494,12 @@ public class Evaluator {
     }
 
     /**
-     * True when there were assignments found, and they are easy enough to play
-     * and easier than any errors found.
+     * True when there were playable assignments found, and any errors aren't
+     * too easy or too numerous.
      */
     public boolean assignmentsWon() {
       return bestMoveKind != null
-          && (bestErrorKind == null || bestMoveKind.compareTo(bestErrorKind) < 0)
-          && bestMoveKind.shouldPlay();
+          && (bestErrorKind != MoveKind.DIRECT_EASY || numMoveInsights >= numErrors);
     }
 
     public Iterable<Assignment> getAssignments() {
@@ -503,13 +507,11 @@ public class Evaluator {
     }
 
     /**
-     * True when there were errors found, and they are easy enough to see
-     * and at least as easy as any moves found.
+     * True when there were direct easy errors found, and there are more of them
+     * than there are move insights.
      */
     public boolean errorsWon() {
-      return bestErrorKind != null
-          && (bestMoveKind == null || bestMoveKind.compareTo(bestErrorKind) >= 0)
-          && bestErrorKind.shouldPlay();
+      return bestErrorKind == MoveKind.DIRECT_EASY && numErrors > numMoveInsights;
     }
   }
 
@@ -622,9 +624,11 @@ public class Evaluator {
 
   /**
    * Tells whether the given insight is an implication that leads to an easy
-   * assignment or error.
+   * assignment or error, and all antecedents are also easy.
    */
   private static boolean isEasy(Grid grid, Implication imp) {
+    if (areAnyAntecedentsHard(imp)) return false;
+
     Location target;
     Insight nub = imp.getNub();
     switch (nub.type) {
@@ -649,7 +653,7 @@ public class Evaluator {
 
     NumSet[] sets = inUnits(grid, target);
 
-    while (imp != null) {
+    do {
       for (Insight a : imp.getAntecedents()) {
         switch (a.type) {
           case OVERLAP: {
@@ -675,9 +679,31 @@ public class Evaluator {
         }
       }
       imp = imp.getConsequent().asImplication();
-    }
+    } while (imp != null);
 
     return areTwoUnitsSufficient(sets);
+  }
+
+  private static boolean areAnyAntecedentsHard(Implication imp) {
+    do {
+      for (Insight a : imp.getAntecedents()) {
+        switch (a.type) {
+          case LOCKED_SET:
+            // At present, we count any naked set as hard, and that's it.
+            LockedSet s = (LockedSet) a;
+            if (s.isNakedSet())
+              return true;
+            break;
+          case FORCED_NUMERAL:
+            return true;
+          default:
+            break;
+        }
+      }
+      imp = imp.getConsequent().asImplication();
+    } while (imp != null);
+
+    return false;
   }
 
   /**

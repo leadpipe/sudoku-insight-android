@@ -15,10 +15,7 @@ limitations under the License.
  */
 package us.blanshard.sudoku.stats;
 
-import static us.blanshard.sudoku.insight.Evaluator.KIND_COMPARE;
-import static us.blanshard.sudoku.insight.Evaluator.KIND_REVERSE;
 import static us.blanshard.sudoku.insight.Evaluator.kindForInsight;
-import static us.blanshard.sudoku.insight.PartialComparators.updateMinima;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Block;
@@ -36,16 +33,15 @@ import us.blanshard.sudoku.insight.Evaluator.MoveKind;
 import us.blanshard.sudoku.insight.GridMarks;
 import us.blanshard.sudoku.insight.Insight;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.io.PrintWriter;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -133,8 +129,8 @@ public class InsightMeasurer implements Runnable {
           && (game.getTrail(move.trailId).getTrailhead() == null
               || game.getTrail(move.trailId).getTrailhead() == move.getLocation());
       if (isTrailhead) {
-        Set<MoveKind> minima = getMinima(collector.moves.values());
-        emitTrailheadLine(elapsed, numOpen, move.timestamp, minima);
+        MinKindAndCount min = getMinAndCount(collector.moves.values());
+        emitTrailheadLine(elapsed, numOpen, move.timestamp, min);
       } else if (collector.moves.containsKey(move.getAssignment())) {
         newBatch = new Batch(collector, move, elapsed, numOpen);
         for (Batch b : openBatches) {
@@ -159,31 +155,33 @@ public class InsightMeasurer implements Runnable {
     }
   }
 
-  static EnumSet<MoveKind> getMinima(Collection<WrappedInsight> wrappedInsights) {
-    EnumSet<MoveKind> minima = EnumSet.noneOf(MoveKind.class);
+  static MinKindAndCount getMinAndCount(Collection<WrappedInsight> wrappedInsights) {
+    MinKindAndCount answer = new MinKindAndCount();
     for (WrappedInsight w : wrappedInsights) {
-      updateMinima(minima, w.kind(), KIND_COMPARE);
+      answer.add(w.kind());
     }
-    return minima;
+    return answer;
   }
 
-  private void emitTrailheadLine(long elapsed, int numOpen, long timestamp, Set<MoveKind> minima) {
-    startLine(true, elapsed, numOpen, timestamp, minima);
+  static Ordering<MoveKind> ORD = Ordering.natural().nullsFirst();
+
+  private void emitTrailheadLine(long elapsed, int numOpen, long timestamp, MinKindAndCount min) {
+    startLine(true, elapsed, numOpen, timestamp, min);
     endLine();
   }
 
   private void emitBatch(Batch b) {
-    startLine(false, b.totalElapsed, b.numOpen, b.firstMove.timestamp, b.minima);
+    startLine(false, b.totalElapsed, b.numOpen, b.firstMove.timestamp, b.minPlayable);
     emit(b.assignments.size());
-    emit(Joiner.on(';').join(b.maxOfFirstMoveMins));
-    emit(Joiner.on(';').join(b.maxOfOriginalMins));
-    emit(Joiner.on(';').join(getMinima(b.collector.errors)));
+    emit(b.maxOfFirstMoveMins);
+    emit(b.maxOfOriginalMins);
+    emit(getMinAndCount(b.collector.errors));
     b.emitUniverse();
     endLine();
   }
 
   private void startLine(boolean isTrailhead, long elapsed, int numOpen,
-      long timestamp, Set<MoveKind> minima) {
+      long timestamp, MinKindAndCount min) {
     out.print(isTrailhead);
     emit(elapsed);
     emit(numOpen);
@@ -193,7 +191,7 @@ public class InsightMeasurer implements Runnable {
     emit(timestamp - skippedTime);
     emit(moveNumber);
     emit(moveNumber - numSkippedMoves);
-    emit(Joiner.on(';').join(minima));
+    emit(min);
   }
 
   private void endLine() {
@@ -211,6 +209,15 @@ public class InsightMeasurer implements Runnable {
 
   private void emit(long i) {
     emit(String.valueOf(i));
+  }
+
+  private void emit(MoveKind kind) {
+    emit(kind == null ? "" : kind.toString());
+  }
+
+  private void emit(MinKindAndCount min) {
+    emit(min.kind);
+    emit(min.count);
   }
 
   private void emitUniverse(Universe u) {
@@ -272,6 +279,19 @@ public class InsightMeasurer implements Runnable {
     }
   }
 
+  private static class MinKindAndCount {
+    MoveKind kind;
+    int count;
+    void add(MoveKind k) {
+      if (kind == null || ORD.compare(k, kind) < 0) {
+        kind = k;
+        count = 1;
+      } else if (k == kind) {
+        ++count;
+      }
+    }
+  }
+
   /**
    * Gathers the scan targets (numerator and denominator) and realm vector
    * for one collection of insights in a batch.
@@ -307,10 +327,10 @@ public class InsightMeasurer implements Runnable {
     final Collector collector;
     final Move firstMove;
     final int numOpen;
-    final Set<MoveKind> minima;
-    final Set<MoveKind> firstMoveMinima;
-    final Set<MoveKind> maxOfFirstMoveMins;
-    final Set<MoveKind> maxOfOriginalMins;
+    final MinKindAndCount minPlayable;
+    final MinKindAndCount firstMoveMin;
+    MoveKind maxOfFirstMoveMins;
+    final MoveKind maxOfOriginalMins;
     final Set<Assignment> assignments = Sets.newHashSet();
     final Universe universe = new Universe();
     long totalElapsed;
@@ -319,17 +339,16 @@ public class InsightMeasurer implements Runnable {
       this.collector = collector;
       this.firstMove = firstMove;
       this.numOpen = numOpen;
-      this.minima = getMinima(collector.moves.values());
+      this.minPlayable = getMinAndCount(collector.moves.values());
       Assignment assignment = firstMove.getAssignment();
       Collection<WrappedInsight> wrappedInsights = collector.moves.get(assignment);
-      EnumSet<MoveKind> fmin = getMinima(wrappedInsights);
-      this.firstMoveMinima = fmin;
-      this.maxOfFirstMoveMins = fmin.clone();
-      this.maxOfOriginalMins = fmin.clone();
+      this.firstMoveMin = getMinAndCount(wrappedInsights);
+      this.maxOfFirstMoveMins = firstMoveMin.kind;
+      MoveKind max = firstMoveMin.kind;
       for (Assignment a : collector.moves.keySet()) {
-        for (MoveKind k : getMinima(collector.moves.get(a)))
-          updateMinima(maxOfOriginalMins, k, KIND_REVERSE);
+        max = ORD.max(max, getMinAndCount(collector.moves.get(a)).kind);
       }
+      this.maxOfOriginalMins = max;
       for (WrappedInsight w : wrappedInsights) {
         universe.add(w.insight, true);
       }
@@ -350,8 +369,7 @@ public class InsightMeasurer implements Runnable {
         for (WrappedInsight w : collector.moves.get(a)) {
           universe.add(w.insight, true);
         }
-        for (MoveKind k : newBatch.firstMoveMinima)
-          updateMinima(maxOfFirstMoveMins, k, KIND_REVERSE);
+        maxOfFirstMoveMins = ORD.max(maxOfFirstMoveMins, newBatch.firstMoveMin.kind);
       }
       return false;
     }

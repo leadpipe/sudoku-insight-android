@@ -3,7 +3,7 @@
 *** TODO Investigate recent puzzles
 - categories: estimate way too high, way too low, high, low, close to perfect
 - add columns for the pattern that the estimator found, and patterns matching actual move
-*** TODO New evaluator algorithm [3/8]
+*** DONE New evaluator algorithm [8/8]
 - [X] Rework InsightMeasurer to track batches of insights
   - Each legit move starts a new batch; the batch is tracked through successive
     moves until something happens that is NOT one of its implied assignments.
@@ -20,11 +20,11 @@
     - They also have kinds, so we can talk of them being subsumed.
 - [X] Rework ScanPoints to keep pace
 - [X] Implement new algo based on these measurements
-- [ ] Include antecedents in easy/hard determination: naked sets in particular
-- [ ] Redo InsightMeasurer with new kinds; don't limit to "playable" kinds
-- [ ] See whether it makes sense to skip hard moves with the new definition
-- [ ] Assuming it does, redo InsightMeasurer again, and ScanPoints
-- [ ] Use the numbers from ScanPoints to rework the algo once again
+- [X] Include antecedents in easy/hard determination: naked sets in particular
+- [X] Redo InsightMeasurer with new kinds; don't limit to "playable" kinds
+- [X] See whether it makes sense to skip hard moves with the new definition
+- [X] Assuming it does, redo InsightMeasurer again, and ScanPoints
+- [X] Use the numbers from ScanPoints to rework the algo once again
 *** TODO Performance improvements [0/2]
 - [ ] Run profiler after evaluator change
 - [ ] Add phase to Analyzer callback, and stop after assignments when taking a short path?
