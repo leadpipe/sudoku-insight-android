@@ -421,6 +421,7 @@ public class Evaluator {
     private final Set<Assignment> assignments = Sets.newLinkedHashSet();
     private MoveKind bestMoveKind;
     private int realmWeight;
+    private Numeral numeral;
     private MoveKind bestErrorKind;
     private int numMoveInsights;
     private int numErrors;
@@ -442,18 +443,23 @@ public class Evaluator {
           kinds.put(a, kind);
           if (bestMoveKind == null || kind.compareTo(bestMoveKind) < 0) {
             bestMoveKind = kind;
-            realmWeight = 0;
             numMoveInsights = 0;
+            realmWeight = 0;
           }
           if (kind == bestMoveKind) {
             ++numMoveInsights;
             int w = realmWeights[insight.getNub().getRealmVector()];
             if (w > realmWeight) {
               realmWeight = w;
-              assignments.clear();
+              numeral = null;
             }
             if (w == realmWeight) {
-              assignments.add(a);
+              if (numeral == null || a.numeral.number < numeral.number) {
+                numeral = a.numeral;
+                assignments.clear();
+              }
+              if (numeral == a.numeral)
+                assignments.add(a);
             }
           }
         }
@@ -525,9 +531,9 @@ public class Evaluator {
     private static int[] realmWeights = new int[8];
     static {
       // Larger weights count more, so happen first.
-      realmWeights[Insight.Realm.LOCATION.bit] = 1;
-      realmWeights[Insight.Realm.BLOCK.bit] = 2;
-      realmWeights[Insight.Realm.LINE.bit] = 3;
+      realmWeights[Insight.Realm.LINE.bit] = 1;
+      realmWeights[Insight.Realm.LOCATION.bit] = 2;
+      realmWeights[Insight.Realm.BLOCK.bit] = 3;
     }
   }
 
