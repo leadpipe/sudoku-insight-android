@@ -26,6 +26,28 @@ Seconds/scan-point: 0.496
    COMPLEXLY_IMPLIED_HARD (137):
 Scan-points/second: 2.20; var: 8.27 (376.44%)
 Seconds/scan-point: 0.455
+ - By realm vector:
+   [BLOCK] (35):
+Scan-points/second: 0.19; var: 0.17 (88.95%)
+Seconds/scan-point: 5.154
+   [LINE] (338):
+Scan-points/second: 0.29; var: 0.63 (215.25%)
+Seconds/scan-point: 3.439
+   [BLOCK, LINE] (7,970):
+Scan-points/second: 1.73; var: 4.20 (243.36%)
+Seconds/scan-point: 0.579
+   [LOCATION] (48):
+Scan-points/second: 0.16; var: 0.27 (166.71%)
+Seconds/scan-point: 6.211
+   [BLOCK, LOCATION] (25):
+Scan-points/second: 1.11; var: 1.43 (129.23%)
+Seconds/scan-point: 0.904
+   [LINE, LOCATION] (210):
+Scan-points/second: 0.86; var: 1.69 (196.36%)
+Seconds/scan-point: 1.162
+   [BLOCK, LINE, LOCATION] (44,521):
+Scan-points/second: 3.18; var: 12.51 (393.95%)
+Seconds/scan-point: 0.315
  - Error info:
    DIRECT_EASY:
 Avg moves when errors: 1.68  (3681 batches)
@@ -60,6 +82,19 @@ Seconds/scan-point: 0.792
    COMPLEXLY_IMPLIED_HARD (5):
 Scan-points/second: 1.99; var: 3.26 (164.22%)
 Seconds/scan-point: 0.503
+ - By realm vector:
+   [LINE] (7):
+Scan-points/second: 0.38; var: 0.43 (114.56%)
+Seconds/scan-point: 2.638
+   [BLOCK, LINE] (20):
+Scan-points/second: 0.63; var: 0.87 (139.55%)
+Seconds/scan-point: 1.596
+   [LINE, LOCATION] (6):
+Scan-points/second: 3.34; var: 14.11 (422.61%)
+Seconds/scan-point: 0.300
+   [BLOCK, LINE, LOCATION] (118):
+Scan-points/second: 2.01; var: 12.70 (631.33%)
+Seconds/scan-point: 0.497
  - Error info:
    DIRECT_EASY:
 Avg moves when errors: 1.75  (4 batches)
@@ -82,6 +117,22 @@ Seconds/scan-point: 0.599
    COMPLEXLY_IMPLIED_HARD (9):
 Scan-points/second: 4.27; var: 30.63 (716.78%)
 Seconds/scan-point: 0.234
+ - By realm vector:
+   [LINE] (4):
+Scan-points/second: 1.74; var: 1.50 (86.35%)
+Seconds/scan-point: 0.575
+   [BLOCK, LINE] (1):
+Scan-points/second: 0.11; var: 0.10 (90.32%)
+Seconds/scan-point: 9.400
+   [BLOCK, LOCATION] (1):
+Scan-points/second: 0.55; var: 0.25 (45.56%)
+Seconds/scan-point: 1.820
+   [LINE, LOCATION] (2):
+Scan-points/second: 0.48; var: 0.69 (145.58%)
+Seconds/scan-point: 2.104
+   [BLOCK, LINE, LOCATION] (28):
+Scan-points/second: 2.36; var: 11.75 (497.41%)
+Seconds/scan-point: 0.423
  - Error info:
    COMPLEXLY_IMPLIED_EASY:
 Avg moves when errors: 2.00  (1 batches)
@@ -117,6 +168,28 @@ Seconds/scan-point: 0.439
    COMPLEXLY_IMPLIED_HARD (51):
 Scan-points/second: 2.41; var: 10.37 (429.87%)
 Seconds/scan-point: 0.414
+ - By realm vector:
+   [BLOCK] (41):
+Scan-points/second: 0.21; var: 0.20 (91.64%)
+Seconds/scan-point: 4.656
+   [LINE] (243):
+Scan-points/second: 0.29; var: 0.58 (202.88%)
+Seconds/scan-point: 3.483
+   [BLOCK, LINE] (6,009):
+Scan-points/second: 1.67; var: 3.43 (204.67%)
+Seconds/scan-point: 0.597
+   [LOCATION] (12):
+Scan-points/second: 0.04; var: 0.04 (96.08%)
+Seconds/scan-point: 22.778
+   [BLOCK, LOCATION] (30):
+Scan-points/second: 0.51; var: 0.62 (122.15%)
+Seconds/scan-point: 1.975
+   [LINE, LOCATION] (151):
+Scan-points/second: 0.97; var: 1.79 (185.15%)
+Seconds/scan-point: 1.032
+   [BLOCK, LINE, LOCATION] (23,951):
+Scan-points/second: 3.01; var: 11.59 (384.77%)
+Seconds/scan-point: 0.332
  - Error info:
    DIRECT_EASY:
 Avg moves when errors: 1.72  (2201 batches)
@@ -148,6 +221,19 @@ Seconds/scan-point: 1.798
    COMPLEXLY_IMPLIED_HARD (1):
 Scan-points/second: 1.67; var: 0.23 (13.71%)
 Seconds/scan-point: 0.600
+ - By realm vector:
+   [LINE] (2):
+Scan-points/second: 0.07; var: 0.06 (93.80%)
+Seconds/scan-point: 14.444
+   [BLOCK, LINE] (2):
+Scan-points/second: 0.97; var: 0.29 (29.86%)
+Seconds/scan-point: 1.032
+   [LINE, LOCATION] (4):
+Scan-points/second: 4.44; var: 8.67 (195.53%)
+Seconds/scan-point: 0.225
+   [BLOCK, LINE, LOCATION] (39):
+Scan-points/second: 1.34; var: 1.78 (132.72%)
+Seconds/scan-point: 0.744
  - Error info:
    DIRECT_EASY:
 Avg moves when errors: 2.00  (1 batches)
@@ -167,6 +253,19 @@ Seconds/scan-point: 0.547
    COMPLEXLY_IMPLIED_HARD (10):
 Scan-points/second: 2.62; var: 2.64 (100.72%)
 Seconds/scan-point: 0.381
+ - By realm vector:
+   [LINE] (1):
+Scan-points/second: 3.25; var: 0.25 (7.69%)
+Seconds/scan-point: 0.308
+   [BLOCK, LINE] (1):
+Scan-points/second: 3.86; var: 0.14 (3.70%)
+Seconds/scan-point: 0.259
+   [LINE, LOCATION] (1):
+Scan-points/second: 1.00; var: 0.00 (0.00%)
+Seconds/scan-point: 1.000
+   [BLOCK, LINE, LOCATION] (16):
+Scan-points/second: 2.03; var: 6.58 (323.72%)
+Seconds/scan-point: 0.492
  - Error info:
 
 DIRECT_HARD: 0 batches (0 moves); 1 trailheads
@@ -174,6 +273,7 @@ DIRECT_HARD: 0 batches (0 moves); 1 trailheads
 Scan-points/second: NaN; var: NaN (NaN%)
 Seconds/scan-point: NaN
  - By hardest move in batch:
+ - By realm vector:
  - Error info:
 
 
@@ -206,6 +306,28 @@ Seconds/scan-point: 0.538
    COMPLEXLY_IMPLIED_HARD (51):
 Scan-points/second: 1.69; var: 4.07 (239.98%)
 Seconds/scan-point: 0.590
+ - By realm vector:
+   [BLOCK] (22):
+Scan-points/second: 0.13; var: 0.20 (159.00%)
+Seconds/scan-point: 7.824
+   [LINE] (290):
+Scan-points/second: 0.19; var: 0.20 (108.38%)
+Seconds/scan-point: 5.303
+   [BLOCK, LINE] (4,137):
+Scan-points/second: 1.23; var: 2.43 (198.10%)
+Seconds/scan-point: 0.814
+   [LOCATION] (17):
+Scan-points/second: 0.10; var: 0.12 (113.92%)
+Seconds/scan-point: 9.706
+   [BLOCK, LOCATION] (20):
+Scan-points/second: 0.75; var: 1.85 (246.13%)
+Seconds/scan-point: 1.333
+   [LINE, LOCATION] (156):
+Scan-points/second: 0.77; var: 1.85 (239.17%)
+Seconds/scan-point: 1.293
+   [BLOCK, LINE, LOCATION] (21,583):
+Scan-points/second: 2.50; var: 10.97 (438.37%)
+Seconds/scan-point: 0.399
  - Error info:
    DIRECT_EASY:
 Avg moves when errors: 1.74  (1584 batches)
@@ -240,6 +362,19 @@ Seconds/scan-point: 0.656
    COMPLEXLY_IMPLIED_HARD (6):
 Scan-points/second: 1.96; var: 9.73 (495.91%)
 Seconds/scan-point: 0.510
+ - By realm vector:
+   [LINE] (7):
+Scan-points/second: 0.21; var: 0.25 (121.24%)
+Seconds/scan-point: 4.759
+   [BLOCK, LINE] (9):
+Scan-points/second: 0.61; var: 0.29 (47.71%)
+Seconds/scan-point: 1.641
+   [LINE, LOCATION] (2):
+Scan-points/second: 1.27; var: 1.74 (136.54%)
+Seconds/scan-point: 0.786
+   [BLOCK, LINE, LOCATION] (91):
+Scan-points/second: 1.97; var: 8.99 (457.38%)
+Seconds/scan-point: 0.508
  - Error info:
    COMPLEXLY_IMPLIED_EASY:
 Avg moves when errors: 1.00  (1 batches)
@@ -262,6 +397,19 @@ Seconds/scan-point: 5.000
    COMPLEXLY_IMPLIED_HARD (5):
 Scan-points/second: 2.55; var: 5.36 (210.37%)
 Seconds/scan-point: 0.392
+ - By realm vector:
+   [LINE] (1):
+Scan-points/second: 0.43; var: 0.26 (60.00%)
+Seconds/scan-point: 2.333
+   [LOCATION] (1):
+Scan-points/second: 0.03; var: 0.03 (100.00%)
+Seconds/scan-point: 30.000
+   [LINE, LOCATION] (1):
+Scan-points/second: 0.66; var: 0.23 (35.14%)
+Seconds/scan-point: 1.520
+   [BLOCK, LINE, LOCATION] (14):
+Scan-points/second: 3.27; var: 19.44 (594.48%)
+Seconds/scan-point: 0.306
  - Error info:
 
 
@@ -297,6 +445,28 @@ Seconds/scan-point: 0.447
    COMPLEXLY_IMPLIED_HARD (62):
 Scan-points/second: 1.35; var: 4.09 (301.95%)
 Seconds/scan-point: 0.739
+ - By realm vector:
+   [BLOCK] (14):
+Scan-points/second: 0.12; var: 0.11 (89.02%)
+Seconds/scan-point: 8.300
+   [LINE] (252):
+Scan-points/second: 0.20; var: 0.26 (128.70%)
+Seconds/scan-point: 4.963
+   [BLOCK, LINE] (2,739):
+Scan-points/second: 1.06; var: 2.71 (256.96%)
+Seconds/scan-point: 0.947
+   [LOCATION] (22):
+Scan-points/second: 0.13; var: 0.12 (93.07%)
+Seconds/scan-point: 8.000
+   [BLOCK, LOCATION] (15):
+Scan-points/second: 1.75; var: 2.66 (151.83%)
+Seconds/scan-point: 0.571
+   [LINE, LOCATION] (198):
+Scan-points/second: 0.87; var: 2.96 (340.34%)
+Seconds/scan-point: 1.148
+   [BLOCK, LINE, LOCATION] (20,013):
+Scan-points/second: 2.18; var: 10.42 (477.53%)
+Seconds/scan-point: 0.458
  - Error info:
    DIRECT_EASY:
 Avg moves when errors: 1.72  (808 batches)
@@ -331,6 +501,25 @@ Seconds/scan-point: 1.162
    COMPLEXLY_IMPLIED_HARD (5):
 Scan-points/second: 0.68; var: 1.19 (174.49%)
 Seconds/scan-point: 1.466
+ - By realm vector:
+   [BLOCK] (1):
+Scan-points/second: 0.67; var: 0.33 (50.00%)
+Seconds/scan-point: 1.500
+   [LINE] (12):
+Scan-points/second: 0.21; var: 0.17 (78.74%)
+Seconds/scan-point: 4.663
+   [BLOCK, LINE] (25):
+Scan-points/second: 0.87; var: 3.15 (363.47%)
+Seconds/scan-point: 1.153
+   [LOCATION] (1):
+Scan-points/second: 0.05; var: 0.05 (96.34%)
+Seconds/scan-point: 20.750
+   [LINE, LOCATION] (5):
+Scan-points/second: 0.63; var: 2.50 (398.08%)
+Seconds/scan-point: 1.592
+   [BLOCK, LINE, LOCATION] (171):
+Scan-points/second: 1.22; var: 3.90 (320.73%)
+Seconds/scan-point: 0.822
  - Error info:
    SIMPLY_IMPLIED_EASY:
 Avg moves when errors: 2.00  (1 batches)
@@ -356,6 +545,22 @@ Seconds/scan-point: 0.609
    COMPLEXLY_IMPLIED_HARD (6):
 Scan-points/second: 3.19; var: 29.72 (930.72%)
 Seconds/scan-point: 0.313
+ - By realm vector:
+   [LINE] (2):
+Scan-points/second: 0.68; var: 0.23 (33.33%)
+Seconds/scan-point: 1.471
+   [BLOCK, LINE] (3):
+Scan-points/second: 0.47; var: 1.16 (243.89%)
+Seconds/scan-point: 2.108
+   [LOCATION] (3):
+Scan-points/second: 0.56; var: 0.36 (63.73%)
+Seconds/scan-point: 1.781
+   [LINE, LOCATION] (3):
+Scan-points/second: 0.89; var: 0.78 (88.11%)
+Seconds/scan-point: 1.124
+   [BLOCK, LINE, LOCATION] (29):
+Scan-points/second: 1.28; var: 4.96 (388.30%)
+Seconds/scan-point: 0.782
  - Error info:
 
 DIRECT_HARD: 0 batches (0 moves); 1 trailheads
@@ -363,6 +568,7 @@ DIRECT_HARD: 0 batches (0 moves); 1 trailheads
 Scan-points/second: NaN; var: NaN (NaN%)
 Seconds/scan-point: NaN
  - By hardest move in batch:
+ - By realm vector:
  - Error info:
 
 COMPLEXLY_IMPLIED_HARD: 0 batches (0 moves); 3 trailheads
@@ -370,6 +576,7 @@ COMPLEXLY_IMPLIED_HARD: 0 batches (0 moves); 3 trailheads
 Scan-points/second: NaN; var: NaN (NaN%)
 Seconds/scan-point: NaN
  - By hardest move in batch:
+ - By realm vector:
  - Error info:
 
 
@@ -402,6 +609,28 @@ Seconds/scan-point: 0.933
    COMPLEXLY_IMPLIED_HARD (48):
 Scan-points/second: 1.44; var: 3.42 (238.16%)
 Seconds/scan-point: 0.697
+ - By realm vector:
+   [BLOCK] (6):
+Scan-points/second: 0.09; var: 0.09 (93.55%)
+Seconds/scan-point: 10.667
+   [LINE] (226):
+Scan-points/second: 0.19; var: 0.26 (135.65%)
+Seconds/scan-point: 5.186
+   [BLOCK, LINE] (2,206):
+Scan-points/second: 1.11; var: 3.82 (344.52%)
+Seconds/scan-point: 0.902
+   [LOCATION] (11):
+Scan-points/second: 0.17; var: 0.15 (88.63%)
+Seconds/scan-point: 5.975
+   [BLOCK, LOCATION] (7):
+Scan-points/second: 0.33; var: 0.32 (95.74%)
+Seconds/scan-point: 3.000
+   [LINE, LOCATION] (199):
+Scan-points/second: 0.77; var: 2.08 (269.96%)
+Seconds/scan-point: 1.298
+   [BLOCK, LINE, LOCATION] (17,877):
+Scan-points/second: 2.04; var: 10.10 (495.11%)
+Seconds/scan-point: 0.490
  - Error info:
    DIRECT_EASY:
 Avg moves when errors: 1.73  (328 batches)
@@ -439,6 +668,25 @@ Seconds/scan-point: 4.818
    COMPLEXLY_IMPLIED_HARD (14):
 Scan-points/second: 1.41; var: 5.47 (387.66%)
 Seconds/scan-point: 0.709
+ - By realm vector:
+   [LINE] (18):
+Scan-points/second: 0.15; var: 0.21 (134.76%)
+Seconds/scan-point: 6.481
+   [BLOCK, LINE] (32):
+Scan-points/second: 0.49; var: 0.96 (197.41%)
+Seconds/scan-point: 2.052
+   [LOCATION] (1):
+Scan-points/second: 0.04; var: 0.04 (98.08%)
+Seconds/scan-point: 26.500
+   [BLOCK, LOCATION] (2):
+Scan-points/second: 0.39; var: 0.24 (62.12%)
+Seconds/scan-point: 2.577
+   [LINE, LOCATION] (11):
+Scan-points/second: 0.68; var: 1.11 (163.00%)
+Seconds/scan-point: 1.473
+   [BLOCK, LINE, LOCATION] (324):
+Scan-points/second: 1.00; var: 3.71 (369.68%)
+Seconds/scan-point: 0.997
  - Error info:
    DIRECT_EASY:
 Avg moves when errors: 1.00  (1 batches)
@@ -467,6 +715,25 @@ Seconds/scan-point: 4.167
    COMPLEXLY_IMPLIED_HARD (7):
 Scan-points/second: 1.21; var: 4.14 (342.07%)
 Seconds/scan-point: 0.827
+ - By realm vector:
+   [LINE] (3):
+Scan-points/second: 0.33; var: 0.40 (123.09%)
+Seconds/scan-point: 3.061
+   [BLOCK, LINE] (5):
+Scan-points/second: 0.50; var: 2.52 (501.37%)
+Seconds/scan-point: 1.986
+   [LOCATION] (2):
+Scan-points/second: 0.15; var: 0.13 (87.50%)
+Seconds/scan-point: 6.833
+   [BLOCK, LOCATION] (1):
+Scan-points/second: 1.15; var: 0.13 (11.10%)
+Seconds/scan-point: 0.873
+   [LINE, LOCATION] (2):
+Scan-points/second: 0.77; var: 1.40 (181.66%)
+Seconds/scan-point: 1.296
+   [BLOCK, LINE, LOCATION] (63):
+Scan-points/second: 1.12; var: 2.29 (203.27%)
+Seconds/scan-point: 0.889
  - Error info:
    SIMPLY_IMPLIED_EASY:
 Avg moves when errors: 1.00  (1 batches)
@@ -480,6 +747,16 @@ Seconds/scan-point: 0.400
    COMPLEXLY_IMPLIED_HARD (3):
 Scan-points/second: 2.50; var: 41.39 (1655.56%)
 Seconds/scan-point: 0.400
+ - By realm vector:
+   [LINE] (1):
+Scan-points/second: 0.12; var: 0.11 (88.89%)
+Seconds/scan-point: 8.111
+   [BLOCK, LINE] (1):
+Scan-points/second: 15.00; var: 0.00 (0.00%)
+Seconds/scan-point: 0.067
+   [BLOCK, LINE, LOCATION] (1):
+Scan-points/second: 20.86; var: 0.14 (0.68%)
+Seconds/scan-point: 0.048
  - Error info:
 
 
@@ -515,6 +792,28 @@ Seconds/scan-point: 0.930
    COMPLEXLY_IMPLIED_HARD (35):
 Scan-points/second: 1.42; var: 3.93 (275.86%)
 Seconds/scan-point: 0.702
+ - By realm vector:
+   [BLOCK] (3):
+Scan-points/second: 0.04; var: 0.04 (100.00%)
+Seconds/scan-point: 26.000
+   [LINE] (71):
+Scan-points/second: 0.26; var: 1.02 (389.22%)
+Seconds/scan-point: 3.831
+   [BLOCK, LINE] (2,247):
+Scan-points/second: 1.23; var: 2.76 (223.49%)
+Seconds/scan-point: 0.810
+   [LOCATION] (3):
+Scan-points/second: 0.26; var: 0.19 (74.77%)
+Seconds/scan-point: 3.862
+   [BLOCK, LOCATION] (5):
+Scan-points/second: 1.37; var: 7.22 (527.99%)
+Seconds/scan-point: 0.731
+   [LINE, LOCATION] (94):
+Scan-points/second: 0.93; var: 2.43 (260.42%)
+Seconds/scan-point: 1.073
+   [BLOCK, LINE, LOCATION] (9,716):
+Scan-points/second: 2.25; var: 9.54 (424.93%)
+Seconds/scan-point: 0.445
  - Error info:
    DIRECT_EASY:
 Avg moves when errors: 1.50  (30 batches)
@@ -543,6 +842,25 @@ Seconds/scan-point: 1.168
    COMPLEXLY_IMPLIED_HARD (1):
 Scan-points/second: 1.46; var: 0.25 (17.41%)
 Seconds/scan-point: 0.687
+ - By realm vector:
+   [LINE] (9):
+Scan-points/second: 0.15; var: 0.15 (101.47%)
+Seconds/scan-point: 6.710
+   [BLOCK, LINE] (13):
+Scan-points/second: 0.77; var: 2.21 (286.20%)
+Seconds/scan-point: 1.297
+   [LOCATION] (2):
+Scan-points/second: 0.09; var: 0.09 (91.45%)
+Seconds/scan-point: 10.727
+   [BLOCK, LOCATION] (1):
+Scan-points/second: 0.04; var: 0.04 (96.41%)
+Seconds/scan-point: 24.500
+   [LINE, LOCATION] (2):
+Scan-points/second: 1.98; var: 12.06 (608.95%)
+Seconds/scan-point: 0.505
+   [BLOCK, LINE, LOCATION] (131):
+Scan-points/second: 0.98; var: 2.15 (219.73%)
+Seconds/scan-point: 1.021
  - Error info:
    COMPLEXLY_IMPLIED_EASY:
 Avg moves when errors: 2.00  (1 batches)
@@ -556,6 +874,16 @@ Seconds/scan-point: 1.314
    COMPLEXLY_IMPLIED_EASY (24):
 Scan-points/second: 0.76; var: 1.03 (134.87%)
 Seconds/scan-point: 1.314
+ - By realm vector:
+   [BLOCK, LINE] (3):
+Scan-points/second: 0.43; var: 0.31 (71.32%)
+Seconds/scan-point: 2.313
+   [LINE, LOCATION] (2):
+Scan-points/second: 0.84; var: 2.20 (263.65%)
+Seconds/scan-point: 1.196
+   [BLOCK, LINE, LOCATION] (19):
+Scan-points/second: 0.76; var: 0.88 (115.57%)
+Seconds/scan-point: 1.316
  - Error info:
 
 SIMPLY_IMPLIED_HARD: 0 batches (0 moves); 1 trailheads
@@ -563,6 +891,7 @@ SIMPLY_IMPLIED_HARD: 0 batches (0 moves); 1 trailheads
 Scan-points/second: NaN; var: NaN (NaN%)
 Seconds/scan-point: NaN
  - By hardest move in batch:
+ - By realm vector:
  - Error info:
 
 COMPLEXLY_IMPLIED_HARD: 0 batches (0 moves); 1 trailheads
@@ -570,6 +899,7 @@ COMPLEXLY_IMPLIED_HARD: 0 batches (0 moves); 1 trailheads
 Scan-points/second: NaN; var: NaN (NaN%)
 Seconds/scan-point: NaN
  - By hardest move in batch:
+ - By realm vector:
  - Error info:
 
 

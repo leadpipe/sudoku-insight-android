@@ -304,10 +304,11 @@ public class InsightMeasurer implements Runnable {
     private int realmVector;
 
     void add(Insight insight, boolean numerator) {
-      if (numerator)
+      if (numerator) {
         insight.addScanTargets(locTargetsNum, unitNumTargetsNum);
+        realmVector |= insight.getNub().getRealmVector();
+      }
       insight.addScanTargets(locTargetsDenom, unitNumTargetsDenom);
-      realmVector |= insight.getRealmVector();
     }
 
     int numerator() {

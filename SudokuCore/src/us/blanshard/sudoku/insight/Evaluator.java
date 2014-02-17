@@ -420,6 +420,7 @@ public class Evaluator {
     private final Multimap<Assignment, Insight> moves = ArrayListMultimap.create();
     private final Set<Assignment> assignments = Sets.newLinkedHashSet();
     private MoveKind bestMoveKind;
+    private int realmWeight;
     private MoveKind bestErrorKind;
     private int numMoveInsights;
     private int numErrors;
@@ -441,12 +442,19 @@ public class Evaluator {
           kinds.put(a, kind);
           if (bestMoveKind == null || kind.compareTo(bestMoveKind) < 0) {
             bestMoveKind = kind;
-            assignments.clear();
+            realmWeight = 0;
             numMoveInsights = 0;
           }
           if (kind == bestMoveKind) {
-            assignments.add(a);
             ++numMoveInsights;
+            int w = realmWeights[insight.getNub().getRealmVector()];
+            if (w > realmWeight) {
+              realmWeight = w;
+              assignments.clear();
+            }
+            if (w == realmWeight) {
+              assignments.add(a);
+            }
           }
         }
       } else if (insight.isError()) {
@@ -512,6 +520,14 @@ public class Evaluator {
      */
     public boolean errorsWon() {
       return bestErrorKind == MoveKind.DIRECT_EASY && numErrors > numMoveInsights;
+    }
+
+    private static int[] realmWeights = new int[8];
+    static {
+      // Larger weights count more, so happen first.
+      realmWeights[Insight.Realm.LOCATION.bit] = 1;
+      realmWeights[Insight.Realm.BLOCK.bit] = 2;
+      realmWeights[Insight.Realm.LINE.bit] = 3;
     }
   }
 

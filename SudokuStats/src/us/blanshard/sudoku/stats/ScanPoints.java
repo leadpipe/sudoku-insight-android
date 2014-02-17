@@ -151,7 +151,7 @@ public class ScanPoints {
     private int trailheadsIncluded;
     private int batchesIncluded;
     private int movesIncluded;
-    private final boolean reportByRealm = false;
+    private final boolean reportByRealm = true;
 
     public BatchProcess(MoveKind bestKind) {
       this.bestKind = bestKind;
