@@ -54,8 +54,8 @@ public final class LockedSet extends Insight {
     this.extraElims = overlap == null ? null : overlap.subtract(locs.unit);
   }
 
-  @Override public Collection<Assignment> getEliminations() {
-    Collection<Assignment> answer = eliminations;
+  @Override public List<Assignment> getEliminations() {
+    List<Assignment> answer = eliminations;
     if (answer == null) {
       synchronized (this) {
         if ((answer = eliminations) == null) {

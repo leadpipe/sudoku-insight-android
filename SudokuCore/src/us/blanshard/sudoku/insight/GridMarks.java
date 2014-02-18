@@ -21,6 +21,8 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Numeral;
 
+import java.util.List;
+
 /**
  * @author Luke Blanshard
  */
@@ -84,6 +86,12 @@ public class GridMarks {
     public Builder apply(Iterable<Insight> insights) {
       for (Insight insight : insights)
         insight.apply(this);
+      return this;
+    }
+
+    public Builder apply(List<Insight> insights) {
+      for (int i = 0, c = insights.size(); i < c; ++i)
+        insights.get(i).apply(this);
       return this;
     }
 

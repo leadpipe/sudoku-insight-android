@@ -27,6 +27,7 @@ import us.blanshard.sudoku.core.UnitNumeral;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -72,7 +73,7 @@ public final class Implication extends Insight {
     return consequent.isElimination();
   }
 
-  @Override public Collection<Assignment> getEliminations() {
+  @Override public List<Assignment> getEliminations() {
     return consequent.getEliminations();
   }
 
@@ -107,8 +108,8 @@ public final class Implication extends Insight {
   }
 
   @Override public void apply(GridMarks.Builder builder) {
-    for (Insight insight : antecedents)
-      insight.apply(builder);
+    for (int i = 0, c = antecedents.size(); i < c; ++i)
+      antecedents.get(i).apply(builder);
     consequent.apply(builder);
   }
 
@@ -116,14 +117,14 @@ public final class Implication extends Insight {
     // Checks that all antecedents are implied by the given grid and marks; if
     // so, applies the antecedents to new builders and checks that the
     // consequent is implied by the resulting grid and marks.
-    for (Insight insight : antecedents)
-      if (!insight.isImpliedBy(gridMarks)) return false;
+    for (int i = 0, c = antecedents.size(); i < c; ++i)
+      if (!antecedents.get(i).isImpliedBy(gridMarks)) return false;
     return consequent.isImpliedBy(gridMarks.toBuilder().apply(antecedents).build());
   }
 
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {
-    for (Insight insight : antecedents)
-      if (insight.mightBeRevealedByElimination(elimination)) return true;
+    for (int i = 0, c = antecedents.size(); i < c; ++i)
+      if (antecedents.get(i).mightBeRevealedByElimination(elimination)) return true;
     return consequent.mightBeRevealedByElimination(elimination);
   }
 

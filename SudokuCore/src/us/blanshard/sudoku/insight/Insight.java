@@ -23,6 +23,7 @@ import us.blanshard.sudoku.core.UnitNumeral;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -115,8 +116,8 @@ public abstract class Insight {
   }
 
   /** The assignments this insight disproves. */
-  public Collection<Assignment> getEliminations() {
-    return Collections.<Assignment>emptySet();
+  public List<Assignment> getEliminations() {
+    return Collections.<Assignment>emptyList();
   }
 
   /** Returns the "nub" of this insight, ie the ultimate consequent insight. */

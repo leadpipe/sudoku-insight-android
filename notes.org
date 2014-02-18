@@ -25,9 +25,8 @@
 - [X] See whether it makes sense to skip hard moves with the new definition
 - [X] Assuming it does, redo InsightMeasurer again, and ScanPoints
 - [X] Use the numbers from ScanPoints to rework the algo once again
-*** TODO Performance improvements [0/2]
+*** TODO Performance improvements [0/1]
 - [ ] Run profiler after evaluator change
-- [ ] Add phase to Analyzer callback, and stop after assignments when taking a short path?
 *** TODO Investigate distribution of times for multiple puzzles generated from the same end state
 
 ** Getting games with history from a sqlite db into a tsv file:

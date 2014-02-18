@@ -25,6 +25,7 @@ import us.blanshard.sudoku.core.UnitSubset;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -39,7 +40,7 @@ public final class Overlap extends Insight {
   private final Unit unit;
   private final Numeral numeral;
   private final UnitSubset extra;
-  private volatile Collection<Assignment> eliminations;
+  private volatile List<Assignment> eliminations;
 
   public Overlap(Unit unit, Numeral numeral, UnitSubset extra) {
     super(Type.OVERLAP);
@@ -48,8 +49,8 @@ public final class Overlap extends Insight {
     this.extra = extra;
   }
 
-  @Override public Collection<Assignment> getEliminations() {
-    Collection<Assignment> answer = eliminations;
+  @Override public List<Assignment> getEliminations() {
+    List<Assignment> answer = eliminations;
     if (answer == null) {
       synchronized (this) {
         if ((answer = eliminations) == null) {

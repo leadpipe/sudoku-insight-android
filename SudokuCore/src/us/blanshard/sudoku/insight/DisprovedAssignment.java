@@ -26,6 +26,7 @@ import com.google.common.base.Objects;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -63,8 +64,8 @@ public final class DisprovedAssignment extends Insight {
     return resultingError;
   }
 
-  @Override public Collection<Assignment> getEliminations() {
-    return Collections.singleton(assignment);
+  @Override public List<Assignment> getEliminations() {
+    return Collections.singletonList(assignment);
   }
 
   @Override public Insight getNub() {

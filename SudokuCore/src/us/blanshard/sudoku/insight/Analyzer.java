@@ -246,8 +246,9 @@ public class Analyzer {
 
   private static boolean mayBeAntecedentTo(Insight antecedent, Insight consequent) {
     if (antecedent.isAssignment()) return true;
-    for (Assignment assignment : antecedent.getEliminations())
-      if (consequent.mightBeRevealedByElimination(assignment))
+    List<Assignment> elims = antecedent.getEliminations();
+    for (int i = 0, c = elims.size(); i < c; ++i)
+      if (consequent.mightBeRevealedByElimination(elims.get(i)))
         return true;
     return false;
   }
