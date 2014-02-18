@@ -31,7 +31,9 @@ import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
 import us.blanshard.sudoku.insight.Rating.Difficulty;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -40,6 +42,7 @@ import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -112,8 +115,7 @@ public class Evaluator {
 
   public Rating evaluate(@Nullable Callback callback, int trialCount) {
     checkArgument(trialCount >= 1);
-    int minOpen = puzzle.getNumOpenLocations();
-    Run outer = new Run(new GridMarks(puzzle), minOpen);
+    Run outer = new Run(new GridMarks(puzzle), puzzle.getNumOpenLocations());
     outer.runStraightShot(callback);
     double score = outer.score;
     boolean uninterrupted = outer.uninterrupted();
@@ -123,15 +125,13 @@ public class Evaluator {
       if (callback != null) callback.disproofsRequired();
       double totalScore = 0;
       int numEvaluations = 0;
-      minOpen = outer.minOpen;
       while (uninterrupted && numEvaluations++ < trialCount) {
-        Run inner = new Run(outer.gridMarks, minOpen);
+        Run inner = new Run(outer.gridMarks, outer.minOpen);
         inner.runDisproof(
             new InnerCallback(callback, score + totalScore / trialCount, trialCount));
         uninterrupted = inner.uninterrupted();
         totalScore += inner.score;
         if (inner.recursiveDisproofs) difficulty = Difficulty.RECURSIVE_DISPROOFS;
-        minOpen = inner.minOpen;
       }
       score += totalScore / numEvaluations;
     }
@@ -421,7 +421,7 @@ public class Evaluator {
     private final Set<Assignment> assignments = Sets.newLinkedHashSet();
     private MoveKind bestMoveKind;
     private int realmWeight;
-    private Numeral numeral;
+    private int[] numeralCounts;
     private MoveKind bestErrorKind;
     private int numMoveInsights;
     private int numErrors;
@@ -451,15 +451,12 @@ public class Evaluator {
             int w = realmWeights[insight.getNub().getRealmVector()];
             if (w > realmWeight) {
               realmWeight = w;
-              numeral = null;
+              numeralCounts = new int[Numeral.COUNT];
+              assignments.clear();
             }
             if (w == realmWeight) {
-              if (numeral == null || a.numeral.number < numeral.number) {
-                numeral = a.numeral;
-                assignments.clear();
-              }
-              if (numeral == a.numeral)
-                assignments.add(a);
+              if (assignments.add(a))
+                ++numeralCounts[a.numeral.index];
             }
           }
         }
@@ -517,7 +514,26 @@ public class Evaluator {
     }
 
     public Iterable<Assignment> getAssignments() {
-      return assignments;
+      List<Numeral> numerals = Lists.newArrayList(Numeral.all());
+      Collections.sort(numerals, new Comparator<Numeral>() {
+        @Override public int compare(Numeral o1, Numeral o2) {
+          return numeralCounts[o2.index] - numeralCounts[o1.index];
+        }
+      });
+      NumSet n = NumSet.NONE;
+      int total = 0;
+      for (Numeral num : numerals) {
+        n = n.with(num);
+        int c = numeralCounts[num.index];
+        total += c;
+        if (c == 0 || total > 5) break;
+      }
+      final NumSet include = n;
+      return Iterables.filter(assignments, new Predicate<Assignment>() {
+        @Override public boolean apply(@Nullable Assignment input) {
+          return include.contains(input.numeral);
+        }
+      });
     }
 
     /**

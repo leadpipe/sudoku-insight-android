@@ -31,10 +31,10 @@ public class Ratings {
    * between 1 and {@link #MAX_STARS} inclusive.
    */
   public static int ratingStars(double score) {
-    if (score < 3.5) return 1;
-    if (score < 5.5) return 2;
-    if (score < 10)  return 3;
-    if (score < 20)  return 4;
+    if (score < 4) return 1;
+    if (score < 5) return 2;
+    if (score < 8)  return 3;
+    if (score < 15)  return 4;
     return 5;
   }
 

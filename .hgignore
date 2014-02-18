@@ -45,3 +45,4 @@ WEB-INF/appengine-generated/*
 data/*.tsv
 stats/*.tsv
 SudokuStats/*.txt
+SudokuStats/*.ods
