@@ -18,7 +18,6 @@ package us.blanshard.sudoku.insight;
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
-import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
@@ -103,11 +102,13 @@ public final class LockedSet extends Insight {
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {
     if (isNakedSet()) {
-      for (Location loc : locs)
-        if (!gridMarks.marks.get(loc).isSubsetOf(nums)) return false;
+      for (int i = 0, c = locs.size(); i < c; ++i)
+        if (!gridMarks.marks.get(locs.get(i)).isSubsetOf(nums)) return false;
     } else {
-      for (Numeral num : nums)
-        if (!gridMarks.marks.get(UnitNumeral.of(locs.unit, num)).isSubsetOf(locs)) return false;
+      for (int i = 0, c = nums.size(); i < c; ++i)
+        if (!locs.isSupersetOfBits(gridMarks.marks.getBits(
+            UnitNumeral.of(locs.unit, nums.get(i)))))
+          return false;
     }
     return true;
   }

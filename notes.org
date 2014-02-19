@@ -25,8 +25,8 @@
 - [X] See whether it makes sense to skip hard moves with the new definition
 - [X] Assuming it does, redo InsightMeasurer again, and ScanPoints
 - [X] Use the numbers from ScanPoints to rework the algo once again
-*** TODO Performance improvements [0/1]
-- [ ] Run profiler after evaluator change
+*** DONE Performance improvements [1/1]
+- [X] Run profiler after evaluator change
 *** TODO Investigate distribution of times for multiple puzzles generated from the same end state
 
 ** Getting games with history from a sqlite db into a tsv file:
@@ -58,6 +58,7 @@ END
 - How to mitigate?  Not sure, but I bet it's possible.
 
 ** App/UI cleanups
+*** TODO Add a way to import a collection of puzzles: .sdm file
 *** TODO Fix the list fragment so it maintains current scroll on update
 - currently jumps back to selected item, not always what you want (in
   particular, not when stats or rating has been updated, or on resume)

@@ -142,10 +142,14 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
 
   public boolean isSupersetOf(Iterable<Location> it) {
     UnitSubset that = sameUnit(it);
-    if (that != null) return (this.bits & that.bits) == that.bits;
+    if (that != null) return this.isSupersetOfBits(that.bits);
     for (Location loc : it)
       if (!this.contains(loc)) return false;
     return true;
+  }
+
+  public boolean isSupersetOfBits(int bits) {
+    return (this.bits & bits) == bits;
   }
 
   public boolean contains(Location loc) {
