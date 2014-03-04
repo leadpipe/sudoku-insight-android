@@ -67,6 +67,17 @@ limitations under the License.
                 <data android:scheme="http" android:host="*" android:path="/goggles/a/sudoku" />
             </intent-filter>
         </activity>
+        <activity android:name=".CaptureCollectionActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" android:host="*" android:pathPattern=".*.sdm" />
+                <data android:scheme="http" android:host="*" android:pathPattern=".*..*.sdm" />
+                <data android:scheme="file" android:host="*" android:pathPattern=".*.sdm" />
+                <data android:scheme="file" android:host="*" android:pathPattern=".*..*.sdm" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
