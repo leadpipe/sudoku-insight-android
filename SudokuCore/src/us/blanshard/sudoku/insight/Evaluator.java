@@ -56,7 +56,7 @@ import javax.annotation.Nullable;
 public class Evaluator {
 
   /** The current version of the time estimation algorithm. */
-  public static final int CURRENT_VERSION = 4;
+  public static final int CURRENT_VERSION = 5;
 
   /**
    * How many times we run the evaluator when we must make choices that could
@@ -335,7 +335,7 @@ public class Evaluator {
   public enum MoveKind {
     DIRECT_EASY(0, 0, 0.32, 0.34, 0.41, 0.44, 0.45, 0.41),
     SIMPLY_IMPLIED_EASY(0, 1, 0.51, 0.67, 0.56, 0.84, 0.94, 1.05),
-    COMPLEXLY_IMPLIED_EASY(0, 2, 0.60, 0.55, 0.35, 0.89, 0.92, 1.31),
+    COMPLEXLY_IMPLIED_EASY(0, 2),
     DIRECT_HARD(1, 0),
     SIMPLY_IMPLIED_HARD(1, 1),
     COMPLEXLY_IMPLIED_HARD(1, 2),
@@ -364,7 +364,7 @@ public class Evaluator {
      * should move on to a disproof.
      */
     public boolean isPlayable() {
-      return difficulty == 0;
+      return secondsPerScanPoint != null;
     }
 
     /**
@@ -399,7 +399,7 @@ public class Evaluator {
     private MoveKind(int difficulty, int complexity, double... secondsPerScanPoint) {
       this.difficulty = difficulty;
       this.complexity = complexity;
-      this.secondsPerScanPoint = secondsPerScanPoint;
+      this.secondsPerScanPoint = secondsPerScanPoint.length > 0 ? secondsPerScanPoint : null;
     }
   }
 
