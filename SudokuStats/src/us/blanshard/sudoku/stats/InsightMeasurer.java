@@ -42,8 +42,11 @@ import com.google.common.collect.Sets;
 
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * Analyzes sudoku game histories to measure the time taken to make use of
@@ -130,7 +133,8 @@ public class InsightMeasurer implements Runnable {
               || game.getTrail(move.trailId).getTrailhead() == move.getLocation());
       if (isTrailhead) {
         MinKindAndCount min = getMinAndCount(collector.moves.values());
-        emitTrailheadLine(elapsed, numOpen, move.timestamp, min);
+        Universe universe = getPlausibleUniverse(collector, min);
+        emitTrailheadLine(elapsed, numOpen, move.timestamp, min, universe);
       } else if (collector.moves.containsKey(move.getAssignment())) {
         newBatch = new Batch(collector, move, elapsed, numOpen);
         for (Batch b : openBatches) {
@@ -163,10 +167,29 @@ public class InsightMeasurer implements Runnable {
     return answer;
   }
 
-  static Ordering<MoveKind> ORD = Ordering.natural().nullsFirst();
+  @Nullable static Universe getPlausibleUniverse(Collector collector, MinKindAndCount min) {
+    if (min.count == 0) return null;
+    Universe universe = null;
+    Assignment assignment = null;
+    for (Assignment a : collector.moves.keySet()) {
+      for (WrappedInsight w : collector.moves.get(a))
+        if (w.kind == min.kind) {
+          Universe u = collector.universeForAssignment(a);
+          if (universe == null || u.numerator() < universe.numerator()) {
+            universe = u;
+            assignment = a;
+          }
+          break;
+        }
+    }
+    collector.fillDenominator(universe, Collections.singleton(assignment));
+    return universe;
+  }
 
-  private void emitTrailheadLine(long elapsed, int numOpen, long timestamp, MinKindAndCount min) {
+  private void emitTrailheadLine(long elapsed, int numOpen, long timestamp, MinKindAndCount min,
+                                 @Nullable Universe universe) {
     startLine(true, elapsed, numOpen, timestamp, min);
+    if (universe != null) emitUniverse(universe);
     endLine();
   }
 
@@ -262,6 +285,25 @@ public class InsightMeasurer implements Runnable {
         builder.apply(e);
       }
     }
+
+    public Universe universeForAssignment(Assignment a) {
+      Universe universe = new Universe();
+      for (WrappedInsight w : moves.get(a)) {
+        universe.add(w.insight, true);
+      }
+      return universe;
+    }
+
+    public void fillDenominator(Universe universe, Set<Assignment> except) {
+      for (Assignment a : moves.keySet())
+        if (!except.contains(a))
+          for (WrappedInsight w : moves.get(a))
+            universe.add(w.insight, false);
+      for (WrappedInsight w : errors)
+        universe.add(w.insight, false);
+      for (Insight i : elims)
+        universe.add(i, false);
+    }
   }
 
   private static class WrappedInsight {
@@ -278,6 +320,8 @@ public class InsightMeasurer implements Runnable {
       return kind;
     }
   }
+
+  static Ordering<MoveKind> ORD = Ordering.natural().nullsFirst();
 
   private static class MinKindAndCount {
     MoveKind kind;
@@ -333,7 +377,7 @@ public class InsightMeasurer implements Runnable {
     MoveKind maxOfFirstMoveMins;
     final MoveKind maxOfOriginalMins;
     final Set<Assignment> assignments = Sets.newHashSet();
-    final Universe universe = new Universe();
+    final Universe universe;
     long totalElapsed;
 
     Batch(Collector collector, Move firstMove, long elapsed, int numOpen) {
@@ -342,17 +386,14 @@ public class InsightMeasurer implements Runnable {
       this.numOpen = numOpen;
       this.minPlayable = getMinAndCount(collector.moves.values());
       Assignment assignment = firstMove.getAssignment();
-      Collection<WrappedInsight> wrappedInsights = collector.moves.get(assignment);
-      this.firstMoveMin = getMinAndCount(wrappedInsights);
+      this.firstMoveMin = getMinAndCount(collector.moves.get(assignment));
       this.maxOfFirstMoveMins = firstMoveMin.kind;
       MoveKind max = firstMoveMin.kind;
       for (Assignment a : collector.moves.keySet()) {
         max = ORD.max(max, getMinAndCount(collector.moves.get(a)).kind);
       }
       this.maxOfOriginalMins = max;
-      for (WrappedInsight w : wrappedInsights) {
-        universe.add(w.insight, true);
-      }
+      this.universe = collector.universeForAssignment(assignment);
       assignments.add(assignment);
       totalElapsed = elapsed;
     }
@@ -381,14 +422,7 @@ public class InsightMeasurer implements Runnable {
      * denominator is the number of scan targets in all insights in the batch.
      */
     public void emitUniverse() {
-      for (Assignment a : collector.moves.keySet())
-        if (!assignments.contains(a))
-          for (WrappedInsight w : collector.moves.get(a))
-            universe.add(w.insight, false);
-      for (WrappedInsight w : collector.errors)
-        universe.add(w.insight, false);
-      for (Insight i : collector.elims)
-        universe.add(i, false);
+      collector.fillDenominator(universe, assignments);
       InsightMeasurer.this.emitUniverse(universe);
     }
   }

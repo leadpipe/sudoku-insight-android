@@ -69,7 +69,8 @@ public class ScanPoints {
           minOpen, numTrails, timestamp, effectiveTimestamp, moveNumber, effectiveMoveNumber);
       double seconds = ms / 1000.0;
       if (isTrailhead) {
-        reporter.takeTrailhead(seconds, openCount, bestKind, bestKindCount);
+        Universe universe = iter.hasNext() ? new Universe(iter) : null;
+        reporter.takeTrailhead(seconds, openCount, bestKind, bestKindCount, universe);
       } else {
         int numMoves = Integer.parseInt(iter.next());
         MoveKind worstKind = parseKinds(iter.next());
@@ -127,10 +128,10 @@ public class ScanPoints {
     }
 
     public void takeTrailhead(double seconds, int openCount, @Nullable MoveKind bestKind,
-        int bestKindCount) {
+                              int bestKindCount, @Nullable Universe universe) {
       trailheadCounter.count(seconds, 1);
       if (bestKind != null)
-        processes.getUnchecked(bestKind).takeTrailhead();
+        processes.getUnchecked(bestKind).takeTrailhead(seconds, openCount, universe);
     }
 
     public void takeBatch(double seconds, int openCount, MoveKind bestKind, int bestKindCount,
@@ -148,10 +149,11 @@ public class ScanPoints {
     private final LoadingCache<MoveKind, ProcessCounter> maxCounters;
     private final LoadingCache<MoveKind, ErrorCounter> errorCounters;
     private final ProcessCounter overallCounter = new ProcessCounter();
+    private final ProcessCounter trailheadCounter = new ProcessCounter();
     private int trailheadsIncluded;
     private int batchesIncluded;
     private int movesIncluded;
-    private final boolean reportByRealm = true;
+    private final boolean reportByRealm = false;
 
     public BatchProcess(MoveKind bestKind) {
       this.bestKind = bestKind;
@@ -172,8 +174,10 @@ public class ScanPoints {
       });
     }
 
-    public void takeTrailhead() {
+    public void takeTrailhead(double seconds, int openCount, @Nullable Universe universe) {
       ++trailheadsIncluded;
+      if (universe != null)
+        trailheadCounter.count(seconds, pointsScanned(openCount, 4, universe));
     }
 
     public void take(double seconds, int openCount, int numMoves, int bestKindCount, MoveKind worstKind,
@@ -217,6 +221,9 @@ public class ScanPoints {
 
       out.println(" - Overall:");
       overallCounter.report(out);
+
+      out.println(" - If trailheads had been moves:");
+      trailheadCounter.report(out);
 
       out.println(" - By hardest move in batch:");
       int count = maxCounters.asMap().size();
