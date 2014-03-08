@@ -238,12 +238,11 @@ public class Database {
   }
 
   /**
-   * Adds the puzzle with the given clues, properties, and source to the
-   * database, or updates it by merging the properties and source with what's
-   * already there.  If not already present creates an attempt row for it as
-   * well.  Modifies the given JsonObject to remove the puzzle ID and add any
-   * properties already in the database that aren't in the given JsonObject.
-   * Returns the puzzle's ID.
+   * Adds the puzzle with the given properties and source to the database, or
+   * updates it by merging the properties and source with what's already there.
+   * If not already present creates an attempt row for it as well.  Modifies the
+   * given JsonObject to remove the clues and add any properties already in the
+   * database that aren't in the given JsonObject.  Returns the puzzle's ID.
    */
   private long addOrUpdatePuzzle(JsonObject properties, String source) throws SQLException {
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
@@ -289,6 +288,37 @@ public class Database {
     values.put("attemptState", AttemptState.UNSTARTED.getNumber());
     values.put("lastTime", System.currentTimeMillis());
     return db.insertOrThrow("Attempt", null, values);
+  }
+
+  /**
+   * Adds a new collection to the database, from the given source and with the
+   * given name, and consisting of the given puzzles, expressed as Generator
+   * properties objects.  Returns the ID of the new collection.
+   */
+  public long addCollection(String name, String source, List<JsonObject> puzzles) {
+    SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+    db.beginTransaction();
+    try {
+      ContentValues values = new ContentValues();
+      long createTime = System.currentTimeMillis();
+      values.put("name", name);
+      values.put("source", source);
+      values.put("createTime", createTime);
+      long collectionId = db.insertOrThrow("Collection", null, values);
+
+      for (JsonObject puzzle : puzzles) {
+        long puzzleId = addOrUpdatePuzzle(puzzle, source);
+        values.clear();
+        values.put("puzzleId", puzzleId);
+        values.put("collectionId", collectionId);
+        values.put("createTime", createTime);
+        db.insertOrThrow("Element", null, values);
+      }
+      db.setTransactionSuccessful();
+      return collectionId;
+    } finally {
+      db.endTransaction();
+    }
   }
 
   /**

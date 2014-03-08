@@ -58,14 +58,19 @@ END
 - How to mitigate?  Not sure, but I bet it's possible.
 
 ** App/UI cleanups
-*** TODO Add a way to import a collection of puzzles: .sdm file
+*** TODO Add a way to import a collection of puzzles: .sdm file [1/2]
+- [X] basic implementation
+- [ ] ensure rating service will rate them all, before historical ones
+*** TODO Fix activities so SudokuActivity is always root (when it appears)
+*** TODO Instead of skipping improper puzzles, show a warning on the rating view
+- and maybe show a warning in the rating area of the board too
+- kill ImproperDialog
+*** TODO In the rating view, show a spinner with all the collections that have pending puzzles
+- need a pref for current collection
+- set it when capture a puzzle (to Captured) or a collection (to the collection captured)
 *** TODO Fix the list fragment so it maintains current scroll on update
 - currently jumps back to selected item, not always what you want (in
   particular, not when stats or rating has been updated, or on resume)
-*** TODO Add prefs for only showing easy puzzles?
-*** TODO Add a pref for not showing ratings
-- until after a complete attempt
-- worth it?
 *** TODO Don't send skipped puzzles to the app engine
 - treat skipped puzzles specially, if we play them we should be changing the
   existing attempt not making a new one

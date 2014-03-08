@@ -56,6 +56,7 @@ public class Prefs {
   /** The largest number of solutions this app will tolerate. */
   public static final int MAX_SOLUTIONS = 10;
 
+  private static final String COLLECTION = "collection";
   private static final String COUNTER = "counter";
   private static final String DEFAULT_DEVICE_NAME = "defaultDeviceName";
   private static final String INSTALL_DATA = "installData";
@@ -304,6 +305,20 @@ public class Prefs {
   public void setRatingVersionAsync(int version) {
     SharedPreferences.Editor prefs = mLocalPrefs.edit();
     prefs.putInt(RATING_VERSION, version);
+    prefs.apply();
+  }
+
+  /**
+   * The database collection ID of the collection currently being played.  Defaults
+   * to the built-in collection of generated puzzles.
+   */
+  public long getCurrentCollection() {
+    return mLocalPrefs.getLong(COLLECTION, Database.GENERATED_COLLECTION_ID);
+  }
+
+  public void setCurrentCollectionAsync(long collectionId) {
+    SharedPreferences.Editor prefs = mLocalPrefs.edit();
+    prefs.putLong(COLLECTION, collectionId);
     prefs.apply();
   }
 }
