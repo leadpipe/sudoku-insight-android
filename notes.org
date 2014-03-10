@@ -58,10 +58,12 @@ END
 - How to mitigate?  Not sure, but I bet it's possible.
 
 ** App/UI cleanups
-*** TODO Add a way to import a collection of puzzles: .sdm file [1/2]
+*** TODO Add a way to import a collection of puzzles: .sdm file [2/3]
 - [X] basic implementation
+- [X] add progress, and disable the button while saving to db
 - [ ] ensure rating service will rate them all, before historical ones
-*** TODO Fix activities so SudokuActivity is always root (when it appears)
+*** DONE Fix activities so SudokuActivity is always root (when it appears)
+*** TODO "Play" from info doesn't start a new puzzle if the current one hasn't been started
 *** TODO Instead of skipping improper puzzles, show a warning on the rating view
 - and maybe show a warning in the rating area of the board too
 - kill ImproperDialog

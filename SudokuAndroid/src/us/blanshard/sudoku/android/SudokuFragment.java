@@ -439,11 +439,19 @@ public class SudokuFragment
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
+    Long attemptId = null;
+    if (savedInstanceState != null && savedInstanceState.containsKey(Extras.ATTEMPT_ID)) {
+      attemptId = savedInstanceState.getLong(Extras.ATTEMPT_ID);
+    }
+    newAttempt(attemptId);
+  }
+
+  public void newAttempt(Long attemptIdObject) {
     long attemptId = 0;
     if (getActivity().getIntent().hasExtra(Extras.ATTEMPT_ID)) {
       attemptId = getActivity().getIntent().getExtras().getLong(Extras.ATTEMPT_ID);
-    } else if (savedInstanceState != null && savedInstanceState.containsKey(Extras.ATTEMPT_ID)) {
-      attemptId = savedInstanceState.getLong(Extras.ATTEMPT_ID);
+    } else if (attemptIdObject != null) {
+      attemptId = attemptIdObject;
     } else if (mPrefs.hasCurrentAttemptId()) {
       attemptId = mPrefs.getCurrentAttemptId();
     }

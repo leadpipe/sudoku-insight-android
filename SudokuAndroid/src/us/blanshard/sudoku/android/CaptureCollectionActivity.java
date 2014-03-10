@@ -14,6 +14,8 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.common.base.Charsets;
@@ -35,13 +37,16 @@ import java.util.Set;
 public class CaptureCollectionActivity extends ActivityBase
     implements View.OnClickListener, TextWatcher {
   private static final String TAG = "CaptureCollection";
+  private FrameLayout mNoticeFrame;
   private TextView mNotice;
+  private ProgressBar mProgress;
   private TextView mCollectionName;
   private TextView mDescription;
   private Button mImport;
   private String mSource;
   private String mName;
   private boolean mReadFailed;
+  private boolean mSaving;
   private final List<JsonObject> mPuzzles = Lists.newArrayList();
   private final Set<String> mCollectionNames = Sets.newHashSet();
   private final Set<String> mCollectionSources = Sets.newHashSet();
@@ -50,7 +55,9 @@ public class CaptureCollectionActivity extends ActivityBase
     super.onCreate(savedInstanceState);
     setContentView(R.layout.collect);
 
+    mNoticeFrame = (FrameLayout) findViewById(R.id.notice_frame);
     mNotice = (TextView) findViewById(R.id.notice);
+    mProgress = (ProgressBar) findViewById(R.id.progress);
     mCollectionName = (TextView) findViewById(R.id.collection_name);
     mDescription = (TextView) findViewById(R.id.description);
     mImport = (Button) findViewById(R.id.import_collection);
@@ -87,8 +94,10 @@ public class CaptureCollectionActivity extends ActivityBase
   }
 
   @Override public void onClick(View v) {
-    if (!mPuzzles.isEmpty() && v == mImport) {
+    if (!mSaving && !mPuzzles.isEmpty() && v == mImport) {
+      mSaving = true;
       new Save(this).execute();
+      updateState();
     }
   }
 
@@ -102,32 +111,35 @@ public class CaptureCollectionActivity extends ActivityBase
     boolean havePuzzles = !mPuzzles.isEmpty();
     if (havePuzzles) {
       mDescription.setText(getString(R.string.text_collection_desc, mPuzzles.size(), mSource));
+      if (mSaving)
+        showNotice(R.string.text_saving_collection, true);
     } else {
       showNotice(mReadFailed
           ? R.string.text_loading_collection_failed
-          : R.string.text_loading_collection);
+          : R.string.text_loading_collection, !mReadFailed);
     }
     boolean haveCollectionInfo = !mCollectionNames.isEmpty();
     boolean okSource = haveCollectionInfo && !mCollectionSources.contains(mSource);
-    if (havePuzzles && !okSource)
-      showNotice(R.string.text_already_have_collection_source);
+    if (haveCollectionInfo && !okSource)
+      showNotice(R.string.text_already_have_collection_source, false);
     mName = mCollectionName.getText().toString().trim();
     boolean okName = haveCollectionInfo && !mName.isEmpty()
         && !mCollectionNames.contains(mName);
     if (havePuzzles && okSource && !okName)
-      showNotice(R.string.text_already_have_collection_name);
-    mImport.setEnabled(havePuzzles && okName && okSource);
+      showNotice(R.string.text_already_have_collection_name, false);
+    mImport.setEnabled(havePuzzles && okName && okSource && !mSaving);
     if (mImport.isEnabled())
       hideNotice();
   }
 
-  private void showNotice(int stringId) {
+  private void showNotice(int stringId, boolean progress) {
     mNotice.setText(stringId);
-    mNotice.setVisibility(View.VISIBLE);
+    mProgress.setVisibility(progress ? View.VISIBLE : View.GONE);
+    mNoticeFrame.setVisibility(View.VISIBLE);
   }
 
   private void hideNotice() {
-    mNotice.setVisibility(View.GONE);
+    mNoticeFrame.setVisibility(View.GONE);
   }
 
   private static class FetchData extends WorkerFragment.ActivityTask<CaptureCollectionActivity, Void, Void, Boolean> {
@@ -135,6 +147,7 @@ public class CaptureCollectionActivity extends ActivityBase
     private final Set<String> mCollectionNames;
     private final Set<String> mCollectionSources;
     private final URL mUrl;
+    private final String mSource;
     private final List<JsonObject> mPuzzles;
 
     FetchData(CaptureCollectionActivity activity, URL url) {
@@ -143,6 +156,7 @@ public class CaptureCollectionActivity extends ActivityBase
       mCollectionNames = activity.mCollectionNames;
       mCollectionSources = activity.mCollectionSources;
       mUrl = url;
+      mSource = activity.mSource;
       mPuzzles = activity.mPuzzles;
     }
 
@@ -153,6 +167,8 @@ public class CaptureCollectionActivity extends ActivityBase
         if (info.source != null)
           mCollectionSources.add(info.source);
       }
+      if (mCollectionSources.contains(mSource))
+        return false;
 
       BufferedReader in = null;
       try {

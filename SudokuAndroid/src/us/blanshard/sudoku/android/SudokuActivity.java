@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.android;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.view.MenuItem;
@@ -44,6 +45,11 @@ public class SudokuActivity extends ActivityBase {
           .penaltyDropBox()
           .build());
     }
+  }
+
+  @Override protected void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    mBoardFragment.newAttempt(null);
   }
 
   @Override protected String getHelpPage() {

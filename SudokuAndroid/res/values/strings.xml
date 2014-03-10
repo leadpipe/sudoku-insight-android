@@ -21,7 +21,7 @@
     <string name="dialog_improper_title">"\"Improper\" Puzzle"</string>
     <string name="dialog_show_solution_message">Show the solution for this puzzle?</string>
     <string name="hint_capture_source">Where does this puzzle come from?</string>
-    <string name="hint_collection_name">Collection name</string>
+    <string name="hint_collection_name">Name</string>
     <string name="menu_about">About</string>
     <string name="menu_apply">Apply Selected Insight</string>
     <string name="menu_capture_puzzle">Enter a Puzzle</string>
@@ -80,7 +80,7 @@
     <string name="text_captured_puzzles">Captured puzzles</string>
     <string name="text_broken_symmetry">Symmetry (broken): %1$s.</string>
     <string name="text_collection_date">%1$s, %2$s</string>
-    <string name="text_collection_desc">%1$d puzzles from %2$s</string>
+    <string name="text_collection_desc">Read %1$d puzzles from %2$s.</string>
     <string name="text_collection_in_start">"In: "</string>
     <string name="text_collection_separator">"; "</string>
     <string name="text_congrats">Congratulations!</string>
@@ -110,6 +110,7 @@
     <string name="text_rating_very_hard">Very Hard</string>
     <string name="text_recommended_puzzles">Recommended puzzles</string>
     <string name="text_replay_title">Review #%1$d</string>
+    <string name="text_saving_collection">Saving collection…</string>
     <string name="text_sentence_end">.</string>
     <string name="text_source">Source: %1$s</string>
     <string name="text_symmetry">Symmetry: %1$s.</string>
