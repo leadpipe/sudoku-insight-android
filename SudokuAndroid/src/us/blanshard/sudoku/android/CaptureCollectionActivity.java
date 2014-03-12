@@ -75,7 +75,7 @@ public class CaptureCollectionActivity extends ActivityBase
       } catch (MalformedURLException e) {
         Log.e(TAG, "Bad URL " + mSource, e);
       }
-      if (url != null && mSource.endsWith(".sdm")) {
+      if (url != null && uri.getPath().endsWith(".sdm")) {
         name = uri.getLastPathSegment();
       }
     }
