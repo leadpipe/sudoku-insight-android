@@ -77,6 +77,8 @@ limitations under the License.
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" android:host="*" android:pathPattern=".*.sdm" />
                 <data android:scheme="http" android:host="*" android:pathPattern=".*..*.sdm" />
+                <data android:scheme="https" android:host="*" android:pathPattern=".*.sdm" />
+                <data android:scheme="https" android:host="*" android:pathPattern=".*..*.sdm" />
                 <data android:scheme="file" android:host="*" android:pathPattern=".*.sdm" />
                 <data android:scheme="file" android:host="*" android:pathPattern=".*..*.sdm" />
             </intent-filter>
