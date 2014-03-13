@@ -49,7 +49,8 @@ public class SudokuActivity extends ActivityBase {
 
   @Override protected void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
-    mBoardFragment.newAttempt(null);
+    setIntent(intent);
+    mBoardFragment.newAttempt(0);
   }
 
   @Override protected String getHelpPage() {

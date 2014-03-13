@@ -252,7 +252,7 @@ public class SudokuFragment
         long attemptId = mAttempt._id;
         setAttempt(null, null, null, null);
         WorkerFragment.cancelAll(SudokuFragment.this);
-        new FetchFindOrMakePuzzle(SudokuFragment.this).execute(attemptId);
+        new FetchFindOrMakePuzzle(SudokuFragment.this, false).execute(attemptId);
       }
     });
 
@@ -439,24 +439,23 @@ public class SudokuFragment
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    Long attemptId = null;
+    long attemptId = 0;
     if (savedInstanceState != null && savedInstanceState.containsKey(Extras.ATTEMPT_ID)) {
       attemptId = savedInstanceState.getLong(Extras.ATTEMPT_ID);
     }
     newAttempt(attemptId);
   }
 
-  public void newAttempt(Long attemptIdObject) {
-    long attemptId = 0;
+  public void newAttempt(long attemptId) {
+    boolean force = false;
     if (getActivity().getIntent().hasExtra(Extras.ATTEMPT_ID)) {
       attemptId = getActivity().getIntent().getExtras().getLong(Extras.ATTEMPT_ID);
-    } else if (attemptIdObject != null) {
-      attemptId = attemptIdObject;
-    } else if (mPrefs.hasCurrentAttemptId()) {
+      force = true;
+    } else if (attemptId == 0 && mPrefs.hasCurrentAttemptId()) {
       attemptId = mPrefs.getCurrentAttemptId();
     }
     WorkerFragment.cancelAll(this);
-    new FetchFindOrMakePuzzle(this).execute(attemptId);
+    new FetchFindOrMakePuzzle(this, force).execute(attemptId);
     mProgress.setVisibility(View.VISIBLE);
   }
 
@@ -556,27 +555,46 @@ public class SudokuFragment
     private final Database mDb;
     private final Prefs mPrefs;
     private final Context mAppContext;
+    private final boolean mForce;
 
     private List<Move> mHistory;
     private String mTitle;
     private String mStatus;
 
-    FetchFindOrMakePuzzle(SudokuFragment fragment) {
+    FetchFindOrMakePuzzle(SudokuFragment fragment, boolean force) {
       super(fragment, Priority.FOREGROUND, Independence.DEPENDENT);
       mDb = fragment.mDb;
       mPrefs = fragment.mPrefs;
       mAppContext = fragment.getActivity().getApplicationContext();
+      mForce = force;
     }
 
     @Override protected Database.Attempt doInBackground(Long... params) {
       Database.Attempt answer = mDb.getAttempt(params[0]);
-      if (answer == null || !answer.attemptState.isInPlay())
+      if (!isAcceptableAttempt(answer, mForce))
+        answer = mDb.getFirstOpenAttempt(mPrefs.getCurrentCollection());
+      if (!isAcceptableAttempt(answer, false))
         answer = mDb.getFirstOpenAttempt();
-      if (answer == null || !answer.attemptState.isInPlay())
+      if (!isAcceptableAttempt(answer, true))
         answer = generateAndStorePuzzle(mDb, mPrefs);
       if (answer != null)
         makeAdditionalArtifacts(answer);
       return answer;
+    }
+
+    private boolean isAcceptableAttempt(Database.Attempt attempt, boolean force) {
+      if (attempt == null || !attempt.attemptState.isInPlay())
+        return false;
+      long id = mPrefs.getCurrentCollection();
+      for (Database.Element e : attempt.elements)
+        if (e.collection._id == id)
+          return true;
+      if (force) {
+        int size = attempt.elements.size();
+        if (size > 0)
+          mPrefs.setCurrentCollectionAsync(attempt.elements.get(size - 1).collection._id);
+      }
+      return force;
     }
 
     /**

@@ -556,12 +556,28 @@ public class Database {
   }
 
   /**
-   * Returns the least recently modified open attempt row in the database, or
-   * null.
+   * Returns the open attempt row for the first puzzle in the given collection
+   * that has one, or null.
+   */
+  public Attempt getFirstOpenAttempt(long collectionId) throws SQLException {
+    SQLiteDatabase db = mOpenHelper.getReadableDatabase();
+    String sql = ATTEMPT_SELECT_AND_FROM_CLAUSE
+        + "WHERE [attemptState] IN (?, ?) "
+        + "AND EXISTS (SELECT _id FROM [Element] WHERE puzzleId = p._id AND collectionId = ?) "
+        + "ORDER BY p._id ASC, [lastTime] ASC";
+    Attempt answer = fetchAttempt(db, sql, Integer.toString(AttemptState.UNSTARTED.getNumber()),
+        Integer.toString(AttemptState.STARTED.getNumber()), Long.toString(collectionId));
+    return answer;
+  }
+
+  /**
+   * Returns the open attempt row for the first puzzle in the database that has
+   * one, or null.
    */
   public Attempt getFirstOpenAttempt() throws SQLException {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    String sql = ATTEMPT_SELECT_AND_FROM_CLAUSE + "WHERE [attemptState] IN (?, ?) ORDER BY [lastTime] ASC";
+    String sql = ATTEMPT_SELECT_AND_FROM_CLAUSE
+        + "WHERE [attemptState] IN (?, ?) ORDER BY p._id ASC, [lastTime] ASC";
     Attempt answer = fetchAttempt(db, sql, Integer.toString(AttemptState.UNSTARTED.getNumber()),
         Integer.toString(AttemptState.STARTED.getNumber()));
     return answer;
