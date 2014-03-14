@@ -3,30 +3,10 @@
 *** TODO Investigate recent puzzles
 - categories: estimate way too high, way too low, high, low, close to perfect
 - add columns for the pattern that the estimator found, and patterns matching actual move
-*** DONE New evaluator algorithm [8/8]
-- [X] Rework InsightMeasurer to track batches of insights
-  - Each legit move starts a new batch; the batch is tracked through successive
-    moves until something happens that is NOT one of its implied assignments.
-  - Actually we only want to count some of those implied assignments as part of
-    the batch.  Those that have insights subsumed by the min-set of the founding
-    move.
-  - 4 possible ways of counting scan targets:
-    - Small: only count insights subsumed within the min-set of the founding
-      move.
-    - Medium: same set of moves, but count all insights for those moves.
-    - Large: insights for all moves found.
-    - X-large: all insights, even eliminations.  (This is the only one that works.)
-  - Error insights: which ones are included?
-    - They also have kinds, so we can talk of them being subsumed.
-- [X] Rework ScanPoints to keep pace
-- [X] Implement new algo based on these measurements
-- [X] Include antecedents in easy/hard determination: naked sets in particular
-- [X] Redo InsightMeasurer with new kinds; don't limit to "playable" kinds
-- [X] See whether it makes sense to skip hard moves with the new definition
-- [X] Assuming it does, redo InsightMeasurer again, and ScanPoints
-- [X] Use the numbers from ScanPoints to rework the algo once again
-*** DONE Performance improvements [1/1]
-- [X] Run profiler after evaluator change
+*** TODO One more round needed [0/3]
+- [ ] refine def of "simply": some hidden sets are way too hard to see
+- [ ] look into adding a third level of implication complexity
+- [ ] look for commonalities in missed simply and complexly implied moves
 *** TODO Investigate distribution of times for multiple puzzles generated from the same end state
 
 ** Getting games with history from a sqlite db into a tsv file:
@@ -44,7 +24,7 @@ END
 ** Bugs
 *** TODO bug: 1:1:2013-11:191 showed up with a series of different ratings, ever increasing
 - not just on the board, but in the list as well
-*** TODO bug: 1:5:2013-12:57 failed to register a completion
+*** DONE bug: 1:5:2013-12:57 failed to register a completion
 - played it, finished it, reviewed it, backed out of the review page and the
   details page, and ended up back at the play page, ready to play it again
 - backed out again; next time I started the app, the next puzzle showed.
@@ -56,6 +36,7 @@ END
   resumed, and does resume when it gets control.
 - Why does this happen?  I assume it's an Android bug.
 - How to mitigate?  Not sure, but I bet it's possible.
+**** singleTop should do the trick
 
 ** App/UI cleanups
 *** TODO Add a way to import a collection of puzzles: .sdm file [2/3]
@@ -63,11 +44,12 @@ END
 - [X] add progress, and disable the button while saving to db
 - [ ] ensure rating service will rate them all, before historical ones
 *** DONE Fix activities so SudokuActivity is always root (when it appears)
-*** TODO "Play" from info doesn't start a new puzzle if the current one hasn't been started
+*** DONE "Play" from info doesn't start a new puzzle if the current one hasn't been started
 *** TODO Instead of skipping improper puzzles, show a warning on the rating view
 - and maybe show a warning in the rating area of the board too
 - kill ImproperDialog
-*** TODO In the rating view, show a spinner with all the collections that have pending puzzles
+*** TODO Show collection name(s) in the rating view when there's no name
+*** +In the rating view, show a spinner with all the collections that have pending puzzles+
 - need a pref for current collection
 - set it when capture a puzzle (to Captured) or a collection (to the collection captured)
 *** TODO Fix the list fragment so it maintains current scroll on update
