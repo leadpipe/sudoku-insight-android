@@ -16,6 +16,8 @@ limitations under the License.
 package us.blanshard.sudoku.android;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static us.blanshard.sudoku.core.Numeral.number;
 import static us.blanshard.sudoku.core.Numeral.numeral;
 
@@ -31,6 +33,7 @@ import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -75,6 +78,8 @@ public class SudokuView extends View {
   protected int[] mOffsetsY;
   protected final Paint mPaint = new Paint();
   protected float mTextSize;
+  private final int[] mLocOnScreen = new int[2];
+  private float mMinCenterX, mMaxCenterX, mMinCenterY, mMaxCenterY;
 
   private Sudoku.State mState;
   private int mPointerId = INVALID_POINTER_ID;
@@ -212,7 +217,7 @@ public class SudokuView extends View {
     int wExtra = getPaddingLeft() + getPaddingRight();
     int hExtra = getPaddingTop() + getPaddingBottom();
 
-    int size = Math.min(wSize - wExtra, hSize - hExtra);
+    int size = min(wSize - wExtra, hSize - hExtra);
 
     int width = wMode == MeasureSpec.EXACTLY ? wSize : size + wExtra;
     int height = hMode == MeasureSpec.EXACTLY ? hSize : size + hExtra;
@@ -224,8 +229,9 @@ public class SudokuView extends View {
         : NORMAL_THICK_LINE_WIDTH;
     mSquareSize = (size - 4 * mThickLineWidth - 6 * THIN_LINE_WIDTH) / 9;
     mTextSize = mSquareSize * (mThickLineWidth > THIN_LINE_WIDTH ? 0.75f : 0.85f);
-    mClockRadius = Math.max(mSquareSize * CLOCK_RADIUS_FACTOR,
-        getResources().getDisplayMetrics().density * CLOCK_RADIUS_DP);
+    DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+    mClockRadius = max(mSquareSize * CLOCK_RADIUS_FACTOR,
+        displayMetrics.density * CLOCK_RADIUS_DP);
 
     int sizePlus = THIN_LINE_WIDTH + mSquareSize;
     int blockSize = mThickLineWidth + 2 * sizePlus + mSquareSize;
@@ -243,6 +249,12 @@ public class SudokuView extends View {
       }
     mOffsetsX[9] = xOffset + total;
     mOffsetsY[9] = yOffset + total;
+
+    getLocationOnScreen(mLocOnScreen);
+    mMinCenterX = mClockRadius - mLocOnScreen[0];
+    mMinCenterY = mClockRadius - mLocOnScreen[1];
+    mMaxCenterX = displayMetrics.widthPixels - mClockRadius - mLocOnScreen[0];
+    mMaxCenterY = displayMetrics.heightPixels - mClockRadius - mLocOnScreen[1];
   }
 
   @Override protected void onDraw(Canvas canvas) {
@@ -353,7 +365,7 @@ public class SudokuView extends View {
           drawChoice(mChoice, canvas, mPreviewX2, mPreviewY - half + toBaseline);
       }
 
-      mPaint.setTextSize(Math.max(7, mSquareSize * 0.33f));
+      mPaint.setTextSize(max(7, mSquareSize * 0.33f));
 
       toBaseline = -mPaint.ascent() / 2.0f;
       double r2 = r - toBaseline;
@@ -392,8 +404,8 @@ public class SudokuView extends View {
           if (loc != null && mState.canModify(loc)) {
             mLocation = loc;
             mPointerId = event.getPointerId(index);
-            mPointerX = x;
-            mPointerY = y;
+            mPointerX = min(max(x, mMinCenterX), mMaxCenterX);
+            mPointerY = min(max(y, mMinCenterY), mMaxCenterY);
             mChanging = false;
             float half = mSquareSize * 0.5f;
             float cx = mOffsetsX[loc.column.index] + half;
