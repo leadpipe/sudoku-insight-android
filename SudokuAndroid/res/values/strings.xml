@@ -85,6 +85,7 @@
     <string name="text_collection_separator">"; "</string>
     <string name="text_congrats">Congratulations!</string>
     <string name="text_generated_puzzles">Generated puzzles</string>
+    <string name="text_improper">Improper</string>
     <string name="text_info_title">#%1$d Details</string>
     <string name="text_loading_collection">Reading puzzles, please wait…</string>
     <string name="text_loading_collection_failed">Unable to read puzzles.</string>

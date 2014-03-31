@@ -45,9 +45,11 @@ END
 - [ ] ensure rating service will rate them all, before historical ones
 *** DONE Fix activities so SudokuActivity is always root (when it appears)
 *** DONE "Play" from info doesn't start a new puzzle if the current one hasn't been started
-*** TODO Instead of skipping improper puzzles, show a warning on the rating view
+*** DONE Instead of skipping improper puzzles, show a warning on the rating view
 - and maybe show a warning in the rating area of the board too
 - kill ImproperDialog
+*** TODO Add a help link after "Improper"
+- use scheme filter idea
 *** TODO Show collection name(s) in the rating view when there's no name
 *** +In the rating view, show a spinner with all the collections that have pending puzzles+
 - need a pref for current collection

@@ -100,6 +100,7 @@ public class SudokuFragment
 
   private UndoStack mUndoStack = new UndoStack();
   private Database.Attempt mAttempt;
+  private boolean mImproper;
   private Sudoku mGame;
   private boolean mResumed;
   private Grid.State mState;
@@ -146,7 +147,7 @@ public class SudokuFragment
       if (attempt != null && attempt.puzzleId == puzzleId && mRatingFrame.getVisibility() == View.VISIBLE) {
         mSudokuView.post(new Runnable() {
           @Override public void run() {
-            mRatingFrameBody.setText(Html.fromHtml(ToText.ratingProgressHtml(getActivity(), minScore)));
+            mRatingFrameBody.setText(Html.fromHtml(ToText.ratingProgressHtml(getActivity(), minScore, mImproper)));
           }
         });
       }
@@ -213,6 +214,7 @@ public class SudokuFragment
 
   private void showRatingFrame() {
     final JsonObject props = new JsonParser().parse(mAttempt.properties).getAsJsonObject();
+    mImproper = props.get(Generator.NUM_SOLUTIONS_KEY).getAsInt() > 1;
 
     String ratingTitle = props.has(Generator.NAME_KEY)
         ? getString(R.string.text_puzzle_name, props.get(Generator.NAME_KEY).getAsString(), mAttempt.puzzleId)
@@ -224,7 +226,7 @@ public class SudokuFragment
     boolean mustRate = rating == null || !rating.evalComplete
         || rating.algorithmVersion < Evaluator.CURRENT_VERSION;
     Spanned message = mustRate
-        ? Html.fromHtml(ToText.ratingProgressHtml(getActivity(), 0))
+        ? Html.fromHtml(ToText.ratingProgressHtml(getActivity(), 0, mImproper))
         : Html.fromHtml(ToText.ratingHtml(getActivity(), rating));
     mRatingFrameBody.setText(message);
 

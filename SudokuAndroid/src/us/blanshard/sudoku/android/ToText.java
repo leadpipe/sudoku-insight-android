@@ -101,11 +101,13 @@ public class ToText {
   /**
    * Returns a description of the progress of rating a puzzle.
    */
-  public static String ratingProgressHtml(Context context, double minScore) {
+  public static String ratingProgressHtml(Context context, double minScore, boolean improper) {
     StringBuilder sb = new StringBuilder();
     sb.append(context.getString(R.string.text_rating_in_progress, adjustedScore(minScore)));
     sb.append("&nbsp;");
     appendStars(minScore, sb);
+    sb.append("<br>");
+    appendImproperWarning(context, improper, sb);
     return sb.toString();
   }
 
@@ -120,6 +122,8 @@ public class ToText {
     int stars = appendStars(rating.score, sb);
     int resourceId = Ratings.starsDescriptionResource(stars);
     sb.append("&nbsp;").append(context.getString(resourceId));
+    sb.append("<br>");
+    appendImproperWarning(context, rating.improper, sb);
     return sb.toString();
   }
 
@@ -132,6 +136,7 @@ public class ToText {
     appendRatingVersion(context, rating, sb);
     sb.append(' ');
     appendStars(rating.score, sb);
+    appendImproperWarning(context, rating.improper, sb);
     return sb.toString();
   }
 
@@ -146,6 +151,14 @@ public class ToText {
       sb.append(s < stars ? SOLID_STAR_HTML : HOLLOW_STAR_HTML);
     }
     return stars;
+  }
+
+  private static void appendImproperWarning(Context context, boolean improper, StringBuilder sb) {
+    if (improper && Prefs.instance(context).getProperOnly()) {
+      sb.append(" <b>");
+      sb.append(context.getString(R.string.text_improper));
+      sb.append("</b>");
+    }
   }
 
   private static double adjustedScore(double score) {

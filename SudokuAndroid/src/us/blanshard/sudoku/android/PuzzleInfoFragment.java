@@ -145,15 +145,7 @@ public class PuzzleInfoFragment extends FragmentBase
   @Override public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
       case R.id.menu_play:
-        if (ImproperDialog.isNeeded(mPrefs, mProperties)) {
-          new ImproperDialog() {
-            @Override protected void okayed() {
-              new Play(PuzzleInfoFragment.this).execute();
-            }
-          }.show(getFragmentManager());
-        } else {
-          new Play(this).execute();
-        }
+        new Play(this).execute();
         return true;
 
       default:

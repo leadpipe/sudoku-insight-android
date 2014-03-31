@@ -98,16 +98,7 @@ public class CapturePuzzleActivity extends ActivityBase implements OnMoveListene
 
   @Override public void onClick(View v) {
     if (mPuzzleProperties != null && (v == mPlay || v == mSave)) {
-      final Save save = new Save(this, v == mPlay);
-      if (ImproperDialog.isNeeded(mPrefs, mPuzzleProperties)) {
-        new ImproperDialog() {
-          @Override protected void okayed() {
-            save.execute();
-          }
-        }.show(getFragmentManager());
-      } else {
-        save.execute();
-      }
+      new Save(this, v == mPlay).execute();
     }
   }
 
