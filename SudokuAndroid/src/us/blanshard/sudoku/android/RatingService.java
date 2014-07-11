@@ -328,7 +328,6 @@ public class RatingService extends Service {
                 for (RatingCallback rc : sCallbacks)
                   rc.ratingScoreUpdated(puzzleId, minScore);
               }
-              @Override public void disproofsRequired() {}
             };
         }
         rating = Evaluator.evaluate(puzzle.clues, callback);

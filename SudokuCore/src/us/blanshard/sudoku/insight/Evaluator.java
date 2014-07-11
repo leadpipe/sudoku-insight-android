@@ -56,12 +56,9 @@ import javax.annotation.Nullable;
 public class Evaluator {
 
   /** The current version of the time estimation algorithm. */
-  public static final int CURRENT_VERSION = 5;
+  public static final int CURRENT_VERSION = 6;
 
-  /**
-   * How many times we run the evaluator when we must make choices that could
-   * make the result vary by a lot.
-   */
+  /** How many times we run the evaluator to come up with our estimate. */
   public static final int NUM_TRIALS = 10;
 
   /**
@@ -71,20 +68,15 @@ public class Evaluator {
   public interface Callback {
     /** Returns a monotonically increasing score during the evaluation. */
     void updateEstimate(double minScore);
-
-    /**
-     * Called when a trail is first started.  There may be (hard) moves
-     * still available.
-     */
-    void disproofsRequired();
   }
 
   /**
    * Evaluates the difficulty of a Sudoku puzzle, which must be solvable and
-   * have no more than a few solutions (or the method will throw). The provided
+   * have no more than a few solutions (or the method will throw).  The provided
    * callback may be given updates during the evaluation; these will be
-   * monotonically increasing. If the thread is interrupted, the evaluation may
-   * stop early, and in that case the result object will be marked as incomplete.
+   * monotonically increasing.  If the thread is interrupted, the evaluation may
+   * stop early, and in that case the result object will be marked as
+   * incomplete.
    */
   public static Rating evaluate(Grid puzzle, Callback callback) {
     return new Evaluator(puzzle).evaluate(callback);
@@ -115,27 +107,31 @@ public class Evaluator {
 
   public Rating evaluate(@Nullable Callback callback, int trialCount) {
     checkArgument(trialCount >= 1);
-    Run outer = new Run(new GridMarks(puzzle), puzzle.getNumOpenLocations());
-    outer.runStraightShot(callback);
-    double score = outer.score;
-    boolean uninterrupted = outer.uninterrupted();
+    double[] scores = new double[trialCount];
+    GridMarks gridMarks = new GridMarks(puzzle);
+    int numOpen = puzzle.getNumOpenLocations();
+    boolean uninterrupted = true;
+    double totalScore = 0;
     Difficulty difficulty = Difficulty.NO_DISPROOFS;
-    if (outer.status == RunStatus.INCONCLUSIVE) {
-      difficulty = Difficulty.SIMPLE_DISPROOFS;
-      if (callback != null) callback.disproofsRequired();
-      double totalScore = 0;
-      int numEvaluations = 0;
-      while (uninterrupted && numEvaluations++ < trialCount) {
-        Run inner = new Run(outer.gridMarks, outer.minOpen);
-        inner.runDisproof(
-            new InnerCallback(callback, score + totalScore / trialCount, trialCount));
-        uninterrupted = inner.uninterrupted();
-        totalScore += inner.score;
-        if (inner.recursiveDisproofs) difficulty = Difficulty.RECURSIVE_DISPROOFS;
-      }
-      score += totalScore / numEvaluations;
+    int numEvaluations = 0;
+    while (uninterrupted && numEvaluations++ < trialCount) {
+      Run run = new Run(gridMarks, numOpen);
+      run.run(new InnerCallback(callback, totalScore / trialCount, trialCount));
+      uninterrupted = run.uninterrupted();
+      scores[numEvaluations - 1] = run.score;
+      totalScore += run.score;
+      if (run.difficulty.ordinal() > difficulty.ordinal())
+        difficulty = run.difficulty;
     }
-    return new Rating(CURRENT_VERSION, score, uninterrupted, difficulty, improper);
+    double score = totalScore / numEvaluations;
+    double variance = 0;
+    for (double s : scores) {
+      double error = s - score;
+      variance += error * error;
+    }
+    variance /= trialCount;
+    return new Rating(CURRENT_VERSION, score, Math.sqrt(variance),
+                      uninterrupted, difficulty, improper);
   }
 
   private static class InnerCallback implements Callback {
@@ -153,8 +149,6 @@ public class Evaluator {
       if (callback != null)
         callback.updateEstimate(baseScore + minScore / trialCount);
     }
-
-    @Override public void disproofsRequired() {}
   }
 
   private enum RunStatus { INTERRUPTED, COMPLETE, ERROR, INCONCLUSIVE };
@@ -167,19 +161,27 @@ public class Evaluator {
     double score;
     RunStatus status;
     boolean foundSolution;
-    boolean recursiveDisproofs;
+    Difficulty difficulty = Difficulty.NO_DISPROOFS;
 
-    Run(GridMarks gridMarks, int minOpen) {
+    Run(GridMarks gridMarks, int numOpen) {
       this.gridMarks = gridMarks;
-      this.minOpen = minOpen;
-      this.numOpen = gridMarks.grid.getNumOpenLocations();
+      this.minOpen = numOpen;
+      this.numOpen = numOpen;
     }
 
-    void runStraightShot(@Nullable Callback callback) {
+    void run(@Nullable Callback callback) {
+      runStraightShot(callback);
+      while (status == RunStatus.INCONCLUSIVE) {
+        eliminateOne(callback);
+        runStraightShot(callback);
+      }
+    }
+
+    private void runStraightShot(@Nullable Callback callback) {
       if (status == RunStatus.INTERRUPTED) return;
       status = null;
       do {
-        Collector collector = new Collector(gridMarks, minOpen, numOpen);
+        Collector collector = new Collector(gridMarks, minOpen, numOpen, random);
         if (Analyzer.analyze(gridMarks, collector, OPTS)) {
           score += collector.getElapsedMinutes();
           if (callback != null) callback.updateEstimate(score);
@@ -208,39 +210,39 @@ public class Evaluator {
       if (numOpen < minOpen) minOpen = numOpen;
     }
 
-    void runDisproof(@Nullable Callback callback) {
-      do {
-        eliminateOne(callback);
-        runStraightShot(callback);
-      } while (status == RunStatus.INCONCLUSIVE);
-    }
-
-    void eliminateOne(@Nullable Callback callback) {
+    private void eliminateOne(@Nullable Callback callback) {
       GridMarks start = gridMarks;
-      if (!recursiveDisproofs) {
-        for (Assignment a : shuffledRemainingAssignments()) {
-          if (status == RunStatus.INTERRUPTED)
-            return;
-          if (foundSolution && solutionIntersection.get(a.location) == a.numeral)
-            continue;
-          setGridMarks(start.toBuilder().assign(a));
-          runStraightShot(callback);
-          if (status == RunStatus.ERROR) {
-            setGridMarks(start.toBuilder().eliminate(a));
-            return;
-          } else if (status == RunStatus.COMPLETE) {
-            foundSolution = true;
+      switch (difficulty) {
+        case NO_DISPROOFS:
+          difficulty = Difficulty.SIMPLE_DISPROOFS;
+          // Fall through:
+        case SIMPLE_DISPROOFS:
+          for (Assignment a : shuffledRemainingAssignments()) {
+            if (status == RunStatus.INTERRUPTED)
+              return;
+            if (foundSolution && solutionIntersection.get(a.location) == a.numeral)
+              continue;
+            setGridMarks(start.toBuilder().assign(a));
+            runStraightShot(callback);
+            if (status == RunStatus.ERROR) {
+              setGridMarks(start.toBuilder().eliminate(a));
+              return;
+            } else if (status == RunStatus.COMPLETE) {
+              foundSolution = true;
+            }
           }
-        }
+          // If we make it here, we've exhausted the simple disproofs.
+          difficulty = Difficulty.RECURSIVE_DISPROOFS;
+          // Fall through:
+        case RECURSIVE_DISPROOFS:
+          Assignment impossible = randomErroneousAssignment();
+          setGridMarks(start.toBuilder().assign(impossible));
+          runErrorSearch(callback);
+          setGridMarks(start.toBuilder().eliminate(impossible));
       }
-      recursiveDisproofs = true;
-      Assignment impossible = randomErroneousAssignment();
-      setGridMarks(start.toBuilder().assign(impossible));
-      runErrorSearch(callback);
-      setGridMarks(start.toBuilder().eliminate(impossible));
     }
 
-    void runErrorSearch(@Nullable Callback callback) {
+    private void runErrorSearch(@Nullable Callback callback) {
       runStraightShot(callback);
       if (status != RunStatus.INCONCLUSIVE) return;
 
@@ -414,6 +416,7 @@ public class Evaluator {
     private final GridMarks gridMarks;
     private final int numOpen;
     private final int minOpen;
+    private final Random random;
     private final LocSet locTargets = new LocSet();
     private final UnitNumSet unitNumTargets = new UnitNumSet();
     private final Map<Assignment, MoveKind> kinds = Maps.newHashMap();
@@ -426,10 +429,11 @@ public class Evaluator {
     private int numMoveInsights;
     private int numErrors;
 
-    public Collector(GridMarks gridMarks, int numOpen, int minOpen) {
+    public Collector(GridMarks gridMarks, int numOpen, int minOpen, Random random) {
       this.gridMarks = gridMarks;
       this.numOpen = numOpen;
       this.minOpen = minOpen;
+      this.random = random;
     }
 
     @Override public void take(Insight insight) throws StopException {

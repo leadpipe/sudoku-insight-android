@@ -23,15 +23,16 @@ import java.util.Iterator;
 /** The object returned by the {@link Evaluator}. */
 public class Rating {
   /**
-   * Intrinsic degrees of difficulty for Sudokus.  "No disproofs" means that the
-   * basic solution rules are sufficient to solve the puzzle.  "Simple
-   * disproofs" means that disproving possible assignments using the basic
-   * solution rules is sufficient.  "Recursive disproofs" means that there
-   * aren't enough simple disproofs available to solve the puzzle, so you must
-   * disprove subsequent assignments while trying to disprove initial ones.
+   * Degrees of difficulty for Sudokus.  "No disproofs" means that the basic
+   * solution rules are sufficient to solve the puzzle.  "Simple disproofs"
+   * means that disproving possible assignments using the basic solution rules
+   * is sufficient.  "Recursive disproofs" means that there aren't enough simple
+   * disproofs available to solve the puzzle, so you must disprove subsequent
+   * assignments while trying to disprove initial ones.
    *
-   * <p> Note that SIMPLE_DISPROOFS may not be strictly true, if there are
-   * possible moves that the evaluator considers too hard to find.
+   * <p> Note that SIMPLE_DISPROOFS is returned even if the basic solution rules
+   * would be sufficient, if the evaluator considers some of these moves too
+   * hard to find.
    */
   public enum Difficulty {
     NO_DISPROOFS,
@@ -44,6 +45,9 @@ public class Rating {
   /** The puzzle's score. This is an estimate of the expected solution time in
       minutes. */
   public final double score;
+  /** The standard deviation for the distribution of scores in the evaluator's
+      trials. */
+  public final double standardDeviation;
   /** Whether the evaluation was complete; if false, the score is probably
       less than it would have been if allowed to finish. */
   public final boolean evalComplete;
@@ -52,10 +56,11 @@ public class Rating {
   /** Whether the puzzle has more than one solution. */
   public final boolean improper;
 
-  public Rating(int algorithmVersion, double score, boolean evalComplete, Difficulty difficulty,
-      boolean improper) {
+  public Rating(int algorithmVersion, double score, double standardDeviation, boolean evalComplete,
+                Difficulty difficulty, boolean improper) {
     this.algorithmVersion = algorithmVersion;
     this.score = score;
+    this.standardDeviation = standardDeviation;
     this.evalComplete = evalComplete;
     this.difficulty = difficulty;
     this.improper = improper;
@@ -63,7 +68,7 @@ public class Rating {
 
   /** Renders this result in a string form that can be reversed by {@link #deserialize}. */
   public String serialize() {
-    return JOINER.join(algorithmVersion, score, evalComplete, difficulty.ordinal(), improper);
+    return JOINER.join(algorithmVersion, score, evalComplete, difficulty.ordinal(), improper, standardDeviation);
   }
 
   @Override public String toString() {
@@ -78,7 +83,9 @@ public class Rating {
     boolean evalComplete = Boolean.parseBoolean(it.next());
     Difficulty difficulty = Difficulty.values()[Integer.parseInt(it.next())];
     boolean improper = Boolean.parseBoolean(it.next());
+    double standardDeviation = 0;
     if (algorithmVersion == 1) score /= 60;
-    return new Rating(algorithmVersion, score, evalComplete, difficulty, improper);
+    if (algorithmVersion >= 6) standardDeviation = Double.parseDouble(it.next());
+    return new Rating(algorithmVersion, score, standardDeviation, evalComplete, difficulty, improper);
   }
 }

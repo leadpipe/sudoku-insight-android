@@ -15,6 +15,9 @@ limitations under the License.
 */
 package us.blanshard.sudoku.stats;
 
+import static java.lang.Math.max;
+
+import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.stats.Pattern.UnitCategory;
 
@@ -43,21 +46,9 @@ import javax.annotation.concurrent.Immutable;
 public abstract class Sp implements Comparable<Sp> {
 
   protected final Type type;
-  protected final int openCountBucket;
-  protected final int numAssignmentsBucket;
 
-  private static final int OPEN_COUNT_BUCKET_SIZE = 20;
-  private static final int NUM_ASSIGNMENTS_BUCKET_SIZE = 3;
-
-  Sp(Type type, int openCount, int numAssignments) {
+  Sp(Type type) {
     this.type = type;
-    this.openCountBucket = bucket(openCount, OPEN_COUNT_BUCKET_SIZE, 3);
-    this.numAssignmentsBucket = bucket(numAssignments, NUM_ASSIGNMENTS_BUCKET_SIZE, 4);
-  }
-
-  static int bucket(int count, int bucketSize, int maxBuckets) {
-    int bucket = count / bucketSize * bucketSize;
-    return Math.min(bucket, bucketSize * (maxBuckets - 1));
   }
 
   public final Type getType() {
@@ -65,12 +56,7 @@ public abstract class Sp implements Comparable<Sp> {
   }
 
   public Appendable appendTo(Appendable a) throws IOException {
-    a.append(String.valueOf(openCountBucket))
-        .append(':')
-        .append(String.valueOf(numAssignmentsBucket))
-        .append(':')
-        .append(type.getName())
-        .append(':');
+    a.append(type.getName()).append(':');
     appendGutsTo(a);
     return a;
   }
@@ -84,33 +70,33 @@ public abstract class Sp implements Comparable<Sp> {
     }
   }
 
-  public static Sp fromPattern(Pattern pattern, int openCount, int numAssignments) {
+  public static Sp fromPattern(Pattern pattern, int openCount) {
     switch (pattern.getType()) {
       case CONFLICT:
-        return conflict((Pattern.Conflict) pattern, openCount, numAssignments);
+        return conflict((Pattern.Conflict) pattern, openCount);
       case BARRED_LOCATION:
-        return barredLocation((Pattern.BarredLoc) pattern, openCount, numAssignments);
+        return barredLocation((Pattern.BarredLoc) pattern, openCount);
       case BARRED_NUMERAL:
-        return barredNumeral((Pattern.BarredNum) pattern, openCount, numAssignments);
+        return barredNumeral((Pattern.BarredNum) pattern);
       case FORCED_LOCATION:
-        return forcedLocation((Pattern.ForcedLoc) pattern, openCount, numAssignments);
+        return forcedLocation((Pattern.ForcedLoc) pattern);
       case FORCED_NUMERAL:
-        return forcedNumeral((Pattern.ForcedNum) pattern, openCount, numAssignments);
+        return forcedNumeral((Pattern.ForcedNum) pattern, openCount);
       case OVERLAP:
-        return overlap((Pattern.Overlap) pattern, openCount, numAssignments);
+        return overlap((Pattern.Overlap) pattern, openCount);
       case LOCKED_SET:
-        return lockedSet((Pattern.LockedSet) pattern, openCount, numAssignments);
+        return lockedSet((Pattern.LockedSet) pattern);
       case IMPLICATION:
-        return implication2((Pattern.Implication) pattern, openCount, numAssignments);
+        return implication2((Pattern.Implication) pattern, openCount);
       default:
         throw new IllegalArgumentException();
     }
   }
 
-  public static Sp fromList(List<? extends Pattern> patterns, int openCount, int numAssignments) {
+  public static Sp fromList(List<? extends Pattern> patterns, int openCount) {
     if (patterns.isEmpty()) return NONE;
-    if (patterns.size() == 1) return fromPattern(patterns.get(0), openCount, numAssignments);
-    return combination2(patterns, openCount, numAssignments);
+    if (patterns.size() == 1) return fromPattern(patterns.get(0), openCount);
+    return combination2(patterns, openCount);
   }
 
   public enum Type {
@@ -149,13 +135,7 @@ public abstract class Sp implements Comparable<Sp> {
   }
 
   @Override public int compareTo(Sp that) {
-    int answer = ComparisonChain.start()
-        .compare(this.type, that.type)
-        // Backwards for #open locations
-        .compare(that.openCountBucket, this.openCountBucket)
-        // Backwards for #assignments
-        .compare(that.numAssignmentsBucket, this.numAssignmentsBucket)
-        .result();
+    int answer = this.type.compareTo(that.type);
     if (answer == 0) answer = this.compareToGuts(that);
     return answer;
   }
@@ -165,13 +145,11 @@ public abstract class Sp implements Comparable<Sp> {
     if (o == this) return true;
     if (o.getClass() != this.getClass()) return false;
     Sp that = (Sp) o;
-    return this.type == that.type
-        && this.openCountBucket == that.openCountBucket
-        && this.numAssignmentsBucket == that.numAssignmentsBucket;
+    return this.type == that.type;
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(type, openCountBucket, numAssignmentsBucket);
+    return type.hashCode();
   }
 
   protected abstract Appendable appendGutsTo(Appendable a) throws IOException;
@@ -184,8 +162,8 @@ public abstract class Sp implements Comparable<Sp> {
   public static abstract class UnitBased extends Sp {
     private final UnitCategory category;
 
-    UnitBased(Type type, int openCount, int numAssignments, UnitCategory category) {
-      super(type, openCount, numAssignments);
+    UnitBased(Type type, UnitCategory category) {
+      super(type);
       this.category = category;
     }
 
@@ -218,53 +196,31 @@ public abstract class Sp implements Comparable<Sp> {
    * location, this class counts those adjacent numerals in detail.
    */
   public static final class PeerMetrics implements Comparable<PeerMetrics> {
-    public final int openInBlock;
-    public final int openInLines;  // but not block
-    public final boolean bothLinesRequired;
+    /**
+     * How many more assignments are in the fullest unit, compared to the
+     * average number of assignments per unit overall, rounded down and clipped
+     * at zero.
+     */
+    public final int deltaOverAverage;
 
-    public PeerMetrics(Pattern.PeerMetrics that) {
-      int openInBlock = 0;
-      int openInLines = 0;
-      boolean row = false, col = false;
+    public PeerMetrics(Pattern.PeerMetrics that, int openCount) {
+      int setInFullestUnit = 0;
       for (Unit.Type t : Unit.Type.values()) {
-        for (int chunk = 0; chunk < 3; ++chunk) {
-          int openInChunk = 0;
-          boolean useChunk = true;
-          for (int item = 0; item < 3; ++item) {
-            int i = chunk * 3 + item;
-            switch (that.getLocationCategory(t, i)) {
-              case Pattern.PeerMetrics.UNSET:
-                ++openInChunk;
-                break;
-              case Pattern.PeerMetrics.TARGET:
-                useChunk = false;
-                break;
-              case Pattern.PeerMetrics.ROW_BIT:
-                row = true;
-                break;
-              case Pattern.PeerMetrics.COLUMN_BIT:
-                col = true;
-                break;
-            }
-          }
-          if (t == Unit.Type.BLOCK)
-            openInBlock += openInChunk;
-          else if (useChunk)
-            openInLines += openInChunk;
+        int setInUnit = 0;
+        int unitBit = Pattern.PeerMetrics.unitBit(t);
+        for (int i = 0; i < 9; ++i) {
+          byte cat = that.getLocationCategory(t, i);
+          if ((cat & unitBit) != 0)
+            ++setInUnit;
         }
+        setInFullestUnit = max(setInFullestUnit, setInUnit);
       }
-      this.openInBlock = bucket(openInBlock, 3, 3);
-      this.openInLines = bucket(openInLines, 4, 3);
-      this.bothLinesRequired = row & col;
+      double averageSetPerUnit = (Location.COUNT - openCount) / 9.0;
+      this.deltaOverAverage = max(0, (int) (setInFullestUnit - averageSetPerUnit));
     }
 
     public Appendable appendTo(Appendable a) throws IOException {
-      a.append(String.valueOf(openInBlock))
-          .append(':')
-          .append(String.valueOf(openInLines))
-          .append(':')
-          .append(String.valueOf(bothLinesRequired));
-      return a;
+      return a.append(String.valueOf(deltaOverAverage));
     }
 
     @Override public String toString() {
@@ -280,20 +236,16 @@ public abstract class Sp implements Comparable<Sp> {
     @Override public boolean equals(Object o) {
       if (!(o instanceof PeerMetrics)) return false;
       PeerMetrics that = (PeerMetrics) o;
-      return this.openInBlock == that.openInBlock
-          && this.openInLines == that.openInLines
-          && this.bothLinesRequired == that.bothLinesRequired;
+      return this.deltaOverAverage == that.deltaOverAverage;
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(openInBlock, openInLines, bothLinesRequired);
+      return Objects.hashCode(deltaOverAverage);
     }
 
     @Override public int compareTo(PeerMetrics that) {
       return ComparisonChain.start()
-          .compare(this.openInBlock, that.openInBlock)
-          .compare(this.openInLines, that.openInLines)
-          .compareFalseFirst(this.bothLinesRequired, that.bothLinesRequired)
+          .compare(this.deltaOverAverage, that.deltaOverAverage)
           .result();
     }
   }
@@ -304,8 +256,8 @@ public abstract class Sp implements Comparable<Sp> {
   public static abstract class PeerMetricsBased extends Sp {
     private final PeerMetrics metrics;
 
-    PeerMetricsBased(Type type, int openCount, int numAssignments, PeerMetrics metrics) {
-      super(type, openCount, numAssignments);
+    PeerMetricsBased(Type type, PeerMetrics metrics) {
+      super(type);
       this.metrics = metrics;
     }
 
@@ -338,27 +290,26 @@ public abstract class Sp implements Comparable<Sp> {
    * unit category.
    */
   public static final class Conflict extends UnitBased {
-    Conflict(int openCount, int numAssignments, UnitCategory category) {
-      super(Type.CONFLICT, openCount, numAssignments, category);
+    Conflict(int openCount, UnitCategory category) {
+      super(Type.CONFLICT, category);
     }
   }
 
-  public static Conflict conflict(Pattern.Conflict conflict, int openCount, int numAssignments) {
-    return new Conflict(openCount, numAssignments, conflict.getCategory());
+  public static Conflict conflict(Pattern.Conflict conflict, int openCount) {
+    return new Conflict(openCount, conflict.getCategory());
   }
 
   /**
    * The patterns for a location with no possible assignments.
    */
   public static final class BarredLoc extends PeerMetricsBased {
-    BarredLoc(int openCount, int numAssignments, PeerMetrics metrics) {
-      super(Type.BARRED_LOCATION, openCount, numAssignments, metrics);
+    BarredLoc(PeerMetrics metrics) {
+      super(Type.BARRED_LOCATION, metrics);
     }
   }
 
-  public static BarredLoc barredLocation(Pattern.BarredLoc barredLocation, int openCount,
-      int numAssignments) {
-    return new BarredLoc(openCount, numAssignments, new PeerMetrics(barredLocation.getMetrics()));
+  public static BarredLoc barredLocation(Pattern.BarredLoc barredLocation, int openCount) {
+    return new BarredLoc(new PeerMetrics(barredLocation.getMetrics(), openCount));
   }
 
   /**
@@ -366,14 +317,13 @@ public abstract class Sp implements Comparable<Sp> {
    * unit.
    */
   public static final class BarredNum extends UnitBased {
-    BarredNum(int openCount, int numAssignments, UnitCategory category) {
-      super(Type.BARRED_NUMERAL, openCount, numAssignments, category);
+    BarredNum(UnitCategory category) {
+      super(Type.BARRED_NUMERAL, category);
     }
   }
 
-  public static BarredNum barredNumeral(Pattern.BarredNum barredNumeral, int openCount,
-      int numAssignments) {
-    return new BarredNum(openCount, numAssignments, barredNumeral.getCategory());
+  public static BarredNum barredNumeral(Pattern.BarredNum barredNumeral) {
+    return new BarredNum(barredNumeral.getCategory());
   }
 
   /**
@@ -381,28 +331,26 @@ public abstract class Sp implements Comparable<Sp> {
    * given unit.
    */
   public static final class ForcedLoc extends UnitBased {
-    ForcedLoc(int openCount, int numAssignments, UnitCategory category) {
-      super(Type.FORCED_LOCATION, openCount, numAssignments, category);
+    ForcedLoc(UnitCategory category) {
+      super(Type.FORCED_LOCATION, category);
     }
   }
 
-  public static ForcedLoc forcedLocation(Pattern.ForcedLoc forcedLocation, int openCount,
-      int numAssignments) {
-    return new ForcedLoc(openCount, numAssignments, forcedLocation.getCategory());
+  public static ForcedLoc forcedLocation(Pattern.ForcedLoc forcedLocation) {
+    return new ForcedLoc(forcedLocation.getCategory());
   }
 
   /**
    * The patterns for a location with a single possible numeral assignment.
    */
   public static final class ForcedNum extends PeerMetricsBased {
-    ForcedNum(int openCount, int numAssignments, PeerMetrics metrics) {
-      super(Type.FORCED_NUMERAL, openCount, numAssignments, metrics);
+    ForcedNum(PeerMetrics metrics) {
+      super(Type.FORCED_NUMERAL, metrics);
     }
   }
 
-  public static ForcedNum forcedNumeral(Pattern.ForcedNum forcedNumeral, int openCount,
-      int numAssignments) {
-    return new ForcedNum(openCount, numAssignments, new PeerMetrics(forcedNumeral.getMetrics()));
+  public static ForcedNum forcedNumeral(Pattern.ForcedNum forcedNumeral, int openCount) {
+    return new ForcedNum(new PeerMetrics(forcedNumeral.getMetrics(), openCount));
   }
 
   /**
@@ -411,13 +359,13 @@ public abstract class Sp implements Comparable<Sp> {
    * locations in the second unit.
    */
   public static final class Overlap extends UnitBased {
-    Overlap(int openCount, int numAssignments, UnitCategory category) {
-      super(Type.OVERLAP, openCount, numAssignments, category);
+    Overlap(int openCount, UnitCategory category) {
+      super(Type.OVERLAP, category);
     }
   }
 
-  public static Overlap overlap(Pattern.Overlap overlap, int openCount, int numAssignments) {
-    return new Overlap(openCount, numAssignments, overlap.getCategory());
+  public static Overlap overlap(Pattern.Overlap overlap, int openCount) {
+    return new Overlap(openCount, overlap.getCategory());
   }
 
   /**
@@ -428,8 +376,8 @@ public abstract class Sp implements Comparable<Sp> {
     private final int setSize;
     private final boolean isNaked;
 
-    LockedSet(int openCount, int numAssignments, UnitCategory category, int setSize, boolean isNaked) {
-      super(Type.LOCKED_SET, openCount, numAssignments, category);
+    LockedSet(UnitCategory category, int setSize, boolean isNaked) {
+      super(Type.LOCKED_SET, category);
       this.setSize = setSize;
       this.isNaked = isNaked;
     }
@@ -464,8 +412,8 @@ public abstract class Sp implements Comparable<Sp> {
     }
   }
 
-  public static LockedSet lockedSet(Pattern.LockedSet lockedSet, int openCount, int numAssignments) {
-    return new LockedSet(openCount, numAssignments, lockedSet.getCategory(), lockedSet.getSetSize(), lockedSet.isNaked());
+  public static LockedSet lockedSet(Pattern.LockedSet lockedSet) {
+    return new LockedSet(lockedSet.getCategory(), lockedSet.getSetSize(), lockedSet.isNaked());
   }
 
   /**
@@ -475,8 +423,8 @@ public abstract class Sp implements Comparable<Sp> {
     private final List<Sp> antecedents;
     private final Sp consequent;
 
-    private Implication(int openCount, int numAssignments, List<Sp> antecedents, Sp consequent) {
-      super(Type.IMPLICATION, openCount, numAssignments);
+    private Implication(List<Sp> antecedents, Sp consequent) {
+      super(Type.IMPLICATION);
       this.antecedents = antecedents;
       this.consequent = consequent;
     }
@@ -507,16 +455,13 @@ public abstract class Sp implements Comparable<Sp> {
     }
   }
 
-  public static Implication implication(Pattern.Implication implication, final int openCount,
-      final int numAssignments) {
+  public static Implication implication(Pattern.Implication implication, final int openCount) {
     return new Implication(
-        openCount,
-        numAssignments,
         Lists.transform(implication.getAntecedents(), new Function<Pattern, Sp>() {
           @Override public Sp apply(Pattern p) {
-            return Sp.fromPattern(p, openCount, numAssignments);
+            return Sp.fromPattern(p, openCount);
           }
-        }), Sp.fromPattern(implication.getConsequent(), openCount, numAssignments));
+        }), Sp.fromPattern(implication.getConsequent(), openCount));
   }
 
   /**
@@ -526,8 +471,8 @@ public abstract class Sp implements Comparable<Sp> {
     private final List<Type> antecedents;
     private final Type consequent;
 
-    private Implication2(int openCount, int numAssignments, List<Type> antecedents, Type consequent) {
-      super(Type.IMPLICATION2, openCount, numAssignments);
+    private Implication2(List<Type> antecedents, Type consequent) {
+      super(Type.IMPLICATION2);
       this.antecedents = antecedents;
       this.consequent = consequent;
     }
@@ -563,16 +508,13 @@ public abstract class Sp implements Comparable<Sp> {
     }
   }
 
-  public static Implication2 implication2(Pattern.Implication implication, final int openCount,
-      final int numAssignments) {
+  public static Implication2 implication2(Pattern.Implication implication, final int openCount) {
     return new Implication2(
-        openCount,
-        numAssignments,
         Lists.transform(implication.getAntecedents(), new Function<Pattern, Type>() {
           @Override public Type apply(Pattern p) {
-            return Sp.fromPattern(p, openCount, numAssignments).type;
+            return Sp.fromPattern(p, openCount).type;
           }
-        }), Sp.fromPattern(implication.getConsequent(), openCount, numAssignments).type);
+        }), Sp.fromPattern(implication.getConsequent(), openCount).type);
   }
 
   /**
@@ -581,8 +523,8 @@ public abstract class Sp implements Comparable<Sp> {
   public static class Combination extends Sp {
     private final List<Sp> parts;
 
-    private Combination(int openCount, int numAssignments, List<Sp> parts) {
-      super(Type.COMBINATION, openCount, numAssignments);
+    private Combination(List<Sp> parts) {
+      super(Type.COMBINATION);
       this.parts = parts;
     }
 
@@ -609,13 +551,11 @@ public abstract class Sp implements Comparable<Sp> {
     }
   }
 
-  public static Combination combination(List<Pattern> parts, final int openCount,
-      final int numAssignments) {
+  public static Combination combination(List<Pattern> parts, final int openCount) {
     return new Combination(
-        openCount,
-        numAssignments, Lists.transform(parts, new Function<Pattern, Sp>() {
+        Lists.transform(parts, new Function<Pattern, Sp>() {
           @Override public Sp apply(Pattern p) {
-            return Sp.fromPattern(p, openCount, numAssignments);
+            return Sp.fromPattern(p, openCount);
           }
         }));
   }
@@ -626,8 +566,8 @@ public abstract class Sp implements Comparable<Sp> {
   public static class Combination2 extends Sp {
     private final SortedMultiset<Type> parts;
 
-    private Combination2(int openCount, int numAssignments, SortedMultiset<Type> parts) {
-      super(Type.COMBINATION2, openCount, numAssignments);
+    private Combination2(SortedMultiset<Type> parts) {
+      super(Type.COMBINATION2);
       this.parts = parts;
     }
 
@@ -660,13 +600,11 @@ public abstract class Sp implements Comparable<Sp> {
     }
   }
 
-  public static Combination2 combination2(List<? extends Pattern> parts, final int openCount,
-      final int numAssignments) {
+  public static Combination2 combination2(List<? extends Pattern> parts, final int openCount) {
     return new Combination2(
-        openCount,
-        numAssignments, TreeMultiset.create(Lists.transform(parts, new Function<Pattern, Type>() {
+        TreeMultiset.create(Lists.transform(parts, new Function<Pattern, Type>() {
           @Override public Type apply(Pattern p) {
-            return Sp.fromPattern(p, openCount, numAssignments).type;
+            return Sp.fromPattern(p, openCount).type;
           }
         })));
   }
@@ -677,7 +615,7 @@ public abstract class Sp implements Comparable<Sp> {
    */
   public static class None extends Sp {
     private None() {
-      super(Type.NONE, 0, 0);
+      super(Type.NONE);
     }
 
     @Override public Appendable appendTo(Appendable a) throws IOException {

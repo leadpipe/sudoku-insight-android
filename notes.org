@@ -3,7 +3,9 @@
 *** TODO Investigate recent puzzles
 - categories: estimate way too high, way too low, high, low, close to perfect
 - add columns for the pattern that the estimator found, and patterns matching actual move
-*** TODO One more round needed [0/3]
+*** TODO One more round needed [0/5]
+- [ ] change to always simulate n times; add std dev to rating
+- [ ] instead of playable boolean, have probability of playing
 - [ ] refine def of "simply": some hidden sets are way too hard to see
 - [ ] look into adding a third level of implication complexity
 - [ ] look for commonalities in missed simply and complexly implied moves
@@ -39,21 +41,15 @@ END
 **** singleTop should do the trick
 
 ** App/UI cleanups
+*** TODO Show rating overlay on resume instead of just diving back into the puzzle
+- need alternate button names
 *** TODO Add a way to import a collection of puzzles: .sdm file [2/3]
 - [X] basic implementation
 - [X] add progress, and disable the button while saving to db
 - [ ] ensure rating service will rate them all, before historical ones
-*** DONE Fix activities so SudokuActivity is always root (when it appears)
-*** DONE "Play" from info doesn't start a new puzzle if the current one hasn't been started
-*** DONE Instead of skipping improper puzzles, show a warning on the rating view
-- and maybe show a warning in the rating area of the board too
-- kill ImproperDialog
 *** TODO Add a help link after "Improper"
 - use scheme filter idea
 *** TODO Show collection name(s) in the rating view when there's no name
-*** +In the rating view, show a spinner with all the collections that have pending puzzles+
-- need a pref for current collection
-- set it when capture a puzzle (to Captured) or a collection (to the collection captured)
 *** TODO Fix the list fragment so it maintains current scroll on update
 - currently jumps back to selected item, not always what you want (in
   particular, not when stats or rating has been updated, or on resume)
