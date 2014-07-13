@@ -23,6 +23,8 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.core.UnitSubset;
+import us.blanshard.sudoku.insight.Analyzer;
 import us.blanshard.sudoku.insight.Evaluator.MoveKind;
 
 import com.google.common.base.Joiner;
@@ -624,11 +626,13 @@ public abstract class Pattern implements Comparable<Pattern> {
   public static final class LockedSet extends UnitBased {
     private final int setSize;
     private final boolean isNaked;
+    private final boolean isCompact;
 
-    LockedSet(UnitCategory category, int setSize, boolean isNaked) {
+    LockedSet(UnitCategory category, int setSize, boolean isNaked, boolean isCompact) {
       super(Type.LOCKED_SET, category);
       this.setSize = setSize;
       this.isNaked = isNaked;
+      this.isCompact = isCompact;
     }
 
     public int getSetSize() {
@@ -639,6 +643,10 @@ public abstract class Pattern implements Comparable<Pattern> {
       return isNaked;
     }
 
+    public boolean isCompact() {
+      return isCompact;
+    }
+
     @Override public int getScanTargetCount() {
       return setSize;
     }
@@ -647,13 +655,14 @@ public abstract class Pattern implements Comparable<Pattern> {
       if (super.equals(o)) {
         LockedSet that = (LockedSet) o;
         return this.setSize == that.setSize
-            && this.isNaked == that.isNaked;
+            && this.isNaked == that.isNaked
+            && this.isCompact == that.isCompact;
       }
       return false;
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(super.hashCode(), setSize, isNaked);
+      return Objects.hashCode(super.hashCode(), setSize, isNaked, isCompact);
     }
 
     @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
@@ -661,7 +670,9 @@ public abstract class Pattern implements Comparable<Pattern> {
           .append(':')
           .append(String.valueOf(setSize))
           .append(':')
-          .append(isNaked ? 'n' : 'h');
+          .append(isNaked ? 'n' : 'h')
+          .append(':')
+          .append(isCompact ? 'c' : 'd');
     }
 
     public static LockedSet fromString(String s) {
@@ -671,7 +682,7 @@ public abstract class Pattern implements Comparable<Pattern> {
     private static LockedSet fromPieces(Iterator<String> pieces) {
       UnitCategory category = UnitCategory.fromString(pieces.next());
       int setSize = Integer.parseInt(pieces.next());
-      String s = Iterators.getOnlyElement(pieces);
+      String s = pieces.next();
       checkArgument(s.length() == 1);
       boolean isNaked;
       switch (s.charAt(0)) {
@@ -679,12 +690,45 @@ public abstract class Pattern implements Comparable<Pattern> {
         case 'h': isNaked = false; break;
         default: throw new IllegalArgumentException(s);
       }
-      return lockedSet(category, setSize, isNaked);
+      s = Iterators.getOnlyElement(pieces);
+      checkArgument(s.length() == 1);
+      boolean isCompact;
+      switch (s.charAt(0)) {
+        case 'c': isCompact = true;  break;
+        case 'd': isCompact = false; break;
+        default: throw new IllegalArgumentException(s);
+      }
+      return new LockedSet(category, setSize, isNaked, isCompact);
     }
   }
 
-  public static LockedSet lockedSet(UnitCategory category, int setSize, boolean isNaked) {
-    return new LockedSet(category, setSize, isNaked);
+  public static LockedSet lockedSet(us.blanshard.sudoku.insight.LockedSet set, Grid grid) {
+    UnitCategory category = UnitCategory.forUnit(set.getLocations().unit);
+    int setSize = set.getLocations().size();
+    boolean isNaked = set.isNakedSet();
+    boolean isCompact = false;
+    NumSet unitNums = NumSet.NONE;
+    UnitSubset remainder = set.getLocations();
+    for (Location loc : remainder.unit) {
+      if (grid.containsKey(loc)) {
+        unitNums = unitNums.with(grid.get(loc));
+        if (!isNaked)
+          remainder = remainder.with(loc);
+      }
+    }
+    // For hidden sets, find the complement locations.
+    if (!isNaked)
+      remainder = remainder.not();
+    Unit overlap = Analyzer.findOverlappingUnit(remainder);
+    if (overlap != null) {
+      NumSet inOverlap = NumSet.NONE;
+      for (Location loc : overlap)
+        if (grid.containsKey(loc))
+          inOverlap = inOverlap.with(grid.get(loc));
+      NumSet target = isNaked ? unitNums.not().minus(set.getNumerals()) : set.getNumerals();
+      isCompact = target.isSubsetOf(inOverlap);
+    }
+    return new LockedSet(category, setSize, isNaked, isCompact);
   }
 
   /**

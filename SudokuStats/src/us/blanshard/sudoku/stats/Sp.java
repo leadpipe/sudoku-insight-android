@@ -203,24 +203,38 @@ public abstract class Sp implements Comparable<Sp> {
      */
     public final int deltaOverAverage;
 
+    /**
+     * True if any two of the location's units cover all of the numerals
+     * assigned to peers.
+     */
+    public final boolean areTwoUnitsSufficient;
+
     public PeerMetrics(Pattern.PeerMetrics that, int openCount) {
       int setInFullestUnit = 0;
+      int unitsRequired = 0;
       for (Unit.Type t : Unit.Type.values()) {
         int setInUnit = 0;
+        boolean unitRequired = false;
         int unitBit = Pattern.PeerMetrics.unitBit(t);
         for (int i = 0; i < 9; ++i) {
           byte cat = that.getLocationCategory(t, i);
           if ((cat & unitBit) != 0)
             ++setInUnit;
+          if (cat == unitBit)
+            unitRequired = true;  // This numeral is only set in this unit
         }
         setInFullestUnit = max(setInFullestUnit, setInUnit);
+        if (unitRequired) ++unitsRequired;
       }
-      double averageSetPerUnit = (Location.COUNT - openCount) / 9.0;
-      this.deltaOverAverage = max(0, (int) (setInFullestUnit - averageSetPerUnit));
+      int averageSetPerUnit = (Location.COUNT - openCount) / 9;
+      this.deltaOverAverage = max(0, setInFullestUnit - averageSetPerUnit);
+      this.areTwoUnitsSufficient = unitsRequired <= 2;
     }
 
     public Appendable appendTo(Appendable a) throws IOException {
-      return a.append(String.valueOf(deltaOverAverage));
+      return a.append(String.valueOf(deltaOverAverage))
+          .append(':')
+          .append(String.valueOf(areTwoUnitsSufficient));
     }
 
     @Override public String toString() {
@@ -236,16 +250,19 @@ public abstract class Sp implements Comparable<Sp> {
     @Override public boolean equals(Object o) {
       if (!(o instanceof PeerMetrics)) return false;
       PeerMetrics that = (PeerMetrics) o;
-      return this.deltaOverAverage == that.deltaOverAverage;
+      return this.deltaOverAverage == that.deltaOverAverage
+          && this.areTwoUnitsSufficient == that.areTwoUnitsSufficient;
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(deltaOverAverage);
+      return Objects.hashCode(deltaOverAverage, areTwoUnitsSufficient);
     }
 
     @Override public int compareTo(PeerMetrics that) {
       return ComparisonChain.start()
-          .compare(this.deltaOverAverage, that.deltaOverAverage)
+          // Note reversing order:
+          .compare(that.deltaOverAverage, this.deltaOverAverage)
+          .compareTrueFirst(this.areTwoUnitsSufficient, that.areTwoUnitsSufficient)
           .result();
     }
   }
@@ -375,11 +392,13 @@ public abstract class Sp implements Comparable<Sp> {
   public static final class LockedSet extends UnitBased {
     private final int setSize;
     private final boolean isNaked;
+    private final boolean isCompact;
 
-    LockedSet(UnitCategory category, int setSize, boolean isNaked) {
+    LockedSet(UnitCategory category, int setSize, boolean isNaked, boolean isCompact) {
       super(Type.LOCKED_SET, category);
       this.setSize = setSize;
       this.isNaked = isNaked;
+      this.isCompact = isCompact;
     }
 
     public int getSetSize() {
@@ -390,17 +409,22 @@ public abstract class Sp implements Comparable<Sp> {
       return isNaked;
     }
 
+    public boolean isCompact() {
+      return isCompact;
+    }
+
     @Override public boolean equals(Object o) {
       if (super.equals(o)) {
         LockedSet that = (LockedSet) o;
         return this.setSize == that.setSize
-            && this.isNaked == that.isNaked;
+            && this.isNaked == that.isNaked
+            && this.isCompact == that.isCompact;
       }
       return false;
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(super.hashCode(), setSize, isNaked);
+      return Objects.hashCode(super.hashCode(), setSize, isNaked, isCompact);
     }
 
     @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
@@ -408,12 +432,15 @@ public abstract class Sp implements Comparable<Sp> {
           .append(':')
           .append(String.valueOf(setSize))
           .append(':')
-          .append(isNaked ? 'n' : 'h');
+          .append(isNaked ? 'n' : 'h')
+          .append(':')
+          .append(isCompact ? 'c' : 'd');
     }
   }
 
   public static LockedSet lockedSet(Pattern.LockedSet lockedSet) {
-    return new LockedSet(lockedSet.getCategory(), lockedSet.getSetSize(), lockedSet.isNaked());
+    return new LockedSet(
+        lockedSet.getCategory(), lockedSet.getSetSize(), lockedSet.isNaked(), lockedSet.isCompact());
   }
 
   /**
