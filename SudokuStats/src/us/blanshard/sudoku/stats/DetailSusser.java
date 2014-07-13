@@ -282,7 +282,7 @@ public class DetailSusser {
   private static final int COUNT = 6;
   private static final Reporter[] reporters = new Reporter[COUNT];
   private static final Reporter reporter = new Reporter();
-  private static boolean single = false;
+  private static boolean single = true;
 
   private static Reporter getReporter(int minOpen, int numTrails) {
     if (single) return reporter;
