@@ -5,9 +5,9 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SudokuAppEngine"/>
 	<classpathentry kind="lib" path="/SharedLibs/commons-math3.jar"/>
-	<classpathentry kind="lib" path="/Users/leadpipe/dev/eclipse/plugins/com.google.appengine.eclipse.sdkbundle_1.8.9/appengine-java-sdk-1.8.9/lib/impl/appengine-api-stubs.jar"/>
-	<classpathentry kind="lib" path="/Users/leadpipe/dev/eclipse/plugins/com.google.appengine.eclipse.sdkbundle_1.8.9/appengine-java-sdk-1.8.9/lib/testing/appengine-testing.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/Users/leadpipe/dev/eclipse/plugins/com.google.appengine.eclipse.sdkbundle_1.9.7/appengine-java-sdk-1.9.7/lib/impl/appengine-api-stubs.jar"/>
+	<classpathentry kind="lib" path="/Users/leadpipe/dev/eclipse/plugins/com.google.appengine.eclipse.sdkbundle_1.9.7/appengine-java-sdk-1.9.7/lib/testing/appengine-testing.jar"/>
 	<classpathentry kind="con" path="com.google.appengine.eclipse.core.GAE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
