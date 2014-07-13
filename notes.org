@@ -3,12 +3,11 @@
 *** TODO Investigate recent puzzles
 - categories: estimate way too high, way too low, high, low, close to perfect
 - add columns for the pattern that the estimator found, and patterns matching actual move
-*** TODO One more round needed [0/5]
+*** TODO One more round needed [0/4]
 - [ ] change to always simulate n times; add std dev to rating
-- [ ] instead of playable boolean, have probability of playing
-- [ ] refine def of "simply": some hidden sets are way too hard to see
-- [ ] look into adding a third level of implication complexity
-- [ ] look for commonalities in missed simply and complexly implied moves
+- [ ] instead of playable boolean, have probability of playing per pattern
+- [ ] update locked-set pattern to include enough info to recognize "simple" hidden sets
+- [ ] have InsightMeasurer emit info about errors: need to compute likelihood of seeing errors
 *** TODO Investigate distribution of times for multiple puzzles generated from the same end state
 
 ** Getting games with history from a sqlite db into a tsv file:
