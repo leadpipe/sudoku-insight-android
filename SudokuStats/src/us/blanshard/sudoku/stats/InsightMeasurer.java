@@ -15,8 +15,6 @@ limitations under the License.
  */
 package us.blanshard.sudoku.stats;
 
-import static us.blanshard.sudoku.insight.Evaluator.kindForInsight;
-
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.LocSet;
@@ -26,24 +24,29 @@ import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.UndoDetector;
 import us.blanshard.sudoku.insight.Analyzer;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
-import us.blanshard.sudoku.insight.Evaluator.MoveKind;
+import us.blanshard.sudoku.insight.BarredLoc;
+import us.blanshard.sudoku.insight.BarredNum;
+import us.blanshard.sudoku.insight.Conflict;
+import us.blanshard.sudoku.insight.ForcedLoc;
+import us.blanshard.sudoku.insight.ForcedNum;
 import us.blanshard.sudoku.insight.GridMarks;
+import us.blanshard.sudoku.insight.Implication;
 import us.blanshard.sudoku.insight.Insight;
+import us.blanshard.sudoku.insight.LockedSet;
+import us.blanshard.sudoku.insight.Overlap;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-
-import javax.annotation.Nullable;
 
 /**
  * Analyzes sudoku game histories to measure the time taken to make use of
@@ -123,9 +126,7 @@ public class InsightMeasurer implements Runnable {
           && (game.getTrail(move.trailId).getTrailhead() == null
               || game.getTrail(move.trailId).getTrailhead() == move.getLocation());
       if (isTrailhead) {
-        MinKindAndCount min = getMinAndCount(collector.moves.values());
-        Universe universe = getPlausibleUniverse(collector, min);
-        emitTrailheadLine(elapsed, numOpen, move.timestamp, min, universe);
+        emitTrailheadLine(elapsed, numOpen, move.timestamp, collector);
       } else if (collector.moves.containsKey(move.getAssignment())) {
         newBatch = new Batch(collector, move, elapsed, numOpen);
         for (Batch b : openBatches) {
@@ -150,52 +151,20 @@ public class InsightMeasurer implements Runnable {
     }
   }
 
-  static MinKindAndCount getMinAndCount(Collection<WrappedInsight> wrappedInsights) {
-    MinKindAndCount answer = new MinKindAndCount();
-    for (WrappedInsight w : wrappedInsights) {
-      answer.add(w.kind());
-    }
-    return answer;
-  }
-
-  @Nullable static Universe getPlausibleUniverse(Collector collector, MinKindAndCount min) {
-    if (min.count == 0) return null;
-    Universe universe = null;
-    Assignment assignment = null;
-    for (Assignment a : collector.moves.keySet()) {
-      for (WrappedInsight w : collector.moves.get(a))
-        if (w.kind() == min.kind) {
-          Universe u = collector.universeForAssignment(a);
-          if (universe == null || u.numerator() < universe.numerator()) {
-            universe = u;
-            assignment = a;
-          }
-          break;
-        }
-    }
-    collector.fillDenominator(universe, Collections.singleton(assignment));
-    return universe;
-  }
-
-  private void emitTrailheadLine(long elapsed, int numOpen, long timestamp, MinKindAndCount min,
-                                 @Nullable Universe universe) {
-    startLine(true, elapsed, numOpen, timestamp, min);
-    if (universe != null) emitUniverse(universe);
+  private void emitTrailheadLine(long elapsed, int numOpen, long timestamp, Collector collector) {
+    startLine(true, elapsed, numOpen, timestamp);
+    collector.emitColls(collector.moves.keySet());
     endLine();
   }
 
   private void emitBatch(Batch b) {
-    startLine(false, b.totalElapsed, b.numOpen, b.firstMove.timestamp, b.minPlayable);
-    emit(b.assignments.size());
-    emit(b.maxOfFirstMoveMins);
-    emit(b.maxOfOriginalMins);
-    emit(getMinAndCount(b.collector.errors));
+    startLine(false, b.totalElapsed, b.numOpen, b.firstMove.timestamp);
     b.emitUniverse();
+    b.emitColls();
     endLine();
   }
 
-  private void startLine(boolean isTrailhead, long elapsed, int numOpen,
-      long timestamp, MinKindAndCount min) {
+  private void startLine(boolean isTrailhead, long elapsed, int numOpen, long timestamp) {
     out.print(isTrailhead);
     emit(elapsed);
     emit(numOpen);
@@ -205,7 +174,6 @@ public class InsightMeasurer implements Runnable {
     emit(timestamp - skippedTime);
     emit(moveNumber);
     emit(moveNumber - numSkippedMoves);
-    emit(min);
   }
 
   private void endLine() {
@@ -223,15 +191,6 @@ public class InsightMeasurer implements Runnable {
 
   private void emit(long i) {
     emit(String.valueOf(i));
-  }
-
-  private void emit(MoveKind kind) {
-    emit(kind == null ? "" : kind.toString());
-  }
-
-  private void emit(MinKindAndCount min) {
-    emit(min.kind);
-    emit(min.count);
   }
 
   private void emitUniverse(Universe u) {
@@ -295,34 +254,63 @@ public class InsightMeasurer implements Runnable {
       for (Insight i : elims)
         universe.add(i, false);
     }
+
+    public void emitColls(Iterable<Assignment> assignments) {
+      StringBuilder sb = new StringBuilder();
+      try {
+        Pattern.appendAllTo(sb,
+            Iterables.transform(assignments, new Function<Assignment, Pattern.Coll>() {
+                @Override public Pattern.Coll apply(Assignment a) {
+                  List<Pattern> ps = Lists.newArrayList();
+                  for (WrappedInsight w : moves.get(a))
+                    ps.add(w.getPattern());
+                  return new Pattern.Coll(ps, 0, 0);
+                }
+            }));
+      } catch (IOException impossible) {
+        throw new AssertionError(null, impossible);
+      }
+      emit(sb.toString());
+    }
   }
 
   private static class WrappedInsight {
     final Grid grid;
     final Insight insight;
-    private MoveKind kind;
     WrappedInsight(GridMarks gridMarks, Insight insight) {
       this.grid = gridMarks.grid;
       this.insight = insight;
     }
-    MoveKind kind() {
-      if (kind == null)
-        kind = kindForInsight(grid, insight);
-      return kind;
+
+    Pattern getPattern() {
+      return getPattern(insight);
     }
-  }
 
-  static Ordering<MoveKind> ORD = Ordering.natural().nullsFirst();
-
-  private static class MinKindAndCount {
-    MoveKind kind;
-    int count;
-    void add(MoveKind k) {
-      if (kind == null || ORD.compare(k, kind) < 0) {
-        kind = k;
-        count = 1;
-      } else if (k == kind) {
-        ++count;
+    private Pattern getPattern(Insight insight) {
+      switch (insight.type) {
+        case CONFLICT:
+          return Pattern.conflict(((Conflict) insight).getLocations().unit);
+        case BARRED_LOCATION:
+          return Pattern.barredLocation(grid, ((BarredLoc) insight).getLocation());
+        case BARRED_NUMERAL:
+          return Pattern.barredNumeral(((BarredNum) insight).getUnit());
+        case FORCED_LOCATION:
+          return Pattern.forcedLocation(((ForcedLoc) insight).getUnit());
+        case FORCED_NUMERAL:
+          return Pattern.forcedNumeral(grid, ((ForcedNum) insight).getLocation());
+        case OVERLAP:
+          return Pattern.overlap(((Overlap) insight).getUnit());
+        case LOCKED_SET:
+          return Pattern.lockedSet((LockedSet) insight, grid);
+        case IMPLICATION: {
+          Implication imp = (Implication) insight;
+          List<Pattern> antecedents = Lists.newArrayList();
+          for (Insight a : imp.getAntecedents())
+            antecedents.add(getPattern(a));
+          return Pattern.implication(antecedents, getPattern(imp.getConsequent()), imp.getScanTargetCount());
+        }
+        default:
+          throw new IllegalArgumentException(insight.toShortString());
       }
     }
   }
@@ -363,11 +351,7 @@ public class InsightMeasurer implements Runnable {
     final Collector collector;
     final Move firstMove;
     final int numOpen;
-    final MinKindAndCount minPlayable;
-    final MinKindAndCount firstMoveMin;
-    MoveKind maxOfFirstMoveMins;
-    final MoveKind maxOfOriginalMins;
-    final Set<Assignment> assignments = Sets.newHashSet();
+    final Set<Assignment> assignments = Sets.newLinkedHashSet();
     final Universe universe;
     long totalElapsed;
 
@@ -375,15 +359,7 @@ public class InsightMeasurer implements Runnable {
       this.collector = collector;
       this.firstMove = firstMove;
       this.numOpen = numOpen;
-      this.minPlayable = getMinAndCount(collector.moves.values());
       Assignment assignment = firstMove.getAssignment();
-      this.firstMoveMin = getMinAndCount(collector.moves.get(assignment));
-      this.maxOfFirstMoveMins = firstMoveMin.kind;
-      MoveKind max = firstMoveMin.kind;
-      for (Assignment a : collector.moves.keySet()) {
-        max = ORD.max(max, getMinAndCount(collector.moves.get(a)).kind);
-      }
-      this.maxOfOriginalMins = max;
       this.universe = collector.universeForAssignment(assignment);
       assignments.add(assignment);
       totalElapsed = elapsed;
@@ -393,18 +369,25 @@ public class InsightMeasurer implements Runnable {
      * Attempts to add the given move to this batch, returns true if it fits.
      */
     boolean extendWith(Move move, long elapsed, Batch newBatch) {
-      if (move.trailId >= 0 && move.trailId != firstMove.trailId)
+      if (move.trailId >= 0 && move.trailId != firstMove.trailId) {
         return false;
-      Assignment a = move.getAssignment();
-      if (collector.moves.containsKey(a)) {
-        assignments.add(a);
-        totalElapsed += elapsed;
-        for (WrappedInsight w : collector.moves.get(a)) {
-          universe.add(w.insight, true);
-        }
-        maxOfFirstMoveMins = ORD.max(maxOfFirstMoveMins, newBatch.firstMoveMin.kind);
       }
-      return false;
+
+      Assignment a = move.getAssignment();
+      if (!collector.moves.containsKey(a)) return false;
+      List<WrappedInsight> wa = (List<WrappedInsight>) collector.moves.get(a);
+      List<WrappedInsight> wb = (List<WrappedInsight>) newBatch.collector.moves.get(a);
+      if (wa.size() != wb.size()) return false;
+      for (int i = 0; i < wa.size(); ++i)
+        if (!wa.get(i).insight.equals(wb.get(i).insight))
+          return false;
+
+      assignments.add(a);
+      totalElapsed += elapsed;
+      for (WrappedInsight w : collector.moves.get(a)) {
+        universe.add(w.insight, true);
+      }
+      return true;
     }
 
     /**
@@ -415,6 +398,13 @@ public class InsightMeasurer implements Runnable {
     public void emitUniverse() {
       collector.fillDenominator(universe, assignments);
       InsightMeasurer.this.emitUniverse(universe);
+    }
+
+    public void emitColls() {
+      collector.emitColls(assignments);
+      Set<Assignment> missed = Sets.newLinkedHashSet(collector.moves.keySet());
+      missed.removeAll(assignments);
+      collector.emitColls(missed);
     }
   }
 }

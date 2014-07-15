@@ -3,11 +3,19 @@
 *** TODO Investigate recent puzzles
 - categories: estimate way too high, way too low, high, low, close to perfect
 - add columns for the pattern that the estimator found, and patterns matching actual move
-*** TODO One more round needed [0/4]
+*** TODO One more round needed [2/6]
 - [ ] change to always simulate n times; add std dev to rating
 - [ ] instead of playable boolean, have probability of playing per pattern
-- [ ] update locked-set pattern to include enough info to recognize "simple" hidden sets
-- [ ] have InsightMeasurer emit info about errors: need to compute likelihood of seeing errors
+- [X] update locked-set pattern to include enough info to recognize "simple" hidden sets
+- [ ] have +InsightMeasurer+ something emit info about errors: need to compute likelihood of seeing errors
+  - every move made while an error is present adds 1 to the error's denominator
+  - every trail abandoned with an error adds 1 to its numerator and denominator
+  - note we need to find errors _after_ the move, so it should be a separate program for these
+- [X] have InsightMeasurer gather info using patterns or Sp
+  what we want to end up with:
+  - probability of seeing a given pattern, possibly by stage of game
+  - so: ratio of played moves to found insights
+- [ ] tweak ScanPoints and Sp to tease apart info about combinations of insights
 *** TODO Investigate distribution of times for multiple puzzles generated from the same end state
 
 ** Getting games with history from a sqlite db into a tsv file:

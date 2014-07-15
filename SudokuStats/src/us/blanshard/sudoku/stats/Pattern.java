@@ -25,7 +25,6 @@ import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.insight.Analyzer;
-import us.blanshard.sudoku.insight.Evaluator.MoveKind;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -59,7 +58,7 @@ public abstract class Pattern implements Comparable<Pattern> {
 
   private static final Splitter COLON_SPLITTER = Splitter.on(':');
   private static final Splitter COLON_SPLITTER_2 = COLON_SPLITTER.limit(2);
-  private static final Splitter COLON_SPLITTER_4 = COLON_SPLITTER.limit(4);
+  private static final Splitter COLON_SPLITTER_3 = COLON_SPLITTER.limit(3);
   private static final Splitter COMMA_SPLITTER = Splitter.on(',').omitEmptyStrings();
   private static final Splitter SEMI_SPLITTER = Splitter.on(';').omitEmptyStrings();
 
@@ -137,9 +136,7 @@ public abstract class Pattern implements Comparable<Pattern> {
   }
 
   public static Appendable appendTo(Appendable a, Coll coll) throws IOException {
-    a.append(coll.kind.toString())
-        .append(':')
-        .append(Integer.toString(coll.realmVector))
+    a.append(Integer.toString(coll.realmVector))
         .append(':')
         .append(Integer.toString(coll.numScanTargets))
         .append(':')
@@ -148,25 +145,24 @@ public abstract class Pattern implements Comparable<Pattern> {
   }
 
   public static Appendable appendAllTo(Appendable a, Iterable<Coll> colls) throws IOException {
-    boolean one = false;
+    boolean oneDone = false;
     for (Coll coll : colls) {
-      if (one) a.append(';');
+      if (oneDone) a.append(';');
       appendTo(a, coll);
-      one = true;
+      oneDone = true;
     }
     return a;
   }
 
   public static Coll collFromString(String s) {
-    Iterator<String> pieces = COLON_SPLITTER_4.split(s).iterator();
-    MoveKind kind = MoveKind.valueOf(pieces.next());
+    Iterator<String> pieces = COLON_SPLITTER_3.split(s).iterator();
     int realmVector = Integer.parseInt(pieces.next());
     int numScanTargets = Integer.parseInt(pieces.next());
     ImmutableList.Builder<Pattern> builder = ImmutableList.builder();
     for (String piece : COMMA_SPLITTER.split(pieces.next())) {
       builder.add(fromString(piece));
     }
-    return new Coll(builder.build(), kind, realmVector, numScanTargets);
+    return new Coll(builder.build(), realmVector, numScanTargets);
   }
 
   public static List<Coll> collsFromString(String s) {
@@ -231,13 +227,11 @@ public abstract class Pattern implements Comparable<Pattern> {
 
   public static class Coll {
     public final List<? extends Pattern> patterns;
-    public final MoveKind kind;
     public final int realmVector;
     public final int numScanTargets;
 
-    public Coll(List<? extends Pattern> patterns, MoveKind kind, int realmVector, int numScanTargets) {
+    public Coll(List<? extends Pattern> patterns, int realmVector, int numScanTargets) {
       this.patterns = patterns;
-      this.kind = kind;
       this.realmVector = realmVector;
       this.numScanTargets = numScanTargets;
     }

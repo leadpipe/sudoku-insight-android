@@ -17,15 +17,17 @@ package us.blanshard.sudoku.stats;
 
 import static java.lang.Math.min;
 
-import us.blanshard.sudoku.insight.Evaluator.MoveKind;
 import us.blanshard.sudoku.insight.Insight.Realm;
+import us.blanshard.sudoku.stats.Pattern.Coll;
 
 import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
 
@@ -40,8 +42,7 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import javax.annotation.Nullable;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Analyzes the output from {@link InsightMeasurer} to look for Poisson
@@ -62,23 +63,15 @@ public class ScanPoints {
       long effectiveTimestamp = Long.parseLong(iter.next());
       int moveNumber = Integer.parseInt(iter.next());
       int effectiveMoveNumber = Integer.parseInt(iter.next());
-      MoveKind bestKind = parseKinds(iter.next());
-      int bestKindCount = Integer.parseInt(iter.next());
 
       Reporter reporter = getReporter(
           minOpen, numTrails, timestamp, effectiveTimestamp, moveNumber, effectiveMoveNumber);
       double seconds = ms / 1000.0;
       if (isTrailhead) {
-        Universe universe = iter.hasNext() ? new Universe(iter) : null;
-        reporter.takeTrailhead(seconds, openCount, bestKind, bestKindCount, universe);
+        reporter.takeTrailhead(seconds, openCount, Pattern.collsFromString(iter.next()));
       } else {
-        int numMoves = Integer.parseInt(iter.next());
-        MoveKind worstKind = parseKinds(iter.next());
-        MoveKind worstOriginalKind = parseKinds(iter.next());
-        MoveKind bestError = parseKinds(iter.next());
-        int bestErrorCount = Integer.parseInt(iter.next());
-        reporter.takeBatch(seconds, openCount, bestKind, bestKindCount, numMoves, worstKind,
-            worstOriginalKind, bestError, bestErrorCount, new Universe(iter));
+        reporter.takeBatch(seconds, openCount, new Universe(iter), Pattern.collsFromString(iter.next()),
+                           Pattern.collsFromString(iter.next()));
       }
       if (iter.hasNext()) {
         in.close();
@@ -87,11 +80,6 @@ public class ScanPoints {
     }
     in.close();
     reportSummaries(System.out);
-  }
-
-  @Nullable private static MoveKind parseKinds(String s) {
-    if (s.isEmpty()) return null;
-    return MoveKind.valueOf(s);
   }
 
   static class Universe {
@@ -106,91 +94,109 @@ public class ScanPoints {
   }
 
   static class Reporter {
-    private final LoadingCache<MoveKind, BatchProcess> processes;
+    private final LoadingCache<Sp, BatchProcess> processes;
     private final ProcessCounter trailheadCounter = new ProcessCounter();
+    private int batchCount;
+    private int moveCount;
+    private int singletonMoveCount;
 
     public Reporter() {
-      processes = CacheBuilder.newBuilder().build(new CacheLoader<MoveKind, BatchProcess>() {
-        @Override public BatchProcess load(MoveKind bestKind) {
-          return new BatchProcess(bestKind);
+      processes = CacheBuilder.newBuilder().build(new CacheLoader<Sp, BatchProcess>() {
+        @Override public BatchProcess load(Sp sp) {
+          return new BatchProcess(sp);
         }
       });
     }
 
     public void reportSummaries(PrintStream out) {
-      for (MoveKind k : allKinds)
-        if (processes.asMap().containsKey(k))
-          processes.asMap().get(k).report(out);
-      out.println();
-      out.println();
-      out.printf("Trailheads (%d):%n", trailheadCounter.count);
+      out.printf("%,d batches, %,d moves, %,d singleton moves (%.1f moves per batch)%n%n",
+                 batchCount, moveCount, singletonMoveCount, moveCount / (double) batchCount);
+
+      ConcurrentMap<Sp, BatchProcess> p = processes.asMap();
+      List<BatchProcess> moveless = Lists.newArrayList();
+      for (Sp sp : FluentIterable.from(p.keySet()).toSortedList(Ordering.natural())) {
+        BatchProcess process = p.get(sp);
+        if (process.movesMade() > 0)
+          process.report(out);
+        else
+          moveless.add(process);
+      }
+
+      if (moveless.size() > 0) {
+        out.printf("%nPatterns never seen:%n");
+        for (BatchProcess process : moveless)
+          out.printf("  - %s (%,d)%n", process.sp(), process.movesMissed());
+        out.println();
+      }
+
+      out.printf("%nTrailheads (%,d):%n", trailheadCounter.count);
       trailheadCounter.report(out);
+      out.println();
     }
 
-    public void takeTrailhead(double seconds, int openCount, @Nullable MoveKind bestKind,
-                              int bestKindCount, @Nullable Universe universe) {
+    public void takeTrailhead(double seconds, int openCount, List<Coll> missed) {
       trailheadCounter.count(seconds, 1);
-      if (bestKind != null)
-        processes.getUnchecked(bestKind).takeTrailhead(seconds, openCount, universe);
+      for (Coll coll : missed) {
+        if (coll.patterns.size() == 1)  // Just look at singletons for now
+          processes.getUnchecked(Sp.fromList(coll.patterns, openCount)).addMissed();
+      }
     }
 
-    public void takeBatch(double seconds, int openCount, MoveKind bestKind, int bestKindCount,
-        int numMoves, MoveKind worstKind, MoveKind worstOriginalKind,
-        MoveKind bestError, int bestErrorCount, Universe universe) {
-      processes.getUnchecked(bestKind).take(
-          seconds, openCount, numMoves, bestKindCount, worstKind, worstOriginalKind,
-          bestError, bestErrorCount, universe);
+    public void takeBatch(double seconds, int openCount, Universe universe,
+                          List<Coll> played, List<Coll> missed) {
+      ++batchCount;
+      for (Coll coll : played) {
+        ++moveCount;
+        if (coll.patterns.size() == 1) {  // Just look at singletons for now
+          ++singletonMoveCount;
+          processes.getUnchecked(Sp.fromList(coll.patterns, openCount)).take(seconds, openCount, universe);
+        }
+      }
+      for (Coll coll : missed) {
+        if (coll.patterns.size() == 1)  // Just look at singletons for now
+          processes.getUnchecked(Sp.fromList(coll.patterns, openCount)).addMissed();
+      }
     }
   }
 
   static class BatchProcess {
-    private final MoveKind bestKind;
+    private final Sp sp;
     private final LoadingCache<Integer, ProcessCounter> realmCounters;
-    private final LoadingCache<MoveKind, ProcessCounter> maxCounters;
-    private final LoadingCache<MoveKind, ErrorCounter> errorCounters;
     private final ProcessCounter overallCounter = new ProcessCounter();
-    private final ProcessCounter trailheadCounter = new ProcessCounter();
-    private int trailheadsIncluded;
-    private int batchesIncluded;
-    private int movesIncluded;
+    private int movesMissed;
+    private int movesMade;
     private final boolean reportByRealm = false;
 
-    public BatchProcess(MoveKind bestKind) {
-      this.bestKind = bestKind;
+    public BatchProcess(Sp sp) {
+      this.sp = sp;
       realmCounters = CacheBuilder.newBuilder().build(new CacheLoader<Integer, ProcessCounter>() {
         @Override public ProcessCounter load(Integer realmVector) {
           return new ProcessCounter();
         }
       });
-      maxCounters = CacheBuilder.newBuilder().build(new CacheLoader<MoveKind, ProcessCounter>() {
-        @Override public ProcessCounter load(MoveKind worstKind) {
-          return new ProcessCounter();
-        }
-      });
-      errorCounters = CacheBuilder.newBuilder().build(new CacheLoader<MoveKind, ErrorCounter>() {
-        @Override public ErrorCounter load(MoveKind worstKind) {
-          return new ErrorCounter();
-        }
-      });
     }
 
-    public void takeTrailhead(double seconds, int openCount, @Nullable Universe universe) {
-      ++trailheadsIncluded;
-      if (universe != null)
-        trailheadCounter.count(seconds, pointsScanned(openCount, 4, universe));
+    public Sp sp() {
+      return sp;
     }
 
-    public void take(double seconds, int openCount, int numMoves, int bestKindCount, MoveKind worstKind,
-        MoveKind worstOriginalKind, MoveKind bestError, int bestErrorCount, Universe universe) {
+    public int movesMade() {
+      return movesMade;
+    }
+
+    public int movesMissed() {
+      return movesMissed;
+    }
+
+    public void addMissed() {
+      ++movesMissed;
+    }
+
+    public void take(double seconds, int openCount, Universe universe) {
       realmCounters.getUnchecked(universe.realmVector)
           .count(seconds, pointsScanned(openCount, universe));
-      maxCounters.getUnchecked(worstKind)
-          .count(seconds, pointsScanned(openCount, 4, universe));
-      if (bestError != null)
-        errorCounters.getUnchecked(bestError).count(numMoves, bestErrorCount);
       overallCounter.count(seconds, pointsScanned(openCount, 4, universe));
-      ++batchesIncluded;
-      movesIncluded += numMoves;
+      ++movesMade;
     }
 
     private double pointsScanned(int openCount, int factor, Universe u) {
@@ -216,25 +222,11 @@ public class ScanPoints {
     }
 
     public void report(PrintStream out) {
-      out.printf("%s: %,d batches (%,d moves); %,d trailheads\n",
-          bestKind, batchesIncluded, movesIncluded, trailheadsIncluded);
+      out.printf("%s: %,d moves made, %,d moves missed (p=%.2f%%)%n",
+          sp, movesMade, movesMissed, 100.0 * movesMade / (movesMade + movesMissed));
 
       out.println(" - Overall:");
       overallCounter.report(out);
-
-      out.println(" - If trailheads had been moves:");
-      trailheadCounter.report(out);
-
-      out.println(" - By hardest move in batch:");
-      int count = maxCounters.asMap().size();
-      for (MoveKind k : allKinds)
-        if (maxCounters.asMap().containsKey(k)) {
-          --count;
-          ProcessCounter c = maxCounters.asMap().get(k);
-          out.printf("   %s (%,d):\n", k, c.count);
-          c.report(out);
-        }
-      if (count > 0) throw new IllegalStateException();
 
       if (reportByRealm) {
         out.println(" - By realm vector:");
@@ -246,14 +238,6 @@ public class ScanPoints {
           }
         }
       }
-
-      out.println(" - Error info:");
-      for (MoveKind k : allKinds)
-        if (errorCounters.asMap().containsKey(k)) {
-          ErrorCounter c = errorCounters.asMap().get(k);
-          out.printf("   %s:\n", k);
-          c.report(out);
-        }
 
       out.println();
     }
@@ -272,8 +256,6 @@ public class ScanPoints {
       vectorToSet = builder.build();
     }
   }
-
-  private static final MoveKind[] allKinds = MoveKind.values();
 
   static class ProcessCounter {
     private final boolean reportHistogram;
@@ -353,7 +335,7 @@ public class ScanPoints {
   private static final int COUNT = 6;
   private static final Reporter[] reporters = new Reporter[COUNT];
   private static final Reporter reporter = new Reporter();
-  private static boolean single = false;
+  private static boolean single = true;
 
   private static Reporter getReporter(
       int minOpen, int numTrails, long timestamp,

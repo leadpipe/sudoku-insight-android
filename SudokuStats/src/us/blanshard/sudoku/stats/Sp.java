@@ -73,7 +73,7 @@ public abstract class Sp implements Comparable<Sp> {
   public static Sp fromPattern(Pattern pattern, int openCount) {
     switch (pattern.getType()) {
       case CONFLICT:
-        return conflict((Pattern.Conflict) pattern, openCount);
+        return conflict((Pattern.Conflict) pattern);
       case BARRED_LOCATION:
         return barredLocation((Pattern.BarredLoc) pattern, openCount);
       case BARRED_NUMERAL:
@@ -307,13 +307,13 @@ public abstract class Sp implements Comparable<Sp> {
    * unit category.
    */
   public static final class Conflict extends UnitBased {
-    Conflict(int openCount, UnitCategory category) {
+    Conflict(UnitCategory category) {
       super(Type.CONFLICT, category);
     }
   }
 
-  public static Conflict conflict(Pattern.Conflict conflict, int openCount) {
-    return new Conflict(openCount, conflict.getCategory());
+  public static Conflict conflict(Pattern.Conflict conflict) {
+    return new Conflict(conflict.getCategory());
   }
 
   /**
