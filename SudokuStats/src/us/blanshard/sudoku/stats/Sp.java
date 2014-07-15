@@ -203,38 +203,24 @@ public abstract class Sp implements Comparable<Sp> {
      */
     public final int deltaOverAverage;
 
-    /**
-     * True if any two of the location's units cover all of the numerals
-     * assigned to peers.
-     */
-    public final boolean areTwoUnitsSufficient;
-
     public PeerMetrics(Pattern.PeerMetrics that, int openCount) {
       int setInFullestUnit = 0;
-      int unitsRequired = 0;
       for (Unit.Type t : Unit.Type.values()) {
         int setInUnit = 0;
-        boolean unitRequired = false;
         int unitBit = Pattern.PeerMetrics.unitBit(t);
         for (int i = 0; i < 9; ++i) {
           byte cat = that.getLocationCategory(t, i);
           if ((cat & unitBit) != 0)
             ++setInUnit;
-          if (cat == unitBit)
-            unitRequired = true;  // This numeral is only set in this unit
         }
         setInFullestUnit = max(setInFullestUnit, setInUnit);
-        if (unitRequired) ++unitsRequired;
       }
       int averageSetPerUnit = (Location.COUNT - openCount) / 9;
       this.deltaOverAverage = max(0, setInFullestUnit - averageSetPerUnit);
-      this.areTwoUnitsSufficient = unitsRequired <= 2;
     }
 
     public Appendable appendTo(Appendable a) throws IOException {
-      return a.append(String.valueOf(deltaOverAverage))
-          .append(':')
-          .append(String.valueOf(areTwoUnitsSufficient));
+      return a.append(String.valueOf(deltaOverAverage));
     }
 
     @Override public String toString() {
@@ -250,19 +236,17 @@ public abstract class Sp implements Comparable<Sp> {
     @Override public boolean equals(Object o) {
       if (!(o instanceof PeerMetrics)) return false;
       PeerMetrics that = (PeerMetrics) o;
-      return this.deltaOverAverage == that.deltaOverAverage
-          && this.areTwoUnitsSufficient == that.areTwoUnitsSufficient;
+      return this.deltaOverAverage == that.deltaOverAverage;
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(deltaOverAverage, areTwoUnitsSufficient);
+      return Objects.hashCode(deltaOverAverage);
     }
 
     @Override public int compareTo(PeerMetrics that) {
       return ComparisonChain.start()
           // Note reversing order:
           .compare(that.deltaOverAverage, this.deltaOverAverage)
-          .compareTrueFirst(this.areTwoUnitsSufficient, that.areTwoUnitsSufficient)
           .result();
     }
   }
