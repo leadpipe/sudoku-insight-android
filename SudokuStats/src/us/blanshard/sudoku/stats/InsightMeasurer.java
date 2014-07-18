@@ -79,7 +79,7 @@ public class InsightMeasurer implements Runnable {
   private final Set<Integer> trails = Sets.newHashSet();
   private final PrintWriter out;
 
-  private final Collection<Batch> openBatches = Sets.newLinkedHashSet();
+  private Batch openBatch = null;
 
   private int moveNumber = 0;
   private int numSkippedMoves = 0;
@@ -101,16 +101,17 @@ public class InsightMeasurer implements Runnable {
       ++moveNumber;
       prevTime = move.timestamp;
     }
-    for (Batch b : openBatches)
-      emitBatch(b);
+    if (openBatch != null) {
+      emitBatch(openBatch);
+    }
   }
 
   private static final Analyzer.Options OPTS = new Analyzer.Options(false, true);
 
   private void applyMove(Move move) {
     long elapsed = move.timestamp - prevTime;
-    Collection<Batch> finishedBatches = Lists.newArrayList();
     Batch newBatch = null;
+    Batch finishedBatch = null;
     if (move instanceof Move.Set && !undoDetector.isUndoOrRedo(move)) {
       Grid grid = game.getState(move.trailId).getGrid();
       if (grid.containsKey(move.getLocation()))
@@ -129,19 +130,20 @@ public class InsightMeasurer implements Runnable {
         emitTrailheadLine(elapsed, numOpen, move.timestamp, collector);
       } else if (collector.moves.containsKey(move.getAssignment())) {
         newBatch = new Batch(collector, move, elapsed, numOpen);
-        for (Batch b : openBatches) {
-          if (!b.extendWith(move, elapsed, newBatch))
-            finishedBatches.add(b);
+        if (openBatch == null)
+          openBatch = newBatch;
+        else if (!openBatch.extendWith(move, elapsed, newBatch)) {
+          finishedBatch = openBatch;
+          openBatch = newBatch;
         }
-        openBatches.add(newBatch);
       }
     }
     if (newBatch == null) {
-      finishedBatches.addAll(openBatches);
+      finishedBatch = openBatch;
+      openBatch = null;
     }
-    for (Batch b : finishedBatches) {
-      emitBatch(b);
-      openBatches.remove(b);
+    if (finishedBatch != null) {
+      emitBatch(finishedBatch);
     }
     game.move(move);
     if (move.trailId >= 0) trails.add(move.trailId);
