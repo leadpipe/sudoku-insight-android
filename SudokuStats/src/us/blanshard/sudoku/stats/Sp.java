@@ -87,7 +87,7 @@ public abstract class Sp implements Comparable<Sp> {
       case LOCKED_SET:
         return lockedSet((Pattern.LockedSet) pattern);
       case IMPLICATION:
-        return implication2((Pattern.Implication) pattern, openCount);
+        return implication((Pattern.Implication) pattern, openCount);
       default:
         throw new IllegalArgumentException();
     }
@@ -96,7 +96,7 @@ public abstract class Sp implements Comparable<Sp> {
   public static Sp fromList(List<? extends Pattern> patterns, int openCount) {
     if (patterns.isEmpty()) return NONE;
     if (patterns.size() == 1) return fromPattern(patterns.get(0), openCount);
-    return combination2(patterns, openCount);
+    return combination(patterns, openCount);
   }
 
   public enum Type {
@@ -108,9 +108,7 @@ public abstract class Sp implements Comparable<Sp> {
     OVERLAP(Pattern.Type.OVERLAP),
     LOCKED_SET(Pattern.Type.LOCKED_SET),
     IMPLICATION(Pattern.Type.IMPLICATION),
-    IMPLICATION2(Pattern.Type.IMPLICATION),
     COMBINATION("comb"),
-    COMBINATION2("comb"),
     NONE("none");
 
     private final String name;
@@ -428,201 +426,106 @@ public abstract class Sp implements Comparable<Sp> {
   }
 
   /**
-   * A collection of antecedent patterns leading to a consequent pattern.
+   * Base for Implication and Combination, which both consist of collections of
+   * patterns.
    */
-  public static class Implication extends Sp {
-    private final List<Sp> antecedents;
-    private final Sp consequent;
+  public static abstract class Composite extends Sp {
+    protected final SortedMultiset<Sp> parts;
 
-    private Implication(List<Sp> antecedents, Sp consequent) {
-      super(Type.IMPLICATION);
-      this.antecedents = antecedents;
-      this.consequent = consequent;
+    private Composite(Type type, SortedMultiset<Sp> parts) {
+      super(type);
+      this.parts = parts;
     }
 
     @Override public boolean equals(Object o) {
       if (!super.equals(o)) return false;
-      Implication that = (Implication) o;
-      return this.antecedents.equals(that.antecedents)
-          && this.consequent.equals(that.consequent);
+      Composite that = (Composite) o;
+      return this.parts.equals(that.parts);
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(super.hashCode(), antecedents, consequent);
+      return Objects.hashCode(super.hashCode(), parts);
+    }
+
+    private static final Ordering<Iterable<Sp>> LEXICO = Ordering.natural().lexicographical();
+
+    @Override protected int compareToGuts(Sp p) {
+      Composite that = (Composite) p;
+      return ComparisonChain.start()
+          .compare(this.parts, that.parts, LEXICO)
+          .result();
+    }
+  }
+
+  /**
+   * Contains the patterns of the antecedents and consequent; treated as a
+   * conjunction for probabilities, and a sum for times.
+   */
+  public static class Implication extends Composite {
+
+    private Implication(SortedMultiset<Sp> parts) {
+      super(Type.IMPLICATION, parts);
     }
 
     @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
-      Joiner.on('+').appendTo(a, antecedents).append('=');
-      return consequent.appendTo(a);
-    }
-
-    @Override protected int compareToGuts(Sp p) {
-      Implication that = (Implication) p;
-      Ordering<Iterable<Sp>> ordering = Ordering.natural().lexicographical();
-      return ComparisonChain.start()
-          .compare(this.antecedents, that.antecedents, ordering)
-          .compare(this.consequent, that.consequent)
-          .result();
+      return Joiner.on(',').appendTo(a, Iterables.transform(parts.entrySet(),
+          new Function<Multiset.Entry<Sp>, String>() {
+        @Override public String apply(Multiset.Entry<Sp> e) {
+          if (e.getCount() == 1) return e.getElement().toString();
+          return e.getElement() + "(" + e.getCount() + ")";
+        }
+      }));
     }
   }
 
   public static Implication implication(Pattern.Implication implication, final int openCount) {
-    return new Implication(
-        Lists.transform(implication.getAntecedents(), new Function<Pattern, Sp>() {
-          @Override public Sp apply(Pattern p) {
-            return Sp.fromPattern(p, openCount);
-          }
-        }), Sp.fromPattern(implication.getConsequent(), openCount));
-  }
-
-  /**
-   * A collection of antecedent types leading to a consequent type.
-   */
-  public static class Implication2 extends Sp {
-    private final List<Type> antecedents;
-    private final Type consequent;
-
-    private Implication2(List<Type> antecedents, Type consequent) {
-      super(Type.IMPLICATION2);
-      this.antecedents = antecedents;
-      this.consequent = consequent;
-    }
-
-    @Override public boolean equals(Object o) {
-      if (!super.equals(o)) return false;
-      Implication2 that = (Implication2) o;
-      return this.antecedents.equals(that.antecedents)
-          && this.consequent.equals(that.consequent);
-    }
-
-    @Override public int hashCode() {
-      return Objects.hashCode(super.hashCode(), antecedents, consequent);
-    }
-
-    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
-      boolean one = false;
-      for (Type t : antecedents) {
-        if (one) a.append('+');
-        else one = true;
-        a.append(t.getName());
+    SortedMultiset<Sp> parts = TreeMultiset.create();
+    while (true) {
+      for (Pattern p : implication.getAntecedents())
+        parts.add(Sp.fromPattern(p, openCount));
+      if (implication.getConsequent().getType() == Pattern.Type.IMPLICATION)
+        implication = (Pattern.Implication) implication.getConsequent();
+      else {
+        parts.add(Sp.fromPattern(implication.getConsequent(), openCount));
+        break;
       }
-      return a.append('=').append(consequent.getName());
     }
-
-    @Override protected int compareToGuts(Sp p) {
-      Implication2 that = (Implication2) p;
-      Ordering<Iterable<Type>> ordering = Ordering.natural().lexicographical();
-      return ComparisonChain.start()
-          .compare(this.antecedents, that.antecedents, ordering)
-          .compare(this.consequent, that.consequent)
-          .result();
-    }
-  }
-
-  public static Implication2 implication2(Pattern.Implication implication, final int openCount) {
-    return new Implication2(
-        Lists.transform(implication.getAntecedents(), new Function<Pattern, Type>() {
-          @Override public Type apply(Pattern p) {
-            return Sp.fromPattern(p, openCount).type;
-          }
-        }), Sp.fromPattern(implication.getConsequent(), openCount).type);
+    return new Implication(parts);
   }
 
   /**
-   * A collection of patterns for the same assignment.
+   * A collection of patterns for the same assignment; treated as a disjunction
+   * for probabilities, and a min for times.
    */
-  public static class Combination extends Sp {
-    private final List<Sp> parts;
+  public static class Combination extends Composite {
 
-    private Combination(List<Sp> parts) {
-      super(Type.COMBINATION);
-      this.parts = parts;
-    }
-
-    @Override public boolean equals(Object o) {
-      if (!super.equals(o)) return false;
-      Combination that = (Combination) o;
-      return this.parts.equals(that.parts);
-    }
-
-    @Override public int hashCode() {
-      return Objects.hashCode(super.hashCode(), parts);
-    }
-
-    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
-      return Joiner.on(';').appendTo(a, parts);
-    }
-
-    @Override protected int compareToGuts(Sp p) {
-      Combination that = (Combination) p;
-      Ordering<Iterable<Sp>> ordering = Ordering.natural().lexicographical();
-      return ComparisonChain.start()
-          .compare(this.parts, that.parts, ordering)
-          .result();
-    }
-  }
-
-  public static Combination combination(List<Pattern> parts, final int openCount) {
-    return new Combination(
-        Lists.transform(parts, new Function<Pattern, Sp>() {
-          @Override public Sp apply(Pattern p) {
-            return Sp.fromPattern(p, openCount);
-          }
-        }));
-  }
-
-  /**
-   * A collection of patterns for the same assignment.
-   */
-  public static class Combination2 extends Sp {
-    private final SortedMultiset<Type> parts;
-
-    private Combination2(SortedMultiset<Type> parts) {
-      super(Type.COMBINATION2);
-      this.parts = parts;
-    }
-
-    @Override public boolean equals(Object o) {
-      if (!super.equals(o)) return false;
-      Combination2 that = (Combination2) o;
-      return this.parts.equals(that.parts);
-    }
-
-    @Override public int hashCode() {
-      return Objects.hashCode(super.hashCode(), parts);
+    private Combination(SortedMultiset<Sp> parts) {
+      super(Type.COMBINATION, parts);
     }
 
     @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
       return Joiner.on(';').appendTo(a, Iterables.transform(parts.entrySet(),
-          new Function<Multiset.Entry<Type>, String>() {
-        @Override public String apply(Multiset.Entry<Type> e) {
-          if (e.getCount() == 1) return e.getElement().getName();
-          return e.getElement().getName() + '*' + e.getCount();
+          new Function<Multiset.Entry<Sp>, String>() {
+        @Override public String apply(Multiset.Entry<Sp> e) {
+          if (e.getCount() == 1) return e.getElement().toString();
+          return e.getElement() + "*" + e.getCount();
         }
       }));
     }
-
-    @Override protected int compareToGuts(Sp p) {
-      Combination2 that = (Combination2) p;
-      Ordering<Iterable<Type>> ordering = Ordering.natural().lexicographical();
-      return ComparisonChain.start()
-          .compare(this.parts, that.parts, ordering)
-          .result();
-    }
   }
 
-  public static Combination2 combination2(List<? extends Pattern> parts, final int openCount) {
-    return new Combination2(
-        TreeMultiset.create(Lists.transform(parts, new Function<Pattern, Type>() {
-          @Override public Type apply(Pattern p) {
-            return Sp.fromPattern(p, openCount).type;
+  public static Combination combination(List<? extends Pattern> parts, final int openCount) {
+    return new Combination(
+        TreeMultiset.create(Lists.transform(parts, new Function<Pattern, Sp>() {
+          @Override public Sp apply(Pattern p) {
+            return Sp.fromPattern(p, openCount);
           }
         })));
   }
 
   /**
-   * A special null Sp object used to collection information about
-   * patterns that were not seen.
+   * A special null Sp object used to collect information about patterns that
+   * were not seen.
    */
   public static class None extends Sp {
     private None() {
