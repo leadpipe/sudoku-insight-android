@@ -81,6 +81,11 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
     return or(loc.unitSubsets.get(unit.getType()));
   }
 
+  /** Returns the difference of this set and the singleton containing the given location. */
+  public UnitSubset without(Location loc) {
+    return minus(loc.unitSubsets.get(unit.getType()));
+  }
+
   /** Returns the complement of this set. */
   public UnitSubset not() {
     return ofBits(unit, 511 & (~this.bits));

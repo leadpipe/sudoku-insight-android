@@ -39,13 +39,16 @@ import com.google.common.base.Function;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -78,6 +81,7 @@ public class InsightMeasurer implements Runnable {
   private final UndoDetector undoDetector;
   private final Set<Integer> trails = Sets.newHashSet();
   private final PrintWriter out;
+  private final Map<Integer, Grid> trailFinalGrids = Maps.newHashMap();
 
   private Batch openBatch = null;
 
@@ -103,6 +107,11 @@ public class InsightMeasurer implements Runnable {
     }
     if (openBatch != null) {
       emitBatch(openBatch);
+    }
+    // If the puzzle was solved, go back to all trails that currently have
+    // errors and emit those errors as having been seen.
+    if (game.getState().getGrid().isSolved()) {
+      emitAbandonedErrors();
     }
   }
 
@@ -146,7 +155,10 @@ public class InsightMeasurer implements Runnable {
       emitBatch(finishedBatch);
     }
     game.move(move);
-    if (move.trailId >= 0) trails.add(move.trailId);
+    if (move.trailId >= 0) {
+      trails.add(move.trailId);
+      trailFinalGrids.put(move.trailId, game.getTrail(move.trailId).getGrid());
+    }
     if (newBatch == null) {
       ++numSkippedMoves;
       skippedTime += elapsed;
@@ -155,7 +167,7 @@ public class InsightMeasurer implements Runnable {
 
   private void emitTrailheadLine(long elapsed, int numOpen, long timestamp, Collector collector) {
     startLine(true, elapsed, numOpen, timestamp);
-    collector.emitColls(collector.moves.keySet());
+    collector.emitColls(collector.moves.keySet(), Collections.<WrappedInsight>emptySet());
     endLine();
   }
 
@@ -164,6 +176,21 @@ public class InsightMeasurer implements Runnable {
     b.emitUniverse();
     b.emitColls();
     endLine();
+  }
+
+  private void emitAbandonedErrors() {
+    for (Grid grid : trailFinalGrids.values()) {
+      GridMarks gridMarks = new GridMarks(grid);
+      if (gridMarks.hasErrors) {
+        Collector collector = new Collector(gridMarks);
+        Analyzer.analyze(gridMarks, collector, OPTS);
+        startLine(false, 0, gridMarks.grid.getNumOpenLocations(), 0);
+        emitUniverse(new Universe());
+        collector.emitColls(Collections.<Assignment>emptySet(), collector.errors);
+        emit("");
+        endLine();
+      }
+    }
   }
 
   private void startLine(boolean isTrailhead, long elapsed, int numOpen, long timestamp) {
@@ -257,10 +284,10 @@ public class InsightMeasurer implements Runnable {
         universe.add(i, false);
     }
 
-    public void emitColls(Iterable<Assignment> assignments) {
+    public void emitColls(Iterable<Assignment> assignments, Iterable<WrappedInsight> errors) {
       StringBuilder sb = new StringBuilder();
       try {
-        Pattern.appendAllTo(sb,
+        Pattern.appendAllTo(sb, Iterables.concat(
             Iterables.transform(assignments, new Function<Assignment, Pattern.Coll>() {
                 @Override public Pattern.Coll apply(Assignment a) {
                   List<Pattern> ps = Lists.newArrayList();
@@ -268,7 +295,12 @@ public class InsightMeasurer implements Runnable {
                     ps.add(w.getPattern());
                   return new Pattern.Coll(ps, 0, 0);
                 }
-            }));
+              }),
+            Iterables.transform(errors, new Function<WrappedInsight, Pattern.Coll>() {
+                @Override public Pattern.Coll apply(WrappedInsight w) {
+                  return new Pattern.Coll(Collections.singletonList(w.getPattern()), 0, 0);
+                }
+              })));
       } catch (IOException impossible) {
         throw new AssertionError(null, impossible);
       }
@@ -403,10 +435,10 @@ public class InsightMeasurer implements Runnable {
     }
 
     public void emitColls() {
-      collector.emitColls(assignments);
+      collector.emitColls(assignments, Collections.<WrappedInsight>emptySet());
       Set<Assignment> missed = Sets.newLinkedHashSet(collector.moves.keySet());
       missed.removeAll(assignments);
-      collector.emitColls(missed);
+      collector.emitColls(missed, collector.errors);
     }
   }
 }

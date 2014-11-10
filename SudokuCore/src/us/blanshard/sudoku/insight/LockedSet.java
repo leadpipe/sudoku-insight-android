@@ -91,6 +91,10 @@ public final class LockedSet extends Insight {
     return locs;
   }
 
+  @Nullable public Unit getOverlappingUnit() {
+    return extraElims == null ? null : extraElims.unit;
+  }
+
   @Override public int getRealmVector() {
     return isNaked ? Realm.LOCATION.bit : Realm.of(locs.unit).bit;
   }

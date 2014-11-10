@@ -620,13 +620,13 @@ public abstract class Pattern implements Comparable<Pattern> {
   public static final class LockedSet extends UnitBased {
     private final int setSize;
     private final boolean isNaked;
-    private final boolean isCompact;
+    private final boolean isOverlapped;
 
-    LockedSet(UnitCategory category, int setSize, boolean isNaked, boolean isCompact) {
+    LockedSet(UnitCategory category, int setSize, boolean isNaked, boolean isOverlapped) {
       super(Type.LOCKED_SET, category);
       this.setSize = setSize;
       this.isNaked = isNaked;
-      this.isCompact = isCompact;
+      this.isOverlapped = isOverlapped;
     }
 
     public int getSetSize() {
@@ -637,8 +637,8 @@ public abstract class Pattern implements Comparable<Pattern> {
       return isNaked;
     }
 
-    public boolean isCompact() {
-      return isCompact;
+    public boolean isOverlapped() {
+      return isOverlapped;
     }
 
     @Override public int getScanTargetCount() {
@@ -650,13 +650,13 @@ public abstract class Pattern implements Comparable<Pattern> {
         LockedSet that = (LockedSet) o;
         return this.setSize == that.setSize
             && this.isNaked == that.isNaked
-            && this.isCompact == that.isCompact;
+            && this.isOverlapped == that.isOverlapped;
       }
       return false;
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(super.hashCode(), setSize, isNaked, isCompact);
+      return Objects.hashCode(super.hashCode(), setSize, isNaked, isOverlapped);
     }
 
     @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
@@ -666,7 +666,7 @@ public abstract class Pattern implements Comparable<Pattern> {
           .append(':')
           .append(isNaked ? 'n' : 'h')
           .append(':')
-          .append(isCompact ? 'c' : 'd');
+          .append(isOverlapped ? 'o' : 'd');
     }
 
     public static LockedSet fromString(String s) {
@@ -686,43 +686,69 @@ public abstract class Pattern implements Comparable<Pattern> {
       }
       s = Iterators.getOnlyElement(pieces);
       checkArgument(s.length() == 1);
-      boolean isCompact;
+      boolean isOverlapped;
       switch (s.charAt(0)) {
-        case 'c': isCompact = true;  break;
-        case 'd': isCompact = false; break;
+        case 'o': isOverlapped = true;  break;
+        case 'd': isOverlapped = false; break;
         default: throw new IllegalArgumentException(s);
       }
-      return new LockedSet(category, setSize, isNaked, isCompact);
+      return new LockedSet(category, setSize, isNaked, isOverlapped);
     }
+  }
+
+  /**
+   * Returns the difference between the given set and all numerals assigned to
+   * locations within the given unit, in the given grid.
+   */
+  private static NumSet minusAllInUnit(NumSet nums, Unit unit, Grid grid) {
+    for (Location loc : unit)
+      if (grid.containsKey(loc))
+        nums = nums.without(grid.get(loc));
+    return nums;
   }
 
   public static LockedSet lockedSet(us.blanshard.sudoku.insight.LockedSet set, Grid grid) {
     UnitCategory category = UnitCategory.forUnit(set.getLocations().unit);
     int setSize = set.getLocations().size();
     boolean isNaked = set.isNakedSet();
-    boolean isCompact = false;
-    NumSet unitNums = NumSet.NONE;
-    UnitSubset remainder = set.getLocations();
-    for (Location loc : remainder.unit) {
-      if (grid.containsKey(loc)) {
-        unitNums = unitNums.with(grid.get(loc));
-        if (!isNaked)
-          remainder = remainder.with(loc);
+
+    // Overlapped means that the set arises from assignments in overlapping
+    // units.
+    boolean isOverlapped = false;
+    if (isNaked) {
+      // For naked sets, this means that the set lies in two overlapping units
+      // and all numerals not in the set appear in those two units.
+      Unit overlap = set.getOverlappingUnit();
+      if (overlap != null) {
+        NumSet remaining = NumSet.ALL.minus(set.getNumerals());
+        remaining = minusAllInUnit(remaining, set.getLocations().unit, grid);
+        remaining = minusAllInUnit(remaining, overlap, grid);
+        isOverlapped = remaining.isEmpty();
+      }
+    } else {
+      // For hidden sets, it means that all open squares not in the set lie in
+      // an overlapping unit, and all numerals in the set appear in this unit.
+      UnitSubset taken = set.getLocations();
+      for (Location loc : taken.unit) {
+        if (grid.containsKey(loc))
+          taken = taken.with(loc);
+      }
+      UnitSubset open = taken.not();
+      Unit overlap = Analyzer.findOverlappingUnit(open);
+      if (overlap == null && open.size() == 1) {
+        Location loc = open.get(0);
+        if (category == UnitCategory.LINE) {
+          overlap = loc.block;
+        } else {
+          isOverlapped = minusAllInUnit(set.getNumerals(), loc.row, grid).isEmpty()
+              || minusAllInUnit(set.getNumerals(), loc.column, grid).isEmpty();
+        }
+      }
+      if (overlap != null) {
+        isOverlapped = minusAllInUnit(set.getNumerals(), overlap, grid).isEmpty();
       }
     }
-    // For hidden sets, find the complement locations.
-    if (!isNaked)
-      remainder = remainder.not();
-    Unit overlap = Analyzer.findOverlappingUnit(remainder);
-    if (overlap != null) {
-      NumSet inOverlap = NumSet.NONE;
-      for (Location loc : overlap)
-        if (grid.containsKey(loc))
-          inOverlap = inOverlap.with(grid.get(loc));
-      NumSet target = isNaked ? unitNums.not().minus(set.getNumerals()) : set.getNumerals();
-      isCompact = target.isSubsetOf(inOverlap);
-    }
-    return new LockedSet(category, setSize, isNaked, isCompact);
+    return new LockedSet(category, setSize, isNaked, isOverlapped);
   }
 
   /**

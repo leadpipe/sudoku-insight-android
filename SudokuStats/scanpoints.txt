@@ -1,252 +1,108 @@
 
 ======================
-Single
+Everything together in one bunch
 ======================
 
-169,000 batches, 239,882 moves, 6,840 singleton moves (1.4 moves per batch)
+120,358 batches, 168,995 moves (1.4 moves per batch)
 
-fl:b: 2,085 moves made, 5,543 moves missed (p=27.33%)
+fl:b: 1,486 moves made, 4,164 moves missed (μ=0.26, σ=0.0059, n=5,650)
+ -- Additives (227 in, 9,046 out) --
+Pooled Implied: μ=0.35, σ=0.0099, n=84,310
+Pooled Supremum: μ=0.49, σ=0.017, n=112,477
+ -- Multiplicatives (12 in, 3,661 out) --
+Pooled Infimum: μ=0.045, σ=0.020, n=1,096
  - Overall:
-Scan-points/second: 1.05; var: 1.58 (150.47%)
-Seconds/scan-point: 0.954
+Scan-points/second: 1.21; var: 1.88 (154.51%)
+Seconds/scan-point: 0.823
 
-fl:l: 3,570 moves made, 113,714 moves missed (p=3.04%)
+fl:l: 2,393 moves made, 82,878 moves missed (μ=0.028, σ=0.00057, n=85,271)
+ -- Additives (304 in, 16,016 out) --
+Pooled Implied: μ=0.16, σ=0.0077, n=86,469
+Pooled Supremum: μ=0.38, σ=0.015, n=179,288
+ -- Multiplicatives (44 in, 4,543 out) --
+Pooled Infimum: μ=0.015, σ=0.0068, n=18,115
  - Overall:
-Scan-points/second: 0.87; var: 1.41 (162.29%)
-Seconds/scan-point: 1.154
+Scan-points/second: 1.03; var: 1.73 (167.25%)
+Seconds/scan-point: 0.968
 
-fn:4: 10 moves made, 770 moves missed (p=1.28%)
+fn:6: no direct data
+ -- Additives (0 in, 5 out) --
+
+fn:5: 0 moves made, 9 moves missed (μ=0.091, σ=0.083, n=9)
+ -- Additives (14 in, 253 out) --
+Pooled Implied: μ=0.66, σ=0.062, n=396
+Pooled Supremum: μ=0.74, σ=0.077, n=105
+ -- Multiplicatives (0 in, 7 out) --
  - Overall:
-Scan-points/second: 0.91; var: 2.69 (295.11%)
-Seconds/scan-point: 1.096
+Scan-points/second: NaN; var: NaN (NaN%)
+Seconds/scan-point: NaN
 
-fn:3: 32 moves made, 4,870 moves missed (p=0.65%)
+fn:4: 6 moves made, 543 moves missed (μ=0.013, σ=0.0048, n=549)
+ -- Additives (24 in, 1,162 out) --
+Pooled Implied: μ=0.34, σ=0.030, n=3,141
+Pooled Supremum: μ=0.58, σ=0.053, n=761
+ -- Multiplicatives (1 in, 297 out) --
+Pooled Infimum: μ=0.035, σ=0.024, n=55
  - Overall:
-Scan-points/second: 0.88; var: 0.90 (102.45%)
-Seconds/scan-point: 1.141
+Scan-points/second: 1.79; var: 5.68 (317.55%)
+Seconds/scan-point: 0.559
 
-fn:2: 55 moves made, 12,452 moves missed (p=0.44%)
+fn:3: 18 moves made, 3,545 moves missed (μ=0.0053, σ=0.0012, n=3,563)
+ -- Additives (35 in, 2,562 out) --
+Pooled Implied: μ=0.12, σ=0.017, n=10,247
+Pooled Supremum: μ=0.46, σ=0.035, n=1,709
+ -- Multiplicatives (4 in, 1,021 out) --
+Pooled Infimum: μ=0.0080, σ=0.0081, n=740
  - Overall:
-Scan-points/second: 0.91; var: 0.70 (76.42%)
-Seconds/scan-point: 1.097
+Scan-points/second: 1.14; var: 1.21 (106.15%)
+Seconds/scan-point: 0.880
 
-fn:1: 70 moves made, 20,774 moves missed (p=0.34%)
+fn:2: 33 moves made, 9,412 moves missed (μ=0.0036, σ=0.00062, n=9,445)
+ -- Additives (44 in, 3,203 out) --
+Pooled Implied: μ=0.021, σ=0.0090, n=15,941
+Pooled Supremum: μ=0.29, σ=0.016, n=13,911
+ -- Multiplicatives (13 in, 1,913 out) --
+Pooled Infimum: μ=0.0055, σ=0.0067, n=3,758
  - Overall:
-Scan-points/second: 0.49; var: 0.56 (115.71%)
-Seconds/scan-point: 2.053
+Scan-points/second: 1.05; var: 0.80 (75.92%)
+Seconds/scan-point: 0.953
 
-fn:0: 44 moves made, 33,049 moves missed (p=0.13%)
+fn:1: 39 moves made, 16,053 moves missed (μ=0.0025, σ=0.00039, n=16,092)
+ -- Additives (41 in, 2,270 out) --
+Pooled Implied: μ=0.032, σ=0.014, n=3,443
+Pooled Supremum: μ=0.23, σ=0.0071, n=45,278
+ -- Multiplicatives (19 in, 2,599 out) --
+Pooled Infimum: μ=0.0039, σ=0.0061, n=8,340
  - Overall:
-Scan-points/second: 0.75; var: 1.05 (141.09%)
-Seconds/scan-point: 1.338
+Scan-points/second: 0.49; var: 0.58 (117.99%)
+Seconds/scan-point: 2.030
 
-i:o=fl: 352 moves made, 16,810 moves missed (p=2.05%)
+fn:0: 24 moves made, 25,371 moves missed (μ=0.00098, σ=0.00020, n=25,395)
+ -- Additives (25 in, 1,018 out) --
+Pooled Implied: μ=0.086, σ=0.0048, n=17,108
+Pooled Supremum: μ=0.19, σ=0.0079, n=25,726
+ -- Multiplicatives (35 in, 2,533 out) --
+Pooled Infimum: μ=0.0034, σ=0.0067, n=13,182
  - Overall:
-Scan-points/second: 0.80; var: 1.58 (197.43%)
-Seconds/scan-point: 1.248
+Scan-points/second: 0.80; var: 1.28 (159.19%)
+Seconds/scan-point: 1.246
 
-i:o=fn: 29 moves made, 21,660 moves missed (p=0.13%)
- - Overall:
-Scan-points/second: 0.97; var: 1.15 (118.27%)
-Seconds/scan-point: 1.027
+o:b: no direct data
+ -- Multiplicatives (74 in, 14,317 out) --
+Pooled Implied: μ=0.87, σ=0.93, n=222
+Pooled Infimum: μ=0.012, σ=0.0077, n=23,573
 
-i:o=i: 34 moves made, 17,921 moves missed (p=0.19%)
- - Overall:
-Scan-points/second: 0.74; var: 1.21 (162.86%)
-Seconds/scan-point: 1.350
+o:l: no direct data
+ -- Multiplicatives (71 in, 14,195 out) --
+Pooled Implied: μ=0.77, σ=0.79, n=184
+Pooled Infimum: μ=0.0078, σ=0.0079, n=21,149
 
-i:o+o=fl: 32 moves made, 2,000 moves missed (p=1.57%)
- - Overall:
-Scan-points/second: 0.70; var: 0.43 (60.32%)
-Seconds/scan-point: 1.419
+s:b:4:n:d: no direct data
+ -- Multiplicatives (4 in, 1,781 out) --
+Pooled Infimum: μ=0.0081, σ=0.012, n=473
 
-i:o+o=fn: 16 moves made, 4,506 moves missed (p=0.35%)
- - Overall:
-Scan-points/second: 1.06; var: 0.44 (41.70%)
-Seconds/scan-point: 0.943
-
-i:o+o=i: 14 moves made, 10,924 moves missed (p=0.13%)
- - Overall:
-Scan-points/second: 1.25; var: 2.33 (186.53%)
-Seconds/scan-point: 0.799
-
-i:o+o+o=fl: 1 moves made, 47 moves missed (p=2.08%)
- - Overall:
-Scan-points/second: 1.29; var: 0.24 (18.52%)
-Seconds/scan-point: 0.778
-
-i:o+o+o=i: 1 moves made, 3,621 moves missed (p=0.03%)
- - Overall:
-Scan-points/second: 3.25; var: 0.21 (6.59%)
-Seconds/scan-point: 0.308
-
-i:o+o+o+o+s=i: 1 moves made, 1,127 moves missed (p=0.09%)
- - Overall:
-Scan-points/second: 4.92; var: 0.08 (1.69%)
-Seconds/scan-point: 0.203
-
-i:o+o+o+s=i: 1 moves made, 4,060 moves missed (p=0.02%)
- - Overall:
-Scan-points/second: 3.13; var: 0.12 (3.95%)
-Seconds/scan-point: 0.319
-
-i:o+o+o+s+s+s=i: 2 moves made, 1,040 moves missed (p=0.19%)
- - Overall:
-Scan-points/second: 5.00; var: 0.14 (2.86%)
-Seconds/scan-point: 0.200
-
-i:o+o+s=fn: 1 moves made, 605 moves missed (p=0.17%)
- - Overall:
-Scan-points/second: 7.00; var: 0.00 (0.00%)
-Seconds/scan-point: 0.143
-
-i:o+o+s=i: 2 moves made, 12,728 moves missed (p=0.02%)
- - Overall:
-Scan-points/second: 1.78; var: 0.18 (10.10%)
-Seconds/scan-point: 0.563
-
-i:o+o+s+s=i: 2 moves made, 6,803 moves missed (p=0.03%)
- - Overall:
-Scan-points/second: 1.20; var: 1.63 (135.94%)
-Seconds/scan-point: 0.833
-
-i:o+s=fl: 22 moves made, 15,778 moves missed (p=0.14%)
- - Overall:
-Scan-points/second: 0.75; var: 0.56 (74.58%)
-Seconds/scan-point: 1.342
-
-i:o+s=fn: 7 moves made, 9,275 moves missed (p=0.08%)
- - Overall:
-Scan-points/second: 0.65; var: 0.96 (147.74%)
-Seconds/scan-point: 1.545
-
-i:o+s=i: 29 moves made, 33,024 moves missed (p=0.09%)
- - Overall:
-Scan-points/second: 0.79; var: 2.02 (254.51%)
-Seconds/scan-point: 1.259
-
-i:o+s+s=i: 4 moves made, 16,609 moves missed (p=0.02%)
- - Overall:
-Scan-points/second: 3.90; var: 3.94 (101.00%)
-Seconds/scan-point: 0.257
-
-i:o+s+s+s=i: 2 moves made, 5,446 moves missed (p=0.04%)
- - Overall:
-Scan-points/second: 10.67; var: 21.33 (200.00%)
-Seconds/scan-point: 0.094
-
-i:s=fl: 315 moves made, 62,326 moves missed (p=0.50%)
- - Overall:
-Scan-points/second: 0.75; var: 0.89 (118.95%)
-Seconds/scan-point: 1.330
-
-i:s=fn: 24 moves made, 21,987 moves missed (p=0.11%)
- - Overall:
-Scan-points/second: 0.71; var: 0.99 (140.58%)
-Seconds/scan-point: 1.417
-
-i:s=i: 59 moves made, 49,861 moves missed (p=0.12%)
- - Overall:
-Scan-points/second: 0.99; var: 2.73 (276.86%)
-Seconds/scan-point: 1.014
-
-i:s+s=fl: 13 moves made, 12,330 moves missed (p=0.11%)
- - Overall:
-Scan-points/second: 0.59; var: 1.18 (199.70%)
-Seconds/scan-point: 1.695
-
-i:s+s=fn: 5 moves made, 16,354 moves missed (p=0.03%)
- - Overall:
-Scan-points/second: 5.08; var: 10.07 (198.42%)
-Seconds/scan-point: 0.197
-
-i:s+s=i: 4 moves made, 35,536 moves missed (p=0.01%)
- - Overall:
-Scan-points/second: 1.62; var: 1.19 (73.68%)
-Seconds/scan-point: 0.619
-
-i:s+s+s=i: 2 moves made, 9,914 moves missed (p=0.02%)
- - Overall:
-Scan-points/second: 26.50; var: 4.50 (16.98%)
-Seconds/scan-point: 0.038
-
-
-Patterns never seen:
-  - fn:5 (17)
-  - i:o+o+o=fn (766)
-  - i:o+o+o+o=fl (2)
-  - i:o+o+o+o=fn (83)
-  - i:o+o+o+o=i (1,035)
-  - i:o+o+o+o+o=fn (4)
-  - i:o+o+o+o+o=i (262)
-  - i:o+o+o+o+o+o=fn (1)
-  - i:o+o+o+o+o+o=i (68)
-  - i:o+o+o+o+o+o+o=i (17)
-  - i:o+o+o+o+o+o+o+o=i (10)
-  - i:o+o+o+o+o+o+o+o+o=i (4)
-  - i:o+o+o+o+o+o+o+o+o+o=i (1)
-  - i:o+o+o+o+o+o+o+o+o+o+s=i (1)
-  - i:o+o+o+o+o+o+o+o+o+o+s+s=i (2)
-  - i:o+o+o+o+o+o+o+o+o+s=i (10)
-  - i:o+o+o+o+o+o+o+o+o+s+s=i (4)
-  - i:o+o+o+o+o+o+o+o+s=i (15)
-  - i:o+o+o+o+o+o+o+o+s+s=i (5)
-  - i:o+o+o+o+o+o+o+o+s+s+s=i (1)
-  - i:o+o+o+o+o+o+o+s=i (29)
-  - i:o+o+o+o+o+o+o+s+s=i (19)
-  - i:o+o+o+o+o+o+o+s+s+s=i (13)
-  - i:o+o+o+o+o+o+o+s+s+s+s=i (4)
-  - i:o+o+o+o+o+o+s=i (111)
-  - i:o+o+o+o+o+o+s+s=i (63)
-  - i:o+o+o+o+o+o+s+s+s=i (46)
-  - i:o+o+o+o+o+o+s+s+s+s=i (15)
-  - i:o+o+o+o+o+o+s+s+s+s+s=i (1)
-  - i:o+o+o+o+o+o+s+s+s+s+s+s=i (4)
-  - i:o+o+o+o+o+s=i (360)
-  - i:o+o+o+o+o+s+s=i (219)
-  - i:o+o+o+o+o+s+s+s=i (99)
-  - i:o+o+o+o+o+s+s+s+s=i (42)
-  - i:o+o+o+o+o+s+s+s+s+s=i (14)
-  - i:o+o+o+o+o+s+s+s+s+s+s=i (5)
-  - i:o+o+o+o+o+s+s+s+s+s+s+s=i (2)
-  - i:o+o+o+o+s=fn (1)
-  - i:o+o+o+o+s+s=i (737)
-  - i:o+o+o+o+s+s+s=i (277)
-  - i:o+o+o+o+s+s+s+s=i (87)
-  - i:o+o+o+o+s+s+s+s+s=i (27)
-  - i:o+o+o+o+s+s+s+s+s+s=i (8)
-  - i:o+o+o+o+s+s+s+s+s+s+s=i (1)
-  - i:o+o+o+s=fl (21)
-  - i:o+o+o+s=fn (26)
-  - i:o+o+o+s+s=i (2,397)
-  - i:o+o+o+s+s+s+s=i (316)
-  - i:o+o+o+s+s+s+s+s=i (86)
-  - i:o+o+o+s+s+s+s+s+s=i (13)
-  - i:o+o+o+s+s+s+s+s+s+s=i (5)
-  - i:o+o+s=fl (724)
-  - i:o+o+s+s=fl (42)
-  - i:o+o+s+s+s=fl (1)
-  - i:o+o+s+s+s=i (2,527)
-  - i:o+o+s+s+s+s=i (742)
-  - i:o+o+s+s+s+s+s=i (184)
-  - i:o+o+s+s+s+s+s+s=i (71)
-  - i:o+o+s+s+s+s+s+s+s=i (10)
-  - i:o+o+s+s+s+s+s+s+s+s=i (2)
-  - i:o+s+s=fl (1,195)
-  - i:o+s+s=fn (153)
-  - i:o+s+s+s=fl (46)
-  - i:o+s+s+s+s=i (1,485)
-  - i:o+s+s+s+s+s=i (319)
-  - i:o+s+s+s+s+s+s=i (89)
-  - i:o+s+s+s+s+s+s+s=i (42)
-  - i:s+s+s=fl (941)
-  - i:s+s+s=fn (36)
-  - i:s+s+s+s=fl (47)
-  - i:s+s+s+s=i (2,222)
-  - i:s+s+s+s+s=i (459)
-  - i:s+s+s+s+s+s=i (120)
-  - i:s+s+s+s+s+s+s=i (35)
-  - i:s+s+s+s+s+s+s+s=i (3)
+s:l:4:h:c: no direct data
+ -- Multiplicatives (0 in, 393 out) --
 
 
 Trailheads (3,679):

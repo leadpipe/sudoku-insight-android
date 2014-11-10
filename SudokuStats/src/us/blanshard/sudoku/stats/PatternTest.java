@@ -7,6 +7,7 @@ import us.blanshard.sudoku.core.Block;
 import us.blanshard.sudoku.core.Column;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Row;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.insight.Analyzer;
@@ -85,10 +86,42 @@ public class PatternTest {
     assertEquals(UnitSubset.ofBits(Column.of(7), 0603), set3.getLocations());
     assertEquals(UnitSubset.ofBits(Row.of(2), 0407), set4.getLocations());
 
-    assertEquals("s:b:2:h:c", Pattern.lockedSet(set1, grid).toString());
+    assertEquals("s:b:2:h:o", Pattern.lockedSet(set1, grid).toString());
     assertEquals("s:l:2:h:d", Pattern.lockedSet(set2, grid).toString());
-    assertEquals("s:l:4:h:c", Pattern.lockedSet(set3, grid).toString());
+    assertEquals("s:l:4:h:o", Pattern.lockedSet(set3, grid).toString());
     assertEquals("s:l:4:n:d", Pattern.lockedSet(set4, grid).toString());
+  }
+
+  @Test public void moreLockedSets() {
+    Grid grid = Grid.fromString(
+        " 4 5 . | . . 3 | . . ." +
+        " . 6 . | . . . | 3 . ." +
+        " . . 7 | . . . | . . ." +
+        "-------+-------+------" +
+        " . . 1 | . . . | . . ." +
+        " . . 2 | . . . | . . ." +
+        " . . . | . . . | . . ." +
+        "-------+-------+------" +
+        " . . . | . . . | . . ." +
+        " . . . | . . . | . . ." +
+        " . . . | . . . | . . .");
+    LockedSet set = new LockedSet(
+        NumSet.ofBits(7), UnitSubset.ofBits(Block.of(1), 0310), false);
+    assertEquals("s:b:3:h:d", Pattern.lockedSet(set, grid).toString());
+
+    grid = Grid.fromString(
+        " 4 5 . | . . 3 | . . ." +
+        " . 6 . | . . . | 3 . ." +
+        " . . 7 | . . . | . . ." +
+        "-------+-------+------" +
+        " . . 1 | . . . | . . ." +
+        " . . 2 | . . . | . . ." +
+        " . . 3 | . . . | . . ." +
+        "-------+-------+------" +
+        " . . . | . . . | . . ." +
+        " . . . | . . . | . . ." +
+        " . . . | . . . | . . .");
+    assertEquals("s:b:3:h:o", Pattern.lockedSet(set, grid).toString());
   }
 
   private void testPattern(String s1, Pattern p1) {
@@ -109,11 +142,11 @@ public class PatternTest {
     testPattern("fn:833510500:833000006:006855000", Pattern.forcedNumeral(peerMetrics(4, 1)));
     testPattern("o:b", Pattern.overlap(UnitCategory.BLOCK));
     testPattern("s:b:4:n:d", new Pattern.LockedSet(UnitCategory.BLOCK, 4, true, false));
-    testPattern("s:l:2:h:c", new Pattern.LockedSet(UnitCategory.LINE, 2, false, true));
+    testPattern("s:l:2:h:o", new Pattern.LockedSet(UnitCategory.LINE, 2, false, true));
     testPattern("i:o:b+o:l=3:fl:b",
         Pattern.implication(Arrays.asList(Pattern.Overlap.LINE, Pattern.Overlap.BLOCK),
             Pattern.ForcedLoc.BLOCK, 3));
-    testPattern("i:fl:l+o:b=5:i:fn:833510500:833000006:006855000+s:l:2:n:c=3:c:b",
+    testPattern("i:fl:l+o:b=5:i:fn:833510500:833000006:006855000+s:l:2:n:o=3:c:b",
         Pattern.implication(Arrays.asList(Pattern.Overlap.BLOCK, Pattern.ForcedLoc.LINE),
             Pattern.implication(Arrays.asList(new Pattern.LockedSet(UnitCategory.LINE, 2, true, true),
                 Pattern.forcedNumeral(peerMetrics(4, 1))), Pattern.Conflict.BLOCK, 3), 5));
@@ -147,7 +180,7 @@ public class PatternTest {
     Pattern.appendAllTo(sb, multi);
     assertEquals(0, sb.length());
 
-    String string = "4:1:c:b;4:4:s:b:4:n:c;4:2:fl:b,fl:l";
+    String string = "4:1:c:b;4:4:s:b:4:n:o;4:2:fl:b,fl:l";
     multi = Pattern.collsFromString(string);
     assertEquals(3, multi.size());
     assertEquals(Collections.singletonList(Pattern.Conflict.BLOCK), multi.get(0).patterns);

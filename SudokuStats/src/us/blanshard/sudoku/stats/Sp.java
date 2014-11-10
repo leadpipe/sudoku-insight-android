@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.stats;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Math.max;
 
 import us.blanshard.sudoku.core.Location;
@@ -53,6 +54,25 @@ public abstract class Sp implements Comparable<Sp> {
 
   public final Type getType() {
     return type;
+  }
+
+  public boolean isSingular() {
+    return true;
+  }
+
+  /**
+   * Returns the probability that a move with this pattern will be played, on a
+   * grid with the given number of open squares.
+   */
+  //  public abstract double getProbabilityOfPlaying(int numOpen);
+  //  protected abstract double getAddedProbability(int numOpen);
+
+  /**
+   * Returns the first Sp in a combination, or just this Sp outside of a
+   * combination.
+   */
+  public Sp head() {
+    return this;
   }
 
   public Appendable appendTo(Appendable a) throws IOException {
@@ -374,13 +394,13 @@ public abstract class Sp implements Comparable<Sp> {
   public static final class LockedSet extends UnitBased {
     private final int setSize;
     private final boolean isNaked;
-    private final boolean isCompact;
+    private final boolean isOverlapped;
 
-    LockedSet(UnitCategory category, int setSize, boolean isNaked, boolean isCompact) {
+    LockedSet(UnitCategory category, int setSize, boolean isNaked, boolean isOverlapped) {
       super(Type.LOCKED_SET, category);
       this.setSize = setSize;
       this.isNaked = isNaked;
-      this.isCompact = isCompact;
+      this.isOverlapped = isOverlapped;
     }
 
     public int getSetSize() {
@@ -391,8 +411,8 @@ public abstract class Sp implements Comparable<Sp> {
       return isNaked;
     }
 
-    public boolean isCompact() {
-      return isCompact;
+    public boolean isOverlapped() {
+      return isOverlapped;
     }
 
     @Override public boolean equals(Object o) {
@@ -400,29 +420,37 @@ public abstract class Sp implements Comparable<Sp> {
         LockedSet that = (LockedSet) o;
         return this.setSize == that.setSize
             && this.isNaked == that.isNaked
-            && this.isCompact == that.isCompact;
+            && this.isOverlapped == that.isOverlapped;
       }
       return false;
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(super.hashCode(), setSize, isNaked, isCompact);
+      return Objects.hashCode(super.hashCode(), setSize, isNaked, isOverlapped);
+    }
+
+    @Override protected int compareToGuts(Sp p) {
+      LockedSet that = (LockedSet) p;
+      return ComparisonChain.start()
+          .compare(this.setSize, that.setSize)
+          .compareFalseFirst(this.isNaked, that.isNaked)
+          .compareTrueFirst(this.isOverlapped, that.isOverlapped)
+          .compare(this.getCategory(), that.getCategory())
+          .result();
     }
 
     @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
       return super.appendGutsTo(a)
           .append(':')
           .append(String.valueOf(setSize))
-          .append(':')
           .append(isNaked ? 'n' : 'h')
-          .append(':')
-          .append(isCompact ? 'c' : 'd');
+          .append(isOverlapped ? 'o' : 'd');
     }
   }
 
   public static LockedSet lockedSet(Pattern.LockedSet lockedSet) {
     return new LockedSet(
-        lockedSet.getCategory(), lockedSet.getSetSize(), lockedSet.isNaked(), lockedSet.isCompact());
+        lockedSet.getCategory(), lockedSet.getSetSize(), lockedSet.isNaked(), lockedSet.isOverlapped());
   }
 
   /**
@@ -435,6 +463,24 @@ public abstract class Sp implements Comparable<Sp> {
     private Composite(Type type, SortedMultiset<Sp> parts) {
       super(type);
       this.parts = parts;
+    }
+
+    @Override
+    public boolean isSingular() {
+      return false;
+    }
+
+    /**
+     * Returns the Sp (composite or not) consisting of the remaining parts of
+     * this Composite when the given part is removed.
+     */
+    public Sp minus(Sp part) {
+      checkArgument(parts.contains(part));
+      SortedMultiset<Sp> newParts = TreeMultiset.create(parts);
+      newParts.remove(part);
+      if (newParts.size() == 1)
+        return newParts.firstEntry().getElement();
+      return type == Type.COMBINATION ? new Combination(newParts) : new Implication(newParts);
     }
 
     @Override public boolean equals(Object o) {
@@ -501,6 +547,10 @@ public abstract class Sp implements Comparable<Sp> {
 
     private Combination(SortedMultiset<Sp> parts) {
       super(Type.COMBINATION, parts);
+    }
+
+    @Override public Sp head() {
+      return Iterables.getFirst(parts, null);
     }
 
     @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
