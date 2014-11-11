@@ -1,0 +1,377 @@
+
+======================
+Open squares: 0 - 19
+======================
+
+35,643 batches, 57,561 moves (1.6 moves per batch)
+
+c:b: 30 moves made, 367 moves missed (μ=0.078, σ=0.013, n=397)
+c:l: 183 moves made, 1,043 moves missed (μ=0.15, σ=0.010, n=1,226)
+bl:2: 36 moves made, 146 moves missed (μ=0.20, σ=0.029, n=182)
+bl:1: 489 moves made, 1,567 moves missed (μ=0.24, σ=0.0094, n=2,056)
+bl:0: 498 moves made, 2,053 moves missed (μ=0.20, σ=0.0078, n=2,551)
+bn:b: 1,199 moves made, 3,376 moves missed (μ=0.26, σ=0.0065, n=4,575)
+bn:l: 2,320 moves made, 7,222 moves missed (μ=0.24, σ=0.0044, n=9,542)
+fl:b: 558 moves made, 1,729 moves missed (μ=0.24, σ=0.0090, n=2,287)
+  When added: μ=0.31, σ=0.018, n=43,339
+                                                    Supremum: μ=0.42, σ=0.030, n=119,256
+fl:l: 339 moves made, 37,235 moves missed (μ=0.0090, σ=0.00049, n=37,574)
+  When added: μ=0.13, σ=0.021, n=46,157
+                                                    Supremum: μ=0.33, σ=0.032, n=152,087
+fn:2: no direct data
+fn:1: 1 moves made, 1,521 moves missed (μ=0.0013, σ=0.00093, n=1,522)
+  When added: μ=0.016, σ=0.030, n=10,779
+                                                    Supremum: μ=0.23, σ=0.032, n=49,415
+fn:0: 10 moves made, 20,146 moves missed (μ=0.00055, σ=0.00016, n=20,156)
+  When added: μ=0.028, σ=0.019, n=34,387
+                                                    Supremum: μ=0.32, σ=0.032, n=49,491
+o:b: no direct data
+  When multiplied direct: μ=0.58, σ=0.79, n=42
+  When multiplied while adding: μ=0.70, σ=0.83, n=701
+                                                    Infimum: μ=0.086, σ=0.075, n=5,884
+o:l: no direct data
+  When multiplied direct: μ=0.71, σ=0.88, n=881
+  When multiplied while adding: μ=0.53, σ=0.71, n=681
+                                                    Infimum: μ=0.075, σ=0.074, n=7,488
+s:b:2ho: no direct data
+  When multiplied direct: μ=0.69, σ=0.78, n=7
+  When multiplied while adding: μ=0.51, σ=0.56, n=318
+                                                    Infimum: μ=0.040, σ=0.055, n=4,121
+s:l:2ho: no direct data
+  When multiplied direct: μ=0.64, σ=0.72, n=3
+  When multiplied while adding: μ=0.81, σ=0.89, n=17
+                                                    Infimum: μ=0.070, σ=0.081, n=1,182
+s:b:2hd: no direct data
+  When multiplied direct: μ=0.52, σ=0.77, n=35
+  When multiplied while adding: μ=0.53, σ=0.71, n=267
+                                                    Infimum: μ=0.064, σ=0.078, n=4,164
+s:l:2hd: no direct data
+  When multiplied direct: μ=0.38, σ=0.82, n=314
+  When multiplied while adding: μ=0.57, σ=0.77, n=786
+                                                    Infimum: μ=0.052, σ=0.071, n=8,355
+s:b:2no: no direct data
+  When multiplied while adding: μ=0.32, σ=0.56, n=105
+                                                    Infimum: μ=0.089, σ=0.088, n=609
+s:l:2no: no direct data
+                                                    Infimum: μ=0.45, σ=0.16, n=24
+s:b:2nd: no direct data
+  When multiplied direct: μ=0.61, σ=0.72, n=27
+  When multiplied while adding: μ=0.66, σ=0.80, n=154
+                                                    Infimum: μ=0.10, σ=0.10, n=2,414
+s:l:2nd: no direct data
+  When multiplied direct: μ=0.36, σ=0.76, n=589
+  When multiplied while adding: μ=0.54, σ=0.74, n=186
+                                                    Infimum: μ=0.085, σ=0.089, n=5,179
+s:b:3ho: no direct data
+  When multiplied direct: μ=0.75, σ=0.82, n=2
+  When multiplied while adding: μ=0.72, σ=0.79, n=14
+                                                    Infimum: μ=0.069, σ=0.091, n=657
+s:l:3ho: no direct data
+  When multiplied direct: μ=0.60, σ=0.69, n=1
+  When multiplied while adding: μ=0.58, σ=0.80, n=3
+                                                    Infimum: μ=0.091, σ=0.098, n=486
+s:b:3hd: no direct data
+  When multiplied direct: μ=0.60, σ=0.77, n=2
+  When multiplied while adding: μ=0.62, σ=0.86, n=9
+                                                    Infimum: μ=0.13, σ=0.12, n=541
+s:l:3hd: no direct data
+  When multiplied direct: μ=0.74, σ=0.81, n=41
+  When multiplied while adding: μ=0.66, σ=0.83, n=235
+                                                    Infimum: μ=0.070, σ=0.084, n=3,818
+s:b:3no: no direct data
+                                                    Infimum: μ=0.24, σ=0.19, n=30
+s:b:3nd: no direct data
+  When multiplied direct: μ=0.70, σ=0.78, n=5
+  When multiplied while adding: μ=0.49, σ=0.76, n=25
+                                                    Infimum: μ=0.13, σ=0.13, n=584
+s:l:3nd: no direct data
+  When multiplied direct: μ=0.75, σ=0.79, n=26
+  When multiplied while adding: μ=0.64, σ=0.77, n=66
+                                                    Infimum: μ=0.10, σ=0.11, n=1,795
+s:b:4ho: no direct data
+                                                    Infimum: μ=0.12, σ=0.12, n=111
+s:l:4ho: no direct data
+  When multiplied while adding: μ=0.67, σ=0.87, n=1
+                                                    Infimum: μ=0.17, σ=0.15, n=69
+s:b:4hd: no direct data
+  When multiplied while adding: μ=0.70, σ=0.84, n=7
+                                                    Infimum: μ=0.12, σ=0.12, n=146
+s:l:4hd: no direct data
+  When multiplied direct: μ=0.64, σ=0.70, n=5
+  When multiplied while adding: μ=0.82, σ=0.81, n=17
+                                                    Infimum: μ=0.083, σ=0.10, n=914
+s:b:4nd: no direct data
+  When multiplied while adding: μ=0.56, σ=0.78, n=5
+                                                    Infimum: μ=0.19, σ=0.16, n=122
+s:l:4nd: no direct data
+  When multiplied direct: μ=0.50, σ=0.60, n=1
+  When multiplied while adding: μ=0.60, σ=0.87, n=8
+                                                    Infimum: μ=0.16, σ=0.15, n=485
+
+
+======================
+Open squares: 20 - 39
+======================
+
+54,978 batches, 78,785 moves (1.4 moves per batch)
+
+c:b: 9 moves made, 194 moves missed (μ=0.049, σ=0.015, n=203)
+c:l: 150 moves made, 821 moves missed (μ=0.16, σ=0.012, n=971)
+bl:4: 18 moves made, 49 moves missed (μ=0.28, σ=0.053, n=67)
+bl:3: 120 moves made, 416 moves missed (μ=0.22, σ=0.018, n=536)
+bl:2: 304 moves made, 1,303 moves missed (μ=0.19, σ=0.0098, n=1,607)
+bl:1: 112 moves made, 960 moves missed (μ=0.11, σ=0.0094, n=1,072)
+bl:0: 82 moves made, 564 moves missed (μ=0.13, σ=0.013, n=646)
+bn:b: 920 moves made, 2,654 moves missed (μ=0.26, σ=0.0073, n=3,574)
+bn:l: 1,519 moves made, 5,547 moves missed (μ=0.22, σ=0.0049, n=7,066)
+fl:b: 741 moves made, 2,159 moves missed (μ=0.26, σ=0.0081, n=2,900)
+  When added: μ=0.34, σ=0.038, n=43,698
+                                                    Supremum: μ=0.42, σ=0.077, n=134,507
+fl:l: 1,250 moves made, 36,903 moves missed (μ=0.033, σ=0.00091, n=38,153)
+  When added: μ=0.10, σ=0.049, n=45,351
+                                                    Supremum: μ=0.33, σ=0.082, n=192,660
+fn:4: no direct data
+fn:3: 2 moves made, 1,045 moves missed (μ=0.0029, σ=0.0016, n=1,047)
+  When added: μ=0.11, σ=0.050, n=12,893
+                                                    Supremum: μ=0.35, σ=0.092, n=21,770
+fn:2: 16 moves made, 6,600 moves missed (μ=0.0026, σ=0.00062, n=6,616)
+  When added: μ=0.036, σ=0.047, n=22,011
+                                                    Supremum: μ=0.23, σ=0.078, n=47,395
+fn:1: 27 moves made, 13,205 moves missed (μ=0.0021, σ=0.00040, n=13,232)
+  When added: μ=0.041, σ=0.062, n=12,913
+                                                    Supremum: μ=0.13, σ=0.095, n=27,408
+fn:0: 12 moves made, 5,050 moves missed (μ=0.0026, σ=0.00071, n=5,062)
+  When added: μ=0.036, σ=0.062, n=7,547
+                                                    Supremum: μ=0.11, σ=0.095, n=13,987
+o:b: no direct data
+  When multiplied direct: μ=0.63, σ=0.76, n=3,853
+  When multiplied while adding: μ=0.70, σ=0.84, n=12,085
+                                                    Infimum: μ=0.13, σ=0.13, n=82,401
+o:l: no direct data
+  When multiplied direct: μ=0.44, σ=0.68, n=5,722
+  When multiplied while adding: μ=0.69, σ=0.83, n=10,323
+                                                    Infimum: μ=0.14, σ=0.14, n=77,185
+s:b:2ho: no direct data
+  When multiplied direct: μ=0.69, σ=0.79, n=178
+  When multiplied while adding: μ=0.71, σ=0.71, n=1,622
+                                                    Infimum: μ=0.12, σ=0.13, n=13,030
+s:l:2ho: no direct data
+  When multiplied direct: μ=0.27, σ=0.85, n=216
+  When multiplied while adding: μ=0.64, σ=0.82, n=574
+                                                    Infimum: μ=0.16, σ=0.15, n=6,491
+s:b:2hd: no direct data
+  When multiplied direct: μ=0.64, σ=0.75, n=1,227
+  When multiplied while adding: μ=0.68, σ=0.81, n=3,273
+                                                    Infimum: μ=0.14, σ=0.14, n=39,398
+s:l:2hd: no direct data
+  When multiplied direct: μ=0.20, σ=0.69, n=11,286
+  When multiplied while adding: μ=0.73, σ=0.87, n=7,647
+                                                    Infimum: μ=0.14, σ=0.14, n=63,949
+s:b:2no: no direct data
+  When multiplied direct: μ=0.65, σ=0.80, n=63
+  When multiplied while adding: μ=0.63, σ=0.82, n=731
+                                                    Infimum: μ=0.14, σ=0.13, n=8,385
+s:l:2no: no direct data
+  When multiplied while adding: μ=0.65, σ=0.85, n=6
+                                                    Infimum: μ=0.35, σ=0.15, n=237
+s:b:2nd: no direct data
+  When multiplied direct: μ=0.45, σ=0.86, n=1,405
+  When multiplied while adding: μ=0.70, σ=0.86, n=4,763
+                                                    Infimum: μ=0.17, σ=0.15, n=27,127
+s:l:2nd: no direct data
+  When multiplied direct: μ=0.24, σ=0.74, n=5,619
+  When multiplied while adding: μ=0.67, σ=0.82, n=4,421
+                                                    Infimum: μ=0.15, σ=0.14, n=46,746
+s:b:3ho: no direct data
+  When multiplied direct: μ=0.67, σ=0.77, n=67
+  When multiplied while adding: μ=0.63, σ=0.80, n=487
+                                                    Infimum: μ=0.16, σ=0.15, n=5,419
+s:l:3ho: no direct data
+  When multiplied direct: μ=0.63, σ=0.79, n=63
+  When multiplied while adding: μ=0.59, σ=0.79, n=315
+                                                    Infimum: μ=0.18, σ=0.16, n=4,799
+s:b:3hd: no direct data
+  When multiplied direct: μ=0.61, σ=0.77, n=294
+  When multiplied while adding: μ=0.62, σ=0.79, n=1,327
+                                                    Infimum: μ=0.19, σ=0.16, n=14,263
+s:l:3hd: no direct data
+  When multiplied direct: μ=0.20, σ=0.74, n=6,859
+  When multiplied while adding: μ=0.71, σ=0.84, n=7,832
+                                                    Infimum: μ=0.16, σ=0.15, n=45,494
+s:b:3no: no direct data
+  When multiplied direct: μ=0.59, σ=0.80, n=21
+  When multiplied while adding: μ=0.58, σ=0.86, n=123
+                                                    Infimum: μ=0.17, σ=0.15, n=1,957
+s:l:3no: no direct data
+  When multiplied direct: μ=0.56, σ=0.90, n=11
+  When multiplied while adding: μ=0.55, σ=0.87, n=1
+                                                    Infimum: μ=0.33, σ=0.18, n=156
+s:b:3nd: no direct data
+  When multiplied direct: μ=0.71, σ=0.78, n=323
+  When multiplied while adding: μ=0.69, σ=0.87, n=1,950
+                                                    Infimum: μ=0.18, σ=0.16, n=15,883
+s:l:3nd: no direct data
+  When multiplied direct: μ=0.42, σ=0.76, n=2,087
+  When multiplied while adding: μ=0.74, σ=0.85, n=5,752
+                                                    Infimum: μ=0.17, σ=0.15, n=36,585
+s:b:4ho: no direct data
+  When multiplied direct: μ=0.69, σ=0.78, n=21
+  When multiplied while adding: μ=0.66, σ=0.84, n=76
+                                                    Infimum: μ=0.19, σ=0.16, n=1,820
+s:l:4ho: no direct data
+  When multiplied direct: μ=0.65, σ=0.74, n=45
+  When multiplied while adding: μ=0.64, σ=0.80, n=111
+                                                    Infimum: μ=0.20, σ=0.17, n=1,911
+s:b:4hd: no direct data
+  When multiplied direct: μ=0.66, σ=0.75, n=150
+  When multiplied while adding: μ=0.58, σ=0.78, n=492
+                                                    Infimum: μ=0.21, σ=0.17, n=8,212
+s:l:4hd: no direct data
+  When multiplied direct: μ=0.20, σ=0.68, n=2,727
+  When multiplied while adding: μ=0.77, σ=0.85, n=4,519
+                                                    Infimum: μ=0.18, σ=0.16, n=28,102
+s:b:4nd: no direct data
+  When multiplied direct: μ=0.70, σ=0.79, n=144
+  When multiplied while adding: μ=0.64, σ=0.82, n=805
+                                                    Infimum: μ=0.20, σ=0.17, n=9,927
+s:l:4nd: no direct data
+  When multiplied direct: μ=0.68, σ=0.79, n=596
+  When multiplied while adding: μ=0.61, σ=0.84, n=3,418
+                                                    Infimum: μ=0.19, σ=0.17, n=22,593
+
+
+======================
+Open squares: 40 or more
+======================
+
+31,690 batches, 46,527 moves (1.5 moves per batch)
+
+c:b: 6 moves made, 42 moves missed (μ=0.14, σ=0.049, n=48)
+c:l: 25 moves made, 139 moves missed (μ=0.16, σ=0.028, n=164)
+bl:5: 3 moves made, 5 moves missed (μ=0.40, σ=0.15, n=8)
+bl:4: 14 moves made, 37 moves missed (μ=0.28, σ=0.061, n=51)
+bl:3: 10 moves made, 78 moves missed (μ=0.12, σ=0.034, n=88)
+bl:2: 33 moves made, 151 moves missed (μ=0.18, σ=0.028, n=184)
+bl:1: 26 moves made, 142 moves missed (μ=0.16, σ=0.028, n=168)
+bl:0: 8 moves made, 86 moves missed (μ=0.094, σ=0.030, n=94)
+bn:b: 121 moves made, 406 moves missed (μ=0.23, σ=0.018, n=527)
+bn:l: 216 moves made, 817 moves missed (μ=0.21, σ=0.013, n=1,033)
+fl:b: 187 moves made, 276 moves missed (μ=0.40, σ=0.023, n=463)
+  When added: μ=0.45, σ=0.048, n=10,685
+                                                    Supremum: μ=0.50, σ=0.12, n=59,676
+fl:l: 804 moves made, 8,740 moves missed (μ=0.084, σ=0.0028, n=9,544)
+  When added: μ=0.13, σ=0.069, n=9,807
+                                                    Supremum: μ=0.44, σ=0.12, n=81,512
+fn:6: no direct data
+fn:5: 0 moves made, 9 moves missed (μ=0.091, σ=0.083, n=9)
+  When added: μ=0.36, σ=0.084, n=599
+                                                    Supremum: μ=0.67, σ=0.15, n=1,237
+fn:4: 6 moves made, 543 moves missed (μ=0.013, σ=0.0048, n=549)
+  When added: μ=0.18, σ=0.083, n=2,438
+                                                    Supremum: μ=0.46, σ=0.14, n=5,756
+fn:3: 16 moves made, 2,500 moves missed (μ=0.0068, σ=0.0016, n=2,516)
+  When added: μ=0.096, σ=0.090, n=3,355
+                                                    Supremum: μ=0.24, σ=0.15, n=8,665
+fn:2: 17 moves made, 2,812 moves missed (μ=0.0064, σ=0.0015, n=2,829)
+  When added: μ=0.073, σ=0.079, n=3,823
+                                                    Supremum: μ=0.21, σ=0.14, n=11,465
+fn:1: 11 moves made, 1,327 moves missed (μ=0.0090, σ=0.0026, n=1,338)
+  When added: μ=0.060, σ=0.086, n=1,723
+                                                    Supremum: μ=0.16, σ=0.14, n=5,503
+fn:0: 2 moves made, 175 moves missed (μ=0.017, σ=0.0096, n=177)
+  When added: μ=0.072, σ=0.10, n=341
+                                                    Supremum: μ=0.16, σ=0.15, n=878
+o:b: no direct data
+  When multiplied direct: μ=0.68, σ=0.78, n=3,762
+  When multiplied while adding: μ=0.70, σ=0.80, n=10,275
+                                                    Infimum: μ=0.21, σ=0.18, n=64,869
+o:l: no direct data
+  When multiplied direct: μ=0.63, σ=0.81, n=2,983
+  When multiplied while adding: μ=0.72, σ=0.81, n=7,538
+                                                    Infimum: μ=0.22, σ=0.18, n=56,851
+s:b:2ho: no direct data
+  When multiplied direct: μ=0.70, σ=0.77, n=97
+  When multiplied while adding: μ=0.68, σ=0.78, n=440
+                                                    Infimum: μ=0.22, σ=0.18, n=5,383
+s:l:2ho: no direct data
+  When multiplied direct: μ=0.69, σ=0.78, n=59
+  When multiplied while adding: μ=0.58, σ=0.83, n=160
+                                                    Infimum: μ=0.24, σ=0.19, n=4,326
+s:b:2hd: no direct data
+  When multiplied direct: μ=0.68, σ=0.81, n=788
+  When multiplied while adding: μ=0.63, σ=0.83, n=1,504
+                                                    Infimum: μ=0.24, σ=0.19, n=27,081
+s:l:2hd: no direct data
+  When multiplied direct: μ=0.52, σ=0.77, n=1,564
+  When multiplied while adding: μ=0.64, σ=0.83, n=2,288
+                                                    Infimum: μ=0.24, σ=0.19, n=38,721
+s:b:2no: no direct data
+  When multiplied direct: μ=0.70, σ=0.78, n=122
+  When multiplied while adding: μ=0.62, σ=0.85, n=501
+                                                    Infimum: μ=0.22, σ=0.18, n=6,396
+s:l:2no: no direct data
+  When multiplied direct: μ=0.60, σ=0.92, n=3
+                                                    Infimum: μ=0.28, σ=0.20, n=78
+s:b:2nd: no direct data
+  When multiplied direct: μ=0.68, σ=0.77, n=424
+  When multiplied while adding: μ=0.68, σ=0.84, n=1,903
+                                                    Infimum: μ=0.25, σ=0.20, n=21,017
+s:l:2nd: no direct data
+  When multiplied direct: μ=0.70, σ=0.79, n=504
+  When multiplied while adding: μ=0.65, σ=0.84, n=1,722
+                                                    Infimum: μ=0.25, σ=0.20, n=22,716
+s:b:3ho: no direct data
+  When multiplied direct: μ=0.63, σ=0.75, n=55
+  When multiplied while adding: μ=0.63, σ=0.81, n=252
+                                                    Infimum: μ=0.24, σ=0.19, n=3,836
+s:l:3ho: no direct data
+  When multiplied direct: μ=0.69, σ=0.77, n=73
+  When multiplied while adding: μ=0.63, σ=0.84, n=346
+                                                    Infimum: μ=0.25, σ=0.19, n=4,097
+s:b:3hd: no direct data
+  When multiplied direct: μ=0.71, σ=0.78, n=253
+  When multiplied while adding: μ=0.65, σ=0.82, n=814
+                                                    Infimum: μ=0.26, σ=0.20, n=14,105
+s:l:3hd: no direct data
+  When multiplied direct: μ=0.34, σ=0.75, n=1,944
+  When multiplied while adding: μ=0.67, σ=0.84, n=3,339
+                                                    Infimum: μ=0.24, σ=0.19, n=33,755
+s:b:3no: no direct data
+  When multiplied direct: μ=0.54, σ=0.80, n=188
+  When multiplied while adding: μ=0.59, σ=0.81, n=198
+                                                    Infimum: μ=0.22, σ=0.18, n=5,074
+s:l:3no: no direct data
+                                                    Infimum: μ=0.39, σ=0.21, n=81
+s:b:3nd: no direct data
+  When multiplied direct: μ=0.69, σ=0.76, n=283
+  When multiplied while adding: μ=0.71, σ=0.87, n=1,373
+                                                    Infimum: μ=0.25, σ=0.20, n=15,496
+s:l:3nd: no direct data
+  When multiplied direct: μ=0.64, σ=0.75, n=930
+  When multiplied while adding: μ=0.72, σ=0.83, n=5,611
+                                                    Infimum: μ=0.25, σ=0.20, n=28,822
+s:b:4ho: no direct data
+  When multiplied direct: μ=0.74, σ=0.84, n=28
+  When multiplied while adding: μ=0.56, σ=0.77, n=102
+                                                    Infimum: μ=0.24, σ=0.19, n=1,997
+s:l:4ho: no direct data
+  When multiplied direct: μ=0.65, σ=0.74, n=20
+  When multiplied while adding: μ=0.54, σ=0.85, n=144
+                                                    Infimum: μ=0.27, σ=0.21, n=2,068
+s:b:4hd: no direct data
+  When multiplied direct: μ=0.67, σ=0.77, n=277
+  When multiplied while adding: μ=0.64, σ=0.88, n=1,135
+                                                    Infimum: μ=0.26, σ=0.20, n=12,359
+s:l:4hd: no direct data
+  When multiplied direct: μ=0.39, σ=0.84, n=1,303
+  When multiplied while adding: μ=0.66, σ=0.82, n=4,020
+                                                    Infimum: μ=0.25, σ=0.20, n=29,200
+s:b:4nd: no direct data
+  When multiplied direct: μ=0.53, σ=0.65, n=532
+  When multiplied while adding: μ=0.66, σ=0.87, n=2,877
+                                                    Infimum: μ=0.24, σ=0.19, n=16,493
+s:l:4nd: no direct data
+  When multiplied direct: μ=0.53, σ=0.77, n=1,178
+  When multiplied while adding: μ=0.73, σ=0.84, n=6,210
+                                                    Infimum: μ=0.24, σ=0.19, n=29,291
+
