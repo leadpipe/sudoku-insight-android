@@ -23,18 +23,19 @@ import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentMap;
+
+import javax.annotation.Nullable;
 
 /**
  * Analyzes the output from {@link InsightMeasurer} to look for probability
@@ -47,7 +48,7 @@ public class Probabilities {
     for (String line; (line = in.readLine()) != null; ) {
       Iterator<String> iter = splitter.split(line).iterator();
       boolean isTrailhead = Boolean.parseBoolean(iter.next());
-      long ms = Long.parseLong(iter.next());
+      iter.next();  // elapsed ms
       int openCount = Integer.parseInt(iter.next());
       int minOpen = Integer.parseInt(iter.next());
       int numTrails = Integer.parseInt(iter.next());
@@ -58,13 +59,11 @@ public class Probabilities {
 
       Reporter reporter = getReporter(
           openCount, minOpen, numTrails, timestamp, effectiveTimestamp, moveNumber, effectiveMoveNumber);
-      double seconds = ms / 1000.0;
-      if (isTrailhead) {
-        reporter.takeTrailhead(seconds, openCount, Pattern.collsFromString(iter.next()));
-      } else {
-        reporter.takeBatch(seconds, openCount, new Universe(iter), Pattern.collsFromString(iter.next()),
-                           Pattern.collsFromString(iter.next()));
+      if (!isTrailhead) {
+        new Universe(iter);
+        reporter.notePlayed(openCount, Pattern.collsFromString(iter.next()));
       }
+      reporter.noteMissed(openCount, Pattern.collsFromString(iter.next()));
       if (iter.hasNext()) {
         in.close();
         throw new IOException("Mismatch in line consumption");
@@ -147,33 +146,31 @@ public class Probabilities {
   }
 
   static class Reporter {
-    private final LoadingCache<Sp, BatchProcess> processes;
+    private final LoadingCache<Sp, SpCounter> counters;
     private int batchCount;
     private int moveCount;
 
     public Reporter() {
-      processes = CacheBuilder.newBuilder().build(new CacheLoader<Sp, BatchProcess>() {
-        @Override public BatchProcess load(Sp sp) {
-          return new BatchProcess(sp);
+      counters = CacheBuilder.newBuilder().build(new CacheLoader<Sp, SpCounter>() {
+        @Override public SpCounter load(Sp sp) {
+          return new SpCounter(sp);
         }
       });
     }
 
-    public void takeTrailhead(double seconds, int openCount, List<Coll> missed) {
+    public void noteMissed(int openCount, List<Coll> missed) {
       for (Coll coll : missed) {
-        processes.getUnchecked(Sp.fromList(coll.patterns, openCount)).addMissed();
+        for (Pattern p : coll.patterns)
+          counters.getUnchecked(Sp.fromPattern(p, openCount)).addMissed(coll.patterns.size());
       }
     }
 
-    public void takeBatch(double seconds, int openCount, Universe universe,
-                          List<Coll> played, List<Coll> missed) {
+    public void notePlayed(int openCount, List<Coll> played) {
       ++batchCount;
       for (Coll coll : played) {
         ++moveCount;
-        processes.getUnchecked(Sp.fromList(coll.patterns, openCount)).take(seconds, openCount, universe);
-      }
-      for (Coll coll : missed) {
-        processes.getUnchecked(Sp.fromList(coll.patterns, openCount)).addMissed();
+        for (Pattern p : coll.patterns)
+          counters.getUnchecked(Sp.fromPattern(p, openCount)).addPlayed(coll.patterns.size());
       }
     }
 
@@ -189,40 +186,23 @@ public class Probabilities {
         }
       });
 
-      ConcurrentMap<Sp, BatchProcess> p = processes.asMap();
-      Set<Sp.Combination> combs = Sets.newTreeSet();
+      ConcurrentMap<Sp, SpCounter> p = counters.asMap();
       Set<Sp.Implication> imps = Sets.newTreeSet();
       for (Sp sp : p.keySet()) {
-        BatchProcess process = p.get(sp);
-        infos.getUnchecked(sp).setProcess(process);
-        switch (sp.getType()) {
-          case COMBINATION: combs.add((Sp.Combination) sp); break;
-          case IMPLICATION: imps.add((Sp.Implication) sp); break;
-          default: break;
-        }
-      }
-
-      for (Sp.Combination comb : combs) {
-        SpInfo combInfo = infos.getUnchecked(comb);
-        for (Sp part : comb.parts.elementSet()) {
-          if (part.getType() == Sp.Type.IMPLICATION)
-            imps.add((Sp.Implication) part);
-          // comb = part or rest
-          SpInfo partInfo = infos.getUnchecked(part);
-          Sp rest = comb.minus(part);
-          SpInfo restInfo = infos.getUnchecked(rest);
-          partInfo.addAdditive(combInfo, restInfo);
-        }
+        SpCounter counter = p.get(sp);
+        infos.getUnchecked(sp).setCounter(counter);
+        if (sp.getType() == Sp.Type.IMPLICATION)
+          imps.add((Sp.Implication) sp);
       }
 
       for (Sp.Implication imp : imps) {
         SpInfo impInfo = infos.getUnchecked(imp);
-        for (Sp part : imp.parts.elementSet()) {
-          // imp = part and rest
-          SpInfo partInfo = infos.getUnchecked(part);
-          Sp rest = imp.minus(part);
+        for (Sp antecedent : imp.antecedents.elementSet()) {
+          // imp = antecedent and rest
+          SpInfo antecedentInfo = infos.getUnchecked(antecedent);
+          Sp rest = imp.minus(antecedent);
           SpInfo restInfo = infos.getUnchecked(rest);
-          partInfo.addMultiplicative(impInfo, restInfo);
+          antecedentInfo.infer(impInfo, restInfo);
         }
       }
 
@@ -234,117 +214,142 @@ public class Probabilities {
     }
   }
 
-  static class BatchProcess {
+  static class SpCounter {
     private final Sp sp;
-    private int movesMissed;
-    private int movesMade;
+    private final LoadingCache<Integer, SizeCounter> counters;
+    private int missed;
+    private int played;
 
-    public BatchProcess(Sp sp) {
+    public SpCounter(Sp sp) {
       this.sp = sp;
+      this.counters = CacheBuilder.newBuilder().build(new CacheLoader<Integer, SizeCounter>() {
+        @Override public SizeCounter load(Integer size) {
+          return new SizeCounter();
+        }
+      });
     }
 
     public Sp sp() {
       return sp;
     }
 
-    public int movesMade() {
-      return movesMade;
+    public int played() {
+      return played;
     }
 
-    public int movesMissed() {
-      return movesMissed;
+    public int missed() {
+      return missed;
     }
 
-    public int totalMoves() {
-      return movesMade + movesMissed;
+    public int total() {
+      return played + missed;
     }
 
-    public void addMissed() {
-      ++movesMissed;
+    public void addMissed(int size) {
+      ++missed;
+      if (sp.isMove())
+        counters.getUnchecked(size).addMissed();
     }
 
-    public void take(double seconds, int openCount, Universe universe) {
-      ++movesMade;
+    public void addPlayed(int size) {
+      ++played;
+      if (sp.isMove())
+        counters.getUnchecked(size).addPlayed();
     }
 
     public Dist getDist() {
-      return forBinomial(movesMade, movesMade + movesMissed);
+      return forBinomial(played, total());
+    }
+
+    public Iterable<Integer> getSizes() {
+      return new TreeSet<Integer>(counters.asMap().keySet());
+    }
+
+    @Nullable public SizeCounter getSizeCounter(int size) {
+      return counters.asMap().get(size);
+    }
+  }
+
+  // Breaks out played/missed counts by size of the set of insights that all
+  // point to the same move (or that are all errors).
+  static class SizeCounter {
+    private int missed;
+    private int played;
+
+    public SizeCounter() {
+    }
+
+    public int played() {
+      return played;
+    }
+
+    public int missed() {
+      return missed;
+    }
+
+    public int total() {
+      return played + missed;
+    }
+
+    public void addMissed() {
+      ++missed;
+    }
+
+    public void addPlayed() {
+      ++played;
+    }
+
+    public Dist getDist() {
+      return forBinomial(played, total());
     }
   }
 
   // Aggregates distribution information about a specific Sp.
   static class SpInfo {
     final Sp sp;
-    BatchProcess process;
+    SpCounter counter;
     Dist direct;
-    final Collection<SpInfo> inverted = Lists.newArrayList();
-    Dist pooledAdditive;
-    Dist pooledSupremum;
-    Dist pooledMultiplicative;
-    Dist pooledAdditiveMultiplicative;
-    Dist pooledInfimum;
+    Dist pooledInferred;
+    int numUsed;
+    int numSkipped;
 
     SpInfo(Sp sp) {
       this.sp = sp;
     }
 
-    void setProcess(BatchProcess process) {
-      this.process = process;
-      this.direct = process.getDist();
+    void setCounter(SpCounter counter) {
+      this.counter = counter;
+      this.direct = counter.getDist();
     }
 
     boolean hasEnoughData() {
-      return direct != null && direct.count >= 1;
+      return direct != null && direct.count >= 400;
     }
 
-    void addAdditive(SpInfo combInfo, SpInfo restInfo) {
-      if (combInfo.hasEnoughData() && restInfo.hasEnoughData() && less(restInfo.direct, combInfo.direct)) {
-        Dist implied = difference(combInfo.direct, restInfo.direct);
-        pooledAdditive = pool(pooledAdditive, implied);
+    void infer(SpInfo impInfo, SpInfo restInfo) {
+      if (impInfo.hasEnoughData() && restInfo.hasEnoughData()) {
+        if (impInfo.direct.mean < restInfo.direct.mean) {
+          Dist inferred = quotient(impInfo.direct, restInfo.direct);
+          pooledInferred = pool(pooledInferred, inferred);
+          ++numUsed;
+        } else {
+          ++numSkipped;
+        }
       }
-      Dist supremum = combInfo.direct;
-      pooledSupremum = pool(pooledSupremum, supremum);
-    }
-
-    void addMultiplicative(SpInfo impInfo, SpInfo restInfo) {
-      if (impInfo.hasEnoughData() && restInfo.hasEnoughData() && less(impInfo.direct, restInfo.direct)) {
-        Dist implied = quotient(impInfo.direct, restInfo.direct);
-        pooledMultiplicative = pool(pooledMultiplicative, implied);
-      }
-      if (impInfo.pooledAdditive != null && restInfo.pooledAdditive != null
-          && less(impInfo.pooledAdditive, restInfo.pooledAdditive)) {
-        Dist implied = quotient(impInfo.pooledAdditive, restInfo.pooledAdditive);
-        pooledAdditiveMultiplicative = pool(pooledAdditiveMultiplicative, implied);
-      }
-      Dist infimum = impInfo.direct;
-      pooledInfimum = pool(pooledInfimum, infimum);
     }
 
     void report(PrintStream out) {
-      if (process == null) {
-        out.printf("%s: no direct data%n", sp);
-        reportMultiplicatives(out);
+      if (counter == null) {
+        out.printf("%-8s inferred %-24s  used %3.0f%%%n", sp, pooledInferred,
+                   100.0 * numUsed / (numUsed + numSkipped));
       } else {
-        out.printf("%s: %,d moves made, %,d moves missed (%s)%n",
-                   sp, process.movesMade, process.movesMissed, direct);
-        reportAdditives(out);
+        out.printf("%-8s %s%n", sp, direct);
+        for (int size : counter.getSizes()) {
+          Dist dist = counter.getSizeCounter(size).getDist();
+          out.printf("%10d %-28s %4.0f%%%n", size, dist,
+                     100 * dist.mean / direct.mean);
+        }
       }
-    }
-
-    void reportDist(PrintStream out, Dist d, String name) {
-      if (d != null)
-        out.printf("%s %s%n", name, d);
-    }
-
-    void reportAdditives(PrintStream out) {
-      reportDist(out, pooledAdditive, "  When added:");
-      reportDist(out, pooledSupremum, "                                                    Supremum:");
-    }
-
-    void reportMultiplicatives(PrintStream out) {
-      reportDist(out, pooledMultiplicative, "  When multiplied direct:");
-      reportDist(out, pooledAdditiveMultiplicative, "  When multiplied while adding:");
-      reportDist(out, pooledInfimum, "                                                    Infimum:");
     }
   }
 

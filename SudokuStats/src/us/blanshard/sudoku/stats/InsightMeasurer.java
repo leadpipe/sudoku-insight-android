@@ -179,18 +179,42 @@ public class InsightMeasurer implements Runnable {
   }
 
   private void emitAbandonedErrors() {
-    for (Grid grid : trailFinalGrids.values()) {
-      GridMarks gridMarks = new GridMarks(grid);
+    for (Map.Entry<Integer, Grid> entry: trailFinalGrids.entrySet()) {
+      GridMarks gridMarks = new GridMarks(entry.getValue());
       if (gridMarks.hasErrors) {
         Collector collector = new Collector(gridMarks);
         Analyzer.analyze(gridMarks, collector, OPTS);
-        startLine(false, 0, gridMarks.grid.getNumOpenLocations(), 0);
+        long timestamp = 0;
+        long elapsed = 0;
+        int trailId = entry.getKey();
+        for (int index = history.size(); index-- > 0; ) {
+          Move move = history.get(index);
+          if (move.trailId == trailId) {
+            timestamp = history.get(index + 1).timestamp;
+            elapsed = timestamp - move.timestamp;
+            break;
+          }
+        }
+        startLine(false, elapsed, gridMarks.grid.getNumOpenLocations(), timestamp);
         emitUniverse(new Universe());
-        collector.emitColls(Collections.<Assignment>emptySet(), collector.errors);
+        StringBuilder sb = new StringBuilder();
+        try {
+          Pattern.appendTo(sb, toColl(collector.errors));
+        } catch (IOException e) {
+          throw new AssertionError(e);
+        }
+        emit(sb.toString());
         emit("");
         endLine();
       }
     }
+  }
+
+  private Pattern.Coll toColl(Iterable<WrappedInsight> insights) {
+    List<Pattern> ps = Lists.newArrayList();
+    for (WrappedInsight w : insights)
+      ps.add(w.getPattern());
+    return new Pattern.Coll(ps, 0, 0);
   }
 
   private void startLine(boolean isTrailhead, long elapsed, int numOpen, long timestamp) {
@@ -231,7 +255,7 @@ public class InsightMeasurer implements Runnable {
   private class Collector implements Analyzer.Callback {
     final GridMarks gridMarks;
     final Multimap<Assignment, WrappedInsight> moves = ArrayListMultimap.create();
-    final Collection<WrappedInsight> errors = Lists.newArrayList();
+    final List<WrappedInsight> errors = Lists.newArrayList();
     final Set<Insight> elims = Sets.newLinkedHashSet();
 
     Collector(GridMarks gridMarks) {
@@ -284,23 +308,19 @@ public class InsightMeasurer implements Runnable {
         universe.add(i, false);
     }
 
-    public void emitColls(Iterable<Assignment> assignments, Iterable<WrappedInsight> errors) {
+    public void emitColls(Iterable<Assignment> assignments, Collection<WrappedInsight> errors) {
       StringBuilder sb = new StringBuilder();
       try {
-        Pattern.appendAllTo(sb, Iterables.concat(
-            Iterables.transform(assignments, new Function<Assignment, Pattern.Coll>() {
-                @Override public Pattern.Coll apply(Assignment a) {
-                  List<Pattern> ps = Lists.newArrayList();
-                  for (WrappedInsight w : moves.get(a))
-                    ps.add(w.getPattern());
-                  return new Pattern.Coll(ps, 0, 0);
-                }
-              }),
-            Iterables.transform(errors, new Function<WrappedInsight, Pattern.Coll>() {
-                @Override public Pattern.Coll apply(WrappedInsight w) {
-                  return new Pattern.Coll(Collections.singletonList(w.getPattern()), 0, 0);
-                }
-              })));
+        Iterable<Pattern.Coll> colls = Iterables.transform(
+            assignments, new Function<Assignment, Pattern.Coll>() {
+            @Override public Pattern.Coll apply(Assignment a) {
+              return toColl(moves.get(a));
+            }
+          });
+        if (!errors.isEmpty()) {
+          colls = Iterables.concat(colls, Collections.singleton(toColl(errors)));
+        }
+        Pattern.appendAllTo(sb, colls);
       } catch (IOException impossible) {
         throw new AssertionError(null, impossible);
       }

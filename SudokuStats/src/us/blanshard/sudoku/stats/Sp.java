@@ -26,6 +26,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
@@ -35,6 +36,7 @@ import com.google.common.collect.TreeMultiset;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -60,12 +62,48 @@ public abstract class Sp implements Comparable<Sp> {
     return true;
   }
 
+  public boolean isMove() {
+    return false;
+  }
+
+  public int size() {
+    return 1;
+  }
+
+  public Sp nub() {
+    return this;
+  }
+
   /**
    * Returns the probability that a move with this pattern will be played, on a
    * grid with the given number of open squares.
    */
-  //  public abstract double getProbabilityOfPlaying(int numOpen);
-  //  protected abstract double getAddedProbability(int numOpen);
+  public double getProbabilityOfPlaying(int numOpen) {
+    return getProbability(numOpen, directProbabilities);
+  }
+
+  protected double getAddedProbability(int numOpen) {
+    return getProbability(numOpen, additiveProbabilities);
+  }
+
+  protected Sp getFallbackKey() {
+    throw new UnsupportedOperationException();
+  }
+
+  private double getProbability(int numOpen, Map<Sp, double[]> map) {
+    Sp key = this;
+    while (!map.containsKey(key)) key = key.getFallbackKey();
+    double[] ps = map.get(key);
+    int index = Math.min(numOpen / 20, 2);
+    return ps[index];
+  }
+
+  private static final ImmutableMap<Sp, double[]> directProbabilities;
+  private static final ImmutableMap<Sp, double[]> additiveProbabilities;
+  static {
+    directProbabilities = null;
+    additiveProbabilities = null;
+  }
 
   /**
    * Returns the first Sp in a combination, or just this Sp outside of a
@@ -353,6 +391,9 @@ public abstract class Sp implements Comparable<Sp> {
     ForcedLoc(UnitCategory category) {
       super(Type.FORCED_LOCATION, category);
     }
+    @Override public boolean isMove() {
+      return true;
+    }
   }
 
   public static ForcedLoc forcedLocation(Pattern.ForcedLoc forcedLocation) {
@@ -365,6 +406,9 @@ public abstract class Sp implements Comparable<Sp> {
   public static final class ForcedNum extends PeerMetricsBased {
     ForcedNum(PeerMetrics metrics) {
       super(Type.FORCED_NUMERAL, metrics);
+    }
+    @Override public boolean isMove() {
+      return true;
     }
   }
 
@@ -454,20 +498,130 @@ public abstract class Sp implements Comparable<Sp> {
   }
 
   /**
-   * Base for Implication and Combination, which both consist of collections of
-   * patterns.
+   * Contains the patterns of the antecedents and consequent; treated as a
+   * conjunction for probabilities, and a sum for times.
    */
-  public static abstract class Composite extends Sp {
-    protected final SortedMultiset<Sp> parts;
+  public static class Implication extends Sp {
+    final SortedMultiset<Sp> antecedents;
+    final Sp consequent;
 
-    private Composite(Type type, SortedMultiset<Sp> parts) {
-      super(type);
+    private Implication(SortedMultiset<Sp> antecedents, Sp consequent) {
+      super(Type.IMPLICATION);
+      this.antecedents = antecedents;
+      this.consequent = consequent;
+    }
+
+    @Override public boolean isSingular() {
+      return false;
+    }
+
+    @Override public boolean isMove() {
+      return consequent.isMove();
+    }
+
+    @Override public int size() {
+      return antecedents.size() + consequent.size();
+    }
+
+    @Override public Sp nub() {
+      return consequent.nub();
+    }
+
+    /**
+     * Returns the Sp (implication or not) consisting of the remaining parts of
+     * this implication when the given antecedent is removed.
+     */
+    public Sp minus(Sp antecedent) {
+      checkArgument(antecedents.contains(antecedent));
+      if (antecedents.size() == 1) return consequent;
+      SortedMultiset<Sp> newAntecedents = TreeMultiset.create(antecedents);
+      newAntecedents.remove(antecedent);
+      return new Implication(newAntecedents, consequent);
+    }
+
+    @Override public boolean equals(Object o) {
+      if (!super.equals(o)) return false;
+      Implication that = (Implication) o;
+      return this.antecedents.equals(that.antecedents)
+          && this.consequent.equals(that.consequent);
+    }
+
+    @Override public int hashCode() {
+      return Objects.hashCode(super.hashCode(), antecedents, consequent);
+    }
+
+    private static final Ordering<Iterable<Sp>> LEXICO = Ordering.natural().lexicographical();
+
+    @Override protected int compareToGuts(Sp p) {
+      Implication that = (Implication) p;
+      return ComparisonChain.start()
+          .compare(this.antecedents, that.antecedents, LEXICO)
+          .compare(this.consequent, that.consequent)
+          .result();
+    }
+
+    @Override public double getProbabilityOfPlaying(int numOpen) {
+      double answer = consequent.getProbabilityOfPlaying(numOpen);
+      for (Sp antecedent : antecedents) answer *= antecedent.getProbabilityOfPlaying(numOpen);
+      return answer;
+    }
+
+    @Override public double getAddedProbability(int numOpen) {
+      double answer = consequent.getAddedProbability(numOpen);
+      for (Sp antecedent : antecedents) answer *= antecedent.getAddedProbability(numOpen);
+      return answer;
+    }
+
+    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
+      Joiner.on(',').appendTo(a, Iterables.transform(antecedents.entrySet(),
+          new Function<Multiset.Entry<Sp>, String>() {
+        @Override public String apply(Multiset.Entry<Sp> e) {
+          if (e.getCount() == 1) return e.getElement().toString();
+          return e.getElement() + "(" + e.getCount() + ")";
+        }
+      }));
+      a.append("=>");
+      return consequent.appendGutsTo(a);
+    }
+  }
+
+  public static Implication implication(Pattern.Implication implication, final int openCount) {
+    SortedMultiset<Sp> antecedents = TreeMultiset.create();
+    for (Pattern p : implication.getAntecedents())
+      antecedents.add(Sp.fromPattern(p, openCount));
+    Sp consequent = Sp.fromPattern(implication.getConsequent(), openCount);
+    return new Implication(antecedents, consequent);
+  }
+
+  /**
+   * A collection of patterns for the same assignment; treated as a disjunction
+   * for probabilities, and a min for times.
+   */
+  public static class Combination extends Sp {
+    final SortedMultiset<Sp> parts;
+
+    private Combination(SortedMultiset<Sp> parts) {
+      super(Type.COMBINATION);
       this.parts = parts;
     }
 
-    @Override
-    public boolean isSingular() {
+
+    @Override public boolean isSingular() {
       return false;
+    }
+
+    @Override public boolean isMove() {
+      for (Sp part : parts)
+        if (part.isMove()) return true;
+      return false;
+    }
+
+    @Override public int size() {
+      return parts.size();
+    }
+
+    @Override public Sp nub() {
+      return parts.firstEntry().getElement();
     }
 
     /**
@@ -480,12 +634,12 @@ public abstract class Sp implements Comparable<Sp> {
       newParts.remove(part);
       if (newParts.size() == 1)
         return newParts.firstEntry().getElement();
-      return type == Type.COMBINATION ? new Combination(newParts) : new Implication(newParts);
+      return new Combination(newParts);
     }
 
     @Override public boolean equals(Object o) {
       if (!super.equals(o)) return false;
-      Composite that = (Composite) o;
+      Combination that = (Combination) o;
       return this.parts.equals(that.parts);
     }
 
@@ -496,57 +650,24 @@ public abstract class Sp implements Comparable<Sp> {
     private static final Ordering<Iterable<Sp>> LEXICO = Ordering.natural().lexicographical();
 
     @Override protected int compareToGuts(Sp p) {
-      Composite that = (Composite) p;
+      Combination that = (Combination) p;
       return ComparisonChain.start()
           .compare(this.parts, that.parts, LEXICO)
           .result();
     }
-  }
 
-  /**
-   * Contains the patterns of the antecedents and consequent; treated as a
-   * conjunction for probabilities, and a sum for times.
-   */
-  public static class Implication extends Composite {
-
-    private Implication(SortedMultiset<Sp> parts) {
-      super(Type.IMPLICATION, parts);
-    }
-
-    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
-      return Joiner.on(',').appendTo(a, Iterables.transform(parts.entrySet(),
-          new Function<Multiset.Entry<Sp>, String>() {
-        @Override public String apply(Multiset.Entry<Sp> e) {
-          if (e.getCount() == 1) return e.getElement().toString();
-          return e.getElement() + "(" + e.getCount() + ")";
+    @Override public double getProbabilityOfPlaying(int numOpen) {
+      double answer = 0;
+      boolean firstPart = true;
+      for (Sp part : parts) {
+        if (firstPart) {
+          firstPart = false;
+          answer = part.getProbabilityOfPlaying(numOpen);
+        } else {
+          answer += part.getAddedProbability(numOpen);
         }
-      }));
-    }
-  }
-
-  public static Implication implication(Pattern.Implication implication, final int openCount) {
-    SortedMultiset<Sp> parts = TreeMultiset.create();
-    while (true) {
-      for (Pattern p : implication.getAntecedents())
-        parts.add(Sp.fromPattern(p, openCount));
-      if (implication.getConsequent().getType() == Pattern.Type.IMPLICATION)
-        implication = (Pattern.Implication) implication.getConsequent();
-      else {
-        parts.add(Sp.fromPattern(implication.getConsequent(), openCount));
-        break;
       }
-    }
-    return new Implication(parts);
-  }
-
-  /**
-   * A collection of patterns for the same assignment; treated as a disjunction
-   * for probabilities, and a min for times.
-   */
-  public static class Combination extends Composite {
-
-    private Combination(SortedMultiset<Sp> parts) {
-      super(Type.COMBINATION, parts);
+      return answer;
     }
 
     @Override public Sp head() {

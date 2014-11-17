@@ -229,7 +229,7 @@ public class ScanPoints {
 
       for (Sp.Implication imp : imps) {
         SpInfo impInfo = infos.getUnchecked(imp);
-        for (Sp part : imp.parts.elementSet()) {
+        for (Sp part : imp.antecedents.elementSet()) {
           // imp = part and rest
           SpInfo partInfo = infos.getUnchecked(part);
           impInfo.addMultiplicativePart(partInfo);
