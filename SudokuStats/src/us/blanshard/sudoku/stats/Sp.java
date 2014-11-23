@@ -144,6 +144,8 @@ public abstract class Sp implements Comparable<Sp> {
         return overlap((Pattern.Overlap) pattern, openCount);
       case LOCKED_SET:
         return lockedSet((Pattern.LockedSet) pattern);
+      case NAKED_SET:
+        return nakedSet((Pattern.NakedSet) pattern);
       case IMPLICATION:
         return implication((Pattern.Implication) pattern, openCount);
       default:
@@ -165,6 +167,7 @@ public abstract class Sp implements Comparable<Sp> {
     FORCED_NUMERAL(Pattern.Type.FORCED_NUMERAL),
     OVERLAP(Pattern.Type.OVERLAP),
     LOCKED_SET(Pattern.Type.LOCKED_SET),
+    NAKED_SET(Pattern.Type.NAKED_SET),
     IMPLICATION(Pattern.Type.IMPLICATION),
     COMBINATION("comb"),
     NONE("none");
@@ -495,6 +498,72 @@ public abstract class Sp implements Comparable<Sp> {
   public static LockedSet lockedSet(Pattern.LockedSet lockedSet) {
     return new LockedSet(
         lockedSet.getCategory(), lockedSet.getSetSize(), lockedSet.isNaked(), lockedSet.isOverlapped());
+  }
+
+  /**
+   * A special pattern for naked sets.
+   */
+  public static final class NakedSet extends Sp {
+    private final UnitCategory category;
+    private final int setSize;
+    private final int deltaOverAverage;
+
+    NakedSet(UnitCategory category, int setSize, int deltaOverAverage) {
+      super(Type.NAKED_SET);
+      this.category = category;
+      this.setSize = setSize;
+      this.deltaOverAverage = deltaOverAverage;
+    }
+
+    public UnitCategory getCategory() {
+      return category;
+    }
+
+    public int getSetSize() {
+      return setSize;
+    }
+
+    public int getDeltaOverAverage() {
+      return deltaOverAverage;
+    }
+
+    @Override public boolean equals(Object o) {
+      if (o == null) return false;
+      if (o == this) return true;
+      if (o instanceof NakedSet) {
+        NakedSet that = (NakedSet) o;
+        return this.category == that.category
+            && this.setSize == that.setSize
+            /*&& this.deltaOverAverage == that.deltaOverAverage*/;
+      }
+      return false;
+    }
+
+    @Override public int hashCode() {
+      return Objects.hashCode(category, setSize/*, deltaOverAverage*/);
+    }
+
+    @Override protected int compareToGuts(Sp p) {
+      NakedSet that = (NakedSet) p;
+      return ComparisonChain.start()
+          .compare(this.setSize, that.setSize)
+          .compare(this.category, that.category)
+//          .compare(that.deltaOverAverage, this.deltaOverAverage)  // inverted
+          .result();
+    }
+
+    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
+      return a
+          .append(String.valueOf(setSize))
+          .append(':')
+          .append(category.toString())
+//          .append(String.valueOf(deltaOverAverage))
+          ;
+    }
+  }
+
+  public static NakedSet nakedSet(Pattern.NakedSet set) {
+    return new NakedSet(set.getCategory(), set.getSetSize(), set.getDeltaOverAverage());
   }
 
   /**

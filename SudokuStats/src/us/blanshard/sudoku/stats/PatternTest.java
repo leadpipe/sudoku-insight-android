@@ -89,7 +89,7 @@ public class PatternTest {
     assertEquals("s:b:2:h:o", Pattern.lockedSet(set1, grid).toString());
     assertEquals("s:l:2:h:d", Pattern.lockedSet(set2, grid).toString());
     assertEquals("s:l:4:h:o", Pattern.lockedSet(set3, grid).toString());
-    assertEquals("s:l:4:n:d", Pattern.lockedSet(set4, grid).toString());
+    assertEquals("ns:l:4:1", Pattern.lockedSet(set4, grid).toString());
   }
 
   @Test public void moreLockedSets() {

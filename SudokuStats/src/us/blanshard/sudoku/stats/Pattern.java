@@ -128,6 +128,8 @@ public abstract class Pattern implements Comparable<Pattern> {
         return overlap(UnitCategory.fromString(params));
       case LOCKED_SET:
         return LockedSet.fromString(params);
+      case NAKED_SET:
+        return NakedSet.fromString(params);
       case IMPLICATION:
         return Implication.fromString(params);
       default:
@@ -181,6 +183,7 @@ public abstract class Pattern implements Comparable<Pattern> {
     FORCED_NUMERAL("fn"),
     OVERLAP("o"),
     LOCKED_SET("s"),
+    NAKED_SET("ns"),
     IMPLICATION("i");
 
     private final String name;
@@ -697,6 +700,82 @@ public abstract class Pattern implements Comparable<Pattern> {
   }
 
   /**
+   * Special separate pattern for naked sets.
+   */
+  public static final class NakedSet extends Pattern {
+    private final UnitCategory category;
+    private final int setSize;
+    private final int deltaOverAverage;
+
+    NakedSet(UnitCategory category, int setSize, int deltaOverAverage) {
+      super(Type.NAKED_SET);
+      this.category = category;
+      this.setSize = setSize;
+      this.deltaOverAverage = deltaOverAverage;
+    }
+
+    public UnitCategory getCategory() {
+      return category;
+    }
+
+    public int getSetSize() {
+      return setSize;
+    }
+
+    public int getDeltaOverAverage() {
+      return deltaOverAverage;
+    }
+
+    @Override public int getScanTargetCount() {
+      return setSize;
+    }
+
+    @Override public boolean equals(Object o) {
+      if (o == null) return false;
+      if (o == this) return true;
+      if (o instanceof NakedSet) {
+        NakedSet that = (NakedSet) o;
+        return this.category == that.category
+            && this.setSize == that.setSize
+            && this.deltaOverAverage == that.deltaOverAverage;
+      }
+      return false;
+    }
+
+    @Override public int hashCode() {
+      return Objects.hashCode(category, setSize, deltaOverAverage);
+    }
+
+    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
+      return a.append(category.toString())
+          .append(':')
+          .append(String.valueOf(setSize))
+          .append(':')
+          .append(String.valueOf(deltaOverAverage));
+    }
+
+    public static NakedSet fromString(String s) {
+      return fromPieces(COLON_SPLITTER.split(s).iterator());
+    }
+
+    private static NakedSet fromPieces(Iterator<String> pieces) {
+      UnitCategory category = UnitCategory.fromString(pieces.next());
+      int setSize = Integer.parseInt(pieces.next());
+      int deltaOverAverage = Integer.parseInt(Iterators.getOnlyElement(pieces));
+      return new NakedSet(category, setSize, deltaOverAverage);
+    }
+
+    @Override protected int compareToGuts(Pattern p) {
+      NakedSet that = (NakedSet) p;
+      return ComparisonChain.start()
+          .compare(this.setSize, that.setSize)
+          .compare(this.category, that.category)
+          .compare(this.deltaOverAverage, that.deltaOverAverage)
+          .result();
+    }
+  }
+
+  /**
    * Returns the difference between the given set and all numerals assigned to
    * locations within the given unit, in the given grid.
    */
@@ -707,7 +786,35 @@ public abstract class Pattern implements Comparable<Pattern> {
     return nums;
   }
 
-  public static LockedSet lockedSet(us.blanshard.sudoku.insight.LockedSet set, Grid grid) {
+  private static int countNumSetInUnit(Grid grid, Unit unit) {
+    int answer = 0;
+    for (Location loc : unit)
+      if (grid.containsKey(loc))
+        ++answer;
+    return answer;
+  }
+
+  private static NakedSet nakedSet(us.blanshard.sudoku.insight.LockedSet set, Grid grid) {
+    UnitCategory category = UnitCategory.forUnit(set.getLocations().unit);
+    int setSize = set.getLocations().size();
+    int numSetInUnit = countNumSetInUnit(grid, set.getLocations().unit);
+    int numSetInFullestUnit = numSetInUnit;
+    Unit overlap = set.getOverlappingUnit();
+    if (overlap != null) {
+      int numSetInOverlap = countNumSetInUnit(grid, overlap);
+      if (numSetInOverlap > numSetInUnit) {
+        category = UnitCategory.forUnit(overlap);
+        numSetInFullestUnit = numSetInOverlap;
+      }
+    }
+    int averageSetPerUnit = (Location.COUNT - grid.getNumOpenLocations()) / 9;
+    int deltaOverAverage = Math.max(0, numSetInFullestUnit - averageSetPerUnit);
+    return new NakedSet(category, setSize, deltaOverAverage);
+  }
+
+  public static Pattern lockedSet(us.blanshard.sudoku.insight.LockedSet set, Grid grid) {
+    if (set.isNakedSet()) return nakedSet(set, grid);
+
     UnitCategory category = UnitCategory.forUnit(set.getLocations().unit);
     int setSize = set.getLocations().size();
     boolean isNaked = set.isNakedSet();

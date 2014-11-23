@@ -309,9 +309,12 @@ public class Probabilities {
     final Sp sp;
     SpCounter counter;
     Dist direct;
+    Dist lone;
     Dist pooledInferred;
-    int numUsed;
-    int numSkipped;
+    int numLess;
+    int numPooled;
+    int maxMissedCount;
+    int maxLessCount;
 
     SpInfo(Sp sp) {
       this.sp = sp;
@@ -320,35 +323,46 @@ public class Probabilities {
     void setCounter(SpCounter counter) {
       this.counter = counter;
       this.direct = counter.getDist();
+      SizeCounter s = counter.getSizeCounter(1);
+      if (s != null) this.lone = s.getDist();
     }
 
     boolean hasEnoughData() {
-      return direct != null && direct.count >= 400;
+      return direct != null && direct.count >= 300;
     }
 
     void infer(SpInfo impInfo, SpInfo restInfo) {
       if (impInfo.hasEnoughData() && restInfo.hasEnoughData()) {
+        Dist inferred = quotient(impInfo.direct, restInfo.direct);
+        pooledInferred = pool(pooledInferred, inferred);
+        ++numPooled;
         if (impInfo.direct.mean < restInfo.direct.mean) {
-          Dist inferred = quotient(impInfo.direct, restInfo.direct);
-          pooledInferred = pool(pooledInferred, inferred);
-          ++numUsed;
-        } else {
-          ++numSkipped;
+          ++numLess;
         }
+      } else if (impInfo.direct != null && restInfo.direct != null) {
+        int minCount = Math.min(impInfo.direct.count, restInfo.direct.count);
+        if (minCount > maxMissedCount) maxMissedCount = minCount;
+        if (minCount > maxLessCount && impInfo.direct.count < restInfo.direct.count)
+          maxLessCount = minCount;
       }
     }
 
     void report(PrintStream out) {
       if (counter == null) {
-        out.printf("%-8s inferred %-24s  used %3.0f%%%n", sp, pooledInferred,
-                   100.0 * numUsed / (numUsed + numSkipped));
+        out.printf("%-8s inferred %-24s  less %3.0f%% %d/%d%n", sp, pooledInferred,
+                   100.0 * numLess / numPooled, numLess, numPooled);
+//        if (maxMissedCount > 0) {
+//          out.printf("%44smore at %d", "", maxMissedCount);
+//          if (maxLessCount < maxMissedCount) out.printf(" / %d", maxLessCount);
+//          out.println();
+//        }
       } else {
         out.printf("%-8s %s%n", sp, direct);
-        for (int size : counter.getSizes()) {
-          Dist dist = counter.getSizeCounter(size).getDist();
-          out.printf("%10d %-28s %4.0f%%%n", size, dist,
-                     100 * dist.mean / direct.mean);
-        }
+//        for (int size : counter.getSizes()) {
+//          Dist dist = counter.getSizeCounter(size).getDist();
+//          out.printf("%10d %-28s %4.0f%%%n", size, dist,
+//                     100 * dist.mean / direct.mean);
+//        }
       }
     }
   }
