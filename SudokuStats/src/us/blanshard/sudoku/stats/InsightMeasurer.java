@@ -81,7 +81,7 @@ public class InsightMeasurer implements Runnable {
   private final UndoDetector undoDetector;
   private final Set<Integer> trails = Sets.newHashSet();
   private final PrintWriter out;
-  private final Map<Integer, Grid> trailFinalGrids = Maps.newHashMap();
+  private final Map<Integer, TrailState> trailFinals = Maps.newHashMap();
 
   private Batch openBatch = null;
 
@@ -157,7 +157,7 @@ public class InsightMeasurer implements Runnable {
     game.move(move);
     if (move.trailId >= 0) {
       trails.add(move.trailId);
-      trailFinalGrids.put(move.trailId, game.getTrail(move.trailId).getGrid());
+      trailFinals.put(move.trailId, new TrailState(game.getTrail(move.trailId).getGrid(), minOpen));
     }
     if (newBatch == null) {
       ++numSkippedMoves;
@@ -179,8 +179,8 @@ public class InsightMeasurer implements Runnable {
   }
 
   private void emitAbandonedErrors() {
-    for (Map.Entry<Integer, Grid> entry: trailFinalGrids.entrySet()) {
-      GridMarks gridMarks = new GridMarks(entry.getValue());
+    for (Map.Entry<Integer, TrailState> entry: trailFinals.entrySet()) {
+      GridMarks gridMarks = new GridMarks(entry.getValue().grid);
       if (gridMarks.hasErrors) {
         Collector collector = new Collector(gridMarks);
         Analyzer.analyze(gridMarks, collector, OPTS);
@@ -195,6 +195,7 @@ public class InsightMeasurer implements Runnable {
             break;
           }
         }
+        minOpen = entry.getValue().minOpen;
         startLine(false, elapsed, gridMarks.grid.getNumOpenLocations(), timestamp);
         emitUniverse(new Universe());
         StringBuilder sb = new StringBuilder();
@@ -250,6 +251,15 @@ public class InsightMeasurer implements Runnable {
     emit(u.numerator());
     emit(u.denominator());
     emit(u.realmVector());
+  }
+
+  private static class TrailState {
+    final Grid grid;
+    final int minOpen;
+    TrailState(Grid grid, int minOpen) {
+      this.grid = grid;
+      this.minOpen = minOpen;
+    }
   }
 
   private class Collector implements Analyzer.Callback {

@@ -17,6 +17,8 @@ package us.blanshard.sudoku.stats;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Math.max;
+import static us.blanshard.sudoku.stats.Pattern.UnitCategory.BLOCK;
+import static us.blanshard.sudoku.stats.Pattern.UnitCategory.LINE;
 
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Unit;
@@ -36,7 +38,6 @@ import com.google.common.collect.TreeMultiset;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -79,30 +80,60 @@ public abstract class Sp implements Comparable<Sp> {
    * grid with the given number of open squares.
    */
   public double getProbabilityOfPlaying(int numOpen) {
-    return getProbability(numOpen, directProbabilities);
-  }
-
-  protected double getAddedProbability(int numOpen) {
-    return getProbability(numOpen, additiveProbabilities);
+    Sp key = this;
+    while (!probabilities.containsKey(key)) key = key.getFallbackKey();
+    double[] ps = probabilities.get(key);
+    int index = Math.min(numOpen / 20, 2);
+    return ps[index];
   }
 
   protected Sp getFallbackKey() {
     throw new UnsupportedOperationException();
   }
 
-  private double getProbability(int numOpen, Map<Sp, double[]> map) {
-    Sp key = this;
-    while (!map.containsKey(key)) key = key.getFallbackKey();
-    double[] ps = map.get(key);
-    int index = Math.min(numOpen / 20, 2);
-    return ps[index];
-  }
-
-  private static final ImmutableMap<Sp, double[]> directProbabilities;
-  private static final ImmutableMap<Sp, double[]> additiveProbabilities;
+  private static final ImmutableMap<Sp, double[]> probabilities;
   static {
-    directProbabilities = null;
-    additiveProbabilities = null;
+    probabilities = ImmutableMap.<Sp, double[]>builder()
+        .put(new Conflict(BLOCK), new double[]{0.078, 0.049, 0.14})
+        .put(new Conflict(LINE),  new double[]{0.15, 0.16, 0.16})
+        .put(new BarredLoc(5), new double[]{0.20, 0.28, 0.40})
+        .put(new BarredLoc(4), new double[]{0.20, 0.28, 0.28})
+        .put(new BarredLoc(3), new double[]{0.20, 0.22, 0.12})
+        .put(new BarredLoc(2), new double[]{0.20, 0.19, 0.18})
+        .put(new BarredLoc(1), new double[]{0.24, 0.11, 0.16})
+        .put(new BarredLoc(0), new double[]{0.20, 0.13, 0.094})
+        .put(new BarredNum(BLOCK), new double[]{0.26, 0.26, 0.23})
+        .put(new BarredNum(LINE),  new double[]{0.24, 0.22, 0.21})
+        .put(new ForcedLoc(BLOCK), new double[]{0.41, 0.41, 0.50})
+        .put(new ForcedLoc(LINE),  new double[]{0.32, 0.30, 0.40})
+        .put(new ForcedNum(6), new double[]{0.24, 0.47, 0.86})
+        .put(new ForcedNum(5), new double[]{0.24, 0.47, 0.71})
+        .put(new ForcedNum(4), new double[]{0.24, 0.47, 0.38})
+        .put(new ForcedNum(3), new double[]{0.24, 0.31, 0.10})
+        .put(new ForcedNum(2), new double[]{0.24, 0.18, 0.086})
+        .put(new ForcedNum(1), new double[]{0.22, 0.050, 0.040})
+        .put(new ForcedNum(0), new double[]{0.22, 0.039, 0.029})
+        .put(new Overlap(BLOCK), new double[]{0.37, 0.88, 0.90})
+        .put(new Overlap(LINE),  new double[]{0.54, 0.91, 0.90})
+        .put(hiddenSet(BLOCK, 2, true),  new double[]{0.26, 0.37, 0.53})
+        .put(hiddenSet(LINE, 2, true),   new double[]{0.28, 0.32, 0.36})
+        .put(hiddenSet(BLOCK, 2, false), new double[]{0.16, 0.30, 0.38})
+        .put(hiddenSet(LINE, 2, false),  new double[]{0.13, 0.18, 0.19})
+        .put(hiddenSet(BLOCK, 3, true),  new double[]{0.28, 0.28, 0.31})
+        .put(hiddenSet(LINE, 3, true),   new double[]{0.30, 0.41, 0.39})
+        .put(hiddenSet(BLOCK, 3, false), new double[]{0.11, 0.11, 0.19})
+        .put(hiddenSet(LINE, 3, false),  new double[]{0.15, 0.16, 0.13})
+        .put(hiddenSet(BLOCK, 4, true),  new double[]{0.28, 0.44, 0.33})
+        .put(hiddenSet(LINE, 4, true),   new double[]{0.30, 0.53, 0.53})
+        .put(hiddenSet(BLOCK, 4, false), new double[]{0.11, 0.058, 0.10})
+        .put(hiddenSet(LINE, 4, false),  new double[]{0.20, 0.21, 0.13})
+        .put(nakedSet(BLOCK, 2), new double[]{0.75, 2.1, 1.9})
+        .put(nakedSet(LINE, 2),  new double[]{0.45, 1.6, 1.6})
+        .put(nakedSet(BLOCK, 3), new double[]{0.84, 3.1, 2.9})
+        .put(nakedSet(LINE, 3),  new double[]{0.43, 2.1, 2.5})
+        .put(nakedSet(BLOCK, 4), new double[]{0.84, 3.6, 4.6})
+        .put(nakedSet(LINE, 4),  new double[]{0.77, 2.4, 3.4})
+        .build();
   }
 
   /**
@@ -278,6 +309,10 @@ public abstract class Sp implements Comparable<Sp> {
       this.deltaOverAverage = max(0, setInFullestUnit - averageSetPerUnit);
     }
 
+    public PeerMetrics(int deltaOverAverage) {
+      this.deltaOverAverage = deltaOverAverage;
+    }
+
     public Appendable appendTo(Appendable a) throws IOException {
       return a.append(String.valueOf(deltaOverAverage));
     }
@@ -366,6 +401,9 @@ public abstract class Sp implements Comparable<Sp> {
     BarredLoc(PeerMetrics metrics) {
       super(Type.BARRED_LOCATION, metrics);
     }
+    BarredLoc(int deltaOverAverage) {
+      this(new PeerMetrics(deltaOverAverage));
+    }
   }
 
   public static BarredLoc barredLocation(Pattern.BarredLoc barredLocation, int openCount) {
@@ -410,6 +448,9 @@ public abstract class Sp implements Comparable<Sp> {
     ForcedNum(PeerMetrics metrics) {
       super(Type.FORCED_NUMERAL, metrics);
     }
+    ForcedNum(int deltaOverAverage) {
+      this(new PeerMetrics(deltaOverAverage));
+    }
     @Override public boolean isMove() {
       return true;
     }
@@ -425,13 +466,13 @@ public abstract class Sp implements Comparable<Sp> {
    * locations in the second unit.
    */
   public static final class Overlap extends UnitBased {
-    Overlap(int openCount, UnitCategory category) {
+    Overlap(UnitCategory category) {
       super(Type.OVERLAP, category);
     }
   }
 
   public static Overlap overlap(Pattern.Overlap overlap, int openCount) {
-    return new Overlap(openCount, overlap.getCategory());
+    return new Overlap(overlap.getCategory());
   }
 
   /**
@@ -500,19 +541,21 @@ public abstract class Sp implements Comparable<Sp> {
         lockedSet.getCategory(), lockedSet.getSetSize(), lockedSet.isNaked(), lockedSet.isOverlapped());
   }
 
+  public static LockedSet hiddenSet(UnitCategory category, int setSize, boolean isOverlapped) {
+    return new LockedSet(category, setSize, false, isOverlapped);
+  }
+
   /**
    * A special pattern for naked sets.
    */
   public static final class NakedSet extends Sp {
     private final UnitCategory category;
     private final int setSize;
-    private final int deltaOverAverage;
 
-    NakedSet(UnitCategory category, int setSize, int deltaOverAverage) {
+    NakedSet(UnitCategory category, int setSize) {
       super(Type.NAKED_SET);
       this.category = category;
       this.setSize = setSize;
-      this.deltaOverAverage = deltaOverAverage;
     }
 
     public UnitCategory getCategory() {
@@ -523,24 +566,19 @@ public abstract class Sp implements Comparable<Sp> {
       return setSize;
     }
 
-    public int getDeltaOverAverage() {
-      return deltaOverAverage;
-    }
-
     @Override public boolean equals(Object o) {
       if (o == null) return false;
       if (o == this) return true;
       if (o instanceof NakedSet) {
         NakedSet that = (NakedSet) o;
         return this.category == that.category
-            && this.setSize == that.setSize
-            /*&& this.deltaOverAverage == that.deltaOverAverage*/;
+            && this.setSize == that.setSize;
       }
       return false;
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(category, setSize/*, deltaOverAverage*/);
+      return Objects.hashCode(category, setSize);
     }
 
     @Override protected int compareToGuts(Sp p) {
@@ -548,7 +586,6 @@ public abstract class Sp implements Comparable<Sp> {
       return ComparisonChain.start()
           .compare(this.setSize, that.setSize)
           .compare(this.category, that.category)
-//          .compare(that.deltaOverAverage, this.deltaOverAverage)  // inverted
           .result();
     }
 
@@ -557,13 +594,16 @@ public abstract class Sp implements Comparable<Sp> {
           .append(String.valueOf(setSize))
           .append(':')
           .append(category.toString())
-//          .append(String.valueOf(deltaOverAverage))
           ;
     }
   }
 
   public static NakedSet nakedSet(Pattern.NakedSet set) {
-    return new NakedSet(set.getCategory(), set.getSetSize(), set.getDeltaOverAverage());
+    return new NakedSet(set.getCategory(), set.getSetSize());
+  }
+
+  public static NakedSet nakedSet(UnitCategory category, int setSize) {
+    return new NakedSet(category, setSize);
   }
 
   /**
@@ -632,12 +672,6 @@ public abstract class Sp implements Comparable<Sp> {
     @Override public double getProbabilityOfPlaying(int numOpen) {
       double answer = consequent.getProbabilityOfPlaying(numOpen);
       for (Sp antecedent : antecedents) answer *= antecedent.getProbabilityOfPlaying(numOpen);
-      return answer;
-    }
-
-    @Override public double getAddedProbability(int numOpen) {
-      double answer = consequent.getAddedProbability(numOpen);
-      for (Sp antecedent : antecedents) answer *= antecedent.getAddedProbability(numOpen);
       return answer;
     }
 
@@ -727,14 +761,9 @@ public abstract class Sp implements Comparable<Sp> {
 
     @Override public double getProbabilityOfPlaying(int numOpen) {
       double answer = 0;
-      boolean firstPart = true;
       for (Sp part : parts) {
-        if (firstPart) {
-          firstPart = false;
-          answer = part.getProbabilityOfPlaying(numOpen);
-        } else {
-          answer += part.getAddedProbability(numOpen);
-        }
+        double p = part.getProbabilityOfPlaying(numOpen);
+        answer = answer + p - answer * p;
       }
       return answer;
     }
