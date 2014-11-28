@@ -19,30 +19,25 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.core.LocSet;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Unit;
-import us.blanshard.sudoku.core.UnitNumSet;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
 import us.blanshard.sudoku.insight.Rating.Difficulty;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -152,7 +147,7 @@ public class Evaluator {
   }
 
   private enum RunStatus { INTERRUPTED, COMPLETE, ERROR, INCONCLUSIVE };
-  private static final Analyzer.Options OPTS = new Analyzer.Options(false, true);
+  private static final Analyzer.Options OPTS = new Analyzer.Options(false, false);
 
   private class Run {
     GridMarks gridMarks;
@@ -330,104 +325,251 @@ public class Evaluator {
   }
 
   /**
-   * A classification of insights based on empirical study of degrees of
-   * difficulty of different insights.  They are ordered from easiest to
-   * hardest.
+   * A classification of the atomic insights based on empirical study of the
+   * likelihood of playing different insights.
    */
-  public enum MoveKind {
-    DIRECT_EASY(0, 0, 0.32, 0.34, 0.41, 0.44, 0.45, 0.41),
-    SIMPLY_IMPLIED_EASY(0, 1, 0.51, 0.67, 0.56, 0.84, 0.94, 1.05),
-    COMPLEXLY_IMPLIED_EASY(0, 2),
-    DIRECT_HARD(1, 0),
-    SIMPLY_IMPLIED_HARD(1, 1),
-    COMPLEXLY_IMPLIED_HARD(1, 2),
+  public enum Pattern {
+    CONFLICT_B(0.078, 0.049, 0.14),
+    CONFLICT_L(0.15, 0.16, 0.16),
+    BARRED_LOC_5(0.20, 0.28, 0.40),
+    BARRED_LOC_4(0.20, 0.28, 0.28),
+    BARRED_LOC_3(0.20, 0.22, 0.12),
+    BARRED_LOC_2(0.20, 0.19, 0.18),
+    BARRED_LOC_1(0.24, 0.11, 0.16),
+    BARRED_LOC_0(0.20, 0.13, 0.094),
+    BARRED_NUM_B(0.26, 0.26, 0.23),
+    BARRED_NUM_L(0.24, 0.22, 0.21),
+    FORCED_LOC_B(0.41, 0.41, 0.50),
+    FORCED_LOC_L(0.32, 0.30, 0.40),
+    FORCED_NUM_6(0.24, 0.47, 0.86),
+    FORCED_NUM_5(0.24, 0.47, 0.71),
+    FORCED_NUM_4(0.24, 0.47, 0.38),
+    FORCED_NUM_3(0.24, 0.31, 0.10),
+    FORCED_NUM_2(0.24, 0.18, 0.086),
+    FORCED_NUM_1(0.22, 0.050, 0.040),
+    FORCED_NUM_0(0.22, 0.039, 0.029),
+    OVERLAP_B(0.37, 0.88, 0.90),
+    OVERLAP_L(0.54, 0.91, 0.90),
+    HIDDEN_SET_B_2_OVERLAP(0.26, 0.37, 0.53),
+    HIDDEN_SET_L_2_OVERLAP(0.28, 0.32, 0.36),
+    HIDDEN_SET_B_2_DIFFUSE(0.16, 0.30, 0.38),
+    HIDDEN_SET_L_2_DIFFUSE(0.13, 0.18, 0.19),
+    HIDDEN_SET_B_3_OVERLAP(0.28, 0.28, 0.31),
+    HIDDEN_SET_L_3_OVERLAP(0.30, 0.41, 0.39),
+    HIDDEN_SET_B_3_DIFFUSE(0.11, 0.11, 0.19),
+    HIDDEN_SET_L_3_DIFFUSE(0.15, 0.16, 0.13),
+    HIDDEN_SET_B_4_OVERLAP(0.28, 0.44, 0.33),
+    HIDDEN_SET_L_4_OVERLAP(0.30, 0.53, 0.53),
+    HIDDEN_SET_B_4_DIFFUSE(0.11, 0.058, 0.10),
+    HIDDEN_SET_L_4_DIFFUSE(0.20, 0.21, 0.13),
+    NAKED_SET_B_2(0.75, 2.1, 1.9),
+    NAKED_SET_L_2(0.45, 1.6, 1.6),
+    NAKED_SET_B_3(0.84, 3.1, 2.9),
+    NAKED_SET_L_3(0.43, 2.1, 2.5),
+    NAKED_SET_B_4(0.84, 3.6, 4.6),
+    NAKED_SET_L_4(0.77, 2.4, 3.4),
     ;
 
-    public static final MoveKind MIN = DIRECT_EASY;
-    public static final MoveKind MAX = COMPLEXLY_IMPLIED_HARD;
-
     /**
-     * How many minutes it takes on average to scan one "point" for this kind of
-     * move, for the given minimum number of open locations.
-     *
-     * <p> The number of "points" at any given grid position is defined as the
-     * number of potential scan targets divided by the number of targets covered
-     * by one or more insights.  The number of potential scan targets is 4 times
-     * the number of open locations.
-     *
-     * <p> This method throws if {@link #shouldPlay} returns false.
+     * The "weight" of an insight matching this pattern with the given number of
+     * open squares in the grid.  For assignments, this is the probability of
+     * playing the move; for errors, it's the probability of seeing the error;
+     * and for eliminations it's a multiplier used to calculate the probability
+     * of an implication in which the elimination is an antecedent.
      */
-    public double minutesPerScanPoint(int minOpen) {
-      return toMinutes(secondsPerScanPoint, minOpen);
+    public double getWeight(int numOpen) {
+      return weights[Math.min(2, numOpen / 20)];
     }
 
     /**
-     * Tells whether an insight of this kind should be played.  If not, the evaluator
-     * should move on to a disproof.
+     * Returns the pattern corresponding to the given insight within the given
+     * grid.  Throws for non-atomic insights.
      */
-    public boolean isPlayable() {
-      return secondsPerScanPoint != null;
+    public static Pattern forInsight(Insight insight, Grid grid) {
+      switch (insight.type) {
+        case CONFLICT: {
+          Conflict i = (Conflict) insight;
+          return isBlock(i.getLocations().unit) ? CONFLICT_B : CONFLICT_L;
+        }
+        case BARRED_LOCATION: {
+          BarredLoc i = (BarredLoc) insight;
+          switch (getMaxDeltaAboveAverage(i.getLocation(), grid)) {
+            default:
+            case 5: return BARRED_LOC_5;
+            case 4: return BARRED_LOC_4;
+            case 3: return BARRED_LOC_3;
+            case 2: return BARRED_LOC_2;
+            case 1: return BARRED_LOC_1;
+            case 0: return BARRED_LOC_0;
+          }
+        }
+        case BARRED_NUMERAL: {
+          BarredNum i = (BarredNum) insight;
+          return isBlock(i.getUnit()) ? BARRED_NUM_B : BARRED_NUM_L;
+        }
+        case FORCED_LOCATION: {
+          ForcedLoc i = (ForcedLoc) insight;
+          return isBlock(i.getUnit()) ? FORCED_LOC_B : FORCED_LOC_L;
+        }
+        case FORCED_NUMERAL: {
+          ForcedNum i = (ForcedNum) insight;
+          switch (getMaxDeltaAboveAverage(i.getLocation(), grid)) {
+            default:
+            case 6: return FORCED_NUM_6;
+            case 5: return FORCED_NUM_5;
+            case 4: return FORCED_NUM_4;
+            case 3: return FORCED_NUM_3;
+            case 2: return FORCED_NUM_2;
+            case 1: return FORCED_NUM_1;
+            case 0: return FORCED_NUM_0;
+          }
+        }
+        case OVERLAP: {
+          Overlap i = (Overlap) insight;
+          return isBlock(i.getUnit()) ? OVERLAP_B : OVERLAP_L;
+        }
+        case LOCKED_SET: {
+          LockedSet i = (LockedSet) insight;
+          boolean block = isBlock(i.getLocations().unit);
+          if (i.isHiddenSet()) {
+            boolean overlap = isOverlapped(i, grid);
+            switch (i.getNumerals().size()) {
+              case 2: return overlap
+                  ? block ? HIDDEN_SET_B_2_OVERLAP : HIDDEN_SET_L_2_OVERLAP
+                  : block ? HIDDEN_SET_B_2_DIFFUSE : HIDDEN_SET_L_2_DIFFUSE;
+              case 3: return overlap
+                  ? block ? HIDDEN_SET_B_3_OVERLAP : HIDDEN_SET_L_3_OVERLAP
+                  : block ? HIDDEN_SET_B_3_DIFFUSE : HIDDEN_SET_L_3_DIFFUSE;
+              default:
+              case 4: return overlap
+                  ? block ? HIDDEN_SET_B_4_OVERLAP : HIDDEN_SET_L_4_OVERLAP
+                  : block ? HIDDEN_SET_B_4_DIFFUSE : HIDDEN_SET_L_4_DIFFUSE;
+            }
+          } else {
+            switch (i.getNumerals().size()) {
+              case 2: return block ? NAKED_SET_B_2 : NAKED_SET_L_2;
+              case 3: return block ? NAKED_SET_B_3 : NAKED_SET_L_3;
+              default:
+              case 4: return block ? NAKED_SET_B_4 : NAKED_SET_L_4;
+            }
+          }
+        }
+        default:
+          throw new IllegalArgumentException("Atomic insights only, got " + insight.type);
+      }
+    }
+
+    private final double[] weights;
+
+    private Pattern(double... weights) {
+      this.weights = weights;
+    }
+
+    private static boolean isBlock(Unit unit) {
+      return unit.getType() == Unit.Type.BLOCK;
     }
 
     /**
-     * When there are no moves implied, the best model is simply to pause a
-     * fixed amount of time before looking for disproofs.
+     * Finds the unit connected to the given location with the largest number of
+     * assignments, returns the difference between that number and the average
+     * number of assignments per unit.  The larger that delta, the likelier the
+     * given insight is to be played.
      */
-    public static double minutesBeforeDisproof(int minOpen) {
-      return toMinutes(secondsBeforeTrailhead, minOpen);
+    private static int getMaxDeltaAboveAverage(Location loc, Grid grid) {
+      int maxSet = 0;
+      for (Unit.Type unitType : Unit.Type.values()) {
+        maxSet = Math.max(maxSet, numSetInUnit(loc.unit(unitType), grid));
+      }
+      int averageSetPerUnit = grid.size() / 9;
+      return Math.max(0, maxSet - averageSetPerUnit);
     }
 
-    public Integer partialCompare(MoveKind that) {
-      if (this.difficulty < that.difficulty)
-        return this.complexity <= that.complexity ? -1 : null;
-      if (this.difficulty > that.difficulty)
-        return this.complexity >= that.complexity ? 1 : null;
-      return this.complexity - that.complexity;
+    private static int numSetInUnit(Unit unit, Grid grid) {
+      int answer = 0;
+      for (Location loc : unit)
+        if (grid.containsKey(loc))
+          ++answer;
+      return answer;
     }
 
-    private final int difficulty;
-    private final int complexity;
-    private final double[] secondsPerScanPoint;
-
-    private static final double[] secondsBeforeTrailhead = {
-      32.0, 44.9, 55.8, 74.3, 97.0, 130.7
-    };
-
-    private static double toMinutes(double[] seconds, int minOpen) {
-      int index = Math.min(minOpen / 10, seconds.length - 1);
-      return seconds[index] / 60.0;
+    /**
+     * For a hidden set, overlapped means that all open squares in the set's
+     * unit but not in the set lie in an overlapping unit, and all numerals in
+     * the set appear in this other unit.  These sets are typically much easier
+     * to find than other sets.
+     */
+    private static boolean isOverlapped(LockedSet set, Grid grid) {
+      boolean isOverlapped = false;
+      UnitSubset taken = set.getLocations();
+      for (Location loc : taken.unit) {
+        if (grid.containsKey(loc))
+          taken = taken.with(loc);
+      }
+      UnitSubset open = taken.not();
+      Unit overlap = Analyzer.findOverlappingUnit(open);
+      if (overlap == null && open.size() == 1) {
+        Location loc = open.get(0);
+        if (isBlock(open.unit)) {
+          isOverlapped = minusAllInUnit(set.getNumerals(), loc.row, grid).isEmpty()
+              || minusAllInUnit(set.getNumerals(), loc.column, grid).isEmpty();
+        } else {
+          overlap = loc.block;
+        }
+      }
+      if (overlap != null) {
+        isOverlapped = minusAllInUnit(set.getNumerals(), overlap, grid).isEmpty();
+      }
+      return isOverlapped;
     }
 
-    private MoveKind(int difficulty, int complexity, double... secondsPerScanPoint) {
-      this.difficulty = difficulty;
-      this.complexity = complexity;
-      this.secondsPerScanPoint = secondsPerScanPoint.length > 0 ? secondsPerScanPoint : null;
+    /**
+     * Returns the difference between the given set and all numerals assigned to
+     * locations within the given unit, in the given grid.
+     */
+    private static NumSet minusAllInUnit(NumSet nums, Unit unit, Grid grid) {
+      for (Location loc : unit)
+        if (grid.containsKey(loc))
+          nums = nums.without(grid.get(loc));
+      return nums;
     }
   }
 
-  public static final PartialComparator<MoveKind> KIND_COMPARE = new PartialComparator<MoveKind>() {
-    @Override public Integer partialCompare(MoveKind a, MoveKind b) {
-      return a.partialCompare(b);
+  /**
+   * Calculates the probability of playing/seeing the given insight within the
+   * given grid.  Only works for atomic insights and implications.
+   */
+  public static double getProbability(Insight insight, Grid grid) {
+    return getProbability(insight, grid, grid.getNumOpenLocations());
+  }
+
+  private static double getProbability(Insight insight, Grid grid, int numOpen) {
+    if (insight.type != Insight.Type.IMPLICATION) {
+      return Pattern.forInsight(insight, grid).getWeight(numOpen);
     }
-  };
-  public static final PartialComparator<MoveKind> KIND_REVERSE = PartialComparators.reverse(KIND_COMPARE);
+    Implication imp = (Implication) insight;
+    double answer = getProbability(imp.getConsequent(), grid, numOpen);
+    for (Insight a : imp.getAntecedents())
+      answer *= Pattern.forInsight(a, grid).getWeight(numOpen);
+    return answer;
+  }
+
+  /** A simple mutable double class. */
+  private static class Weight {
+    double weight;
+  }
 
   public static class Collector implements Analyzer.Callback {
     private final GridMarks gridMarks;
     private final int numOpen;
     private final int minOpen;
     private final Random random;
-    private final LocSet locTargets = new LocSet();
-    private final UnitNumSet unitNumTargets = new UnitNumSet();
-    private final Map<Assignment, MoveKind> kinds = Maps.newHashMap();
-    private final Multimap<Assignment, Insight> moves = ArrayListMultimap.create();
-    private final Set<Assignment> assignments = Sets.newLinkedHashSet();
-    private MoveKind bestMoveKind;
-    private int realmWeight;
-    private int[] numeralCounts;
-    private MoveKind bestErrorKind;
-    private int numMoveInsights;
-    private int numErrors;
+    // Keys of 'weights', and members of 'played', are Assignments and the ERRORS object.
+    private final Map<Object, Weight> weights = Maps.newHashMap();
+    private final Set<Object> played = Sets.newLinkedHashSet();
+    private static final Object ERRORS = new Object();
+    private double totalWeight;
+    private static final double[] trailheadSeconds = {0.821, 1.225, 1.528, 1.839, 2.080, 2.480};
+    private static final double[] playedSeconds    = {0.819, 0.785, 0.889, 0.967, 1.165, 1.355};
 
     public Collector(GridMarks gridMarks, int numOpen, int minOpen, Random random) {
       this.gridMarks = gridMarks;
@@ -438,344 +580,47 @@ public class Evaluator {
 
     @Override public void take(Insight insight) throws StopException {
       insight = Analyzer.minimize(gridMarks, insight);
-      insight.addScanTargets(locTargets, unitNumTargets);
+      double p = getProbability(insight, gridMarks.grid, numOpen);
+      totalWeight += p;
       Assignment a = insight.getImpliedAssignment();
-      if (a != null) {
-        moves.put(a, insight);
-        MoveKind kind = kindForInsight(gridMarks.grid, insight, kinds.get(a));
-        if (kind.isPlayable()) {
-          kinds.put(a, kind);
-          if (bestMoveKind == null || kind.compareTo(bestMoveKind) < 0) {
-            bestMoveKind = kind;
-            numMoveInsights = 0;
-            realmWeight = 0;
-          }
-          if (kind == bestMoveKind) {
-            ++numMoveInsights;
-            int w = realmWeights[insight.getNub().getRealmVector()];
-            if (w > realmWeight) {
-              realmWeight = w;
-              numeralCounts = new int[Numeral.COUNT];
-              assignments.clear();
-            }
-            if (w == realmWeight) {
-              if (assignments.add(a))
-                ++numeralCounts[a.numeral.index];
-            }
-          }
-        }
-      } else if (insight.isError()) {
-        MoveKind kind = kindForInsight(gridMarks.grid, insight);
-        if (kind.isPlayable()) {
-          if (bestErrorKind == null || kind.compareTo(bestErrorKind) < 0) {
-            bestErrorKind = kind;
-            numErrors = 0;
-          }
-          if (kind == bestErrorKind)
-            ++numErrors;
-        }
+      Object key = a == null ? ERRORS : a;
+      Weight w = weights.get(key);
+      if (w == null) weights.put(key, w = new Weight());
+      w.weight += p;
+      if (random.nextDouble() < p) {
+        played.add(key);
       }
     }
 
     public double getElapsedMinutes() {
-      if (assignmentsWon()) {
-        // We have one or more assignments.  The elapsed minutes is calculated as:
-        //  - the total number of scan points (4 * #open locations)
-        //  - times the number of scan targets in the assignments' insights
-        //  - divided by the total number of scan targets in all insights
-        //  - times the number of minutes per scan point
-        LocSet locs = new LocSet();
-        UnitNumSet unitNums = new UnitNumSet();
-        for (Assignment a : assignments)
-          for (Insight i : moves.get(a))
-            i.addScanTargets(locs, unitNums);
-        return 4 * numOpen
-            * (locs.size() + unitNums.size())
-            / (locTargets.size() + unitNumTargets.size())
-            * bestMoveKind.minutesPerScanPoint(minOpen);
+      int index = Math.min(5, minOpen / 10);
+      if (played.isEmpty()) {
+        // No move nor error was played.  We'll start a trail.
+        return trailheadSeconds[index] * numOpen;
       }
 
-      if (errorsWon()) {
-        // Errors.  Calculate elapsed time in a similar way as above, except
-        // the number of scan targets is taken as 1 (because if errors won
-        // they are direct).
-        return 4 * numOpen
-            / (locTargets.size() + unitNumTargets.size())
-            * bestErrorKind.minutesPerScanPoint(minOpen);
-      }
-
-      // Otherwise, we start a trail.
-      return MoveKind.minutesBeforeDisproof(minOpen);
+      double playedWeight = 0;
+      for (Object key : played)
+        playedWeight += weights.get(key).weight;
+      return playedSeconds[index] * numOpen * playedWeight / totalWeight;
     }
 
     /**
-     * True when there were playable assignments found, and any errors aren't
-     * too easy or too numerous.
+     * True when there were assignments played, and no errors.
      */
     public boolean assignmentsWon() {
-      return bestMoveKind != null
-          && (bestErrorKind != MoveKind.DIRECT_EASY || numMoveInsights >= numErrors);
+      return played.size() > 0 && !played.contains(ERRORS);
     }
 
     public Iterable<Assignment> getAssignments() {
-      List<Numeral> numerals = Lists.newArrayList(Numeral.all());
-      Collections.sort(numerals, new Comparator<Numeral>() {
-        @Override public int compare(Numeral o1, Numeral o2) {
-          return numeralCounts[o2.index] - numeralCounts[o1.index];
-        }
-      });
-      NumSet n = NumSet.NONE;
-      int total = 0;
-      for (Numeral num : numerals) {
-        n = n.with(num);
-        int c = numeralCounts[num.index];
-        total += c;
-        if (c == 0 || total > 5) break;
-      }
-      final NumSet include = n;
-      return Iterables.filter(assignments, new Predicate<Assignment>() {
-        @Override public boolean apply(@Nullable Assignment input) {
-          return include.contains(input.numeral);
-        }
-      });
+      return Iterables.filter(played, Assignment.class);
     }
 
     /**
-     * True when there were direct easy errors found, and there are more of them
-     * than there are move insights.
+     * True when there were any errors played.
      */
     public boolean errorsWon() {
-      return bestErrorKind == MoveKind.DIRECT_EASY && numErrors > numMoveInsights;
+      return played.contains(ERRORS);
     }
-
-    private static int[] realmWeights = new int[8];
-    static {
-      // Larger weights count more, so happen first.
-      realmWeights[Insight.Realm.LINE.bit] = 1;
-      realmWeights[Insight.Realm.LOCATION.bit] = 2;
-      realmWeights[Insight.Realm.BLOCK.bit] = 3;
-    }
-  }
-
-  public static MoveKind kindForInsight(Grid grid, Insight insight) {
-    return kindForInsight(grid, insight, null);
-  }
-
-  /**
-   * Returns the appropriate MoveKind for the given insight within the given
-   * grid.  If max is given, it is the worst (most expensive) kind that should
-   * be returned.
-   */
-  public static MoveKind kindForInsight(Grid grid, Insight insight, @Nullable MoveKind max) {
-    if (max == MoveKind.MIN) return max;
-    if (max == null) max = MoveKind.MAX;
-    switch (insight.type) {
-      case CONFLICT:
-      case BARRED_LOCATION:
-      case BARRED_NUMERAL:
-      case FORCED_LOCATION:
-      case FORCED_NUMERAL:
-        return isEasy(grid, insight) ? MoveKind.DIRECT_EASY : MoveKind.DIRECT_HARD;
-      case IMPLICATION: {
-        if (max.compareTo(MoveKind.DIRECT_HARD) <= 0) return max;
-        Implication imp = insight.asImplication();
-        boolean easy = isEasy(grid, imp);
-        MoveKind kind = isSimple(imp)
-          ? easy ? MoveKind.SIMPLY_IMPLIED_EASY : MoveKind.SIMPLY_IMPLIED_HARD
-          : easy ? MoveKind.COMPLEXLY_IMPLIED_EASY : MoveKind.COMPLEXLY_IMPLIED_HARD;
-        return Ordering.<MoveKind>natural().min(kind, max);
-      }
-      case OVERLAP:
-      case LOCKED_SET:
-      case DISPROVED_ASSIGNMENT:
-      case UNFOUNDED_ASSIGNMENT:
-        return max;
-    }
-    throw new AssertionError();
-  }
-
-  /**
-   * Tells whether an insight that relies on the set of numerals in a location's
-   * peers is an easy one.
-   */
-  private static boolean isEasy(Grid grid, Location target) {
-    // Our current definition of easy: there are at least 6 assignments in any
-    // unit (not counting the target location); or at most two of the units are
-    // required to force the target numeral.
-    return isAnyUnitFull(grid, target)
-        || areTwoUnitsSufficient(inUnits(grid, target));
-  }
-
-  private static int numAssigned(Grid grid, Unit unit, Location target) {
-    int answer = 0;
-    for (Location loc : unit)
-      if (loc != target && grid.containsKey(loc))
-        ++answer;
-    return answer;
-  }
-
-  private static boolean isAnyUnitFull(Grid grid, Location target) {
-    return numAssigned(grid, target.block, target) >= 6
-        || numAssigned(grid, target.row, target) >= 6
-        || numAssigned(grid, target.column, target) >= 6;
-  }
-
-  private static NumSet inUnit(Grid grid, Unit unit, Location target) {
-    NumSet answer = NumSet.NONE;
-    for (Location loc : unit)
-      if (loc != target && grid.containsKey(loc))
-        answer = answer.with(grid.get(loc));
-    return answer;
-  }
-
-  private static NumSet[] inUnits(Grid grid, Location target) {
-    NumSet[] answer = new NumSet[3];
-    answer[Unit.Type.BLOCK.ordinal()] = inUnit(grid, target.block, target);
-    answer[Unit.Type.ROW.ordinal()] = inUnit(grid, target.row, target);
-    answer[Unit.Type.COLUMN.ordinal()] = inUnit(grid, target.column, target);
-    return answer;
-  }
-
-  private static boolean areTwoUnitsSufficient(NumSet[] sets) {
-    NumSet a = sets[0], b = sets[1], c = sets[2];
-    return a.isSubsetOf(b.or(c))
-        || b.isSubsetOf(c.or(a))
-        || c.isSubsetOf(a.or(b));
-  }
-
-  /**
-   * Tells whether the given insight is an easy assignment or error.
-   */
-  private static boolean isEasy(Grid grid, Insight insight) {
-    switch (insight.type) {
-    case FORCED_LOCATION:
-    case BARRED_NUMERAL:
-    case CONFLICT:
-      return true;
-
-    case FORCED_NUMERAL:
-      return isEasy(grid, ((ForcedNum) insight).getLocation());
-
-    case BARRED_LOCATION:
-      return isEasy(grid, ((BarredLoc) insight).getLocation());
-
-    default:
-      return false;
-    }
-  }
-
-  /**
-   * Tells whether the given insight is an implication that leads to an easy
-   * assignment or error, and all antecedents are also easy.
-   */
-  private static boolean isEasy(Grid grid, Implication imp) {
-    if (areAnyAntecedentsHard(imp)) return false;
-
-    Location target;
-    Insight nub = imp.getNub();
-    switch (nub.type) {
-      case FORCED_LOCATION:
-      case BARRED_NUMERAL:
-      case CONFLICT:
-        return true;
-
-      case FORCED_NUMERAL:
-        target = ((ForcedNum) nub).getLocation();
-        break;
-
-      case BARRED_LOCATION:
-        target = ((BarredLoc) nub).getLocation();
-        break;
-
-      default:
-        return false;
-    }
-
-    if (isAnyUnitFull(grid, target)) return true;
-
-    NumSet[] sets = inUnits(grid, target);
-
-    do {
-      for (Insight a : imp.getAntecedents()) {
-        switch (a.type) {
-          case OVERLAP: {
-            Overlap o = (Overlap) a;
-            Unit u = o.getUnit();
-            if (u.contains(target)) {
-              int i = u.getType().ordinal();
-              sets[i] = sets[i].with(o.getNumeral());
-            }
-            break;
-          }
-          case LOCKED_SET: {
-            LockedSet s = (LockedSet) a;
-            Unit u = s.getLocations().unit;
-            if (u.contains(target)) {
-              int i = u.getType().ordinal();
-              sets[i] = sets[i].or(s.getNumerals());
-            }
-            break;
-          }
-          default:
-            break;
-        }
-      }
-      imp = imp.getConsequent().asImplication();
-    } while (imp != null);
-
-    return areTwoUnitsSufficient(sets);
-  }
-
-  private static boolean areAnyAntecedentsHard(Implication imp) {
-    do {
-      for (Insight a : imp.getAntecedents()) {
-        switch (a.type) {
-          case LOCKED_SET:
-            // At present, we count any naked set as hard, and that's it.
-            LockedSet s = (LockedSet) a;
-            if (s.isNakedSet())
-              return true;
-            break;
-          case FORCED_NUMERAL:
-            return true;
-          default:
-            break;
-        }
-      }
-      imp = imp.getConsequent().asImplication();
-    } while (imp != null);
-
-    return false;
-  }
-
-  /**
-   * Tells whether the given implication is a simple one.
-   */
-  private static boolean isSimple(Implication imp) {
-    boolean outermost = true;
-    while (imp != null) {
-      for (Insight a : imp.getAntecedents())
-        if (!isSimpleAntecedent(a, outermost)) return false;
-      outermost = false;
-      imp = imp.getConsequent().asImplication();
-    }
-    return true;
-  }
-
-  private static boolean isSimpleAntecedent(Insight insight, boolean outermost) {
-    switch (insight.type) {
-      case OVERLAP:
-        break;
-      case LOCKED_SET: {
-        if (!outermost) return false;
-        LockedSet s = (LockedSet) insight;
-        if (s.isNakedSet() || s.getLocations().unit.getType() != Unit.Type.BLOCK
-            || s.getLocations().size() > 3)
-          return false;
-        break;
-      }
-      default: return false;
-    }
-    return true;
   }
 }

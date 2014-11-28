@@ -101,7 +101,7 @@ public class ScanCost {
     }
 
     public void takeTrailhead(double seconds, int openCount, List<Coll> missed) {
-      if (missed.isEmpty()) trailheadCounter.count(seconds, openCount);
+      trailheadCounter.count(seconds, openCount);
     }
 
     public void takeBatch(double seconds, int openCount, Universe universe,

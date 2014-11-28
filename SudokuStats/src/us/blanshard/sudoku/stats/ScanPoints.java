@@ -526,8 +526,6 @@ public class ScanPoints {
 
     void reportMultiplicatives(PrintStream out) {
       out.printf(" -- Multiplicatives (%,d in, %,d out) --%n", multiplicatives.size(), multiplicativesOut);
-      Dist implied = null;
-      Dist inf = null;
       if (reportDetails) {
         for (SpInfoPair p : multiplicatives) {
           out.printf("  - imp: %s (%s)%n    rest: %s (%s)%n", p.collInfo.sp, p.collInfo.direct,
