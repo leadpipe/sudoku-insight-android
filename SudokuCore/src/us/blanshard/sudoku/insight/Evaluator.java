@@ -107,7 +107,7 @@ public class Evaluator {
     int numOpen = puzzle.getNumOpenLocations();
     boolean uninterrupted = true;
     double totalScore = 0;
-    Difficulty difficulty = Difficulty.NO_DISPROOFS;
+    int[] difficultyCounts = new int[Difficulty.values().length];
     int numEvaluations = 0;
     while (uninterrupted && numEvaluations++ < trialCount) {
       Run run = new Run(gridMarks, numOpen);
@@ -115,8 +115,7 @@ public class Evaluator {
       uninterrupted = run.uninterrupted();
       scores[numEvaluations - 1] = run.score;
       totalScore += run.score;
-      if (run.difficulty.ordinal() > difficulty.ordinal())
-        difficulty = run.difficulty;
+      ++difficultyCounts[run.difficulty.ordinal()];
     }
     double score = totalScore / numEvaluations;
     double variance = 0;
@@ -125,6 +124,15 @@ public class Evaluator {
       variance += error * error;
     }
     variance /= trialCount;
+    int maxDifficultyCount = 0;
+    int maxDifficultyIndex = -1;
+    for (int i = 0; i < difficultyCounts.length; ++i) {
+      if (difficultyCounts[i] > maxDifficultyCount) {
+        maxDifficultyCount = difficultyCounts[i];
+        maxDifficultyIndex = i;
+      }
+    }
+    Difficulty difficulty = Difficulty.values()[maxDifficultyIndex];
     return new Rating(CURRENT_VERSION, score, Math.sqrt(variance),
                       uninterrupted, difficulty, improper);
   }
@@ -170,6 +178,7 @@ public class Evaluator {
         eliminateOne(callback);
         runStraightShot(callback);
       }
+      if (status == RunStatus.ERROR) throw new IllegalStateException();
     }
 
     private void runStraightShot(@Nullable Callback callback) {
@@ -188,7 +197,7 @@ public class Evaluator {
             if (gridMarks.grid.isSolved()) status = RunStatus.COMPLETE;
           } else if (collector.errorsWon()) {
             status = RunStatus.ERROR;
-          } else if (onlyAmbiguousAssignmentsRemaining()) {
+          } else if (collector.noPlaysPossible() && onlyAmbiguousAssignmentsRemaining()) {
             setGridMarks(gridMarks.toBuilder().assign(randomAssignment()));
           } else {
             status = RunStatus.INCONCLUSIVE;
@@ -212,7 +221,13 @@ public class Evaluator {
           difficulty = Difficulty.SIMPLE_DISPROOFS;
           // Fall through:
         case SIMPLE_DISPROOFS:
-          for (Assignment a : shuffledRemainingAssignments()) {
+          List<Assignment> remaining = shuffledRemainingAssignments();
+          if (remaining.isEmpty()) {
+            // This means that there are errors or forced numerals on the board.
+            // Just go back and retry a straight shot.
+            return;
+          }
+          for (Assignment a : remaining) {
             if (status == RunStatus.INTERRUPTED)
               return;
             if (foundSolution && solutionIntersection.get(a.location) == a.numeral)
@@ -228,9 +243,11 @@ public class Evaluator {
           }
           // If we make it here, we've exhausted the simple disproofs.
           difficulty = Difficulty.RECURSIVE_DISPROOFS;
+          setGridMarks(start.toBuilder());
           // Fall through:
         case RECURSIVE_DISPROOFS:
           Assignment impossible = randomErroneousAssignment();
+          if (impossible == null) return;
           setGridMarks(start.toBuilder().assign(impossible));
           runErrorSearch(callback);
           setGridMarks(start.toBuilder().eliminate(impossible));
@@ -272,13 +289,14 @@ public class Evaluator {
       return randomAssignment(loc, nums);
     }
 
-    Assignment randomErroneousAssignment() {
+    @Nullable Assignment randomErroneousAssignment() {
       Location loc = randomUnsetLocation(true);
+      if (loc == null) return null;
       NumSet nums = gridMarks.marks.get(loc).without(solutionIntersection.get(loc));
       return randomAssignment(loc, nums);
     }
 
-    Location randomUnsetLocation(boolean inIntersectionOnly) {
+    @Nullable Location randomUnsetLocation(boolean inIntersectionOnly) {
       int size = 9;
       int count = 0;
       Location currentLoc = null;
@@ -299,9 +317,11 @@ public class Evaluator {
 
     List<Assignment> shuffledRemainingAssignments() {
       Multimap<Integer, Assignment> byRank = ArrayListMultimap.create();
+      List<Assignment> assignments = Lists.newArrayList();
       for (Location loc : Location.all()) {
         if (gridMarks.grid.containsKey(loc)) continue;
         NumSet nums = gridMarks.marks.get(loc);
+        if (nums.size() < 2) return assignments;  // it's empty at this point
         for (Numeral num : nums) {
           int rank = nums.size();
           for (Unit.Type unitType : Unit.Type.values()) {
@@ -313,7 +333,6 @@ public class Evaluator {
       }
       ArrayList<Integer> ranks = Lists.newArrayList(byRank.keySet());
       Collections.sort(ranks);
-      List<Assignment> assignments = Lists.newArrayList();
       for (Integer rank : ranks) {
         int start = assignments.size();
         assignments.addAll(byRank.get(rank));
@@ -568,8 +587,8 @@ public class Evaluator {
     private final Set<Object> played = Sets.newLinkedHashSet();
     private static final Object ERRORS = new Object();
     private double totalWeight;
-    private static final double[] trailheadSeconds = {0.821, 1.225, 1.528, 1.839, 2.080, 2.480};
-    private static final double[] playedSeconds    = {0.819, 0.785, 0.889, 0.967, 1.165, 1.355};
+    private static final double[] TRAILHEAD_SECONDS = {0.821, 1.225, 1.528, 1.839, 2.080, 2.480};
+    private static final double[] PLAYED_SECONDS    = {0.819, 0.785, 0.889, 0.967, 1.165, 1.355};
 
     public Collector(GridMarks gridMarks, int numOpen, int minOpen, Random random) {
       this.gridMarks = gridMarks;
@@ -579,10 +598,11 @@ public class Evaluator {
     }
 
     @Override public void take(Insight insight) throws StopException {
+      Assignment a = insight.getImpliedAssignment();
+      if (a == null && !insight.isError()) return;
       insight = Analyzer.minimize(gridMarks, insight);
       double p = getProbability(insight, gridMarks.grid, numOpen);
       totalWeight += p;
-      Assignment a = insight.getImpliedAssignment();
       Object key = a == null ? ERRORS : a;
       Weight w = weights.get(key);
       if (w == null) weights.put(key, w = new Weight());
@@ -596,13 +616,13 @@ public class Evaluator {
       int index = Math.min(5, minOpen / 10);
       if (played.isEmpty()) {
         // No move nor error was played.  We'll start a trail.
-        return trailheadSeconds[index] * numOpen;
+        return TRAILHEAD_SECONDS[index] * numOpen;
       }
 
       double playedWeight = 0;
       for (Object key : played)
         playedWeight += weights.get(key).weight;
-      return playedSeconds[index] * numOpen * playedWeight / totalWeight;
+      return PLAYED_SECONDS[index] * numOpen * playedWeight / totalWeight;
     }
 
     /**
@@ -621,6 +641,11 @@ public class Evaluator {
      */
     public boolean errorsWon() {
       return played.contains(ERRORS);
+    }
+
+    /** True when no assignments nor errors were found. */
+    public boolean noPlaysPossible() {
+      return totalWeight == 0;
     }
   }
 }

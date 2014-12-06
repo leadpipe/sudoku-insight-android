@@ -51,7 +51,7 @@ public class Rating {
   /** Whether the evaluation was complete; if false, the score is probably
       less than it would have been if allowed to finish. */
   public final boolean evalComplete;
-  /** The intrinsic difficulty of the puzzle. */
+  /** The estimated difficulty of the puzzle. */
   public final Difficulty difficulty;
   /** Whether the puzzle has more than one solution. */
   public final boolean improper;

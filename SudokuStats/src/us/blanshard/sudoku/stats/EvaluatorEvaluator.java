@@ -35,7 +35,7 @@ public class EvaluatorEvaluator {
 
   public static void main(String[] args) throws Exception {
     PrintWriter out = new PrintWriter(args[0]);
-    out.println("Puzzle\tElapsed Minutes\tEstimated Minutes\tDifficulty\tImproper");
+    out.println("Puzzle\tElapsed Minutes\tEstimated Minutes\tStandard Deviation\tDifficulty\tImproper");
     int npuzzles = 0;
     int nwon = 0;
     int nsingle = 0;
@@ -67,9 +67,9 @@ public class EvaluatorEvaluator {
         ? singlePass ? overshotSingle : overshotMultiple
         : singlePass ? undershotSingle : undershotMultiple;
       info.addTo(stats);
-      out.printf("%s\t%.2f\t%.2f\t%d\t%d%n",
-          attempt.clues.toFlatString(), attempt.elapsedMinutes, result.score,
-          result.difficulty.ordinal(), result.improper ? 1 : 0);
+      out.printf("%s\t%.2f\t%.2f\t%.2f\t%d\t%d%n",
+                 attempt.clues.toFlatString(), attempt.elapsedMinutes, result.score, result.standardDeviation,
+                 result.difficulty.ordinal(), result.improper ? 1 : 0);
     }
 
     System.err.println();
