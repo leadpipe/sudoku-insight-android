@@ -17,18 +17,16 @@ package us.blanshard.sudoku.stats;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Math.max;
-import static us.blanshard.sudoku.stats.Pattern.UnitCategory.BLOCK;
-import static us.blanshard.sudoku.stats.Pattern.UnitCategory.LINE;
 
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.insight.Evaluator;
 import us.blanshard.sudoku.stats.Pattern.UnitCategory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
@@ -39,6 +37,7 @@ import com.google.common.collect.TreeMultiset;
 import java.io.IOException;
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -50,13 +49,19 @@ import javax.annotation.concurrent.Immutable;
 public abstract class Sp implements Comparable<Sp> {
 
   protected final Type type;
+  @Nullable private final Evaluator.Pattern evaluatorPattern;
 
-  Sp(Type type) {
+  Sp(Type type, Evaluator.Pattern evaluatorPattern) {
     this.type = type;
+    this.evaluatorPattern = evaluatorPattern;
   }
 
   public final Type getType() {
     return type;
+  }
+
+  public final Evaluator.Pattern getEvaluatorPattern() {
+    return evaluatorPattern;
   }
 
   public boolean isSingular() {
@@ -80,60 +85,7 @@ public abstract class Sp implements Comparable<Sp> {
    * grid with the given number of open squares.
    */
   public double getProbabilityOfPlaying(int numOpen) {
-    Sp key = this;
-    while (!probabilities.containsKey(key)) key = key.getFallbackKey();
-    double[] ps = probabilities.get(key);
-    int index = Math.min(numOpen / 20, 2);
-    return ps[index];
-  }
-
-  protected Sp getFallbackKey() {
-    throw new UnsupportedOperationException();
-  }
-
-  private static final ImmutableMap<Sp, double[]> probabilities;
-  static {
-    probabilities = ImmutableMap.<Sp, double[]>builder()
-        .put(new Conflict(BLOCK), new double[]{0.078, 0.049, 0.14})
-        .put(new Conflict(LINE),  new double[]{0.15, 0.16, 0.16})
-        .put(new BarredLoc(5), new double[]{0.20, 0.28, 0.40})
-        .put(new BarredLoc(4), new double[]{0.20, 0.28, 0.28})
-        .put(new BarredLoc(3), new double[]{0.20, 0.22, 0.12})
-        .put(new BarredLoc(2), new double[]{0.20, 0.19, 0.18})
-        .put(new BarredLoc(1), new double[]{0.24, 0.11, 0.16})
-        .put(new BarredLoc(0), new double[]{0.20, 0.13, 0.094})
-        .put(new BarredNum(BLOCK), new double[]{0.26, 0.26, 0.23})
-        .put(new BarredNum(LINE),  new double[]{0.24, 0.22, 0.21})
-        .put(new ForcedLoc(BLOCK), new double[]{0.41, 0.41, 0.50})
-        .put(new ForcedLoc(LINE),  new double[]{0.32, 0.30, 0.40})
-        .put(new ForcedNum(6), new double[]{0.24, 0.47, 0.86})
-        .put(new ForcedNum(5), new double[]{0.24, 0.47, 0.71})
-        .put(new ForcedNum(4), new double[]{0.24, 0.47, 0.38})
-        .put(new ForcedNum(3), new double[]{0.24, 0.31, 0.10})
-        .put(new ForcedNum(2), new double[]{0.24, 0.18, 0.086})
-        .put(new ForcedNum(1), new double[]{0.22, 0.050, 0.040})
-        .put(new ForcedNum(0), new double[]{0.22, 0.039, 0.029})
-        .put(new Overlap(BLOCK), new double[]{0.37, 0.88, 0.90})
-        .put(new Overlap(LINE),  new double[]{0.54, 0.91, 0.90})
-        .put(hiddenSet(BLOCK, 2, true),  new double[]{0.26, 0.37, 0.53})
-        .put(hiddenSet(LINE, 2, true),   new double[]{0.28, 0.32, 0.36})
-        .put(hiddenSet(BLOCK, 2, false), new double[]{0.16, 0.30, 0.38})
-        .put(hiddenSet(LINE, 2, false),  new double[]{0.13, 0.18, 0.19})
-        .put(hiddenSet(BLOCK, 3, true),  new double[]{0.28, 0.28, 0.31})
-        .put(hiddenSet(LINE, 3, true),   new double[]{0.30, 0.41, 0.39})
-        .put(hiddenSet(BLOCK, 3, false), new double[]{0.11, 0.11, 0.19})
-        .put(hiddenSet(LINE, 3, false),  new double[]{0.15, 0.16, 0.13})
-        .put(hiddenSet(BLOCK, 4, true),  new double[]{0.28, 0.44, 0.33})
-        .put(hiddenSet(LINE, 4, true),   new double[]{0.30, 0.53, 0.53})
-        .put(hiddenSet(BLOCK, 4, false), new double[]{0.11, 0.058, 0.10})
-        .put(hiddenSet(LINE, 4, false),  new double[]{0.20, 0.21, 0.13})
-        .put(nakedSet(BLOCK, 2), new double[]{0.75, 2.1, 1.9})
-        .put(nakedSet(LINE, 2),  new double[]{0.45, 1.6, 1.6})
-        .put(nakedSet(BLOCK, 3), new double[]{0.84, 3.1, 2.9})
-        .put(nakedSet(LINE, 3),  new double[]{0.43, 2.1, 2.5})
-        .put(nakedSet(BLOCK, 4), new double[]{0.84, 3.6, 4.6})
-        .put(nakedSet(LINE, 4),  new double[]{0.77, 2.4, 3.4})
-        .build();
+    return evaluatorPattern.getWeight(numOpen);
   }
 
   /**
@@ -146,6 +98,7 @@ public abstract class Sp implements Comparable<Sp> {
 
   public Appendable appendTo(Appendable a) throws IOException {
     a.append(type.getName()).append(':');
+    a.append(String.valueOf(evaluatorPattern.ordinal())).append(':');
     appendGutsTo(a);
     return a;
   }
@@ -225,9 +178,11 @@ public abstract class Sp implements Comparable<Sp> {
   }
 
   @Override public int compareTo(Sp that) {
-    int answer = this.type.compareTo(that.type);
-    if (answer == 0) answer = this.compareToGuts(that);
-    return answer;
+    ComparisonChain chain = ComparisonChain.start()
+        .compare(this.type, that.type)
+        .compare(this.evaluatorPattern, that.evaluatorPattern, Ordering.natural().nullsFirst());
+    if (chain.result() == 0) chain = this.compareToGuts(that, chain);
+    return chain.result();
   }
 
   @Override public boolean equals(Object o) {
@@ -235,15 +190,15 @@ public abstract class Sp implements Comparable<Sp> {
     if (o == this) return true;
     if (o.getClass() != this.getClass()) return false;
     Sp that = (Sp) o;
-    return this.type == that.type;
+    return this.type == that.type && this.evaluatorPattern == that.evaluatorPattern;
   }
 
   @Override public int hashCode() {
-    return type.hashCode();
+    return Objects.hashCode(type, evaluatorPattern);
   }
 
   protected abstract Appendable appendGutsTo(Appendable a) throws IOException;
-  protected abstract int compareToGuts(Sp that);
+  protected abstract ComparisonChain compareToGuts(Sp that, ComparisonChain chain);
 
   /**
    * For simple patterns that rely entirely on the category of unit they pertain
@@ -252,8 +207,8 @@ public abstract class Sp implements Comparable<Sp> {
   public static abstract class UnitBased extends Sp {
     private final UnitCategory category;
 
-    UnitBased(Type type, UnitCategory category) {
-      super(type);
+    UnitBased(Type type, Evaluator.Pattern evaluatorPattern, UnitCategory category) {
+      super(type, evaluatorPattern);
       this.category = category;
     }
 
@@ -275,9 +230,9 @@ public abstract class Sp implements Comparable<Sp> {
       return a.append(category.toString());
     }
 
-    @Override protected int compareToGuts(Sp p) {
+    @Override protected ComparisonChain compareToGuts(Sp p, ComparisonChain chain) {
       UnitBased that = (UnitBased) p;
-      return this.category.compareTo(that.category);
+      return chain.compare(this.category, that.category);
     }
   }
 
@@ -351,8 +306,8 @@ public abstract class Sp implements Comparable<Sp> {
   public static abstract class PeerMetricsBased extends Sp {
     private final PeerMetrics metrics;
 
-    PeerMetricsBased(Type type, PeerMetrics metrics) {
-      super(type);
+    PeerMetricsBased(Type type, Evaluator.Pattern evaluatorPattern, PeerMetrics metrics) {
+      super(type, evaluatorPattern);
       this.metrics = metrics;
     }
 
@@ -374,9 +329,9 @@ public abstract class Sp implements Comparable<Sp> {
       return metrics.appendTo(a);
     }
 
-    @Override protected int compareToGuts(Sp p) {
+    @Override protected ComparisonChain compareToGuts(Sp p, ComparisonChain chain) {
       PeerMetricsBased that = (PeerMetricsBased) p;
-      return this.metrics.compareTo(that.metrics);
+      return chain.compare(this.metrics, that.metrics);
     }
   }
 
@@ -385,29 +340,30 @@ public abstract class Sp implements Comparable<Sp> {
    * unit category.
    */
   public static final class Conflict extends UnitBased {
-    Conflict(UnitCategory category) {
-      super(Type.CONFLICT, category);
+    Conflict(Evaluator.Pattern evaluatorPattern, UnitCategory category) {
+      super(Type.CONFLICT, evaluatorPattern, category);
     }
   }
 
   public static Conflict conflict(Pattern.Conflict conflict) {
-    return new Conflict(conflict.getCategory());
+    return new Conflict(conflict.getEvaluatorPattern(), conflict.getCategory());
   }
 
   /**
    * The patterns for a location with no possible assignments.
    */
   public static final class BarredLoc extends PeerMetricsBased {
-    BarredLoc(PeerMetrics metrics) {
-      super(Type.BARRED_LOCATION, metrics);
+    BarredLoc(Evaluator.Pattern evaluatorPattern, PeerMetrics metrics) {
+      super(Type.BARRED_LOCATION, evaluatorPattern, metrics);
     }
-    BarredLoc(int deltaOverAverage) {
-      this(new PeerMetrics(deltaOverAverage));
+    BarredLoc(Evaluator.Pattern evaluatorPattern, int deltaOverAverage) {
+      this(evaluatorPattern, new PeerMetrics(deltaOverAverage));
     }
   }
 
   public static BarredLoc barredLocation(Pattern.BarredLoc barredLocation, int openCount) {
-    return new BarredLoc(new PeerMetrics(barredLocation.getMetrics(), openCount));
+    return new BarredLoc(barredLocation.getEvaluatorPattern(),
+                         new PeerMetrics(barredLocation.getMetrics(), openCount));
   }
 
   /**
@@ -415,13 +371,13 @@ public abstract class Sp implements Comparable<Sp> {
    * unit.
    */
   public static final class BarredNum extends UnitBased {
-    BarredNum(UnitCategory category) {
-      super(Type.BARRED_NUMERAL, category);
+    BarredNum(Evaluator.Pattern evaluatorPattern, UnitCategory category) {
+      super(Type.BARRED_NUMERAL, evaluatorPattern, category);
     }
   }
 
   public static BarredNum barredNumeral(Pattern.BarredNum barredNumeral) {
-    return new BarredNum(barredNumeral.getCategory());
+    return new BarredNum(barredNumeral.getEvaluatorPattern(), barredNumeral.getCategory());
   }
 
   /**
@@ -429,8 +385,8 @@ public abstract class Sp implements Comparable<Sp> {
    * given unit.
    */
   public static final class ForcedLoc extends UnitBased {
-    ForcedLoc(UnitCategory category) {
-      super(Type.FORCED_LOCATION, category);
+    ForcedLoc(Evaluator.Pattern evaluatorPattern, UnitCategory category) {
+      super(Type.FORCED_LOCATION, evaluatorPattern, category);
     }
     @Override public boolean isMove() {
       return true;
@@ -438,18 +394,18 @@ public abstract class Sp implements Comparable<Sp> {
   }
 
   public static ForcedLoc forcedLocation(Pattern.ForcedLoc forcedLocation) {
-    return new ForcedLoc(forcedLocation.getCategory());
+    return new ForcedLoc(forcedLocation.getEvaluatorPattern(), forcedLocation.getCategory());
   }
 
   /**
    * The patterns for a location with a single possible numeral assignment.
    */
   public static final class ForcedNum extends PeerMetricsBased {
-    ForcedNum(PeerMetrics metrics) {
-      super(Type.FORCED_NUMERAL, metrics);
+    ForcedNum(Evaluator.Pattern evaluatorPattern, PeerMetrics metrics) {
+      super(Type.FORCED_NUMERAL, evaluatorPattern, metrics);
     }
-    ForcedNum(int deltaOverAverage) {
-      this(new PeerMetrics(deltaOverAverage));
+    ForcedNum(Evaluator.Pattern evaluatorPattern, int deltaOverAverage) {
+      this(evaluatorPattern, new PeerMetrics(deltaOverAverage));
     }
     @Override public boolean isMove() {
       return true;
@@ -457,7 +413,8 @@ public abstract class Sp implements Comparable<Sp> {
   }
 
   public static ForcedNum forcedNumeral(Pattern.ForcedNum forcedNumeral, int openCount) {
-    return new ForcedNum(new PeerMetrics(forcedNumeral.getMetrics(), openCount));
+    return new ForcedNum(forcedNumeral.getEvaluatorPattern(),
+                         new PeerMetrics(forcedNumeral.getMetrics(), openCount));
   }
 
   /**
@@ -466,13 +423,13 @@ public abstract class Sp implements Comparable<Sp> {
    * locations in the second unit.
    */
   public static final class Overlap extends UnitBased {
-    Overlap(UnitCategory category) {
-      super(Type.OVERLAP, category);
+    Overlap(Evaluator.Pattern evaluatorPattern, UnitCategory category) {
+      super(Type.OVERLAP, evaluatorPattern, category);
     }
   }
 
   public static Overlap overlap(Pattern.Overlap overlap, int openCount) {
-    return new Overlap(overlap.getCategory());
+    return new Overlap(overlap.getEvaluatorPattern(), overlap.getCategory());
   }
 
   /**
@@ -484,8 +441,9 @@ public abstract class Sp implements Comparable<Sp> {
     private final boolean isNaked;
     private final boolean isOverlapped;
 
-    LockedSet(UnitCategory category, int setSize, boolean isNaked, boolean isOverlapped) {
-      super(Type.LOCKED_SET, category);
+    LockedSet(Evaluator.Pattern evaluatorPattern, UnitCategory category, int setSize,
+              boolean isNaked, boolean isOverlapped) {
+      super(Type.LOCKED_SET, evaluatorPattern, category);
       this.setSize = setSize;
       this.isNaked = isNaked;
       this.isOverlapped = isOverlapped;
@@ -517,14 +475,14 @@ public abstract class Sp implements Comparable<Sp> {
       return Objects.hashCode(super.hashCode(), setSize, isNaked, isOverlapped);
     }
 
-    @Override protected int compareToGuts(Sp p) {
+    @Override protected ComparisonChain compareToGuts(Sp p, ComparisonChain chain) {
       LockedSet that = (LockedSet) p;
-      return ComparisonChain.start()
+      return chain
           .compare(this.setSize, that.setSize)
           .compareFalseFirst(this.isNaked, that.isNaked)
           .compareTrueFirst(this.isOverlapped, that.isOverlapped)
           .compare(this.getCategory(), that.getCategory())
-          .result();
+          ;
     }
 
     @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
@@ -537,29 +495,24 @@ public abstract class Sp implements Comparable<Sp> {
   }
 
   public static LockedSet lockedSet(Pattern.LockedSet lockedSet) {
-    return new LockedSet(
-        lockedSet.getCategory(), lockedSet.getSetSize(), lockedSet.isNaked(), lockedSet.isOverlapped());
+    return new LockedSet(lockedSet.getEvaluatorPattern(), lockedSet.getCategory(), lockedSet.getSetSize(),
+                         lockedSet.isNaked(), lockedSet.isOverlapped());
   }
 
-  public static LockedSet hiddenSet(UnitCategory category, int setSize, boolean isOverlapped) {
-    return new LockedSet(category, setSize, false, isOverlapped);
+  public static LockedSet hiddenSet(
+      Evaluator.Pattern evaluatorPattern, UnitCategory category, int setSize, boolean isOverlapped) {
+    return new LockedSet(evaluatorPattern, category, setSize, false, isOverlapped);
   }
 
   /**
    * A special pattern for naked sets.
    */
-  public static final class NakedSet extends Sp {
-    private final UnitCategory category;
+  public static final class NakedSet extends UnitBased {
     private final int setSize;
 
-    NakedSet(UnitCategory category, int setSize) {
-      super(Type.NAKED_SET);
-      this.category = category;
+    NakedSet(Evaluator.Pattern evaluatorPattern, UnitCategory category, int setSize) {
+      super(Type.NAKED_SET, evaluatorPattern, category);
       this.setSize = setSize;
-    }
-
-    public UnitCategory getCategory() {
-      return category;
     }
 
     public int getSetSize() {
@@ -567,43 +520,40 @@ public abstract class Sp implements Comparable<Sp> {
     }
 
     @Override public boolean equals(Object o) {
-      if (o == null) return false;
-      if (o == this) return true;
-      if (o instanceof NakedSet) {
+      if (super.equals(o)) {
         NakedSet that = (NakedSet) o;
-        return this.category == that.category
-            && this.setSize == that.setSize;
+        return this.setSize == that.setSize;
       }
       return false;
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(category, setSize);
+      return Objects.hashCode(super.hashCode(), setSize);
     }
 
-    @Override protected int compareToGuts(Sp p) {
+    @Override protected ComparisonChain compareToGuts(Sp p, ComparisonChain chain) {
       NakedSet that = (NakedSet) p;
-      return ComparisonChain.start()
+      return chain
           .compare(this.setSize, that.setSize)
-          .compare(this.category, that.category)
-          .result();
+          .compare(this.getCategory(), that.getCategory())
+          ;
     }
 
     @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
       return a
           .append(String.valueOf(setSize))
           .append(':')
-          .append(category.toString())
+          .append(getCategory().toString())
           ;
     }
   }
 
   public static NakedSet nakedSet(Pattern.NakedSet set) {
-    return new NakedSet(set.getCategory(), set.getSetSize());
+    return new NakedSet(set.getEvaluatorPattern(), set.getCategory(), set.getSetSize());
   }
 
-  public static NakedSet nakedSet(UnitCategory category, int setSize) {
-    return new NakedSet(category, setSize);
+  public static NakedSet nakedSet(Evaluator.Pattern evaluatorPattern, UnitCategory category, int setSize) {
+    return new NakedSet(evaluatorPattern, category, setSize);
   }
 
   /**
@@ -615,7 +565,7 @@ public abstract class Sp implements Comparable<Sp> {
     final Sp consequent;
 
     private Implication(SortedMultiset<Sp> antecedents, Sp consequent) {
-      super(Type.IMPLICATION);
+      super(Type.IMPLICATION, null);
       this.antecedents = antecedents;
       this.consequent = consequent;
     }
@@ -661,12 +611,12 @@ public abstract class Sp implements Comparable<Sp> {
 
     private static final Ordering<Iterable<Sp>> LEXICO = Ordering.natural().lexicographical();
 
-    @Override protected int compareToGuts(Sp p) {
+    @Override protected ComparisonChain compareToGuts(Sp p, ComparisonChain chain) {
       Implication that = (Implication) p;
-      return ComparisonChain.start()
+      return chain
           .compare(this.antecedents, that.antecedents, LEXICO)
           .compare(this.consequent, that.consequent)
-          .result();
+          ;
     }
 
     @Override public double getProbabilityOfPlaying(int numOpen) {
@@ -704,7 +654,7 @@ public abstract class Sp implements Comparable<Sp> {
     final SortedMultiset<Sp> parts;
 
     private Combination(SortedMultiset<Sp> parts) {
-      super(Type.COMBINATION);
+      super(Type.COMBINATION, null);
       this.parts = parts;
     }
 
@@ -752,11 +702,9 @@ public abstract class Sp implements Comparable<Sp> {
 
     private static final Ordering<Iterable<Sp>> LEXICO = Ordering.natural().lexicographical();
 
-    @Override protected int compareToGuts(Sp p) {
+    @Override protected ComparisonChain compareToGuts(Sp p, ComparisonChain chain) {
       Combination that = (Combination) p;
-      return ComparisonChain.start()
-          .compare(this.parts, that.parts, LEXICO)
-          .result();
+      return chain.compare(this.parts, that.parts, LEXICO);
     }
 
     @Override public double getProbabilityOfPlaying(int numOpen) {
@@ -798,7 +746,7 @@ public abstract class Sp implements Comparable<Sp> {
    */
   public static class None extends Sp {
     private None() {
-      super(Type.NONE);
+      super(Type.NONE, null);
     }
 
     @Override public Appendable appendTo(Appendable a) throws IOException {
@@ -818,8 +766,8 @@ public abstract class Sp implements Comparable<Sp> {
       throw new UnsupportedOperationException();
     }
 
-    @Override protected int compareToGuts(Sp that) {
-      return 0;
+    @Override protected ComparisonChain compareToGuts(Sp p, ComparisonChain chain) {
+      return chain;
     }
   }
 

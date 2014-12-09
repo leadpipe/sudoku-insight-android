@@ -27,6 +27,7 @@ import us.blanshard.sudoku.insight.Analyzer.StopException;
 import us.blanshard.sudoku.insight.BarredLoc;
 import us.blanshard.sudoku.insight.BarredNum;
 import us.blanshard.sudoku.insight.Conflict;
+import us.blanshard.sudoku.insight.Evaluator;
 import us.blanshard.sudoku.insight.ForcedLoc;
 import us.blanshard.sudoku.insight.ForcedNum;
 import us.blanshard.sudoku.insight.GridMarks;
@@ -355,13 +356,15 @@ public class InsightMeasurer implements Runnable {
         case CONFLICT:
           return Pattern.conflict(((Conflict) insight).getLocations().unit);
         case BARRED_LOCATION:
-          return Pattern.barredLocation(grid, ((BarredLoc) insight).getLocation());
+          return Pattern.barredLocation(Evaluator.Pattern.forInsight(insight, grid),
+              ((BarredLoc) insight).getLocation(), grid);
         case BARRED_NUMERAL:
           return Pattern.barredNumeral(((BarredNum) insight).getUnit());
         case FORCED_LOCATION:
           return Pattern.forcedLocation(((ForcedLoc) insight).getUnit());
         case FORCED_NUMERAL:
-          return Pattern.forcedNumeral(grid, ((ForcedNum) insight).getLocation());
+          return Pattern.forcedNumeral(Evaluator.Pattern.forInsight(insight, grid),
+              grid, ((ForcedNum) insight).getLocation());
         case OVERLAP:
           return Pattern.overlap(((Overlap) insight).getUnit());
         case LOCKED_SET:
