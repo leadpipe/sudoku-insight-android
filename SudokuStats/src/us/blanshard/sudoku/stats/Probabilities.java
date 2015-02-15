@@ -328,7 +328,7 @@ public class Probabilities {
     }
 
     boolean hasEnoughData() {
-      return direct != null && direct.count >= 300;
+      return lone != null && lone.count >= 15 && direct != null && direct.count >= 50;
     }
 
     void infer(SpInfo impInfo, SpInfo restInfo) {
@@ -369,7 +369,7 @@ public class Probabilities {
 
   // ============================
 
-  private static final int COUNT = 3;
+  private static final int COUNT = 6;
   private static final int SIZE = 60 / COUNT;
   private static final Reporter[] reporters = new Reporter[COUNT];
   private static final Reporter reporter = new Reporter();

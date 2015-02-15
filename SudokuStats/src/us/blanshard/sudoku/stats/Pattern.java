@@ -815,7 +815,6 @@ public abstract class Pattern implements Comparable<Pattern> {
     if (overlap != null) {
       int numSetInOverlap = countNumSetInUnit(grid, overlap);
       if (numSetInOverlap > numSetInUnit) {
-        category = UnitCategory.forUnit(overlap);
         numSetInFullestUnit = numSetInOverlap;
       }
     }

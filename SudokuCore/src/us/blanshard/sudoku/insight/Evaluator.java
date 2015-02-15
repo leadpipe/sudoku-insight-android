@@ -497,16 +497,16 @@ public class Evaluator {
     private static int getMaxDeltaAboveAverage(Location loc, Grid grid) {
       int maxSet = 0;
       for (Unit.Type unitType : Unit.Type.values()) {
-        maxSet = Math.max(maxSet, numSetInUnit(loc.unit(unitType), grid));
+        maxSet = Math.max(maxSet, numSetInUnit(loc.unit(unitType), grid, loc));
       }
       int averageSetPerUnit = grid.size() / 9;
       return Math.max(0, maxSet - averageSetPerUnit);
     }
 
-    private static int numSetInUnit(Unit unit, Grid grid) {
+    private static int numSetInUnit(Unit unit, Grid grid, Location skip) {
       int answer = 0;
       for (Location loc : unit)
-        if (grid.containsKey(loc))
+        if (loc != skip && grid.containsKey(loc))
           ++answer;
       return answer;
     }
