@@ -15,8 +15,10 @@ limitations under the License.
 */
 package us.blanshard.sudoku.stats;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Math.min;
 
+import us.blanshard.sudoku.insight.Evaluator;
 import us.blanshard.sudoku.stats.Pattern.Coll;
 
 import com.google.common.base.Splitter;
@@ -29,6 +31,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -43,6 +46,8 @@ import javax.annotation.Nullable;
  */
 public class Probabilities {
   public static void main(String[] args) throws IOException {
+    Probabilities instance = new Probabilities(6);
+
     BufferedReader in = new BufferedReader(new FileReader("measurer.txt"));
     Splitter splitter = Splitter.on('\t');
     for (String line; (line = in.readLine()) != null; ) {
@@ -57,7 +62,7 @@ public class Probabilities {
       int moveNumber = Integer.parseInt(iter.next());
       int effectiveMoveNumber = Integer.parseInt(iter.next());
 
-      Reporter reporter = getReporter(
+      Reporter reporter = instance.getReporter(
           openCount, minOpen, numTrails, timestamp, effectiveTimestamp, moveNumber, effectiveMoveNumber);
       if (!isTrailhead) {
         new Universe(iter);
@@ -70,7 +75,7 @@ public class Probabilities {
       }
     }
     in.close();
-    reportSummaries(System.out);
+    instance.reportSummaries(System.out);
   }
 
   // A simplified probability distribution.  We assume that everything's normal
@@ -134,6 +139,10 @@ public class Probabilities {
         wa + wb);
   }
 
+  static double mean(Dist d) {
+    return d == null ? Double.NaN : d.mean;
+  }
+
   static class Universe {
     final int numerator;
     final int denominator;
@@ -160,8 +169,9 @@ public class Probabilities {
 
     public void noteMissed(int openCount, List<Coll> missed) {
       for (Coll coll : missed) {
+        boolean allImps = coll.areAllImplications();
         for (Pattern p : coll.patterns)
-          counters.getUnchecked(Sp.fromPattern(p, openCount)).addMissed(coll.patterns.size());
+          counters.getUnchecked(Sp.fromPattern(p, openCount)).addMissed(allImps, coll.patterns.size());
       }
     }
 
@@ -169,12 +179,15 @@ public class Probabilities {
       ++batchCount;
       for (Coll coll : played) {
         ++moveCount;
+        boolean allImps = coll.areAllImplications();
         for (Pattern p : coll.patterns)
-          counters.getUnchecked(Sp.fromPattern(p, openCount)).addPlayed(coll.patterns.size());
+          counters.getUnchecked(Sp.fromPattern(p, openCount)).addPlayed(allImps, coll.patterns.size());
       }
     }
 
-    public void reportSummaries(PrintStream out) {
+    public double[] reportSummaries(PrintStream out) {
+      double[] probabilities = new double[Evaluator.Pattern.values().length];
+      Arrays.fill(probabilities, Double.NaN);
       out.printf("%,d batches, %,d moves (%.2g moves per batch)%n%n",
                  batchCount, moveCount, moveCount / (double) batchCount);
 
@@ -207,77 +220,19 @@ public class Probabilities {
       }
 
       for (Sp sp : singulars) {
-        infos.getUnchecked(sp).report(out);
+        probabilities[sp.getEvaluatorPattern().ordinal()]
+            = infos.getUnchecked(sp).report(out);
       }
 
       out.println();
+      return probabilities;
     }
   }
 
-  static class SpCounter {
-    private final Sp sp;
-    private final LoadingCache<Integer, SizeCounter> counters;
+  // The base class for counting played/missed.
+  static class Counter {
     private int missed;
     private int played;
-
-    public SpCounter(Sp sp) {
-      this.sp = sp;
-      this.counters = CacheBuilder.newBuilder().build(new CacheLoader<Integer, SizeCounter>() {
-        @Override public SizeCounter load(Integer size) {
-          return new SizeCounter();
-        }
-      });
-    }
-
-    public Sp sp() {
-      return sp;
-    }
-
-    public int played() {
-      return played;
-    }
-
-    public int missed() {
-      return missed;
-    }
-
-    public int total() {
-      return played + missed;
-    }
-
-    public void addMissed(int size) {
-      ++missed;
-      if (sp.isMove())
-        counters.getUnchecked(size).addMissed();
-    }
-
-    public void addPlayed(int size) {
-      ++played;
-      if (sp.isMove())
-        counters.getUnchecked(size).addPlayed();
-    }
-
-    public Dist getDist() {
-      return forBinomial(played, total());
-    }
-
-    public Iterable<Integer> getSizes() {
-      return new TreeSet<Integer>(counters.asMap().keySet());
-    }
-
-    @Nullable public SizeCounter getSizeCounter(int size) {
-      return counters.asMap().get(size);
-    }
-  }
-
-  // Breaks out played/missed counts by size of the set of insights that all
-  // point to the same move (or that are all errors).
-  static class SizeCounter {
-    private int missed;
-    private int played;
-
-    public SizeCounter() {
-    }
 
     public int played() {
       return played;
@@ -304,11 +259,59 @@ public class Probabilities {
     }
   }
 
+  static class SpCounter extends Counter {
+    private final Sp sp;
+    @Nullable private final Counter allImpsCounter;
+    private final LoadingCache<Integer, Counter> counters;
+
+    public SpCounter(Sp sp) {
+      this.sp = sp;
+      this.allImpsCounter = sp.type == Sp.Type.IMPLICATION ? new Counter() : null;
+      this.counters = CacheBuilder.newBuilder().build(new CacheLoader<Integer, Counter>() {
+        @Override public Counter load(Integer size) {
+          return new Counter();
+        }
+      });
+    }
+
+    public Sp sp() {
+      return sp;
+    }
+
+    public void addMissed(boolean allImps, int size) {
+      addMissed();
+      if (sp.isMove()) {
+        if (allImps) allImpsCounter.addMissed();
+        counters.getUnchecked(size).addMissed();
+      }
+    }
+
+    public void addPlayed(boolean allImps, int size) {
+      addPlayed();
+      if (sp.isMove()) {
+        if (allImps) allImpsCounter.addPlayed();
+        counters.getUnchecked(size).addPlayed();
+      }
+    }
+
+    @Nullable public Dist getAllImpsDist() {
+      return allImpsCounter == null ? null : allImpsCounter.getDist();
+    }
+
+    public Iterable<Integer> getSizes() {
+      return new TreeSet<Integer>(counters.asMap().keySet());
+    }
+
+    @Nullable public Counter getSizeCounter(int size) {
+      return counters.asMap().get(size);
+    }
+  }
+
   // Aggregates distribution information about a specific Sp.
   static class SpInfo {
     final Sp sp;
     SpCounter counter;
-    Dist direct;
+    Dist dist;
     Dist lone;
     Dist pooledInferred;
     int numLess;
@@ -322,32 +325,33 @@ public class Probabilities {
 
     void setCounter(SpCounter counter) {
       this.counter = counter;
-      this.direct = counter.getDist();
-      SizeCounter s = counter.getSizeCounter(1);
+      this.dist = sp.type == Sp.Type.IMPLICATION ? counter.getAllImpsDist() : counter.getDist();
+      Counter s = counter.getSizeCounter(1);
       if (s != null) this.lone = s.getDist();
     }
 
     boolean hasEnoughData() {
-      return lone != null && lone.count >= 15 && direct != null && direct.count >= 50;
+      return /*lone != null && lone.count >= 15 &&*/
+          dist != null && dist.count >= 30;
     }
 
     void infer(SpInfo impInfo, SpInfo restInfo) {
       if (impInfo.hasEnoughData() && restInfo.hasEnoughData()) {
-        Dist inferred = quotient(impInfo.direct, restInfo.direct);
+        Dist inferred = quotient(impInfo.dist, restInfo.dist);
         pooledInferred = pool(pooledInferred, inferred);
         ++numPooled;
-        if (impInfo.direct.mean < restInfo.direct.mean) {
+        if (impInfo.dist.mean < restInfo.dist.mean) {
           ++numLess;
         }
-      } else if (impInfo.direct != null && restInfo.direct != null) {
-        int minCount = Math.min(impInfo.direct.count, restInfo.direct.count);
+      } else if (impInfo.dist != null && restInfo.dist != null) {
+        int minCount = Math.min(impInfo.dist.count, restInfo.dist.count);
         if (minCount > maxMissedCount) maxMissedCount = minCount;
-        if (minCount > maxLessCount && impInfo.direct.count < restInfo.direct.count)
+        if (minCount > maxLessCount && impInfo.dist.count < restInfo.dist.count)
           maxLessCount = minCount;
       }
     }
 
-    void report(PrintStream out) {
+    double report(PrintStream out) {
       if (counter == null) {
         out.printf("%-8s inferred %-24s  less %3.0f%% %d/%d%n", sp, pooledInferred,
                    100.0 * numLess / numPooled, numLess, numPooled);
@@ -356,58 +360,71 @@ public class Probabilities {
 //          if (maxLessCount < maxMissedCount) out.printf(" / %d", maxLessCount);
 //          out.println();
 //        }
+        return mean(pooledInferred);
       } else {
-        out.printf("%-8s %s%n", sp, direct);
+        out.printf("%-8s %s%n", sp, dist);
 //        for (int size : counter.getSizes()) {
 //          Dist dist = counter.getSizeCounter(size).getDist();
 //          out.printf("%10d %-28s %4.0f%%%n", size, dist,
 //                     100 * dist.mean / direct.mean);
 //        }
+        return mean(dist);
       }
     }
   }
 
   // ============================
 
-  private static final int COUNT = 6;
-  private static final int SIZE = 60 / COUNT;
-  private static final Reporter[] reporters = new Reporter[COUNT];
-  private static final Reporter reporter = new Reporter();
-  private static final boolean singleReporter = false;
+  private final int numBuckets;
+  private final int bucketSize;
+  private final Reporter[] reporters;
 
-  private static Reporter getReporter(
+  private Probabilities(int numBuckets) {
+    checkArgument(numBuckets > 0, "bad count %s");
+    this.numBuckets = numBuckets;
+    this.bucketSize = 60 / numBuckets;
+    this.reporters = new Reporter[numBuckets];
+  }
+
+  private Reporter getReporter(
       int openCount, int minOpen, int numTrails, long timestamp,
       long effectiveTimestamp, int moveNumber, int effectiveMoveNumber) {
-    if (singleReporter) return reporter;
-    int index = min(COUNT - 1, openCount / SIZE);
+    int index = min(numBuckets - 1, minOpen / bucketSize);
     Reporter answer = reporters[index];
     if (answer == null)
       reporters[index] = answer = new Reporter();
     return answer;
   }
 
-  private static void reportSummaries(PrintStream out) {
-    if (singleReporter) {
-      reportSummaries(out, reporter, "Everything together in one bunch");
-    } else {
-      for (int i = 0; i < COUNT; ++i) {
-        Reporter r = reporters[i];
-        if (r != null)
-          reportSummaries(out, r, headline(i));
+  private void reportSummaries(PrintStream out) {
+    double[][] probabilities = new double[numBuckets][];
+    for (int i = 0; i < numBuckets; ++i) {
+      Reporter r = reporters[i];
+      if (r != null)
+        probabilities[i] = reportSummaries(out, r, headline(i));
+    }
+    out.println("Means per pattern:");
+    for (Evaluator.Pattern p : Evaluator.Pattern.values()) {
+      out.printf("%s(", p);
+      for (int i = 0; i < numBuckets; ++i) {
+        if (i > 0) out.print(", ");
+        out.printf("%.3g", probabilities[i][p.ordinal()]);
       }
+      out.println("),");
     }
   }
 
-  private static String headline(int i) {
-    int min = i * SIZE;
-    int max = min + SIZE - 1;
-    if (i == COUNT - 1)
+  private String headline(int i) {
+    if (numBuckets == 1) return "All in one batch";
+    int min = i * bucketSize;
+    int max = min + bucketSize - 1;
+    if (i == numBuckets - 1)
       return String.format("Open squares: %d or more", min);
     return String.format("Open squares: %d - %d", min, max);
   }
 
-  private static void reportSummaries(PrintStream out, Reporter reporter, String desc) {
+  private static double[] reportSummaries(PrintStream out, Reporter reporter, String desc) {
     out.printf("%n======================%n%s%n======================%n%n", desc);
-    reporter.reportSummaries(out);
+    return reporter.reportSummaries(out);
   }
 }

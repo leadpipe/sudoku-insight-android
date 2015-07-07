@@ -250,6 +250,12 @@ public abstract class Pattern implements Comparable<Pattern> {
       this.realmVector = realmVector;
       this.numScanTargets = numScanTargets;
     }
+
+    public boolean areAllImplications() {
+      for (Pattern p : patterns)
+        if (p.type != Type.IMPLICATION) return false;
+      return true;
+    }
   }
 
   /**

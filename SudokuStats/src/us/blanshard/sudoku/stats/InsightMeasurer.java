@@ -1,17 +1,12 @@
 /*
-Copyright 2013 Luke Blanshard
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-     http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+ * Copyright 2013 Luke Blanshard Licensed under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law
+ * or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
  */
 package us.blanshard.sudoku.stats;
 
@@ -64,13 +59,20 @@ public class InsightMeasurer implements Runnable {
     PrintWriter out = new PrintWriter("measurer.txt");
     int npuzzles = 0;
 
-    Iterable<AttemptInfo> attempts = Iterables.concat(
-        Attempts.phone2013(), Attempts.tablet2014() /*, Attempts.datastoreBackup()*/);
+    Iterable<AttemptInfo> attempts =
+        Iterables.concat(Attempts.phone2013(), Attempts.tablet2014() /*
+                                                                      * ,
+                                                                      * Attempts
+                                                                      * .
+                                                                      * datastoreBackup
+                                                                      * ()
+                                                                      */);
     for (AttemptInfo attempt : attempts) {
       ++npuzzles;
       new InsightMeasurer(attempt.clues, attempt.history, out).run();
       System.out.print('.');
-      if (npuzzles % 100 == 0) System.out.println();
+      if (npuzzles % 100 == 0)
+        System.out.println();
       out.flush();
     }
 
@@ -133,9 +135,10 @@ public class InsightMeasurer implements Runnable {
       Collector collector = new Collector(gridMarks);
       Analyzer.analyze(gridMarks, collector, OPTS);
       collector.extendElims();
-      boolean isTrailhead = move.trailId >= 0
-          && (game.getTrail(move.trailId).getTrailhead() == null
-              || game.getTrail(move.trailId).getTrailhead() == move.getLocation());
+      boolean isTrailhead =
+          move.trailId >= 0
+              && (game.getTrail(move.trailId).getTrailhead() == null || game.getTrail(move.trailId)
+                  .getTrailhead() == move.getLocation());
       if (isTrailhead) {
         emitTrailheadLine(elapsed, numOpen, move.timestamp, collector);
       } else if (collector.moves.containsKey(move.getAssignment())) {
@@ -168,7 +171,7 @@ public class InsightMeasurer implements Runnable {
 
   private void emitTrailheadLine(long elapsed, int numOpen, long timestamp, Collector collector) {
     startLine(true, elapsed, numOpen, timestamp);
-    collector.emitColls(collector.moves.keySet(), Collections.<WrappedInsight>emptySet());
+    collector.emitColls(collector.moves.keySet(), Collections.<WrappedInsight> emptySet());
     endLine();
   }
 
@@ -180,7 +183,7 @@ public class InsightMeasurer implements Runnable {
   }
 
   private void emitAbandonedErrors() {
-    for (Map.Entry<Integer, TrailState> entry: trailFinals.entrySet()) {
+    for (Map.Entry<Integer, TrailState> entry : trailFinals.entrySet()) {
       GridMarks gridMarks = new GridMarks(entry.getValue().grid);
       if (gridMarks.hasErrors) {
         Collector collector = new Collector(gridMarks);
@@ -188,7 +191,7 @@ public class InsightMeasurer implements Runnable {
         long timestamp = 0;
         long elapsed = 0;
         int trailId = entry.getKey();
-        for (int index = history.size(); index-- > 0; ) {
+        for (int index = history.size(); index-- > 0;) {
           Move move = history.get(index);
           if (move.trailId == trailId) {
             timestamp = history.get(index + 1).timestamp;
@@ -257,6 +260,7 @@ public class InsightMeasurer implements Runnable {
   private static class TrailState {
     final Grid grid;
     final int minOpen;
+
     TrailState(Grid grid, int minOpen) {
       this.grid = grid;
       this.minOpen = minOpen;
@@ -276,12 +280,13 @@ public class InsightMeasurer implements Runnable {
     @Override public void take(Insight insight) throws StopException {
       insight = Analyzer.minimize(gridMarks, insight);
       Assignment a = insight.getImpliedAssignment();
-      if (a != null)
+      if (a != null) {
         moves.put(a, new WrappedInsight(gridMarks, insight));
-      else if (insight.isError())
+      } else if (insight.isError()) {
         errors.add(new WrappedInsight(gridMarks, insight));
-      else
+      } else {
         elims.add(insight);
+      }
     }
 
     public void extendElims() {
@@ -322,12 +327,12 @@ public class InsightMeasurer implements Runnable {
     public void emitColls(Iterable<Assignment> assignments, Collection<WrappedInsight> errors) {
       StringBuilder sb = new StringBuilder();
       try {
-        Iterable<Pattern.Coll> colls = Iterables.transform(
-            assignments, new Function<Assignment, Pattern.Coll>() {
-            @Override public Pattern.Coll apply(Assignment a) {
-              return toColl(moves.get(a));
-            }
-          });
+        Iterable<Pattern.Coll> colls =
+            Iterables.transform(assignments, new Function<Assignment, Pattern.Coll>() {
+              @Override public Pattern.Coll apply(Assignment a) {
+                return toColl(moves.get(a));
+              }
+            });
         if (!errors.isEmpty()) {
           colls = Iterables.concat(colls, Collections.singleton(toColl(errors)));
         }
@@ -342,6 +347,7 @@ public class InsightMeasurer implements Runnable {
   private static class WrappedInsight {
     final Grid grid;
     final Insight insight;
+
     WrappedInsight(GridMarks gridMarks, Insight insight) {
       this.grid = gridMarks.grid;
       this.insight = insight;
@@ -363,8 +369,8 @@ public class InsightMeasurer implements Runnable {
         case FORCED_LOCATION:
           return Pattern.forcedLocation(((ForcedLoc) insight).getUnit());
         case FORCED_NUMERAL:
-          return Pattern.forcedNumeral(Evaluator.Pattern.forInsight(insight, grid),
-              grid, ((ForcedNum) insight).getLocation());
+          return Pattern.forcedNumeral(Evaluator.Pattern.forInsight(insight, grid), grid,
+              ((ForcedNum) insight).getLocation());
         case OVERLAP:
           return Pattern.overlap(((Overlap) insight).getUnit());
         case LOCKED_SET:
@@ -374,7 +380,8 @@ public class InsightMeasurer implements Runnable {
           List<Pattern> antecedents = Lists.newArrayList();
           for (Insight a : imp.getAntecedents())
             antecedents.add(getPattern(a));
-          return Pattern.implication(antecedents, getPattern(imp.getConsequent()), imp.getScanTargetCount());
+          return Pattern.implication(antecedents, getPattern(imp.getConsequent()),
+              imp.getScanTargetCount());
         }
         default:
           throw new IllegalArgumentException(insight.toShortString());
@@ -383,8 +390,8 @@ public class InsightMeasurer implements Runnable {
   }
 
   /**
-   * Gathers the scan targets (numerator and denominator) and realm vector
-   * for one collection of insights in a batch.
+   * Gathers the scan targets (numerator and denominator) and realm vector for
+   * one collection of insights in a batch.
    */
   private static class Universe {
     private final LocSet locTargetsNum = new LocSet();
@@ -441,10 +448,12 @@ public class InsightMeasurer implements Runnable {
       }
 
       Assignment a = move.getAssignment();
-      if (!collector.moves.containsKey(a)) return false;
+      if (!collector.moves.containsKey(a))
+        return false;
       List<WrappedInsight> wa = (List<WrappedInsight>) collector.moves.get(a);
       List<WrappedInsight> wb = (List<WrappedInsight>) newBatch.collector.moves.get(a);
-      if (wa.size() != wb.size()) return false;
+      if (wa.size() != wb.size())
+        return false;
       for (int i = 0; i < wa.size(); ++i)
         if (!wa.get(i).insight.equals(wb.get(i).insight))
           return false;
@@ -468,7 +477,7 @@ public class InsightMeasurer implements Runnable {
     }
 
     public void emitColls() {
-      collector.emitColls(assignments, Collections.<WrappedInsight>emptySet());
+      collector.emitColls(assignments, Collections.<WrappedInsight> emptySet());
       Set<Assignment> missed = Sets.newLinkedHashSet(collector.moves.keySet());
       missed.removeAll(assignments);
       collector.emitColls(missed, collector.errors);
