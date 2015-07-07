@@ -23,6 +23,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static us.blanshard.sudoku.core.NumSetTest.set;
 
+import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Block;
 import us.blanshard.sudoku.core.Column;
 import us.blanshard.sudoku.core.Grid;
@@ -44,6 +45,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -216,7 +218,42 @@ public class AnalyzerTest {
     assertEquals(new ForcedLoc(Block.of(2), Numeral.of(2), Location.of(2, 5)), imp.getConsequent());
 
     Implication imp2 = (Implication) Analyzer.minimize(gridMarks, imp);
-    assertEquals(Lists.newArrayList(set378), imp2.getAntecedents());
+    assertEquals(Lists.newArrayList(set26), imp2.getAntecedents());
+  }
+
+  @Test public void correctImplication() {
+    Grid grid = Grid.fromString(
+        " 9 . 7 | . 3 . | 4 1 5 " +
+        " . . . | . 7 1 | . 9 . " +
+        " 3 1 . | . 5 9 | 2 6 7 " +
+        "-------+-------+-------" +
+        " 1 . . | 9 . 4 | 6 7 . " +
+        " 4 9 2 | . . 7 | . . . " +
+        " 6 7 . | 1 . . | . 4 . " +
+        "-------+-------+-------" +
+        " 5 . 9 | 7 . . | . . . " +
+        " . 4 1 | . . 6 | . . . " +
+        " . . . | . . . | . . . ");
+
+    Collector collector = new Collector();
+    GridMarks gridMarks = new GridMarks(grid);
+
+    Analyzer.analyze(gridMarks, collector, new Analyzer.Options(false, false));
+
+    boolean found = false;
+    for (Insight i : collector.taken) {
+      if (i.getImpliedAssignment() == Assignment.of(Location.of(2, 1), Numeral.of(2))) {
+        Implication imp = (Implication) Analyzer.minimize(gridMarks, i);
+        if (imp.getConsequent().type == Insight.Type.FORCED_NUMERAL) {
+          found = true;
+          assertEquals(Arrays.asList(
+                  new Overlap(Block.of(3), Numeral.of(8), Row.of(2).intersect(Block.of(3)))),
+              imp.getAntecedents());
+        }
+      }
+    }
+
+    assertTrue(found);
   }
 
   @Test public void overlappingUnit() {
