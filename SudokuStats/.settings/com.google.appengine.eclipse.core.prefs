@@ -1,6 +1,7 @@
 eclipse.preferences.version=1
 filesCopiedToWebInfLib=
 gaeDatanucleusEnabled=false
+gaeHrdEnabled=false
 googleCloudSqlEnabled=false
 localDevMySqlEnabled=true
 ormEnhancementInclusions=
