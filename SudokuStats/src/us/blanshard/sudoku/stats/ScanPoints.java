@@ -434,7 +434,7 @@ public class ScanPoints {
     }
 
     boolean hasEnoughData() {
-      return direct != null && direct.count >= 20;
+      return direct != null && direct.count >= 5;
     }
 
     void addAdditive(SpInfo combInfo, SpInfo restInfo) {
