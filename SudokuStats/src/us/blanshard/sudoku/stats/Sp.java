@@ -439,14 +439,12 @@ public abstract class Sp implements Comparable<Sp> {
   public static final class LockedSet extends UnitBased {
     private final int setSize;
     private final boolean isNaked;
-    private final boolean isOverlapped;
 
     LockedSet(Evaluator.Pattern evaluatorPattern, UnitCategory category, int setSize,
-              boolean isNaked, boolean isOverlapped) {
+              boolean isNaked) {
       super(Type.LOCKED_SET, evaluatorPattern, category);
       this.setSize = setSize;
       this.isNaked = isNaked;
-      this.isOverlapped = isOverlapped;
     }
 
     public int getSetSize() {
@@ -457,22 +455,17 @@ public abstract class Sp implements Comparable<Sp> {
       return isNaked;
     }
 
-    public boolean isOverlapped() {
-      return isOverlapped;
-    }
-
     @Override public boolean equals(Object o) {
       if (super.equals(o)) {
         LockedSet that = (LockedSet) o;
         return this.setSize == that.setSize
-            && this.isNaked == that.isNaked
-            && this.isOverlapped == that.isOverlapped;
+            && this.isNaked == that.isNaked;
       }
       return false;
     }
 
     @Override public int hashCode() {
-      return Objects.hashCode(super.hashCode(), setSize, isNaked, isOverlapped);
+      return Objects.hashCode(super.hashCode(), setSize, isNaked);
     }
 
     @Override protected ComparisonChain compareToGuts(Sp p, ComparisonChain chain) {
@@ -480,7 +473,6 @@ public abstract class Sp implements Comparable<Sp> {
       return chain
           .compare(this.setSize, that.setSize)
           .compareFalseFirst(this.isNaked, that.isNaked)
-          .compareTrueFirst(this.isOverlapped, that.isOverlapped)
           .compare(this.getCategory(), that.getCategory())
           ;
     }
@@ -489,71 +481,17 @@ public abstract class Sp implements Comparable<Sp> {
       return super.appendGutsTo(a)
           .append(':')
           .append(String.valueOf(setSize))
-          .append(isNaked ? 'n' : 'h')
-          .append(isOverlapped ? 'o' : 'd');
+          .append(isNaked ? 'n' : 'h');
     }
   }
 
   public static LockedSet lockedSet(Pattern.LockedSet lockedSet) {
     return new LockedSet(lockedSet.getEvaluatorPattern(), lockedSet.getCategory(), lockedSet.getSetSize(),
-                         lockedSet.isNaked(), lockedSet.isOverlapped());
+                         lockedSet.isNaked());
   }
 
-  public static LockedSet hiddenSet(
-      Evaluator.Pattern evaluatorPattern, UnitCategory category, int setSize, boolean isOverlapped) {
-    return new LockedSet(evaluatorPattern, category, setSize, false, isOverlapped);
-  }
-
-  /**
-   * A special pattern for naked sets.
-   */
-  public static final class NakedSet extends UnitBased {
-    private final int setSize;
-
-    NakedSet(Evaluator.Pattern evaluatorPattern, UnitCategory category, int setSize) {
-      super(Type.NAKED_SET, evaluatorPattern, category);
-      this.setSize = setSize;
-    }
-
-    public int getSetSize() {
-      return setSize;
-    }
-
-    @Override public boolean equals(Object o) {
-      if (super.equals(o)) {
-        NakedSet that = (NakedSet) o;
-        return this.setSize == that.setSize;
-      }
-      return false;
-    }
-
-    @Override public int hashCode() {
-      return Objects.hashCode(super.hashCode(), setSize);
-    }
-
-    @Override protected ComparisonChain compareToGuts(Sp p, ComparisonChain chain) {
-      NakedSet that = (NakedSet) p;
-      return chain
-          .compare(this.setSize, that.setSize)
-          .compare(this.getCategory(), that.getCategory())
-          ;
-    }
-
-    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
-      return a
-          .append(String.valueOf(setSize))
-          .append(':')
-          .append(getCategory().toString())
-          ;
-    }
-  }
-
-  public static NakedSet nakedSet(Pattern.NakedSet set) {
-    return new NakedSet(set.getEvaluatorPattern(), set.getCategory(), set.getSetSize());
-  }
-
-  public static NakedSet nakedSet(Evaluator.Pattern evaluatorPattern, UnitCategory category, int setSize) {
-    return new NakedSet(evaluatorPattern, category, setSize);
+  public static LockedSet nakedSet(Pattern.NakedSet set) {
+    return new LockedSet(set.getEvaluatorPattern(), set.getCategory(), set.getSetSize(), true);
   }
 
   /**

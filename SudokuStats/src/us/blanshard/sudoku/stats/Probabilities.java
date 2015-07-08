@@ -46,7 +46,8 @@ import javax.annotation.Nullable;
  */
 public class Probabilities {
   public static void main(String[] args) throws IOException {
-    Probabilities instance = new Probabilities(6);
+    final int numBuckets = 1;
+    Probabilities instance = new Probabilities(numBuckets);
 
     BufferedReader in = new BufferedReader(new FileReader("measurer.txt"));
     Splitter splitter = Splitter.on('\t');
@@ -405,7 +406,7 @@ public class Probabilities {
     }
     out.println("Means per pattern:");
     for (Evaluator.Pattern p : Evaluator.Pattern.values()) {
-      out.printf("%s(", p);
+      out.printf("    %s(", p);
       for (int i = 0; i < numBuckets; ++i) {
         if (i > 0) out.print(", ");
         out.printf("%.3g", probabilities[i][p.ordinal()]);
@@ -415,12 +416,12 @@ public class Probabilities {
   }
 
   private String headline(int i) {
-    if (numBuckets == 1) return "All in one batch";
+    if (numBuckets == 1) return "All in one bucket";
     int min = i * bucketSize;
     int max = min + bucketSize - 1;
     if (i == numBuckets - 1)
-      return String.format("Open squares: %d or more", min);
-    return String.format("Open squares: %d - %d", min, max);
+      return String.format("Min open squares: %d or more", min);
+    return String.format("Min open squares: %d - %d", min, max);
   }
 
   private static double[] reportSummaries(PrintStream out, Reporter reporter, String desc) {

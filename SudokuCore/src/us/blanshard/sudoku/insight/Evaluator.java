@@ -369,22 +369,16 @@ public class Evaluator {
     FORCED_NUM_0(0.22, 0.039, 0.029),
     OVERLAP_B(0.37, 0.88, 0.90),
     OVERLAP_L(0.54, 0.91, 0.90),
-    HIDDEN_SET_B_2_OVERLAP(0.26, 0.37, 0.53),
-    HIDDEN_SET_L_2_OVERLAP(0.28, 0.32, 0.36),
-    HIDDEN_SET_B_2_DIFFUSE(0.16, 0.30, 0.38),
-    HIDDEN_SET_L_2_DIFFUSE(0.13, 0.18, 0.19),
-    HIDDEN_SET_B_3_OVERLAP(0.28, 0.28, 0.31),
-    HIDDEN_SET_L_3_OVERLAP(0.30, 0.41, 0.39),
-    HIDDEN_SET_B_3_DIFFUSE(0.11, 0.11, 0.19),
-    HIDDEN_SET_L_3_DIFFUSE(0.15, 0.16, 0.13),
-    HIDDEN_SET_B_4_OVERLAP(0.28, 0.44, 0.33),
-    HIDDEN_SET_L_4_OVERLAP(0.30, 0.53, 0.53),
-    HIDDEN_SET_B_4_DIFFUSE(0.11, 0.058, 0.10),
-    HIDDEN_SET_L_4_DIFFUSE(0.20, 0.21, 0.13),
+    HIDDEN_SET_B_2(0.26, 0.37, 0.53),
+    HIDDEN_SET_L_2(0.28, 0.32, 0.36),
     NAKED_SET_B_2(0.75, 2.1, 1.9),
     NAKED_SET_L_2(0.45, 1.6, 1.6),
+    HIDDEN_SET_B_3(0.28, 0.28, 0.31),
+    HIDDEN_SET_L_3(0.30, 0.41, 0.39),
     NAKED_SET_B_3(0.84, 3.1, 2.9),
     NAKED_SET_L_3(0.43, 2.1, 2.5),
+    HIDDEN_SET_B_4(0.28, 0.44, 0.33),
+    HIDDEN_SET_L_4(0.30, 0.53, 0.53),
     NAKED_SET_B_4(0.84, 3.6, 4.6),
     NAKED_SET_L_4(0.77, 2.4, 3.4),
     ;
@@ -451,18 +445,11 @@ public class Evaluator {
           LockedSet i = (LockedSet) insight;
           boolean block = isBlock(i.getLocations().unit);
           if (i.isHiddenSet()) {
-            boolean overlap = isOverlapped(i, grid);
             switch (i.getNumerals().size()) {
-              case 2: return overlap
-                  ? block ? HIDDEN_SET_B_2_OVERLAP : HIDDEN_SET_L_2_OVERLAP
-                  : block ? HIDDEN_SET_B_2_DIFFUSE : HIDDEN_SET_L_2_DIFFUSE;
-              case 3: return overlap
-                  ? block ? HIDDEN_SET_B_3_OVERLAP : HIDDEN_SET_L_3_OVERLAP
-                  : block ? HIDDEN_SET_B_3_DIFFUSE : HIDDEN_SET_L_3_DIFFUSE;
+              case 2: return block ? HIDDEN_SET_B_2 : HIDDEN_SET_L_2;
+              case 3: return block ? HIDDEN_SET_B_3 : HIDDEN_SET_L_3;
               default:
-              case 4: return overlap
-                  ? block ? HIDDEN_SET_B_4_OVERLAP : HIDDEN_SET_L_4_OVERLAP
-                  : block ? HIDDEN_SET_B_4_DIFFUSE : HIDDEN_SET_L_4_DIFFUSE;
+              case 4: return block ? HIDDEN_SET_B_4 : HIDDEN_SET_L_4;
             }
           } else {
             switch (i.getNumerals().size()) {
@@ -509,47 +496,6 @@ public class Evaluator {
         if (loc != skip && grid.containsKey(loc))
           ++answer;
       return answer;
-    }
-
-    /**
-     * For a hidden set, overlapped means that all open squares in the set's
-     * unit but not in the set lie in an overlapping unit, and all numerals in
-     * the set appear in this other unit.  These sets are typically much easier
-     * to find than other sets.
-     */
-    private static boolean isOverlapped(LockedSet set, Grid grid) {
-      boolean isOverlapped = false;
-      UnitSubset taken = set.getLocations();
-      for (Location loc : taken.unit) {
-        if (grid.containsKey(loc))
-          taken = taken.with(loc);
-      }
-      UnitSubset open = taken.not();
-      Unit overlap = Analyzer.findOverlappingUnit(open);
-      if (overlap == null && open.size() == 1) {
-        Location loc = open.get(0);
-        if (isBlock(open.unit)) {
-          isOverlapped = minusAllInUnit(set.getNumerals(), loc.row, grid).isEmpty()
-              || minusAllInUnit(set.getNumerals(), loc.column, grid).isEmpty();
-        } else {
-          overlap = loc.block;
-        }
-      }
-      if (overlap != null) {
-        isOverlapped = minusAllInUnit(set.getNumerals(), overlap, grid).isEmpty();
-      }
-      return isOverlapped;
-    }
-
-    /**
-     * Returns the difference between the given set and all numerals assigned to
-     * locations within the given unit, in the given grid.
-     */
-    private static NumSet minusAllInUnit(NumSet nums, Unit unit, Grid grid) {
-      for (Location loc : unit)
-        if (grid.containsKey(loc))
-          nums = nums.without(grid.get(loc));
-      return nums;
     }
   }
 
