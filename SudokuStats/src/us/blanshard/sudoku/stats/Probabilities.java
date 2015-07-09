@@ -25,6 +25,7 @@ import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 
 import java.io.BufferedReader;
@@ -32,6 +33,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -47,7 +49,8 @@ import javax.annotation.Nullable;
 public class Probabilities {
   public static void main(String[] args) throws IOException {
     final int numBuckets = 1;
-    Probabilities instance = new Probabilities(numBuckets);
+    final boolean useMostLikely = false;
+    Probabilities instance = new Probabilities(numBuckets, useMostLikely);
 
     BufferedReader in = new BufferedReader(new FileReader("measurer.txt"));
     Splitter splitter = Splitter.on('\t');
@@ -171,8 +174,10 @@ public class Probabilities {
     public void noteMissed(int openCount, List<Coll> missed) {
       for (Coll coll : missed) {
         boolean allImps = coll.areAllImplications();
-        for (Pattern p : coll.patterns)
-          counters.getUnchecked(Sp.fromPattern(p, openCount)).addMissed(allImps, coll.patterns.size());
+        Deque<Sp> sps = spsFromPatternsMostLikelyFirst(openCount, coll);
+        for (Sp sp : sps) {
+          counters.getUnchecked(sp).addMissed(sps.getFirst(), allImps, coll.patterns.size());
+        }
       }
     }
 
@@ -181,12 +186,28 @@ public class Probabilities {
       for (Coll coll : played) {
         ++moveCount;
         boolean allImps = coll.areAllImplications();
-        for (Pattern p : coll.patterns)
-          counters.getUnchecked(Sp.fromPattern(p, openCount)).addPlayed(allImps, coll.patterns.size());
+        Deque<Sp> sps = spsFromPatternsMostLikelyFirst(openCount, coll);
+        for (Sp sp : sps) {
+          counters.getUnchecked(sp).addPlayed(sps.getFirst(), allImps, coll.patterns.size());
+        }
       }
     }
 
-    public double[] reportSummaries(PrintStream out) {
+    private Deque<Sp> spsFromPatternsMostLikelyFirst(int openCount, Coll coll) {
+      Deque<Sp> sps = Queues.newArrayDeque();
+      for (Pattern p : coll.patterns) {
+        Sp sp = Sp.fromPattern(p, openCount);
+        if (!sps.isEmpty() &&
+            sp.getProbabilityOfPlaying(openCount) > sps.getFirst().getProbabilityOfPlaying(openCount)) {
+          sps.addFirst(sp);
+        } else {
+          sps.addLast(sp);
+        }
+      }
+      return sps;
+    }
+
+    public double[] reportSummaries(PrintStream out, boolean useMostLikely) {
       double[] probabilities = new double[Evaluator.Pattern.values().length];
       Arrays.fill(probabilities, Double.NaN);
       out.printf("%,d batches, %,d moves (%.2g moves per batch)%n%n",
@@ -204,7 +225,7 @@ public class Probabilities {
       Set<Sp.Implication> imps = Sets.newTreeSet();
       for (Sp sp : p.keySet()) {
         SpCounter counter = p.get(sp);
-        infos.getUnchecked(sp).setCounter(counter);
+        infos.getUnchecked(sp).setCounter(counter, useMostLikely);
         if (sp.getType() == Sp.Type.IMPLICATION)
           imps.add((Sp.Implication) sp);
       }
@@ -263,6 +284,7 @@ public class Probabilities {
   static class SpCounter extends Counter {
     private final Sp sp;
     @Nullable private final Counter allImpsCounter;
+    private final Counter mostLikelyCounter = new Counter();
     private final LoadingCache<Integer, Counter> counters;
 
     public SpCounter(Sp sp) {
@@ -279,16 +301,18 @@ public class Probabilities {
       return sp;
     }
 
-    public void addMissed(boolean allImps, int size) {
+    public void addMissed(Sp mostLikely, boolean allImps, int size) {
       addMissed();
+      if (sp == mostLikely) mostLikelyCounter.addMissed();
       if (sp.isMove()) {
         if (allImps) allImpsCounter.addMissed();
         counters.getUnchecked(size).addMissed();
       }
     }
 
-    public void addPlayed(boolean allImps, int size) {
+    public void addPlayed(Sp mostLikely, boolean allImps, int size) {
       addPlayed();
+      if (sp == mostLikely) mostLikelyCounter.addPlayed();
       if (sp.isMove()) {
         if (allImps) allImpsCounter.addPlayed();
         counters.getUnchecked(size).addPlayed();
@@ -297,6 +321,10 @@ public class Probabilities {
 
     @Nullable public Dist getAllImpsDist() {
       return allImpsCounter == null ? null : allImpsCounter.getDist();
+    }
+
+    @Nullable public Dist getMostLikelyDist() {
+      return mostLikelyCounter.getDist();
     }
 
     public Iterable<Integer> getSizes() {
@@ -324,9 +352,10 @@ public class Probabilities {
       this.sp = sp;
     }
 
-    void setCounter(SpCounter counter) {
+    void setCounter(SpCounter counter, boolean useMostLikely) {
       this.counter = counter;
-      this.dist = sp.type == Sp.Type.IMPLICATION ? counter.getAllImpsDist() : counter.getDist();
+      this.dist = useMostLikely ? counter.getMostLikelyDist() :
+          sp.type == Sp.Type.IMPLICATION ? counter.getAllImpsDist() : counter.getDist();
       Counter s = counter.getSizeCounter(1);
       if (s != null) this.lone = s.getDist();
     }
@@ -378,12 +407,14 @@ public class Probabilities {
 
   private final int numBuckets;
   private final int bucketSize;
+  private final boolean useMostLikely;
   private final Reporter[] reporters;
 
-  private Probabilities(int numBuckets) {
+  private Probabilities(int numBuckets, boolean useMostLikely) {
     checkArgument(numBuckets > 0, "bad count %s");
     this.numBuckets = numBuckets;
     this.bucketSize = 60 / numBuckets;
+    this.useMostLikely = useMostLikely;
     this.reporters = new Reporter[numBuckets];
   }
 
@@ -424,8 +455,8 @@ public class Probabilities {
     return String.format("Min open squares: %d - %d", min, max);
   }
 
-  private static double[] reportSummaries(PrintStream out, Reporter reporter, String desc) {
+  private double[] reportSummaries(PrintStream out, Reporter reporter, String desc) {
     out.printf("%n======================%n%s%n======================%n%n", desc);
-    return reporter.reportSummaries(out);
+    return reporter.reportSummaries(out, useMostLikely);
   }
 }

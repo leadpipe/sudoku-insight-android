@@ -348,39 +348,39 @@ public class Evaluator {
    * likelihood of playing different insights.
    */
   public enum Pattern {
-    CONFLICT_B(0.078, 0.049, 0.14),
-    CONFLICT_L(0.15, 0.16, 0.16),
-    BARRED_LOC_5(0.20, 0.28, 0.40),
-    BARRED_LOC_4(0.20, 0.28, 0.28),
-    BARRED_LOC_3(0.20, 0.22, 0.12),
-    BARRED_LOC_2(0.20, 0.19, 0.18),
-    BARRED_LOC_1(0.24, 0.11, 0.16),
-    BARRED_LOC_0(0.20, 0.13, 0.094),
-    BARRED_NUM_B(0.26, 0.26, 0.23),
-    BARRED_NUM_L(0.24, 0.22, 0.21),
-    FORCED_LOC_B(0.41, 0.41, 0.50),
-    FORCED_LOC_L(0.32, 0.30, 0.40),
-    FORCED_NUM_6(0.24, 0.47, 0.86),
-    FORCED_NUM_5(0.24, 0.47, 0.71),
-    FORCED_NUM_4(0.24, 0.47, 0.38),
-    FORCED_NUM_3(0.24, 0.31, 0.10),
-    FORCED_NUM_2(0.24, 0.18, 0.086),
-    FORCED_NUM_1(0.22, 0.050, 0.040),
-    FORCED_NUM_0(0.22, 0.039, 0.029),
-    OVERLAP_B(0.37, 0.88, 0.90),
-    OVERLAP_L(0.54, 0.91, 0.90),
-    HIDDEN_SET_B_2(0.26, 0.37, 0.53),
-    HIDDEN_SET_L_2(0.28, 0.32, 0.36),
-    NAKED_SET_B_2(0.75, 2.1, 1.9),
-    NAKED_SET_L_2(0.45, 1.6, 1.6),
-    HIDDEN_SET_B_3(0.28, 0.28, 0.31),
-    HIDDEN_SET_L_3(0.30, 0.41, 0.39),
-    NAKED_SET_B_3(0.84, 3.1, 2.9),
-    NAKED_SET_L_3(0.43, 2.1, 2.5),
-    HIDDEN_SET_B_4(0.28, 0.44, 0.33),
-    HIDDEN_SET_L_4(0.30, 0.53, 0.53),
-    NAKED_SET_B_4(0.84, 3.6, 4.6),
-    NAKED_SET_L_4(0.77, 2.4, 3.4),
+    CONFLICT_B(0.0715),
+    CONFLICT_L(0.153),
+    BARRED_LOC_5(0.400),
+    BARRED_LOC_4(0.284),
+    BARRED_LOC_3(0.211),
+    BARRED_LOC_2(0.191),
+    BARRED_LOC_1(0.192),
+    BARRED_LOC_0(0.180),
+    BARRED_NUM_B(0.260),
+    BARRED_NUM_L(0.231),
+    FORCED_LOC_B(0.429),
+    FORCED_LOC_L(0.325),
+    FORCED_NUM_6(0.857),
+    FORCED_NUM_5(0.707),
+    FORCED_NUM_4(0.416),
+    FORCED_NUM_3(0.242),
+    FORCED_NUM_2(0.164),
+    FORCED_NUM_1(0.140),
+    FORCED_NUM_0(0.181),
+    OVERLAP_B(1.28),
+    OVERLAP_L(0.792),
+    HIDDEN_SET_B_2(0.983),
+    HIDDEN_SET_L_2(0.584),
+    NAKED_SET_B_2(0.579),
+    NAKED_SET_L_2(0.495),
+    HIDDEN_SET_B_3(0.764),
+    HIDDEN_SET_L_3(0.434),
+    NAKED_SET_B_3(0.589),
+    NAKED_SET_L_3(0.433),
+    HIDDEN_SET_B_4(0.474),
+    HIDDEN_SET_L_4(0.279),
+    NAKED_SET_B_4(0.579),
+    NAKED_SET_L_4(0.334),
     ;
 
     /**
@@ -391,7 +391,7 @@ public class Evaluator {
      * of an implication in which the elimination is an antecedent.
      */
     public double getWeight(int numOpen) {
-      return weights[Math.min(2, numOpen / 20)];
+      return weights[Math.min(COUNT - 1, numOpen / BUCKET_SIZE)];
     }
 
     /**
@@ -466,8 +466,11 @@ public class Evaluator {
     }
 
     private final double[] weights;
+    private static final int COUNT = 1;
+    private static final int BUCKET_SIZE = 60 / COUNT;
 
     private Pattern(double... weights) {
+      checkArgument(weights.length == COUNT);
       this.weights = weights;
     }
 
