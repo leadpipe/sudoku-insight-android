@@ -20,7 +20,7 @@ import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Queues;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import java.io.BufferedReader;
@@ -28,7 +28,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
-import java.util.Deque;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -42,7 +42,7 @@ import javax.annotation.Nullable;
  */
 public class Probabilities {
   public static void main(String[] args) throws IOException {
-    final int numBuckets = 1;
+    final int numBuckets = 6;
     final Bucketer bucketer = new MinOpenBucketer(numBuckets);
     Probabilities instance = new Probabilities(bucketer);
 
@@ -171,7 +171,7 @@ public class Probabilities {
     public void noteMissed(int openCount, List<Coll> missed) {
       for (Coll coll : missed) {
         boolean allImps = coll.areAllImplications();
-        Deque<Sp> sps = spsFromPatternsMostLikelyFirst(openCount, coll);
+        Collection<Sp> sps = spsFromPatterns(openCount, coll);
         for (Sp sp : sps) {
           counters.getUnchecked(sp).addMissed(allImps, coll.patterns.size());
         }
@@ -183,26 +183,66 @@ public class Probabilities {
       for (Coll coll : played) {
         ++moveCount;
         boolean allImps = coll.areAllImplications();
-        Deque<Sp> sps = spsFromPatternsMostLikelyFirst(openCount, coll);
+        Collection<Sp> sps = spsFromPatterns(openCount, coll);
         for (Sp sp : sps) {
           counters.getUnchecked(sp).addPlayed(allImps, coll.patterns.size());
         }
       }
     }
 
-    private Deque<Sp> spsFromPatternsMostLikelyFirst(int openCount, Coll coll) {
-      Deque<Sp> sps = Queues.newArrayDeque();
+    private Collection<Sp> spsFromPatterns(int openCount, Coll coll) {
+      Sp unlikelyForcedNumeral = null;
+      boolean likelyForcedLocationFound = false;
+      List<Sp> sps = Lists.newArrayList();
       for (Pattern p : coll.patterns) {
         Sp sp = Sp.fromPattern(p, openCount);
-        if (!sps.isEmpty()
-            && sp.getProbabilityOfPlaying(openCount) > sps.getFirst().getProbabilityOfPlaying(
-                openCount)) {
-          sps.addFirst(sp);
-        } else {
-          sps.addLast(sp);
-        }
+        sps.add(sp);
+        if (isUnlikelyForcedNumeral(sp)) unlikelyForcedNumeral = sp;
+        else if (isLikelyForcedLocation(sp)) likelyForcedLocationFound = true;
+      }
+      if (likelyForcedLocationFound && unlikelyForcedNumeral != null) {
+        // We're just dropping the unlikely ones, because there is a strong
+        // correlation between them and the likely ones, and they are in fact
+        // quite difficult to see.  The likely ones therefore increase the
+        // apparent likelihood of the unlikely but correlated ones.
+        sps.remove(unlikelyForcedNumeral);
       }
       return sps;
+    }
+
+    private boolean isUnlikelyForcedNumeral(Sp sp) {
+      // It's unlikely if it's an implication containing at least one naked
+      // set, and leading to a forced numeral.
+      boolean containsNakedSet = false;
+      while (sp.type == Sp.Type.IMPLICATION) {
+        Sp.Implication imp = (Sp.Implication) sp;
+        for (Sp ant : imp.antecedents) {
+          if (ant.type == Sp.Type.LOCKED_SET) {
+            Sp.LockedSet set = (Sp.LockedSet) ant;
+            if (set.isNaked()) containsNakedSet = true;
+          }
+        }
+        sp = imp.consequent;
+      }
+      return containsNakedSet && sp.type == Sp.Type.FORCED_NUMERAL;
+    }
+
+    private boolean isLikelyForcedLocation(Sp sp) {
+      // It's likely if it's a forced location, or any series of overlaps or
+      // small hidden sets leading to one.
+      while (sp.type == Sp.Type.IMPLICATION) {
+        Sp.Implication imp = (Sp.Implication) sp;
+        for (Sp ant : imp.antecedents) {
+          if (ant.type == Sp.Type.OVERLAP) continue;
+          if (ant.type == Sp.Type.LOCKED_SET) {
+            Sp.LockedSet set = (Sp.LockedSet) ant;
+            if (!set.isNaked() && set.size() == 2) continue;
+          }
+          return false;
+        }
+        sp = imp.consequent;
+      }
+      return sp.type == Sp.Type.FORCED_LOCATION;
     }
 
     public double[] reportSummaries(PrintStream out) {
@@ -327,7 +367,8 @@ public class Probabilities {
 
     void setCounter(SpCounter counter) {
       this.counter = counter;
-      this.dist = sp.type == Sp.Type.IMPLICATION ? counter.getAllImpsDist() : counter.getDist();
+      //this.dist = sp.type == Sp.Type.IMPLICATION ? counter.getAllImpsDist() : counter.getDist();
+      this.dist = counter.getDist();
     }
 
     boolean hasEnoughData() {

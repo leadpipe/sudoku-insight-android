@@ -151,7 +151,6 @@ public abstract class Sp implements Comparable<Sp> {
     FORCED_NUMERAL(Pattern.Type.FORCED_NUMERAL),
     OVERLAP(Pattern.Type.OVERLAP),
     LOCKED_SET(Pattern.Type.LOCKED_SET),
-    NAKED_SET(Pattern.Type.NAKED_SET),
     IMPLICATION(Pattern.Type.IMPLICATION),
     COMBINATION("comb"),
     NONE("none");
