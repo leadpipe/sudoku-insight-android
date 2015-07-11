@@ -1,18 +1,13 @@
 /*
-Copyright 2014 Luke Blanshard
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-     http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ * Copyright 2014 Luke Blanshard Licensed under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law
+ * or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
 package us.blanshard.sudoku.stats;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -37,7 +32,6 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.Nullable;
@@ -49,12 +43,12 @@ import javax.annotation.Nullable;
 public class Probabilities {
   public static void main(String[] args) throws IOException {
     final int numBuckets = 1;
-    final boolean useMostLikely = false;
-    Probabilities instance = new Probabilities(numBuckets, useMostLikely);
+    final Bucketer bucketer = new MinOpenBucketer(numBuckets);
+    Probabilities instance = new Probabilities(bucketer);
 
     BufferedReader in = new BufferedReader(new FileReader("measurer.txt"));
     Splitter splitter = Splitter.on('\t');
-    for (String line; (line = in.readLine()) != null; ) {
+    for (String line; (line = in.readLine()) != null;) {
       Iterator<String> iter = splitter.split(line).iterator();
       boolean isTrailhead = Boolean.parseBoolean(iter.next());
       iter.next();  // elapsed ms
@@ -66,8 +60,9 @@ public class Probabilities {
       int moveNumber = Integer.parseInt(iter.next());
       int effectiveMoveNumber = Integer.parseInt(iter.next());
 
-      Reporter reporter = instance.getReporter(
-          openCount, minOpen, numTrails, timestamp, effectiveTimestamp, moveNumber, effectiveMoveNumber);
+      Reporter reporter =
+          instance.getReporter(openCount, minOpen, numTrails, timestamp, effectiveTimestamp,
+              moveNumber, effectiveMoveNumber);
       if (!isTrailhead) {
         new Universe(iter);
         reporter.notePlayed(openCount, Pattern.collsFromString(iter.next()));
@@ -82,7 +77,7 @@ public class Probabilities {
     instance.reportSummaries(System.out);
   }
 
-  // A simplified probability distribution.  We assume that everything's normal
+  // A simplified probability distribution. We assume that everything's normal
   // and we can add and multiply and still get normal distibutions back.
   static class Dist {
     final double mean;
@@ -129,18 +124,19 @@ public class Probabilities {
   }
 
   static Dist absoluteDifference(Dist a, Dist b) {
-    return new Dist(Math.abs(a.mean - b.mean), Math.abs(a.variance - b.variance), Math.min(a.count, b.count));
+    return new Dist(Math.abs(a.mean - b.mean), Math.abs(a.variance - b.variance), Math.min(a.count,
+        b.count));
   }
 
   static Dist pool(Dist a, Dist b) {
-    if (a == null) return b;
-    if (b == null) return a;
+    if (a == null)
+      return b;
+    if (b == null)
+      return a;
     int wa = a.count;  // Note: a.count - 1 may be more correct, but this is
     int wb = b.count;  // associative.
-    return new Dist(
-        (wa * a.mean + wb * b.mean) / (wa + wb),
-        (wa * a.variance + wb * b.variance) / (wa + wb),
-        wa + wb);
+    return new Dist((wa * a.mean + wb * b.mean) / (wa + wb), (wa * a.variance + wb * b.variance)
+        / (wa + wb), wa + wb);
   }
 
   static double mean(Dist d) {
@@ -151,6 +147,7 @@ public class Probabilities {
     final int numerator;
     final int denominator;
     final int realmVector;
+
     Universe(Iterator<String> iter) {
       numerator = Integer.parseInt(iter.next());
       denominator = Integer.parseInt(iter.next());
@@ -176,7 +173,7 @@ public class Probabilities {
         boolean allImps = coll.areAllImplications();
         Deque<Sp> sps = spsFromPatternsMostLikelyFirst(openCount, coll);
         for (Sp sp : sps) {
-          counters.getUnchecked(sp).addMissed(sps.getFirst(), allImps, coll.patterns.size());
+          counters.getUnchecked(sp).addMissed(allImps, coll.patterns.size());
         }
       }
     }
@@ -188,7 +185,7 @@ public class Probabilities {
         boolean allImps = coll.areAllImplications();
         Deque<Sp> sps = spsFromPatternsMostLikelyFirst(openCount, coll);
         for (Sp sp : sps) {
-          counters.getUnchecked(sp).addPlayed(sps.getFirst(), allImps, coll.patterns.size());
+          counters.getUnchecked(sp).addPlayed(allImps, coll.patterns.size());
         }
       }
     }
@@ -197,8 +194,9 @@ public class Probabilities {
       Deque<Sp> sps = Queues.newArrayDeque();
       for (Pattern p : coll.patterns) {
         Sp sp = Sp.fromPattern(p, openCount);
-        if (!sps.isEmpty() &&
-            sp.getProbabilityOfPlaying(openCount) > sps.getFirst().getProbabilityOfPlaying(openCount)) {
+        if (!sps.isEmpty()
+            && sp.getProbabilityOfPlaying(openCount) > sps.getFirst().getProbabilityOfPlaying(
+                openCount)) {
           sps.addFirst(sp);
         } else {
           sps.addLast(sp);
@@ -207,25 +205,27 @@ public class Probabilities {
       return sps;
     }
 
-    public double[] reportSummaries(PrintStream out, boolean useMostLikely) {
+    public double[] reportSummaries(PrintStream out) {
       double[] probabilities = new double[Evaluator.Pattern.values().length];
       Arrays.fill(probabilities, Double.NaN);
-      out.printf("%,d batches, %,d moves (%.2g moves per batch)%n%n",
-                 batchCount, moveCount, moveCount / (double) batchCount);
+      out.printf("%,d batches, %,d moves (%.2g moves per batch)%n%n", batchCount, moveCount,
+          moveCount / (double) batchCount);
 
       final Set<Sp> singulars = Sets.newTreeSet();
-      LoadingCache<Sp, SpInfo> infos = CacheBuilder.newBuilder().build(new CacheLoader<Sp, SpInfo>() {
-        @Override public SpInfo load(Sp sp) {
-          if (sp.isSingular()) singulars.add(sp);
-          return new SpInfo(sp);
-        }
-      });
+      LoadingCache<Sp, SpInfo> infos =
+          CacheBuilder.newBuilder().build(new CacheLoader<Sp, SpInfo>() {
+            @Override public SpInfo load(Sp sp) {
+              if (sp.isSingular())
+                singulars.add(sp);
+              return new SpInfo(sp);
+            }
+          });
 
       ConcurrentMap<Sp, SpCounter> p = counters.asMap();
       Set<Sp.Implication> imps = Sets.newTreeSet();
       for (Sp sp : p.keySet()) {
         SpCounter counter = p.get(sp);
-        infos.getUnchecked(sp).setCounter(counter, useMostLikely);
+        infos.getUnchecked(sp).setCounter(counter);
         if (sp.getType() == Sp.Type.IMPLICATION)
           imps.add((Sp.Implication) sp);
       }
@@ -242,8 +242,7 @@ public class Probabilities {
       }
 
       for (Sp sp : singulars) {
-        probabilities[sp.getEvaluatorPattern().ordinal()]
-            = infos.getUnchecked(sp).report(out);
+        probabilities[sp.getEvaluatorPattern().ordinal()] = infos.getUnchecked(sp).report(out);
       }
 
       out.println();
@@ -284,55 +283,30 @@ public class Probabilities {
   static class SpCounter extends Counter {
     private final Sp sp;
     @Nullable private final Counter allImpsCounter;
-    private final Counter mostLikelyCounter = new Counter();
-    private final LoadingCache<Integer, Counter> counters;
 
     public SpCounter(Sp sp) {
       this.sp = sp;
       this.allImpsCounter = sp.type == Sp.Type.IMPLICATION ? new Counter() : null;
-      this.counters = CacheBuilder.newBuilder().build(new CacheLoader<Integer, Counter>() {
-        @Override public Counter load(Integer size) {
-          return new Counter();
-        }
-      });
     }
 
     public Sp sp() {
       return sp;
     }
 
-    public void addMissed(Sp mostLikely, boolean allImps, int size) {
+    public void addMissed(boolean allImps, int size) {
       addMissed();
-      if (sp == mostLikely) mostLikelyCounter.addMissed();
-      if (sp.isMove()) {
-        if (allImps) allImpsCounter.addMissed();
-        counters.getUnchecked(size).addMissed();
-      }
+      if (sp.isMove() && allImps)
+        allImpsCounter.addMissed();
     }
 
-    public void addPlayed(Sp mostLikely, boolean allImps, int size) {
+    public void addPlayed(boolean allImps, int size) {
       addPlayed();
-      if (sp == mostLikely) mostLikelyCounter.addPlayed();
-      if (sp.isMove()) {
-        if (allImps) allImpsCounter.addPlayed();
-        counters.getUnchecked(size).addPlayed();
-      }
+      if (sp.isMove() && allImps)
+        allImpsCounter.addPlayed();
     }
 
     @Nullable public Dist getAllImpsDist() {
       return allImpsCounter == null ? null : allImpsCounter.getDist();
-    }
-
-    @Nullable public Dist getMostLikelyDist() {
-      return mostLikelyCounter.getDist();
-    }
-
-    public Iterable<Integer> getSizes() {
-      return new TreeSet<Integer>(counters.asMap().keySet());
-    }
-
-    @Nullable public Counter getSizeCounter(int size) {
-      return counters.asMap().get(size);
     }
   }
 
@@ -341,7 +315,6 @@ public class Probabilities {
     final Sp sp;
     SpCounter counter;
     Dist dist;
-    Dist lone;
     Dist pooledInferred;
     int numLess;
     int numPooled;
@@ -352,17 +325,13 @@ public class Probabilities {
       this.sp = sp;
     }
 
-    void setCounter(SpCounter counter, boolean useMostLikely) {
+    void setCounter(SpCounter counter) {
       this.counter = counter;
-      this.dist = useMostLikely ? counter.getMostLikelyDist() :
-          sp.type == Sp.Type.IMPLICATION ? counter.getAllImpsDist() : counter.getDist();
-      Counter s = counter.getSizeCounter(1);
-      if (s != null) this.lone = s.getDist();
+      this.dist = sp.type == Sp.Type.IMPLICATION ? counter.getAllImpsDist() : counter.getDist();
     }
 
     boolean hasEnoughData() {
-      return /*lone != null && lone.count >= 15 &&*/
-          dist != null && dist.count >= 30;
+      return dist != null && dist.count >= 30;
     }
 
     void infer(SpInfo impInfo, SpInfo restInfo) {
@@ -375,7 +344,8 @@ public class Probabilities {
         }
       } else if (impInfo.dist != null && restInfo.dist != null) {
         int minCount = Math.min(impInfo.dist.count, restInfo.dist.count);
-        if (minCount > maxMissedCount) maxMissedCount = minCount;
+        if (minCount > maxMissedCount)
+          maxMissedCount = minCount;
         if (minCount > maxLessCount && impInfo.dist.count < restInfo.dist.count)
           maxLessCount = minCount;
       }
@@ -383,45 +353,111 @@ public class Probabilities {
 
     double report(PrintStream out) {
       if (counter == null) {
-        out.printf("%-8s inferred %-24s  less %3.0f%% %d/%d%n", sp, pooledInferred,
-                   100.0 * numLess / numPooled, numLess, numPooled);
-//        if (maxMissedCount > 0) {
-//          out.printf("%44smore at %d", "", maxMissedCount);
-//          if (maxLessCount < maxMissedCount) out.printf(" / %d", maxLessCount);
-//          out.println();
-//        }
+        out.printf("%-8s inferred %-24s  less %3.0f%% %d/%d%n", sp, pooledInferred, 100.0 * numLess
+            / numPooled, numLess, numPooled);
         return mean(pooledInferred);
       } else {
         out.printf("%-8s %s%n", sp, dist);
-//        for (int size : counter.getSizes()) {
-//          Dist dist = counter.getSizeCounter(size).getDist();
-//          out.printf("%10d %-28s %4.0f%%%n", size, dist,
-//                     100 * dist.mean / direct.mean);
-//        }
         return mean(dist);
       }
     }
   }
 
-  // ============================
+  abstract static class Bucketer {
+    public final int numBuckets;
 
-  private final int numBuckets;
-  private final int bucketSize;
-  private final boolean useMostLikely;
-  private final Reporter[] reporters;
+    Bucketer(int numBuckets) {
+      checkArgument(numBuckets > 0, "bad count %s");
+      this.numBuckets = numBuckets;
+    }
 
-  private Probabilities(int numBuckets, boolean useMostLikely) {
-    checkArgument(numBuckets > 0, "bad count %s");
-    this.numBuckets = numBuckets;
-    this.bucketSize = 60 / numBuckets;
-    this.useMostLikely = useMostLikely;
-    this.reporters = new Reporter[numBuckets];
+    abstract int getBucket(int openCount, int minOpen, int numTrails, long timestamp,
+        long effectiveTimestamp, int moveNumber, int effectiveMoveNumber);
+
+    String headline(int bucket) {
+      if (numBuckets == 1)
+        return "All in one bucket";
+      if (bucket == numBuckets - 1)
+        return String.format("%s: %d or more", getBucketsDescription(), getBucketLeast(bucket));
+      return String.format("%s: %d - %d", getBucketsDescription(),
+          getBucketLeast(bucket), getBucketMost(bucket));
+    }
+
+    abstract int getBucketLeast(int bucket);
+    abstract int getBucketMost(int bucket);
+    abstract String getBucketsDescription();
   }
 
-  private Reporter getReporter(
-      int openCount, int minOpen, int numTrails, long timestamp,
+  abstract static class LocCountBucketer extends Bucketer {
+    protected final int bucketSize;
+
+    LocCountBucketer(int numBuckets) {
+      super(numBuckets);
+      this.bucketSize = 60 / numBuckets;
+    }
+
+    @Override int getBucket(int openCount, int minOpen, int numTrails, long timestamp,
+        long effectiveTimestamp, int moveNumber, int effectiveMoveNumber) {
+      final int locCount =
+          getLocCount(openCount, minOpen, numTrails, timestamp, effectiveTimestamp, moveNumber,
+              effectiveMoveNumber);
+      return min(numBuckets - 1, locCount / bucketSize);
+    }
+
+    @Override int getBucketLeast(int bucket) {
+      return bucket * bucketSize;
+    }
+    @Override int getBucketMost(int bucket) {
+      return getBucketLeast(bucket) + bucketSize - 1;
+    }
+
+    abstract int getLocCount(int openCount, int minOpen, int numTrails, long timestamp,
+        long effectiveTimestamp, int moveNumber, int effectiveMoveNumber);
+  }
+
+  static class OpenCountBucketer extends LocCountBucketer {
+    public OpenCountBucketer(int numBuckets) {
+      super(numBuckets);
+    }
+
+    @Override int getLocCount(int openCount, int minOpen, int numTrails, long timestamp,
+        long effectiveTimestamp, int moveNumber, int effectiveMoveNumber) {
+      return openCount;
+    }
+
+    @Override String getBucketsDescription() {
+      return "Open counts";
+    }
+  }
+
+  static class MinOpenBucketer extends LocCountBucketer {
+    public MinOpenBucketer(int numBuckets) {
+      super(numBuckets);
+    }
+
+    @Override int getLocCount(int openCount, int minOpen, int numTrails, long timestamp,
+        long effectiveTimestamp, int moveNumber, int effectiveMoveNumber) {
+      return minOpen;
+    }
+
+    @Override String getBucketsDescription() {
+      return "Min open counts";
+    }
+  }
+
+  // ============================
+
+  private final Bucketer bucketer;
+  private final Reporter[] reporters;
+
+  private Probabilities(Bucketer bucketer) {
+    this.bucketer = bucketer;
+    this.reporters = new Reporter[bucketer.numBuckets];
+  }
+
+  private Reporter getReporter(int openCount, int minOpen, int numTrails, long timestamp,
       long effectiveTimestamp, int moveNumber, int effectiveMoveNumber) {
-    int index = min(numBuckets - 1, minOpen / bucketSize);
+    int index = bucketer.getBucket(openCount, minOpen, numTrails, timestamp, effectiveTimestamp, moveNumber, effectiveMoveNumber);
     Reporter answer = reporters[index];
     if (answer == null)
       reporters[index] = answer = new Reporter();
@@ -429,34 +465,27 @@ public class Probabilities {
   }
 
   private void reportSummaries(PrintStream out) {
+    int numBuckets = bucketer.numBuckets;
     double[][] probabilities = new double[numBuckets][];
     for (int i = 0; i < numBuckets; ++i) {
       Reporter r = reporters[i];
       if (r != null)
-        probabilities[i] = reportSummaries(out, r, headline(i));
+        probabilities[i] = reportSummaries(out, r, bucketer.headline(i));
     }
     out.println("Means per pattern:");
     for (Evaluator.Pattern p : Evaluator.Pattern.values()) {
       out.printf("    %s(", p);
       for (int i = 0; i < numBuckets; ++i) {
-        if (i > 0) out.print(", ");
+        if (i > 0)
+          out.print(", ");
         out.printf("%.3g", probabilities[i][p.ordinal()]);
       }
       out.println("),");
     }
   }
 
-  private String headline(int i) {
-    if (numBuckets == 1) return "All in one bucket";
-    int min = i * bucketSize;
-    int max = min + bucketSize - 1;
-    if (i == numBuckets - 1)
-      return String.format("Min open squares: %d or more", min);
-    return String.format("Min open squares: %d - %d", min, max);
-  }
-
   private double[] reportSummaries(PrintStream out, Reporter reporter, String desc) {
     out.printf("%n======================%n%s%n======================%n%n", desc);
-    return reporter.reportSummaries(out, useMostLikely);
+    return reporter.reportSummaries(out);
   }
 }
