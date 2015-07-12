@@ -266,7 +266,7 @@ public class Probabilities {
       for (Sp sp : p.keySet()) {
         SpCounter counter = p.get(sp);
         infos.getUnchecked(sp).setCounter(counter);
-        if (sp.getType() == Sp.Type.IMPLICATION)
+        if (sp.getType() == Sp.Type.IMPLICATION && sp.isMove())
           imps.add((Sp.Implication) sp);
       }
 
