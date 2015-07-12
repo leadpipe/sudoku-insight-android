@@ -60,7 +60,8 @@ public class ScanCost {
       if (isTrailhead) {
         reporter.takeTrailhead(seconds, openCount, Pattern.collsFromString(iter.next()));
       } else {
-        reporter.takeBatch(seconds, openCount, new Universe(iter), Pattern.collsFromString(iter.next()),
+        new Universe(iter);
+        reporter.takeBatch(seconds, openCount, minOpen, Pattern.collsFromString(iter.next()),
                            Pattern.collsFromString(iter.next()));
       }
       if (iter.hasNext()) {
@@ -86,37 +87,42 @@ public class ScanCost {
   static class Reporter {
     private final ProcessCounter trailheadCounter = new ProcessCounter();
     private final ProcessCounter combinedCounter = new ProcessCounter();
+    private double playTime;
+    private double waitTime;
 
     public Reporter() {}
 
     public void reportSummaries(PrintStream out) {
       out.printf("Combined moves & errors (%,d):%n", combinedCounter.count);
-      combinedCounter.report(out);
+      playTime = combinedCounter.report(out);
       out.println();
       out.println();
       out.printf("Trailheads (%,d):%n", trailheadCounter.count);
-      trailheadCounter.report(out);
+      waitTime = trailheadCounter.report(out);
       out.println();
       out.println();
     }
+
+    public double getReportedPlayTime() { return playTime; }
+    public double getReportedWaitTime() { return waitTime; }
 
     public void takeTrailhead(double seconds, int openCount, List<Coll> missed) {
       trailheadCounter.count(seconds, openCount);
     }
 
-    public void takeBatch(double seconds, int openCount, Universe universe,
+    public void takeBatch(double seconds, int openCount, int minOpen,
                           List<Coll> played, List<Coll> missed) {
-      double playedWeight = scanWeight(openCount, played);
-      double missedWeight = scanWeight(openCount, missed);
+      double playedWeight = scanWeight(minOpen, played);
+      double missedWeight = scanWeight(minOpen, missed);
       double totalWeight = playedWeight + missedWeight;
       combinedCounter.count(seconds, openCount * playedWeight / totalWeight);
     }
 
-    private double scanWeight(int openCount, Iterable<Coll> colls) {
+    private double scanWeight(int minOpen, Iterable<Coll> colls) {
       double weight = 0;
       for (Coll coll : colls) {
         for (Pattern p : coll.patterns)
-          weight += Sp.fromPattern(p, openCount).getProbabilityOfPlaying(openCount);
+          weight += Sp.fromPattern(p, minOpen).getProbabilityOfPlaying(minOpen);
       }
       return weight;
     }
@@ -160,13 +166,14 @@ public class ScanCost {
       }
     }
 
-    public void report(PrintStream out) {
+    public double report(PrintStream out) {
       SummaryStatistics stats = new SummaryStatistics();
       for (int points : pointsPerSecond)
         stats.addValue(points);
       out.printf("Scan-points/second: %.2f; var: %.2f (%.2f%%)\n", stats.getMean(),
           stats.getVariance(), 100 * stats.getVariance() / stats.getMean());
-      out.printf("Seconds/scan-point: %.3f\n", 1.0 / stats.getMean());
+      final double answer = 1.0 / stats.getMean();
+      out.printf("Seconds/scan-point: %.3f\n", answer);
       if (reportHistogram) {
         PoissonDistribution dist = new PoissonDistribution(stats.getMean());
         out.println("Histogram, actual vs predicted:");
@@ -176,6 +183,7 @@ public class ScanCost {
           out.printf("  %2d:%6d  |%9.2f\n", bucket, pointsPerSecond.count(bucket),
               dist.probability(bucket) * stats.getN());
       }
+      return answer;
     }
   }
 
@@ -202,11 +210,19 @@ public class ScanCost {
     if (singleReporter) {
       reportSummaries(out, reporter, "Everything together in one bunch");
     } else {
+      double[] playTimes = new double[COUNT];
+      double[] waitTimes = new double[COUNT];
       for (int i = 0; i < COUNT; ++i) {
         Reporter r = reporters[i];
-        if (r != null)
+        if (r != null) {
           reportSummaries(out, r, headline(i));
+          playTimes[i] = r.getReportedPlayTime();
+          waitTimes[i] = r.getReportedWaitTime();
+        }
       }
+      out.println("======================\nTimes\n======================\n");
+      reportTimes(out, "Play times", playTimes);
+      reportTimes(out, "Wait times", waitTimes);
     }
   }
 
@@ -221,5 +237,14 @@ public class ScanCost {
   private static void reportSummaries(PrintStream out, Reporter reporter, String desc) {
     out.printf("%n======================%n%s%n======================%n%n", desc);
     reporter.reportSummaries(out);
+  }
+
+  private static void reportTimes(PrintStream out, String desc, double[] times) {
+    out.printf("%s: {", desc);
+    for (int i = 0; i < times.length; ++i) {
+      if (i > 0) out.print(", ");
+      out.printf("%.3f", times[i]);
+    }
+    out.println("};");
   }
 }

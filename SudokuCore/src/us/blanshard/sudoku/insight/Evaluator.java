@@ -348,50 +348,51 @@ public class Evaluator {
    * likelihood of playing different insights.
    */
   public enum Pattern {
-    CONFLICT_B(0.0715),
-    CONFLICT_L(0.153),
-    BARRED_LOC_5(0.400),
-    BARRED_LOC_4(0.284),
-    BARRED_LOC_3(0.211),
-    BARRED_LOC_2(0.191),
-    BARRED_LOC_1(0.192),
-    BARRED_LOC_0(0.180),
-    BARRED_NUM_B(0.260),
-    BARRED_NUM_L(0.231),
-    FORCED_LOC_B(0.429),
-    FORCED_LOC_L(0.325),
-    FORCED_NUM_6(0.857),
-    FORCED_NUM_5(0.707),
-    FORCED_NUM_4(0.416),
-    FORCED_NUM_3(0.242),
-    FORCED_NUM_2(0.164),
-    FORCED_NUM_1(0.140),
-    FORCED_NUM_0(0.181),
-    OVERLAP_B(1.28),
-    OVERLAP_L(0.792),
-    HIDDEN_SET_B_2(0.983),
-    HIDDEN_SET_L_2(0.584),
-    NAKED_SET_B_2(0.579),
-    NAKED_SET_L_2(0.495),
-    HIDDEN_SET_B_3(0.764),
-    HIDDEN_SET_L_3(0.434),
-    NAKED_SET_B_3(0.589),
-    NAKED_SET_L_3(0.433),
-    HIDDEN_SET_B_4(0.474),
-    HIDDEN_SET_L_4(0.279),
-    NAKED_SET_B_4(0.579),
-    NAKED_SET_L_4(0.334),
+    CONFLICT_B(0.111, 0.0248, 0.0505, 0.0833, 0.0882, 0.200),
+    CONFLICT_L(0.179, 0.114, 0.163, 0.157, 0.126, 0.154),
+    BARRED_LOC_5(0.400, 0.400, 0.400, 0.400, 0.400, 0.400),
+    BARRED_LOC_4(0.417, 0.500, 0.417, 0.190, 0.263, 0.263),
+    BARRED_LOC_3(0.279, 0.143, 0.135, 0.290, 0.146, 0.143),
+    BARRED_LOC_2(0.297, 0.0723, 0.212, 0.122, 0.110, 0.300),
+    BARRED_LOC_1(0.224, 0.198, 0.112, 0.145, 0.125, 0.250),
+    BARRED_LOC_0(0.197, 0.157, 0.157, 0.0948, 0.0877, 0.100),
+    BARRED_NUM_B(0.282, 0.228, 0.262, 0.264, 0.196, 0.152),
+    BARRED_NUM_L(0.255, 0.204, 0.219, 0.233, 0.178, 0.125),
+    FORCED_LOC_B(0.442, 0.370, 0.409, 0.467, 0.503, 0.460),
+    FORCED_LOC_L(0.348, 0.267, 0.292, 0.347, 0.402, 0.377),
+    FORCED_NUM_6(0.857, 0.857, 0.857, 0.857, 0.857, 0.857),
+    FORCED_NUM_5(0.590, 0.694, 0.658, 0.824, 0.726, 0.546),
+    FORCED_NUM_4(0.447, 0.451, 0.488, 0.513, 0.339, 0.0780),
+    FORCED_NUM_3(0.263, 0.276, 0.352, 0.253, 0.109, 0.0833),
+    FORCED_NUM_2(0.172, 0.242, 0.199, 0.0747, 0.0831, 0.0392),
+    FORCED_NUM_1(0.177, 0.174, 0.0469, 0.0695, 0.0425, 0.0312),
+    FORCED_NUM_0(0.268, 0.0355, 0.0405, 0.0265, 0.0303, 0.0345),
+    OVERLAP_B(0.808, 1.05, 1.13, 1.09, 1.21, 1.17),
+    OVERLAP_L(0.673, 1.05, 1.02, 0.916, 0.981, 0.980),
+    HIDDEN_SET_B_2(0.504, 0.471, 0.552, 0.536, 0.552, 0.477),
+    HIDDEN_SET_L_2(0.361, 0.281, 0.426, 0.364, 0.304, 0.276),
+    NAKED_SET_B_2(0.299, 0.302, 0.410, 0.425, 0.533, 0.425),
+    NAKED_SET_L_2(0.254, 0.178, 0.327, 0.290, 0.280, 0.281),
+    HIDDEN_SET_B_3(0.322, 0.220, 0.284, 0.305, 0.305, 0.241),
+    HIDDEN_SET_L_3(0.233, 0.198, 0.221, 0.234, 0.267, 0.123),
+    NAKED_SET_B_3(0.467, 0.355, 0.644, 0.675, 0.488, 0.350),
+    NAKED_SET_L_3(0.229, 0.190, 0.302, 0.361, 0.250, 0.378),
+    HIDDEN_SET_B_4(0.200, 0.235, 0.225, 0.316, 0.244, 0.118),
+    HIDDEN_SET_L_4(0.175, 0.229, 0.151, 0.135, 0.171, 0.353),
+    NAKED_SET_B_4(0.783, 0.737, 0.579, 0.742, 0.628, 0.282),
+    NAKED_SET_L_4(0.117, 0.185, 0.120, 0.227, 0.236, 0.346),
     ;
 
     /**
-     * The "weight" of an insight matching this pattern with the given number of
-     * open squares in the grid.  For assignments, this is the probability of
-     * playing the move; for errors, it's the probability of seeing the error;
-     * and for eliminations it's a multiplier used to calculate the probability
-     * of an implication in which the elimination is an antecedent.
+     * The "weight" of an insight matching this pattern with the given smallest
+     * number of open squares in the grid seen so far.  For assignments, this is
+     * the probability of playing the move; for errors, it's the probability of
+     * seeing the error; and for eliminations it's a multiplier used to
+     * calculate the probability of an implication in which the elimination is
+     * an antecedent.
      */
-    public double getWeight(int numOpen) {
-      return weights[Math.min(COUNT - 1, numOpen / BUCKET_SIZE)];
+    public double getWeight(int minOpen) {
+      return weights[Math.min(COUNT - 1, minOpen / BUCKET_SIZE)];
     }
 
     /**
@@ -466,7 +467,7 @@ public class Evaluator {
     }
 
     private final double[] weights;
-    private static final int COUNT = 1;
+    private static final int COUNT = 6;
     private static final int BUCKET_SIZE = 60 / COUNT;
 
     private Pattern(double... weights) {
@@ -504,20 +505,17 @@ public class Evaluator {
 
   /**
    * Calculates the probability of playing/seeing the given insight within the
-   * given grid.  Only works for atomic insights and implications.
+   * given grid and the given smallest number of open locations seen so far.
+   * Only works for atomic insights and implications.
    */
-  public static double getProbability(Insight insight, Grid grid) {
-    return getProbability(insight, grid, grid.getNumOpenLocations());
-  }
-
-  private static double getProbability(Insight insight, Grid grid, int numOpen) {
+  public static double getProbability(Insight insight, Grid grid, int minOpen) {
     if (insight.type != Insight.Type.IMPLICATION) {
-      return Pattern.forInsight(insight, grid).getWeight(numOpen);
+      return Pattern.forInsight(insight, grid).getWeight(minOpen);
     }
     Implication imp = (Implication) insight;
-    double answer = getProbability(imp.getConsequent(), grid, numOpen);
+    double answer = getProbability(imp.getConsequent(), grid, minOpen);
     for (Insight a : imp.getAntecedents())
-      answer *= Pattern.forInsight(a, grid).getWeight(numOpen);
+      answer *= Pattern.forInsight(a, grid).getWeight(minOpen);
     return answer;
   }
 
@@ -537,7 +535,7 @@ public class Evaluator {
     private static final Object ERRORS = new Object();
     private double totalWeight;
     private static final double[] TRAILHEAD_SECONDS = {0.821, 1.225, 1.528, 1.839, 2.080, 2.480};
-    private static final double[] PLAYED_SECONDS    = {0.819, 0.785, 0.889, 0.967, 1.165, 1.355};
+    private static final double[] PLAYED_SECONDS    = {0.680, 0.667, 0.696, 0.716, 0.817, 0.893};
 
     public Collector(GridMarks gridMarks, int numOpen, int minOpen, Random random) {
       this.gridMarks = gridMarks;
@@ -550,7 +548,7 @@ public class Evaluator {
       Assignment a = insight.getImpliedAssignment();
       if (a == null && !insight.isError()) return;
       insight = Analyzer.minimize(gridMarks, insight);
-      double p = getProbability(insight, gridMarks.grid, numOpen);
+      double p = getProbability(insight, gridMarks.grid, minOpen);
       totalWeight += p;
       Object key = a == null ? ERRORS : a;
       Weight w = weights.get(key);

@@ -84,8 +84,8 @@ public abstract class Sp implements Comparable<Sp> {
    * Returns the probability that a move with this pattern will be played, on a
    * grid with the given number of open squares.
    */
-  public double getProbabilityOfPlaying(int numOpen) {
-    return evaluatorPattern.getWeight(numOpen);
+  public double getProbabilityOfPlaying(int minOpen) {
+    return evaluatorPattern.getWeight(minOpen);
   }
 
   /**
@@ -556,9 +556,9 @@ public abstract class Sp implements Comparable<Sp> {
           ;
     }
 
-    @Override public double getProbabilityOfPlaying(int numOpen) {
-      double answer = consequent.getProbabilityOfPlaying(numOpen);
-      for (Sp antecedent : antecedents) answer *= antecedent.getProbabilityOfPlaying(numOpen);
+    @Override public double getProbabilityOfPlaying(int minOpen) {
+      double answer = consequent.getProbabilityOfPlaying(minOpen);
+      for (Sp antecedent : antecedents) answer *= antecedent.getProbabilityOfPlaying(minOpen);
       return answer;
     }
 
@@ -644,10 +644,10 @@ public abstract class Sp implements Comparable<Sp> {
       return chain.compare(this.parts, that.parts, LEXICO);
     }
 
-    @Override public double getProbabilityOfPlaying(int numOpen) {
+    @Override public double getProbabilityOfPlaying(int minOpen) {
       double answer = 0;
       for (Sp part : parts) {
-        double p = part.getProbabilityOfPlaying(numOpen);
+        double p = part.getProbabilityOfPlaying(minOpen);
         answer = answer + p - answer * p;
       }
       return answer;
