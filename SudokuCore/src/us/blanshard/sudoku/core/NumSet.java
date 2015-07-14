@@ -111,7 +111,7 @@ public final class NumSet extends AbstractSet<Numeral> implements Set<Numeral> {
   }
 
   public boolean contains(Numeral num) {
-    return (bits & num.bit) != 0;
+    return num != null && (bits & num.bit) != 0;
   }
 
   @Override public boolean contains(Object o) {
