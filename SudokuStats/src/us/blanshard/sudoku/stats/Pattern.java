@@ -65,15 +65,21 @@ public abstract class Pattern implements Comparable<Pattern> {
   private static final Splitter SEMI_SPLITTER = Splitter.on(';').omitEmptyStrings();
 
   private final Type type;
+  private final boolean sameNumeral;
   @Nullable private final Evaluator.Pattern evaluatorPattern;
 
-  Pattern(Type type, @Nullable Evaluator.Pattern evaluatorPattern) {
+  Pattern(Type type, boolean sameNumeral, @Nullable Evaluator.Pattern evaluatorPattern) {
     this.type = type;
+    this.sameNumeral = sameNumeral;
     this.evaluatorPattern = evaluatorPattern;
   }
 
   public final Type getType() {
     return type;
+  }
+
+  public final boolean isSameNumeral() {
+    return sameNumeral;
   }
 
   @Nullable public final Evaluator.Pattern getEvaluatorPattern() {
@@ -104,6 +110,7 @@ public abstract class Pattern implements Comparable<Pattern> {
 
   public Appendable appendTo(Appendable a) throws IOException {
     a.append(type.getName()).append(':')
+        .append(sameNumeral ? '!' : '-')
         .append(String.valueOf(evaluatorPattern == null ? -1 : evaluatorPattern.ordinal()))
         .append(':');
     appendGutsTo(a);
@@ -122,7 +129,9 @@ public abstract class Pattern implements Comparable<Pattern> {
   public static Pattern fromString(String patternString) {
     Iterator<String> pieces = COLON_SPLITTER_3.split(patternString).iterator();
     Type type = Type.fromName(pieces.next());
-    int patternOrdinal = Integer.parseInt(pieces.next());
+    String s = pieces.next();
+    boolean sameNumeral = s.charAt(0) == '!';
+    int patternOrdinal = Integer.parseInt(s.substring(1));
     Evaluator.Pattern evaluatorPattern = patternOrdinal < 0 ? null : Evaluator.Pattern.values()[patternOrdinal];
     String params = pieces.next();
     switch (type) {
@@ -133,15 +142,15 @@ public abstract class Pattern implements Comparable<Pattern> {
       case BARRED_NUMERAL:
         return barredNumeral(UnitCategory.fromString(params));
       case FORCED_LOCATION:
-        return forcedLocation(UnitCategory.fromString(params));
+        return forcedLocation(sameNumeral, UnitCategory.fromString(params));
       case FORCED_NUMERAL:
-        return forcedNumeral(evaluatorPattern, PeerMetrics.fromString(params));
+        return forcedNumeral(sameNumeral, evaluatorPattern, PeerMetrics.fromString(params));
       case OVERLAP:
-        return overlap(UnitCategory.fromString(params));
+        return overlap(sameNumeral, UnitCategory.fromString(params));
       case LOCKED_SET:
-        return LockedSet.fromString(evaluatorPattern, params);
+        return LockedSet.fromString(sameNumeral, evaluatorPattern, params);
       case NAKED_SET:
-        return NakedSet.fromString(evaluatorPattern, params);
+        return NakedSet.fromString(sameNumeral, evaluatorPattern, params);
       case IMPLICATION:
         return Implication.fromString(params);
       default:
@@ -229,7 +238,10 @@ public abstract class Pattern implements Comparable<Pattern> {
   }
 
   @Override public int compareTo(Pattern that) {
-    int answer = this.type.compareTo(that.type);
+    int answer = ComparisonChain.start()
+        .compare(this.type, that.type)
+        .compareTrueFirst(this.sameNumeral, that.sameNumeral)
+        .result();
     if (answer == 0) answer = this.compareToGuts(that);
     return answer;
   }
@@ -303,8 +315,8 @@ public abstract class Pattern implements Comparable<Pattern> {
   public static abstract class UnitBased extends Pattern {
     private final UnitCategory category;
 
-    UnitBased(Type type, Evaluator.Pattern evaluatorPattern, UnitCategory category) {
-      super(type, evaluatorPattern);
+    UnitBased(Type type, boolean sameNumeral, Evaluator.Pattern evaluatorPattern, UnitCategory category) {
+      super(type, sameNumeral, evaluatorPattern);
       this.category = category;
     }
 
@@ -313,14 +325,15 @@ public abstract class Pattern implements Comparable<Pattern> {
     }
 
     @Override public boolean equals(Object o) {
-      if (o == null) return false;
+      if (o == null || o.getClass() != this.getClass()) return false;
       if (o == this) return true;
-      return o.getClass() == this.getClass()
-          && ((UnitBased) o).category == this.category;
+      UnitBased that = (UnitBased) o;
+      return this.isSameNumeral() == that.isSameNumeral()
+          && this.category == that.category;
     }
 
     @Override public int hashCode() {
-      return getClass().hashCode() ^ category.hashCode();
+      return Objects.hashCode(getClass(), isSameNumeral(), category);
     }
 
     @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
@@ -484,8 +497,8 @@ public abstract class Pattern implements Comparable<Pattern> {
   public static abstract class PeerMetricsBased extends Pattern {
     private final PeerMetrics metrics;
 
-    PeerMetricsBased(Type type, Evaluator.Pattern evaluatorPattern, PeerMetrics metrics) {
-      super(type, evaluatorPattern);
+    PeerMetricsBased(Type type, boolean sameNumeral, Evaluator.Pattern evaluatorPattern, PeerMetrics metrics) {
+      super(type, sameNumeral, evaluatorPattern);
       this.metrics = metrics;
     }
 
@@ -494,14 +507,15 @@ public abstract class Pattern implements Comparable<Pattern> {
     }
 
     @Override public boolean equals(Object o) {
-      if (o == null) return false;
+      if (o == null || o.getClass() != this.getClass()) return false;
       if (o == this) return true;
-      return o.getClass() == this.getClass()
-          && ((PeerMetricsBased) o).metrics.equals(this.metrics);
+      PeerMetricsBased that = (PeerMetricsBased) o;
+      return this.isSameNumeral() == that.isSameNumeral()
+          && this.metrics.equals(that.metrics);
     }
 
     @Override public int hashCode() {
-      return getClass().hashCode() ^ metrics.hashCode();
+      return getClass().hashCode() ^ metrics.hashCode() + (isSameNumeral() ? 1 : 0);
     }
 
     @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
@@ -521,7 +535,7 @@ public abstract class Pattern implements Comparable<Pattern> {
   public static final class Conflict extends UnitBased {
 
     private Conflict(Evaluator.Pattern evaluatorPattern, UnitCategory category) {
-      super(Type.CONFLICT, evaluatorPattern, category);
+      super(Type.CONFLICT, true, evaluatorPattern, category);
     }
 
     static final Conflict BLOCK = new Conflict(Evaluator.Pattern.CONFLICT_B, UnitCategory.BLOCK);
@@ -541,7 +555,7 @@ public abstract class Pattern implements Comparable<Pattern> {
    */
   public static final class BarredLoc extends PeerMetricsBased {
     BarredLoc(Evaluator.Pattern evaluatorPattern, PeerMetrics metrics) {
-      super(Type.BARRED_LOCATION, evaluatorPattern, metrics);
+      super(Type.BARRED_LOCATION, true, evaluatorPattern, metrics);
     }
   }
 
@@ -559,7 +573,7 @@ public abstract class Pattern implements Comparable<Pattern> {
    */
   public static final class BarredNum extends UnitBased {
     private BarredNum(Evaluator.Pattern evaluatorPattern, UnitCategory category) {
-      super(Type.BARRED_NUMERAL, evaluatorPattern, category);
+      super(Type.BARRED_NUMERAL, true, evaluatorPattern, category);
     }
 
     static final BarredNum BLOCK = new BarredNum(Evaluator.Pattern.BARRED_NUM_B, UnitCategory.BLOCK);
@@ -579,37 +593,41 @@ public abstract class Pattern implements Comparable<Pattern> {
    * given unit.
    */
   public static final class ForcedLoc extends UnitBased {
-    private ForcedLoc(Evaluator.Pattern evaluatorPattern, UnitCategory category) {
-      super(Type.FORCED_LOCATION, evaluatorPattern, category);
+    private ForcedLoc(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, UnitCategory category) {
+      super(Type.FORCED_LOCATION, sameNumeral, evaluatorPattern, category);
     }
 
-    static final ForcedLoc BLOCK = new ForcedLoc(Evaluator.Pattern.FORCED_LOC_B, UnitCategory.BLOCK);
-    static final ForcedLoc LINE = new ForcedLoc(Evaluator.Pattern.FORCED_LOC_L, UnitCategory.LINE);
+    static final ForcedLoc BLOCK_SAME = new ForcedLoc(true,  Evaluator.Pattern.FORCED_LOC_B, UnitCategory.BLOCK);
+    static final ForcedLoc BLOCK_DIFF = new ForcedLoc(false, Evaluator.Pattern.FORCED_LOC_B, UnitCategory.BLOCK);
+    static final ForcedLoc LINE_SAME = new ForcedLoc(true,  Evaluator.Pattern.FORCED_LOC_L, UnitCategory.LINE);
+    static final ForcedLoc LINE_DIFF = new ForcedLoc(false, Evaluator.Pattern.FORCED_LOC_L, UnitCategory.LINE);
   }
 
-  public static ForcedLoc forcedLocation(UnitCategory category) {
-    return checkNotNull(category) == UnitCategory.BLOCK ? ForcedLoc.BLOCK : ForcedLoc.LINE;
+  public static ForcedLoc forcedLocation(boolean sameNumeral, UnitCategory category) {
+    return checkNotNull(category) == UnitCategory.BLOCK ?
+        sameNumeral ? ForcedLoc.BLOCK_SAME : ForcedLoc.BLOCK_DIFF :
+        sameNumeral ? ForcedLoc.LINE_SAME : ForcedLoc.LINE_DIFF;
   }
 
-  public static ForcedLoc forcedLocation(Unit unit) {
-    return forcedLocation(UnitCategory.forUnit(unit));
+  public static ForcedLoc forcedLocation(boolean sameNumeral, Unit unit) {
+    return forcedLocation(sameNumeral, UnitCategory.forUnit(unit));
   }
 
   /**
    * The patterns for a location with a single possible numeral assignment.
    */
   public static final class ForcedNum extends PeerMetricsBased {
-    ForcedNum(Evaluator.Pattern evaluatorPattern, PeerMetrics metrics) {
-      super(Type.FORCED_NUMERAL, evaluatorPattern, metrics);
+    ForcedNum(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, PeerMetrics metrics) {
+      super(Type.FORCED_NUMERAL, sameNumeral, evaluatorPattern, metrics);
     }
   }
 
-  public static ForcedNum forcedNumeral(Evaluator.Pattern evaluatorPattern, PeerMetrics metrics) {
-    return new ForcedNum(evaluatorPattern, metrics);
+  public static ForcedNum forcedNumeral(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, PeerMetrics metrics) {
+    return new ForcedNum(sameNumeral, evaluatorPattern, metrics);
   }
 
-  public static ForcedNum forcedNumeral(Evaluator.Pattern evaluatorPattern, Grid grid, Location loc) {
-    return new ForcedNum(evaluatorPattern, peerMetrics(grid, loc));
+  public static ForcedNum forcedNumeral(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, Grid grid, Location loc) {
+    return new ForcedNum(sameNumeral, evaluatorPattern, peerMetrics(grid, loc));
   }
 
   /**
@@ -618,20 +636,24 @@ public abstract class Pattern implements Comparable<Pattern> {
    * locations in the second unit.
    */
   public static final class Overlap extends UnitBased {
-    private Overlap(Evaluator.Pattern evaluatorPattern, UnitCategory category) {
-      super(Type.OVERLAP, evaluatorPattern, category);
+    private Overlap(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, UnitCategory category) {
+      super(Type.OVERLAP, sameNumeral, evaluatorPattern, category);
     }
 
-    static final Overlap BLOCK = new Overlap(Evaluator.Pattern.OVERLAP_B, UnitCategory.BLOCK);
-    static final Overlap LINE = new Overlap(Evaluator.Pattern.OVERLAP_L, UnitCategory.LINE);
+    static final Overlap BLOCK_SAME = new Overlap(true,  Evaluator.Pattern.OVERLAP_B, UnitCategory.BLOCK);
+    static final Overlap BLOCK_DIFF = new Overlap(false, Evaluator.Pattern.OVERLAP_B, UnitCategory.BLOCK);
+    static final Overlap LINE_SAME = new Overlap(true,  Evaluator.Pattern.OVERLAP_L, UnitCategory.LINE);
+    static final Overlap LINE_DIFF = new Overlap(false, Evaluator.Pattern.OVERLAP_L, UnitCategory.LINE);
   }
 
-  public static Overlap overlap(UnitCategory category) {
-    return checkNotNull(category) == UnitCategory.BLOCK ? Overlap.BLOCK : Overlap.LINE;
+  public static Overlap overlap(boolean sameNumeral, UnitCategory category) {
+    return checkNotNull(category) == UnitCategory.BLOCK ?
+        sameNumeral ? Overlap.BLOCK_SAME : Overlap.BLOCK_DIFF :
+        sameNumeral ? Overlap.LINE_SAME : Overlap.LINE_DIFF;
   }
 
-  public static Overlap overlap(Unit unit) {
-    return overlap(UnitCategory.forUnit(unit));
+  public static Overlap overlap(boolean sameNumeral, Unit unit) {
+    return overlap(sameNumeral, UnitCategory.forUnit(unit));
   }
 
   /**
@@ -643,8 +665,8 @@ public abstract class Pattern implements Comparable<Pattern> {
     private final boolean isNaked;
     private final boolean isOverlapped;
 
-    LockedSet(Evaluator.Pattern evaluatorPattern, UnitCategory category, int setSize, boolean isNaked, boolean isOverlapped) {
-      super(Type.LOCKED_SET, evaluatorPattern, category);
+    LockedSet(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, UnitCategory category, int setSize, boolean isNaked, boolean isOverlapped) {
+      super(Type.LOCKED_SET, sameNumeral, evaluatorPattern, category);
       this.setSize = setSize;
       this.isNaked = isNaked;
       this.isOverlapped = isOverlapped;
@@ -690,11 +712,11 @@ public abstract class Pattern implements Comparable<Pattern> {
           .append(isOverlapped ? 'o' : 'd');
     }
 
-    public static LockedSet fromString(Evaluator.Pattern evaluatorPattern, String s) {
-      return fromPieces(evaluatorPattern, COLON_SPLITTER.split(s).iterator());
+    public static LockedSet fromString(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, String s) {
+      return fromPieces(sameNumeral, evaluatorPattern, COLON_SPLITTER.split(s).iterator());
     }
 
-    private static LockedSet fromPieces(Evaluator.Pattern evaluatorPattern, Iterator<String> pieces) {
+    private static LockedSet fromPieces(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, Iterator<String> pieces) {
       UnitCategory category = UnitCategory.fromString(pieces.next());
       int setSize = Integer.parseInt(pieces.next());
       String s = pieces.next();
@@ -713,7 +735,7 @@ public abstract class Pattern implements Comparable<Pattern> {
         case 'd': isOverlapped = false; break;
         default: throw new IllegalArgumentException(s);
       }
-      return new LockedSet(evaluatorPattern, category, setSize, isNaked, isOverlapped);
+      return new LockedSet(sameNumeral, evaluatorPattern, category, setSize, isNaked, isOverlapped);
     }
   }
 
@@ -725,8 +747,8 @@ public abstract class Pattern implements Comparable<Pattern> {
     private final int setSize;
     private final int deltaOverAverage;
 
-    NakedSet(Evaluator.Pattern evaluatorPattern, UnitCategory category, int setSize, int deltaOverAverage) {
-      super(Type.NAKED_SET, evaluatorPattern);
+    NakedSet(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, UnitCategory category, int setSize, int deltaOverAverage) {
+      super(Type.NAKED_SET, sameNumeral, evaluatorPattern);
       this.category = category;
       this.setSize = setSize;
       this.deltaOverAverage = deltaOverAverage;
@@ -753,7 +775,8 @@ public abstract class Pattern implements Comparable<Pattern> {
       if (o == this) return true;
       if (o instanceof NakedSet) {
         NakedSet that = (NakedSet) o;
-        return this.category == that.category
+        return this.isSameNumeral() == that.isSameNumeral()
+            && this.category == that.category
             && this.setSize == that.setSize
             && this.deltaOverAverage == that.deltaOverAverage;
       }
@@ -772,15 +795,15 @@ public abstract class Pattern implements Comparable<Pattern> {
           .append(String.valueOf(deltaOverAverage));
     }
 
-    public static NakedSet fromString(Evaluator.Pattern evaluatorPattern, String s) {
-      return fromPieces(evaluatorPattern, COLON_SPLITTER.split(s).iterator());
+    public static NakedSet fromString(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, String s) {
+      return fromPieces(sameNumeral, evaluatorPattern, COLON_SPLITTER.split(s).iterator());
     }
 
-    private static NakedSet fromPieces(Evaluator.Pattern evaluatorPattern, Iterator<String> pieces) {
+    private static NakedSet fromPieces(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, Iterator<String> pieces) {
       UnitCategory category = UnitCategory.fromString(pieces.next());
       int setSize = Integer.parseInt(pieces.next());
       int deltaOverAverage = Integer.parseInt(Iterators.getOnlyElement(pieces));
-      return new NakedSet(evaluatorPattern, category, setSize, deltaOverAverage);
+      return new NakedSet(sameNumeral, evaluatorPattern, category, setSize, deltaOverAverage);
     }
 
     @Override protected int compareToGuts(Pattern p) {
@@ -812,7 +835,7 @@ public abstract class Pattern implements Comparable<Pattern> {
     return answer;
   }
 
-  private static NakedSet nakedSet(us.blanshard.sudoku.insight.LockedSet set, Grid grid) {
+  private static NakedSet nakedSet(boolean sameNumeral, us.blanshard.sudoku.insight.LockedSet set, Grid grid) {
     UnitCategory category = UnitCategory.forUnit(set.getLocations().unit);
     int setSize = set.getLocations().size();
     int numSetInUnit = countNumSetInUnit(grid, set.getLocations().unit);
@@ -826,11 +849,12 @@ public abstract class Pattern implements Comparable<Pattern> {
     }
     int averageSetPerUnit = (Location.COUNT - grid.getNumOpenLocations()) / 9;
     int deltaOverAverage = Math.max(0, numSetInFullestUnit - averageSetPerUnit);
-    return new NakedSet(Evaluator.Pattern.forInsight(set, grid), category, setSize, deltaOverAverage);
+    return new NakedSet(sameNumeral,
+        Evaluator.Pattern.forInsight(set, grid), category, setSize, deltaOverAverage);
   }
 
-  public static Pattern lockedSet(us.blanshard.sudoku.insight.LockedSet set, Grid grid) {
-    if (set.isNakedSet()) return nakedSet(set, grid);
+  public static Pattern lockedSet(boolean sameNumeral, us.blanshard.sudoku.insight.LockedSet set, Grid grid) {
+    if (set.isNakedSet()) return nakedSet(sameNumeral, set, grid);
 
     UnitCategory category = UnitCategory.forUnit(set.getLocations().unit);
     int setSize = set.getLocations().size();
@@ -872,7 +896,7 @@ public abstract class Pattern implements Comparable<Pattern> {
         isOverlapped = minusAllInUnit(set.getNumerals(), overlap, grid).isEmpty();
       }
     }
-    return new LockedSet(Evaluator.Pattern.forInsight(set, grid), category, setSize, isNaked, isOverlapped);
+    return new LockedSet(sameNumeral, Evaluator.Pattern.forInsight(set, grid), category, setSize, isNaked, isOverlapped);
   }
 
   /**
@@ -885,7 +909,7 @@ public abstract class Pattern implements Comparable<Pattern> {
 
     public Implication(Collection<? extends Pattern> antecedents, Pattern consequent,
         int numScanTargets) {
-      super(Type.IMPLICATION, null);
+      super(Type.IMPLICATION, true, null);
       checkArgument(antecedents.size() > 0);
       Pattern[] a = antecedents.toArray(new Pattern[antecedents.size()]);
       Arrays.sort(a);

@@ -83,13 +83,13 @@ public class PatternTest {
     LockedSet set4 = finder.sets.get(3);
     assertEquals(UnitSubset.ofBits(Block.of(6), 0402), set1.getLocations());
     assertEquals(UnitSubset.ofBits(Block.of(3), 0030), set2.getLocations());
-    assertEquals(UnitSubset.ofBits(Column.of(7), 0603), set3.getLocations());
-    assertEquals(UnitSubset.ofBits(Row.of(2), 0407), set4.getLocations());
+    assertEquals(UnitSubset.ofBits(Row.of(2), 0407), set3.getLocations());
+    assertEquals(UnitSubset.ofBits(Column.of(7), 0603), set4.getLocations());
 
-    assertEquals("s:21:b:2:h:o", Pattern.lockedSet(set1, grid).toString());
-    assertEquals("s:24:l:2:h:d", Pattern.lockedSet(set2, grid).toString());
-    assertEquals("s:30:l:4:h:o", Pattern.lockedSet(set3, grid).toString());
-    assertEquals("ns:38:l:4:1", Pattern.lockedSet(set4, grid).toString());
+    assertEquals("s:!21:b:2:h:o", Pattern.lockedSet(true, set1, grid).toString());
+    assertEquals("s:-22:l:2:h:d", Pattern.lockedSet(false, set2, grid).toString());
+    assertEquals("ns:-32:l:4:1", Pattern.lockedSet(false, set3, grid).toString());
+    assertEquals("s:!30:l:4:h:o", Pattern.lockedSet(true, set4, grid).toString());
   }
 
   @Test public void moreLockedSets() {
@@ -107,7 +107,7 @@ public class PatternTest {
         " . . . | . . . | . . .");
     LockedSet set = new LockedSet(
         NumSet.ofBits(7), UnitSubset.ofBits(Block.of(1), 0310), false);
-    assertEquals("s:27:b:3:h:d", Pattern.lockedSet(set, grid).toString());
+    assertEquals("s:!25:b:3:h:d", Pattern.lockedSet(true, set, grid).toString());
 
     grid = Grid.fromString(
         " 4 5 . | . . 3 | . . ." +
@@ -121,7 +121,7 @@ public class PatternTest {
         " . . . | . . . | . . ." +
         " . . . | . . . | . . ." +
         " . . . | . . . | . . .");
-    assertEquals("s:25:b:3:h:o", Pattern.lockedSet(set, grid).toString());
+    assertEquals("s:-25:b:3:h:o", Pattern.lockedSet(false, set, grid).toString());
   }
 
   private void testPattern(String s1, Pattern p1) {
@@ -134,22 +134,22 @@ public class PatternTest {
   }
 
   @Test public void patterns() {
-    testPattern("c:0:b", Pattern.conflict(UnitCategory.BLOCK));
-    testPattern("c:1:l", Pattern.conflict(UnitCategory.LINE));
-    testPattern("bl:-1:833510500:833000006:006855000", Pattern.barredLocation(null, peerMetrics(4, 1)));
-    testPattern("bn:8:b", Pattern.barredNumeral(UnitCategory.BLOCK));
-    testPattern("fl:11:l", Pattern.forcedLocation(UnitCategory.LINE));
-    testPattern("fn:-1:833510500:833000006:006855000", Pattern.forcedNumeral(null, peerMetrics(4, 1)));
-    testPattern("o:19:b", Pattern.overlap(UnitCategory.BLOCK));
-    testPattern("s:-1:b:4:n:d", new Pattern.LockedSet(null, UnitCategory.BLOCK, 4, true, false));
-    testPattern("s:-1:l:2:h:o", new Pattern.LockedSet(null, UnitCategory.LINE, 2, false, true));
-    testPattern("i:-1:o:19:b+o:20:l=3:fl:10:b",
-        Pattern.implication(Arrays.asList(Pattern.Overlap.LINE, Pattern.Overlap.BLOCK),
-            Pattern.ForcedLoc.BLOCK, 3));
-    testPattern("i:-1:fl:11:l+o:19:b=5:i:-1:fn:-1:833510500:833000006:006855000+s:-1:l:2:n:o=3:c:0:b",
-        Pattern.implication(Arrays.asList(Pattern.Overlap.BLOCK, Pattern.ForcedLoc.LINE),
-            Pattern.implication(Arrays.asList(new Pattern.LockedSet(null, UnitCategory.LINE, 2, true, true),
-                Pattern.forcedNumeral(null, peerMetrics(4, 1))), Pattern.Conflict.BLOCK, 3), 5));
+    testPattern("c:!0:b", Pattern.conflict(UnitCategory.BLOCK));
+    testPattern("c:!1:l", Pattern.conflict(UnitCategory.LINE));
+    testPattern("bl:!-1:833510500:833000006:006855000", Pattern.barredLocation(null, peerMetrics(4, 1)));
+    testPattern("bn:!8:b", Pattern.barredNumeral(UnitCategory.BLOCK));
+    testPattern("fl:-11:l", Pattern.forcedLocation(false, UnitCategory.LINE));
+    testPattern("fn:--1:833510500:833000006:006855000", Pattern.forcedNumeral(false, null, peerMetrics(4, 1)));
+    testPattern("o:!19:b", Pattern.overlap(true, UnitCategory.BLOCK));
+    testPattern("s:!-1:b:4:n:d", new Pattern.LockedSet(true, null, UnitCategory.BLOCK, 4, true, false));
+    testPattern("s:--1:l:2:h:o", new Pattern.LockedSet(false, null, UnitCategory.LINE, 2, false, true));
+    testPattern("i:!-1:o:!19:b+o:-20:l=3:fl:!10:b",
+        Pattern.implication(Arrays.asList(Pattern.Overlap.LINE_DIFF, Pattern.Overlap.BLOCK_SAME),
+            Pattern.ForcedLoc.BLOCK_SAME, 3));
+    testPattern("i:!-1:fl:-11:l+o:!19:b=5:i:!-1:fn:--1:833510500:833000006:006855000+s:!-1:l:2:n:o=3:c:!0:b",
+        Pattern.implication(Arrays.asList(Pattern.Overlap.BLOCK_SAME, Pattern.ForcedLoc.LINE_DIFF),
+            Pattern.implication(Arrays.asList(new Pattern.LockedSet(true, null, UnitCategory.LINE, 2, true, true),
+                Pattern.forcedNumeral(false, null, peerMetrics(4, 1))), Pattern.Conflict.BLOCK, 3), 5));
   }
 
   @Test public void coll() throws Exception {
@@ -161,13 +161,13 @@ public class PatternTest {
     Pattern.appendTo(sb, coll);
     assertEquals("7:123:", sb.toString());
 
-    String string = "2:5:c:0:b,s:0:b:4:n:d";
+    String string = "2:5:c:!0:b,s:-0:b:4:n:d";
     coll = Pattern.collFromString(string);
     assertEquals(2, coll.patterns.size());
     assertEquals(2, coll.realmVector);
     assertEquals(5, coll.numScanTargets);
     assertEquals(Pattern.Conflict.BLOCK, coll.patterns.get(0));
-    assertEquals(new Pattern.LockedSet(null, UnitCategory.BLOCK, 4, true, false), coll.patterns.get(1));
+    assertEquals(new Pattern.LockedSet(false, null, UnitCategory.BLOCK, 4, true, false), coll.patterns.get(1));
     sb.setLength(0);
     Pattern.appendTo(sb, coll);
     assertEquals(string, sb.toString());
@@ -180,14 +180,14 @@ public class PatternTest {
     Pattern.appendAllTo(sb, multi);
     assertEquals(0, sb.length());
 
-    String string = "4:1:c:0:b;4:4:s:0:b:4:n:o;4:2:fl:10:b,fl:11:l";
+    String string = "4:1:c:!0:b;4:4:s:!0:b:4:n:o;4:2:fl:-10:b,fl:!11:l";
     multi = Pattern.collsFromString(string);
     assertEquals(3, multi.size());
     assertEquals(Collections.singletonList(Pattern.Conflict.BLOCK), multi.get(0).patterns);
-    assertEquals(Collections.singletonList(new Pattern.LockedSet(null, UnitCategory.BLOCK, 4, true, true)),
+    assertEquals(Collections.singletonList(new Pattern.LockedSet(true, null, UnitCategory.BLOCK, 4, true, true)),
         multi.get(1).patterns);
-    assertEquals(Arrays.asList(Pattern.forcedLocation(UnitCategory.BLOCK),
-        Pattern.forcedLocation(UnitCategory.LINE)), multi.get(2).patterns);
+    assertEquals(Arrays.asList(Pattern.forcedLocation(false, UnitCategory.BLOCK),
+        Pattern.forcedLocation(true, UnitCategory.LINE)), multi.get(2).patterns);
     Pattern.appendAllTo(sb, multi);
     assertEquals(string, sb.toString());
   }

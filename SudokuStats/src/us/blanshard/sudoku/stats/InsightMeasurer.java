@@ -13,6 +13,7 @@ package us.blanshard.sudoku.stats;
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.LocSet;
+import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.UnitNumSet;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.Sudoku;
@@ -46,6 +47,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * Analyzes sudoku game histories to measure the time taken to make use of
@@ -348,10 +351,10 @@ public class InsightMeasurer implements Runnable {
     }
 
     Pattern getPattern() {
-      return getPattern(insight);
+      return getPattern(insight, getNumeral(insight));
     }
 
-    private Pattern getPattern(Insight insight) {
+    private Pattern getPattern(Insight insight, @Nullable Numeral numeral) {
       switch (insight.type) {
         case CONFLICT:
           return Pattern.conflict(((Conflict) insight).getLocations().unit);
@@ -360,22 +363,65 @@ public class InsightMeasurer implements Runnable {
               ((BarredLoc) insight).getLocation(), grid);
         case BARRED_NUMERAL:
           return Pattern.barredNumeral(((BarredNum) insight).getUnit());
-        case FORCED_LOCATION:
-          return Pattern.forcedLocation(((ForcedLoc) insight).getUnit());
-        case FORCED_NUMERAL:
-          return Pattern.forcedNumeral(Evaluator.Pattern.forInsight(insight, grid), grid,
-              ((ForcedNum) insight).getLocation());
-        case OVERLAP:
-          return Pattern.overlap(((Overlap) insight).getUnit());
-        case LOCKED_SET:
-          return Pattern.lockedSet((LockedSet) insight, grid);
+        case FORCED_LOCATION: {
+          ForcedLoc i = (ForcedLoc) insight;
+          return Pattern.forcedLocation(numeral == i.getNumeral(), i.getUnit());
+        }
+        case FORCED_NUMERAL: {
+          ForcedNum i = (ForcedNum) insight;
+          return Pattern.forcedNumeral(numeral == i.getNumeral(),
+              Evaluator.Pattern.forInsight(insight, grid), grid, i.getLocation());
+        }
+        case OVERLAP: {
+          Overlap i = (Overlap) insight;
+          return Pattern.overlap(numeral == i.getNumeral(), i.getUnit());
+        }
+        case LOCKED_SET: {
+          LockedSet i = (LockedSet) insight;
+          return Pattern.lockedSet(i.getNumerals().contains(numeral), i, grid);
+        }
         case IMPLICATION: {
           Implication imp = (Implication) insight;
           List<Pattern> antecedents = Lists.newArrayList();
           for (Insight a : imp.getAntecedents())
-            antecedents.add(getPattern(a));
-          return Pattern.implication(antecedents, getPattern(imp.getConsequent()),
+            antecedents.add(getPattern(a, numeral));
+          return Pattern.implication(antecedents, getPattern(imp.getConsequent(), numeral),
               imp.getScanTargetCount());
+        }
+        default:
+          throw new IllegalArgumentException(insight.toShortString());
+      }
+    }
+
+    @Nullable private Numeral getNumeral(Insight insight) {
+      switch (insight.type) {
+        case CONFLICT: {
+          Conflict i = (Conflict) insight;
+          return i.getNumeral();
+        }
+        case BARRED_LOCATION:
+          return null;
+        case BARRED_NUMERAL: {
+          BarredNum i = (BarredNum) insight;
+          return i.getNumeral();
+        }
+        case FORCED_LOCATION: {
+          ForcedLoc i = (ForcedLoc) insight;
+          return i.getNumeral();
+        }
+        case FORCED_NUMERAL: {
+          ForcedNum i = (ForcedNum) insight;
+          return i.getNumeral();
+        }
+        case OVERLAP: {
+          Overlap i = (Overlap) insight;
+          return i.getNumeral();
+        }
+        case LOCKED_SET:
+          return null;
+        case IMPLICATION: {
+          Implication i = (Implication) insight;
+          return getNumeral(i.getConsequent());
         }
         default:
           throw new IllegalArgumentException(insight.toShortString());
