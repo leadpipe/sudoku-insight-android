@@ -196,6 +196,7 @@ public class Probabilities {
       List<Sp> sps = Lists.newArrayList();
       for (Pattern p : coll.patterns) {
         Sp sp = Sp.fromPattern(p, openCount);
+        if (hasUnlikelyAntecedent(sp)) continue;
         sps.add(sp);
         if (isUnlikelyForcedNumeral(sp)) unlikelyForcedNumeral = sp;
         else if (isLikelyForcedLocation(sp)) likelyForcedLocationFound = true;
@@ -208,6 +209,26 @@ public class Probabilities {
         sps.remove(unlikelyForcedNumeral);
       }
       return sps;
+    }
+
+    private boolean hasUnlikelyAntecedent(Sp sp) {
+      // A forced-numeral is unlikely as an antecedent.  A forced-location is
+      // unlikely if it's after the first level of implication.
+      int level = 0;
+      while (sp.type == Sp.Type.IMPLICATION) {
+        ++level;
+        int numForcedLocations = 0;
+        Sp.Implication imp = (Sp.Implication) sp;
+        for (Sp ant : imp.antecedents) {
+          if (ant.type == Sp.Type.FORCED_NUMERAL) return true;
+          if (ant.type == Sp.Type.FORCED_LOCATION) {
+            ++numForcedLocations;
+            if (level > 1 || numForcedLocations > 1) return true;
+          }
+        }
+        sp = imp.consequent;
+      }
+      return false;
     }
 
     private boolean isUnlikelyForcedNumeral(Sp sp) {
@@ -234,6 +255,7 @@ public class Probabilities {
         Sp.Implication imp = (Sp.Implication) sp;
         for (Sp ant : imp.antecedents) {
           if (ant.type == Sp.Type.OVERLAP) continue;
+          if (ant.type == Sp.Type.FORCED_LOCATION) continue;
           if (ant.type == Sp.Type.LOCKED_SET) {
             Sp.LockedSet set = (Sp.LockedSet) ant;
             if (!set.isNaked() && set.size() == 2) continue;

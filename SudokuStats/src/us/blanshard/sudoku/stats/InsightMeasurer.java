@@ -60,13 +60,7 @@ public class InsightMeasurer implements Runnable {
     int npuzzles = 0;
 
     Iterable<AttemptInfo> attempts =
-        Iterables.concat(Attempts.phone2013(), Attempts.tablet2014() /*
-                                                                      * ,
-                                                                      * Attempts
-                                                                      * .
-                                                                      * datastoreBackup
-                                                                      * ()
-                                                                      */);
+        Iterables.concat(Attempts.phone2013(), Attempts.tablet2014()/*, Attempts.datastoreBackup()*/);
     for (AttemptInfo attempt : attempts) {
       ++npuzzles;
       new InsightMeasurer(attempt.clues, attempt.history, out).run();
@@ -118,7 +112,7 @@ public class InsightMeasurer implements Runnable {
     }
   }
 
-  private static final Analyzer.Options OPTS = new Analyzer.Options(false, true);
+  private static final Analyzer.Options OPTS = new Analyzer.Options(true, true);
 
   private void applyMove(Move move) {
     long elapsed = move.timestamp - prevTime;
