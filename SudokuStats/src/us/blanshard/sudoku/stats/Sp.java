@@ -131,7 +131,7 @@ public abstract class Sp implements Comparable<Sp> {
         Pattern.ForcedLoc fl = (Pattern.ForcedLoc) pattern;
         // We convert forced locations into overlaps under certain circumstances.
         if (isAntecedent && level == 1 && fl.isSameNumeral() && fl.getCategory() == UnitCategory.BLOCK)
-          return new Overlap(Evaluator.Pattern.OVERLAP_B, UnitCategory.BLOCK, true);
+          return new Overlap(Evaluator.Pattern.OVERLAP_B, UnitCategory.BLOCK);
         return forcedLocation(fl);
       }
       case FORCED_NUMERAL:
@@ -434,39 +434,13 @@ public abstract class Sp implements Comparable<Sp> {
    * locations in the second unit.
    */
   public static final class Overlap extends UnitBased {
-    protected final boolean sameNumeral;
-
-    Overlap(Evaluator.Pattern evaluatorPattern, UnitCategory category, boolean sameNumeral) {
+    Overlap(Evaluator.Pattern evaluatorPattern, UnitCategory category) {
       super(Type.OVERLAP, evaluatorPattern, category);
-      this.sameNumeral = sameNumeral;
-    }
-
-    public boolean isSameNumeral() {
-      return sameNumeral;
-    }
-
-    @Override public boolean equals(Object o) {
-      if (!super.equals(o)) return false;
-      Overlap that = (Overlap) o;
-      return this.sameNumeral == that.sameNumeral;
-    }
-
-    @Override public int hashCode() {
-      return super.hashCode() + (sameNumeral ? 1 : 0);
-    }
-
-    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
-      return super.appendGutsTo(a).append(sameNumeral ? '!' : '-');
-    }
-
-    @Override protected ComparisonChain compareToGuts(Sp p, ComparisonChain chain) {
-      Overlap that = (Overlap) p;
-      return super.compareToGuts(p, chain).compareTrueFirst(this.sameNumeral, that.sameNumeral);
     }
   }
 
   public static Overlap overlap(Pattern.Overlap overlap, int openCount) {
-    return new Overlap(overlap.getEvaluatorPattern(), overlap.getCategory(), overlap.isSameNumeral());
+    return new Overlap(overlap.getEvaluatorPattern(), overlap.getCategory());
   }
 
   /**
