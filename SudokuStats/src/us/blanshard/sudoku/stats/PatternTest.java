@@ -88,7 +88,7 @@ public class PatternTest {
 
     assertEquals("s:!21:b:2:h:o", Pattern.lockedSet(true, set1, grid).toString());
     assertEquals("s:-22:l:2:h:d", Pattern.lockedSet(false, set2, grid).toString());
-    assertEquals("ns:-32:l:4:1", Pattern.lockedSet(false, set3, grid).toString());
+    assertEquals("s:-32:l:4:n:d", Pattern.lockedSet(false, set3, grid).toString());
     assertEquals("s:!30:l:4:h:o", Pattern.lockedSet(true, set4, grid).toString());
   }
 

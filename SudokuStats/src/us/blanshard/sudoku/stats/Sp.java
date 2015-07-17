@@ -140,8 +140,6 @@ public abstract class Sp implements Comparable<Sp> {
         return overlap((Pattern.Overlap) pattern, openCount);
       case LOCKED_SET:
         return lockedSet((Pattern.LockedSet) pattern);
-      case NAKED_SET:
-        return nakedSet((Pattern.NakedSet) pattern);
       case IMPLICATION:
         return implication((Pattern.Implication) pattern, openCount, level + 1);
       default:
@@ -499,10 +497,6 @@ public abstract class Sp implements Comparable<Sp> {
   public static LockedSet lockedSet(Pattern.LockedSet lockedSet) {
     return new LockedSet(lockedSet.getEvaluatorPattern(), lockedSet.getCategory(), lockedSet.getSetSize(),
                          lockedSet.isNaked());
-  }
-
-  public static LockedSet nakedSet(Pattern.NakedSet set) {
-    return new LockedSet(set.getEvaluatorPattern(), set.getCategory(), set.getSetSize(), true);
   }
 
   /**
