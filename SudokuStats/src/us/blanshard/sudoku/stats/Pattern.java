@@ -131,11 +131,11 @@ public abstract class Pattern implements Comparable<Pattern> {
     String params = pieces.next();
     switch (type) {
       case CONFLICT:
-        return conflict(UnitCategory.fromString(params));
+        return conflict(sameNumeral, UnitCategory.fromString(params));
       case BARRED_LOCATION:
         return barredLocation(evaluatorPattern, PeerMetrics.fromString(params));
       case BARRED_NUMERAL:
-        return barredNumeral(UnitCategory.fromString(params));
+        return barredNumeral(sameNumeral, UnitCategory.fromString(params));
       case FORCED_LOCATION:
         return forcedLocation(sameNumeral, UnitCategory.fromString(params));
       case FORCED_NUMERAL:
@@ -517,20 +517,24 @@ public abstract class Pattern implements Comparable<Pattern> {
    */
   public static final class Conflict extends UnitBased {
 
-    private Conflict(Evaluator.Pattern evaluatorPattern, UnitCategory category) {
-      super(Type.CONFLICT, true, evaluatorPattern, category);
+    private Conflict(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, UnitCategory category) {
+      super(Type.CONFLICT, sameNumeral, evaluatorPattern, category);
     }
 
-    static final Conflict BLOCK = new Conflict(Evaluator.Pattern.CONFLICT_B, UnitCategory.BLOCK);
-    static final Conflict LINE = new Conflict(Evaluator.Pattern.CONFLICT_L, UnitCategory.LINE);
+    static final Conflict BLOCK_SAME = new Conflict(true,  Evaluator.Pattern.CONFLICT_B, UnitCategory.BLOCK);
+    static final Conflict BLOCK_DIFF = new Conflict(false, Evaluator.Pattern.CONFLICT_B, UnitCategory.BLOCK);
+    static final Conflict LINE_SAME = new Conflict(true,  Evaluator.Pattern.CONFLICT_L, UnitCategory.LINE);
+    static final Conflict LINE_DIFF = new Conflict(false, Evaluator.Pattern.CONFLICT_L, UnitCategory.LINE);
   }
 
-  public static Conflict conflict(UnitCategory category) {
-    return checkNotNull(category) == UnitCategory.BLOCK ? Conflict.BLOCK : Conflict.LINE;
+  public static Conflict conflict(boolean sameNumeral, UnitCategory category) {
+    return checkNotNull(category) == UnitCategory.BLOCK ?
+        sameNumeral ? Conflict.BLOCK_SAME : Conflict.BLOCK_DIFF :
+        sameNumeral ? Conflict.LINE_SAME : Conflict.LINE_DIFF;
   }
 
-  public static Conflict conflict(Unit unit) {
-    return conflict(UnitCategory.forUnit(unit));
+  public static Conflict conflict(boolean sameNumeral, Unit unit) {
+    return conflict(sameNumeral, UnitCategory.forUnit(unit));
   }
 
   /**
@@ -555,20 +559,24 @@ public abstract class Pattern implements Comparable<Pattern> {
    * unit.
    */
   public static final class BarredNum extends UnitBased {
-    private BarredNum(Evaluator.Pattern evaluatorPattern, UnitCategory category) {
-      super(Type.BARRED_NUMERAL, true, evaluatorPattern, category);
+    private BarredNum(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, UnitCategory category) {
+      super(Type.BARRED_NUMERAL, sameNumeral, evaluatorPattern, category);
     }
 
-    static final BarredNum BLOCK = new BarredNum(Evaluator.Pattern.BARRED_NUM_B, UnitCategory.BLOCK);
-    static final BarredNum LINE = new BarredNum(Evaluator.Pattern.BARRED_NUM_L, UnitCategory.LINE);
+    static final BarredNum BLOCK_SAME = new BarredNum(true,  Evaluator.Pattern.BARRED_NUM_B, UnitCategory.BLOCK);
+    static final BarredNum BLOCK_DIFF = new BarredNum(false, Evaluator.Pattern.BARRED_NUM_B, UnitCategory.BLOCK);
+    static final BarredNum LINE_SAME = new BarredNum(true,  Evaluator.Pattern.BARRED_NUM_L, UnitCategory.LINE);
+    static final BarredNum LINE_DIFF = new BarredNum(false, Evaluator.Pattern.BARRED_NUM_L, UnitCategory.LINE);
   }
 
-  public static BarredNum barredNumeral(UnitCategory category) {
-    return checkNotNull(category) == UnitCategory.BLOCK ? BarredNum.BLOCK : BarredNum.LINE;
+  public static BarredNum barredNumeral(boolean sameNumeral, UnitCategory category) {
+    return checkNotNull(category) == UnitCategory.BLOCK ?
+        sameNumeral ? BarredNum.BLOCK_SAME : BarredNum.BLOCK_DIFF :
+        sameNumeral ? BarredNum.LINE_SAME : BarredNum.LINE_DIFF;
   }
 
-  public static BarredNum barredNumeral(Unit unit) {
-    return barredNumeral(UnitCategory.forUnit(unit));
+  public static BarredNum barredNumeral(boolean sameNumeral, Unit unit) {
+    return barredNumeral(sameNumeral, UnitCategory.forUnit(unit));
   }
 
   /**

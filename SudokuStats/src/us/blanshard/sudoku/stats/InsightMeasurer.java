@@ -327,13 +327,17 @@ public class InsightMeasurer implements Runnable {
 
     private Pattern getPattern(Insight insight, @Nullable Numeral numeral) {
       switch (insight.type) {
-        case CONFLICT:
-          return Pattern.conflict(((Conflict) insight).getLocations().unit);
+        case CONFLICT: {
+          final Conflict i = (Conflict) insight;
+          return Pattern.conflict(numeral == i.getNumeral(), i.getLocations().unit);
+        }
         case BARRED_LOCATION:
           return Pattern.barredLocation(Evaluator.Pattern.forInsight(insight, grid),
               ((BarredLoc) insight).getLocation(), grid);
-        case BARRED_NUMERAL:
-          return Pattern.barredNumeral(((BarredNum) insight).getUnit());
+        case BARRED_NUMERAL: {
+          final BarredNum i = (BarredNum) insight;
+          return Pattern.barredNumeral(numeral == i.getNumeral(), i.getUnit());
+        }
         case FORCED_LOCATION: {
           ForcedLoc i = (ForcedLoc) insight;
           return Pattern.forcedLocation(numeral == i.getNumeral(), i.getUnit());

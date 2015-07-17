@@ -134,10 +134,10 @@ public class PatternTest {
   }
 
   @Test public void patterns() {
-    testPattern("c:!0:b", Pattern.conflict(UnitCategory.BLOCK));
-    testPattern("c:!1:l", Pattern.conflict(UnitCategory.LINE));
+    testPattern("c:!0:b", Pattern.conflict(true, UnitCategory.BLOCK));
+    testPattern("c:-1:l", Pattern.conflict(false, UnitCategory.LINE));
     testPattern("bl:!-1:833510500:833000006:006855000", Pattern.barredLocation(null, peerMetrics(4, 1)));
-    testPattern("bn:!8:b", Pattern.barredNumeral(UnitCategory.BLOCK));
+    testPattern("bn:!8:b", Pattern.barredNumeral(true, UnitCategory.BLOCK));
     testPattern("fl:-11:l", Pattern.forcedLocation(false, UnitCategory.LINE));
     testPattern("fn:--1:833510500:833000006:006855000", Pattern.forcedNumeral(false, null, peerMetrics(4, 1)));
     testPattern("o:!19:b", Pattern.overlap(true, UnitCategory.BLOCK));
@@ -149,7 +149,7 @@ public class PatternTest {
     testPattern("i:!-1:fl:-11:l+o:!19:b=i:!-1:fn:--1:833510500:833000006:006855000+s:!-1:l:2:n:o=c:!0:b",
         Pattern.implication(Arrays.asList(Pattern.Overlap.BLOCK_SAME, Pattern.ForcedLoc.LINE_DIFF),
             Pattern.implication(Arrays.asList(new Pattern.LockedSet(true, null, UnitCategory.LINE, 2, true, true),
-                Pattern.forcedNumeral(false, null, peerMetrics(4, 1))), Pattern.Conflict.BLOCK)));
+                Pattern.forcedNumeral(false, null, peerMetrics(4, 1))), Pattern.Conflict.BLOCK_SAME)));
   }
 
   @Test public void coll() throws Exception {
@@ -159,10 +159,10 @@ public class PatternTest {
     Pattern.appendTo(sb, coll);
     assertEquals("", sb.toString());
 
-    String string = "c:!0:b,s:-0:b:4:n:d";
+    String string = "c:-0:b,s:-0:b:4:n:d";
     coll = Pattern.collFromString(string);
     assertEquals(2, coll.patterns.size());
-    assertEquals(Pattern.Conflict.BLOCK, coll.patterns.get(0));
+    assertEquals(Pattern.Conflict.BLOCK_DIFF, coll.patterns.get(0));
     assertEquals(new Pattern.LockedSet(false, null, UnitCategory.BLOCK, 4, true, false), coll.patterns.get(1));
     sb.setLength(0);
     Pattern.appendTo(sb, coll);
@@ -179,7 +179,7 @@ public class PatternTest {
     String string = "c:!0:b;s:!0:b:4:n:o;fl:-10:b,fl:!11:l";
     multi = Pattern.collsFromString(string);
     assertEquals(3, multi.size());
-    assertEquals(Collections.singletonList(Pattern.Conflict.BLOCK), multi.get(0).patterns);
+    assertEquals(Collections.singletonList(Pattern.Conflict.BLOCK_SAME), multi.get(0).patterns);
     assertEquals(Collections.singletonList(new Pattern.LockedSet(true, null, UnitCategory.BLOCK, 4, true, true)),
         multi.get(1).patterns);
     assertEquals(Arrays.asList(Pattern.forcedLocation(false, UnitCategory.BLOCK),
