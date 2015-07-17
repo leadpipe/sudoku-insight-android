@@ -59,7 +59,6 @@ import javax.annotation.concurrent.Immutable;
 public abstract class Pattern implements Comparable<Pattern> {
 
   private static final Splitter COLON_SPLITTER = Splitter.on(':');
-  private static final Splitter COLON_SPLITTER_2 = COLON_SPLITTER.limit(2);
   private static final Splitter COLON_SPLITTER_3 = COLON_SPLITTER.limit(3);
   private static final Splitter COMMA_SPLITTER = Splitter.on(',').omitEmptyStrings();
   private static final Splitter SEMI_SPLITTER = Splitter.on(';').omitEmptyStrings();
@@ -88,10 +87,6 @@ public abstract class Pattern implements Comparable<Pattern> {
 
   public Pattern getNub() {
     return this;
-  }
-
-  public int getScanTargetCount() {
-    return 1;
   }
 
   public boolean isDirectAssignment() {
@@ -159,11 +154,6 @@ public abstract class Pattern implements Comparable<Pattern> {
   }
 
   public static Appendable appendTo(Appendable a, Coll coll) throws IOException {
-    a.append(Integer.toString(coll.realmVector))
-        .append(':')
-        .append(Integer.toString(coll.numScanTargets))
-        .append(':')
-        ;
     return Joiner.on(',').appendTo(a, coll.patterns);
   }
 
@@ -178,14 +168,11 @@ public abstract class Pattern implements Comparable<Pattern> {
   }
 
   public static Coll collFromString(String s) {
-    Iterator<String> pieces = COLON_SPLITTER_3.split(s).iterator();
-    int realmVector = Integer.parseInt(pieces.next());
-    int numScanTargets = Integer.parseInt(pieces.next());
     ImmutableList.Builder<Pattern> builder = ImmutableList.builder();
-    for (String piece : COMMA_SPLITTER.split(pieces.next())) {
+    for (String piece : COMMA_SPLITTER.split(s)) {
       builder.add(fromString(piece));
     }
-    return new Coll(builder.build(), realmVector, numScanTargets);
+    return new Coll(builder.build());
   }
 
   public static List<Coll> collsFromString(String s) {
@@ -254,13 +241,9 @@ public abstract class Pattern implements Comparable<Pattern> {
 
   public static class Coll {
     public final List<? extends Pattern> patterns;
-    public final int realmVector;
-    public final int numScanTargets;
 
-    public Coll(List<? extends Pattern> patterns, int realmVector, int numScanTargets) {
+    public Coll(List<? extends Pattern> patterns) {
       this.patterns = patterns;
-      this.realmVector = realmVector;
-      this.numScanTargets = numScanTargets;
     }
 
     public boolean areAllImplications() {
@@ -684,10 +667,6 @@ public abstract class Pattern implements Comparable<Pattern> {
       return isOverlapped;
     }
 
-    @Override public int getScanTargetCount() {
-      return setSize;
-    }
-
     @Override public boolean equals(Object o) {
       if (super.equals(o)) {
         LockedSet that = (LockedSet) o;
@@ -764,10 +743,6 @@ public abstract class Pattern implements Comparable<Pattern> {
 
     public int getDeltaOverAverage() {
       return deltaOverAverage;
-    }
-
-    @Override public int getScanTargetCount() {
-      return setSize;
     }
 
     @Override public boolean equals(Object o) {
@@ -905,10 +880,8 @@ public abstract class Pattern implements Comparable<Pattern> {
   public static class Implication extends Pattern {
     private final List<Pattern> antecedents;
     private final Pattern consequent;
-    private final int numScanTargets;
 
-    public Implication(Collection<? extends Pattern> antecedents, Pattern consequent,
-        int numScanTargets) {
+    public Implication(Collection<? extends Pattern> antecedents, Pattern consequent) {
       super(Type.IMPLICATION, true, null);
       checkArgument(antecedents.size() > 0);
       Pattern[] a = antecedents.toArray(new Pattern[antecedents.size()]);
@@ -919,7 +892,6 @@ public abstract class Pattern implements Comparable<Pattern> {
       }
       this.antecedents = Arrays.asList(a);
       this.consequent = checkNotNull(consequent);
-      this.numScanTargets = numScanTargets;
     }
 
     public List<Pattern> getAntecedents() {
@@ -932,13 +904,6 @@ public abstract class Pattern implements Comparable<Pattern> {
 
     @Override public Pattern getNub() {
       return consequent.getNub();
-    }
-
-    @Override public int getScanTargetCount() {
-      int answer = 1 + consequent.getScanTargetCount();
-      for (Pattern a : antecedents)
-        answer += a.getScanTargetCount();
-      return answer;
     }
 
     public boolean hasSimpleAntecedents() {
@@ -978,10 +943,7 @@ public abstract class Pattern implements Comparable<Pattern> {
     }
 
     @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
-      Joiner.on('+').appendTo(a, antecedents)
-          .append('=')
-          .append(String.valueOf(numScanTargets))
-          .append(':');
+      Joiner.on('+').appendTo(a, antecedents).append('=');
       return consequent.appendTo(a);
     }
 
@@ -991,13 +953,11 @@ public abstract class Pattern implements Comparable<Pattern> {
     public static Implication fromString(String s) {
       Iterator<String> iter = EQUALS_SPLITTER_2.split(s).iterator();
       String as = iter.next();
-      iter = COLON_SPLITTER_2.split(iter.next()).iterator();
-      int numScanTargets = Integer.parseInt(iter.next());
       String c = iter.next();
       List<Pattern> antecedents = Lists.newArrayList();
       for (String a : PLUS_SPLITTER.split(as))
         antecedents.add(Pattern.fromString(a));
-      return new Implication(antecedents, Pattern.fromString(c), numScanTargets);
+      return new Implication(antecedents, Pattern.fromString(c));
     }
 
     @Override protected int compareToGuts(Pattern p) {
@@ -1010,8 +970,7 @@ public abstract class Pattern implements Comparable<Pattern> {
     }
   }
 
-  public static Implication implication(Collection<? extends Pattern> antecedents, Pattern consequent,
-      int numScanTargets) {
-    return new Implication(antecedents, consequent, numScanTargets);
+  public static Implication implication(Collection<? extends Pattern> antecedents, Pattern consequent) {
+    return new Implication(antecedents, consequent);
   }
 }

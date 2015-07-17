@@ -60,7 +60,6 @@ public class ScanCost {
       if (isTrailhead) {
         reporter.takeTrailhead(seconds, openCount, Pattern.collsFromString(iter.next()));
       } else {
-        new Universe(iter);
         reporter.takeBatch(seconds, openCount, minOpen, Pattern.collsFromString(iter.next()),
                            Pattern.collsFromString(iter.next()));
       }
@@ -71,17 +70,6 @@ public class ScanCost {
     }
     in.close();
     reportSummaries(System.out);
-  }
-
-  static class Universe {
-    final int numerator;
-    final int denominator;
-    final int realmVector;
-    Universe(Iterator<String> iter) {
-      numerator = Integer.parseInt(iter.next());
-      denominator = Integer.parseInt(iter.next());
-      realmVector = Integer.parseInt(iter.next());
-    }
   }
 
   static class Reporter {

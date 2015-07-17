@@ -16,11 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Unit;
-import us.blanshard.sudoku.core.UnitNumeral;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -69,23 +65,6 @@ public abstract class Insight {
 
     public boolean isElimination() {
       return ELIMINATIONS.contains(this);
-    }
-  }
-
-  /**
-   * A basic categorization of simple insights, combined for compound ones.
-   */
-  public enum Realm {
-    BLOCK, LINE, LOCATION;
-    public final int bit = 1 << ordinal();
-
-    /** Tells whether this realm is included in the given bit vector. */
-    public boolean isIn(int vector) {
-      return (vector & bit) != 0;
-    }
-
-    public static Realm of(Unit unit) {
-      return unit.getType() == Unit.Type.BLOCK ? BLOCK : LINE;
     }
   }
 
@@ -140,12 +119,6 @@ public abstract class Insight {
     return 1;
   }
 
-  /**
-   * Returns the set of realms that this insight inhabits, expressed as a bit
-   * vector.
-   */
-  public abstract int getRealmVector();
-
   /** Returns an abbreviated string form of this insight. */
   public String toShortString() {
     return toString();
@@ -162,20 +135,4 @@ public abstract class Insight {
 
   /** Tells whether this insight is related to the given elimination. */
   public abstract boolean mightBeRevealedByElimination(Assignment elimination);
-
-  /**
-   * Adds the "scan targets" needed to discover this insight to the given
-   * collections. There is one target for each location, and one for each
-   * unit-numeral pair. The location targets represent the constraint that there
-   * can be at most one occurrence of the numeral assigned to a location among
-   * all the units that the location belongs to. The unit-numeral targets
-   * represent the constraint that there must be at least one occurrence of each
-   * numeral within each unit.
-   */
-  public abstract void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums);
-
-  /**
-   * Returns the total number of scan targets needed to discover this insight.
-   */
-  public abstract int getScanTargetCount();
 }

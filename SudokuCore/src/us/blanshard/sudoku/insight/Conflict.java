@@ -19,12 +19,9 @@ import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
-import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
 import com.google.common.base.Objects;
-
-import java.util.Collection;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -51,10 +48,6 @@ public final class Conflict extends Insight {
 
   public UnitSubset getLocations() {
     return locations;
-  }
-
-  @Override public int getRealmVector() {
-    return Realm.of(locations.unit).bit;
   }
 
   @Override public void apply(GridMarks.Builder builder) {
@@ -87,15 +80,5 @@ public final class Conflict extends Insight {
 
   @Override public String toString() {
     return numeral + " \u2208 " + locations.unit + " \u219b " + locations;  // element-of, right-arrow
-  }
-
-  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
-    // Even though conflicts are not about scanning open locations, we add the
-    // unit-numeral in question.
-    unitNums.add(UnitNumeral.of(locations.unit, numeral));
-  }
-
-  @Override public int getScanTargetCount() {
-    return 1;
   }
 }

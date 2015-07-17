@@ -12,9 +12,7 @@ package us.blanshard.sudoku.stats;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.core.LocSet;
 import us.blanshard.sudoku.core.Numeral;
-import us.blanshard.sudoku.core.UnitNumSet;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.Sudoku;
 import us.blanshard.sudoku.game.UndoDetector;
@@ -174,7 +172,6 @@ public class InsightMeasurer implements Runnable {
 
   private void emitBatch(Batch b) {
     startLine(false, b.totalElapsed, b.numOpen, b.firstMove.timestamp);
-    b.emitUniverse();
     b.emitColls();
     endLine();
   }
@@ -198,7 +195,6 @@ public class InsightMeasurer implements Runnable {
         }
         minOpen = entry.getValue().minOpen;
         startLine(false, elapsed, gridMarks.grid.getNumOpenLocations(), timestamp);
-        emitUniverse(new Universe());
         StringBuilder sb = new StringBuilder();
         try {
           Pattern.appendTo(sb, toColl(collector.errors));
@@ -216,7 +212,7 @@ public class InsightMeasurer implements Runnable {
     List<Pattern> ps = Lists.newArrayList();
     for (WrappedInsight w : insights)
       ps.add(w.getPattern());
-    return new Pattern.Coll(ps, 0, 0);
+    return new Pattern.Coll(ps);
   }
 
   private void startLine(boolean isTrailhead, long elapsed, int numOpen, long timestamp) {
@@ -246,12 +242,6 @@ public class InsightMeasurer implements Runnable {
 
   private void emit(long i) {
     emit(String.valueOf(i));
-  }
-
-  private void emitUniverse(Universe u) {
-    emit(u.numerator());
-    emit(u.denominator());
-    emit(u.realmVector());
   }
 
   private static class TrailState {
@@ -300,25 +290,6 @@ public class InsightMeasurer implements Runnable {
         count = e.size();
         builder.apply(e);
       }
-    }
-
-    public Universe universeForAssignment(Assignment a) {
-      Universe universe = new Universe();
-      for (WrappedInsight w : moves.get(a)) {
-        universe.add(w.insight, true);
-      }
-      return universe;
-    }
-
-    public void fillDenominator(Universe universe, Set<Assignment> except) {
-      for (Assignment a : moves.keySet())
-        if (!except.contains(a))
-          for (WrappedInsight w : moves.get(a))
-            universe.add(w.insight, false);
-      for (WrappedInsight w : errors)
-        universe.add(w.insight, false);
-      for (Insight i : elims)
-        universe.add(i, false);
     }
 
     public void emitColls(Iterable<Assignment> assignments, Collection<WrappedInsight> errors) {
@@ -385,8 +356,7 @@ public class InsightMeasurer implements Runnable {
           List<Pattern> antecedents = Lists.newArrayList();
           for (Insight a : imp.getAntecedents())
             antecedents.add(getPattern(a, numeral));
-          return Pattern.implication(antecedents, getPattern(imp.getConsequent(), numeral),
-              imp.getScanTargetCount());
+          return Pattern.implication(antecedents, getPattern(imp.getConsequent(), numeral));
         }
         default:
           throw new IllegalArgumentException(insight.toShortString());
@@ -429,44 +399,11 @@ public class InsightMeasurer implements Runnable {
     }
   }
 
-  /**
-   * Gathers the scan targets (numerator and denominator) and realm vector for
-   * one collection of insights in a batch.
-   */
-  private static class Universe {
-    private final LocSet locTargetsNum = new LocSet();
-    private final UnitNumSet unitNumTargetsNum = new UnitNumSet();
-    private final LocSet locTargetsDenom = new LocSet();
-    private final UnitNumSet unitNumTargetsDenom = new UnitNumSet();
-    private int realmVector;
-
-    void add(Insight insight, boolean numerator) {
-      if (numerator) {
-        insight.addScanTargets(locTargetsNum, unitNumTargetsNum);
-        realmVector |= insight.getNub().getRealmVector();
-      }
-      insight.addScanTargets(locTargetsDenom, unitNumTargetsDenom);
-    }
-
-    int numerator() {
-      return locTargetsNum.size() + unitNumTargetsNum.size();
-    }
-
-    int denominator() {
-      return locTargetsDenom.size() + unitNumTargetsDenom.size();
-    }
-
-    int realmVector() {
-      return realmVector;
-    }
-  }
-
   private class Batch {
     final Collector collector;
     final Move firstMove;
     final int numOpen;
     final Set<Assignment> assignments = Sets.newLinkedHashSet();
-    final Universe universe;
     long totalElapsed;
 
     Batch(Collector collector, Move firstMove, long elapsed, int numOpen) {
@@ -474,7 +411,6 @@ public class InsightMeasurer implements Runnable {
       this.firstMove = firstMove;
       this.numOpen = numOpen;
       Assignment assignment = firstMove.getAssignment();
-      this.universe = collector.universeForAssignment(assignment);
       assignments.add(assignment);
       totalElapsed = elapsed;
     }
@@ -500,20 +436,7 @@ public class InsightMeasurer implements Runnable {
 
       assignments.add(a);
       totalElapsed += elapsed;
-      for (WrappedInsight w : collector.moves.get(a)) {
-        universe.add(w.insight, true);
-      }
       return true;
-    }
-
-    /**
-     * The universe consists of all insights: the numerator is the number of
-     * scan targets in all insights for the moves we've made, and the
-     * denominator is the number of scan targets in all insights in the batch.
-     */
-    public void emitUniverse() {
-      collector.fillDenominator(universe, assignments);
-      InsightMeasurer.this.emitUniverse(universe);
     }
 
     public void emitColls() {

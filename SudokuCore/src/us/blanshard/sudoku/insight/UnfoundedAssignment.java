@@ -18,10 +18,6 @@ package us.blanshard.sudoku.insight;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.UnitNumeral;
-
-import java.util.Collection;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -38,10 +34,6 @@ public class UnfoundedAssignment extends Insight {
   public UnfoundedAssignment(Assignment assignment) {
     super(Type.UNFOUNDED_ASSIGNMENT);
     this.assignment = checkNotNull(assignment);
-  }
-
-  @Override public int getRealmVector() {
-    return 0;
   }
 
   @Override public Assignment getImpliedAssignment() {
@@ -73,13 +65,5 @@ public class UnfoundedAssignment extends Insight {
 
   @Override public String toString() {
     return assignment + "?";
-  }
-
-  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
-    // This one has nothing.
-  }
-
-  @Override public int getScanTargetCount() {
-    return 0;
   }
 }

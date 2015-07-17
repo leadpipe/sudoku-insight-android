@@ -22,8 +22,6 @@ import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
-import java.util.Collection;
-
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -61,10 +59,6 @@ public final class ForcedLoc extends Insight {
     return Assignment.of(location, numeral);
   }
 
-  @Override public int getRealmVector() {
-    return Realm.of(unit).bit;
-  }
-
   @Override public void apply(GridMarks.Builder builder) {
     builder.assign(location, numeral);
   }
@@ -95,13 +89,5 @@ public final class ForcedLoc extends Insight {
 
   @Override public String toString() {
     return numeral + " \u2208 " + unit + " \u2192 " + location;  // element-of, right-arrow
-  }
-
-  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
-    unitNums.add(UnitNumeral.of(unit, numeral));
-  }
-
-  @Override public int getScanTargetCount() {
-    return 1;
   }
 }

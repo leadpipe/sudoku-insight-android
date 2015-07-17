@@ -16,12 +16,9 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
-
-import java.util.Collection;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -46,10 +43,6 @@ public final class BarredNum extends Insight {
 
   public Numeral getNumeral() {
     return unitNum.numeral;
-  }
-
-  @Override public int getRealmVector() {
-    return Realm.of(getUnit()).bit;
   }
 
   @Override public void apply(GridMarks.Builder builder) {
@@ -77,13 +70,5 @@ public final class BarredNum extends Insight {
 
   @Override public String toString() {
     return unitNum.numeral + " \u2209 " + unitNum.unit;  // not-element-of
-  }
-
-  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
-    unitNums.add(unitNum);
-  }
-
-  @Override public int getScanTargetCount() {
-    return 1;
   }
 }

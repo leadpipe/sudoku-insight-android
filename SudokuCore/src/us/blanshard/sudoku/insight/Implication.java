@@ -19,10 +19,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.LocSet;
-import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.UnitNumSet;
-import us.blanshard.sudoku.core.UnitNumeral;
 
 import com.google.common.collect.ImmutableList;
 
@@ -96,13 +92,6 @@ public final class Implication extends Insight {
     return count;
   }
 
-  @Override public int getRealmVector() {
-    int answer = consequent.getRealmVector();
-    for (int i = 0, count = antecedents.size(); i < count; ++i)
-      answer |= antecedents.get(i).getRealmVector();
-    return answer;
-  }
-
   @Override public String toShortString() {
     return getNub() + " \u2235 \u2026 [" + getDepth() + "]";
   }
@@ -142,18 +131,5 @@ public final class Implication extends Insight {
 
   @Override public String toString() {
     return consequent + " \u2235 " + antecedents;  // "because" symbol
-  }
-
-  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
-    for (int i = 0, count = antecedents.size(); i < count; ++i)
-      antecedents.get(i).addScanTargets(locs, unitNums);
-    consequent.addScanTargets(locs, unitNums);
-  }
-
-  @Override public int getScanTargetCount() {
-    LocSet locTargets = new LocSet();
-    UnitNumSet unitNumTargets = new UnitNumSet();
-    addScanTargets(locTargets, unitNumTargets);
-    return locTargets.size() + unitNumTargets.size();
   }
 }

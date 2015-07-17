@@ -64,7 +64,6 @@ public class Probabilities {
           instance.getReporter(openCount, minOpen, numTrails, timestamp, effectiveTimestamp,
               moveNumber, effectiveMoveNumber);
       if (!isTrailhead) {
-        new Universe(iter);
         reporter.notePlayed(openCount, Pattern.collsFromString(iter.next()));
       }
       reporter.noteMissed(openCount, Pattern.collsFromString(iter.next()));
@@ -141,18 +140,6 @@ public class Probabilities {
 
   static double mean(Dist d) {
     return d == null ? Double.NaN : d.mean;
-  }
-
-  static class Universe {
-    final int numerator;
-    final int denominator;
-    final int realmVector;
-
-    Universe(Iterator<String> iter) {
-      numerator = Integer.parseInt(iter.next());
-      denominator = Integer.parseInt(iter.next());
-      realmVector = Integer.parseInt(iter.next());
-    }
   }
 
   static class Reporter {

@@ -17,9 +17,6 @@ package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.UnitNumeral;
-
-import java.util.Collection;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -40,10 +37,6 @@ public final class BarredLoc extends Insight {
 
   public Location getLocation() {
     return location;
-  }
-
-  @Override public int getRealmVector() {
-    return Realm.LOCATION.bit;
   }
 
   @Override public void apply(GridMarks.Builder builder) {
@@ -71,13 +64,5 @@ public final class BarredLoc extends Insight {
 
   @Override public String toString() {
     return location + " \u2190 \u2205";  // assignment empty-set
-  }
-
-  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
-    locs.add(location);
-  }
-
-  @Override public int getScanTargetCount() {
-    return 1;
   }
 }

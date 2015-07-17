@@ -19,12 +19,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.UnitNumeral;
 
 import com.google.common.base.Objects;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -80,10 +77,6 @@ public final class DisprovedAssignment extends Insight {
     return 1 + resultingError.getCount();
   }
 
-  @Override public int getRealmVector() {
-    return resultingError.getRealmVector();
-  }
-
   @Override public String toShortString() {
     return getPrefix() + resultingError.toShortString();
   }
@@ -121,13 +114,5 @@ public final class DisprovedAssignment extends Insight {
     String prefix = assignment.numeral.number + " \u219b "  // crossed-out right arrow
             + assignment.location + " \u2235 ";  // "because" symbol
     return prefix;
-  }
-
-  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
-    // This guy has nothing.
-  }
-
-  @Override public int getScanTargetCount() {
-    return 0;
   }
 }

@@ -16,7 +16,6 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
@@ -24,7 +23,6 @@ import us.blanshard.sudoku.core.UnitSubset;
 
 import com.google.common.collect.ImmutableList;
 
-import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -95,10 +93,6 @@ public final class LockedSet extends Insight {
     return extraElims == null ? null : extraElims.unit;
   }
 
-  @Override public int getRealmVector() {
-    return isNaked ? Realm.LOCATION.bit : Realm.of(locs.unit).bit;
-  }
-
   @Override public void apply(GridMarks.Builder builder) {
     for (int i = 0, count = getEliminations().size(); i < count; ++i)
       builder.eliminate(eliminations.get(i));
@@ -139,17 +133,5 @@ public final class LockedSet extends Insight {
 
   @Override public String toString() {
     return nums + " \u2194 " + locs;
-  }
-
-  @Override public void addScanTargets(Collection<Location> locs, Collection<UnitNumeral> unitNums) {
-    if (isNakedSet())
-      for (int i = 0; i < this.locs.size(); ++i)
-        locs.add(this.locs.get(i));
-    else for (int i = 0; i < this.nums.size(); ++i)
-      unitNums.add(UnitNumeral.of(this.locs.unit, this.nums.get(i)));
-  }
-
-  @Override public int getScanTargetCount() {
-    return locs.size();
   }
 }
