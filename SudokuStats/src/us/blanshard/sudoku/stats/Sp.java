@@ -112,7 +112,14 @@ public abstract class Sp implements Comparable<Sp> {
     }
   }
 
-  public static Sp fromPattern(Pattern pattern, int openCount) {
+  /**
+   * May return null if the pattern is an implication with assignment antecedents.
+   */
+  @Nullable public static Sp fromPattern(Pattern pattern, int openCount) {
+    return fromPattern(pattern, openCount, 0, false);
+  }
+
+  @Nullable private static Sp fromPattern(Pattern pattern, int openCount, int level, boolean isAntecedent) {
     switch (pattern.getType()) {
       case CONFLICT:
         return conflict((Pattern.Conflict) pattern);
@@ -120,8 +127,13 @@ public abstract class Sp implements Comparable<Sp> {
         return barredLocation((Pattern.BarredLoc) pattern, openCount);
       case BARRED_NUMERAL:
         return barredNumeral((Pattern.BarredNum) pattern);
-      case FORCED_LOCATION:
-        return forcedLocation((Pattern.ForcedLoc) pattern);
+      case FORCED_LOCATION: {
+        Pattern.ForcedLoc fl = (Pattern.ForcedLoc) pattern;
+        // We convert forced locations into overlaps under certain circumstances.
+        if (isAntecedent && level == 1 && fl.isSameNumeral() && fl.getCategory() == UnitCategory.BLOCK)
+          return new Overlap(Evaluator.Pattern.OVERLAP_B, UnitCategory.BLOCK, true);
+        return forcedLocation(fl);
+      }
       case FORCED_NUMERAL:
         return forcedNumeral((Pattern.ForcedNum) pattern, openCount);
       case OVERLAP:
@@ -131,7 +143,7 @@ public abstract class Sp implements Comparable<Sp> {
       case NAKED_SET:
         return nakedSet((Pattern.NakedSet) pattern);
       case IMPLICATION:
-        return implication((Pattern.Implication) pattern, openCount);
+        return implication((Pattern.Implication) pattern, openCount, level + 1);
       default:
         throw new IllegalArgumentException();
     }
@@ -422,13 +434,39 @@ public abstract class Sp implements Comparable<Sp> {
    * locations in the second unit.
    */
   public static final class Overlap extends UnitBased {
-    Overlap(Evaluator.Pattern evaluatorPattern, UnitCategory category) {
+    protected final boolean sameNumeral;
+
+    Overlap(Evaluator.Pattern evaluatorPattern, UnitCategory category, boolean sameNumeral) {
       super(Type.OVERLAP, evaluatorPattern, category);
+      this.sameNumeral = sameNumeral;
+    }
+
+    public boolean isSameNumeral() {
+      return sameNumeral;
+    }
+
+    @Override public boolean equals(Object o) {
+      if (!super.equals(o)) return false;
+      Overlap that = (Overlap) o;
+      return this.sameNumeral == that.sameNumeral;
+    }
+
+    @Override public int hashCode() {
+      return super.hashCode() + (sameNumeral ? 1 : 0);
+    }
+
+    @Override protected Appendable appendGutsTo(Appendable a) throws IOException {
+      return super.appendGutsTo(a).append(sameNumeral ? '!' : '-');
+    }
+
+    @Override protected ComparisonChain compareToGuts(Sp p, ComparisonChain chain) {
+      Overlap that = (Overlap) p;
+      return super.compareToGuts(p, chain).compareTrueFirst(this.sameNumeral, that.sameNumeral);
     }
   }
 
   public static Overlap overlap(Pattern.Overlap overlap, int openCount) {
-    return new Overlap(overlap.getEvaluatorPattern(), overlap.getCategory());
+    return new Overlap(overlap.getEvaluatorPattern(), overlap.getCategory(), overlap.isSameNumeral());
   }
 
   /**
@@ -575,11 +613,15 @@ public abstract class Sp implements Comparable<Sp> {
     }
   }
 
-  public static Implication implication(Pattern.Implication implication, final int openCount) {
+  @Nullable public static Implication implication(Pattern.Implication implication, int openCount, int level) {
     SortedMultiset<Sp> antecedents = TreeMultiset.create();
-    for (Pattern p : implication.getAntecedents())
-      antecedents.add(Sp.fromPattern(p, openCount));
-    Sp consequent = Sp.fromPattern(implication.getConsequent(), openCount);
+    for (Pattern p : implication.getAntecedents()) {
+      Sp antecedent = Sp.fromPattern(p, openCount, level, true);
+      if (antecedent.isMove()) return null;
+      antecedents.add(antecedent);
+    }
+    Sp consequent = Sp.fromPattern(implication.getConsequent(), openCount, level, false);
+    if (consequent == null) return null;
     return new Implication(antecedents, consequent);
   }
 
