@@ -12,6 +12,7 @@ package us.blanshard.sudoku.stats;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.game.Move;
 import us.blanshard.sudoku.game.Sudoku;
@@ -30,7 +31,6 @@ import us.blanshard.sudoku.insight.Insight;
 import us.blanshard.sudoku.insight.LockedSet;
 import us.blanshard.sudoku.insight.Overlap;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -134,10 +134,11 @@ public class InsightMeasurer implements Runnable {
           move.trailId >= 0
               && (game.getTrail(move.trailId).getTrailhead() == null || game.getTrail(move.trailId)
                   .getTrailhead() == move.getLocation());
+      NumSet prevNums = openBatch == null ? NumSet.NONE : openBatch.nums;
       if (isTrailhead) {
-        emitTrailheadLine(elapsed, numOpen, move.timestamp, collector);
+        emitTrailheadLine(elapsed, numOpen, move.timestamp, collector, prevNums);
       } else if (collector.moves.containsKey(move.getAssignment())) {
-        newBatch = new Batch(collector, move, elapsed, numOpen);
+        newBatch = new Batch(collector, move, elapsed, numOpen, prevNums);
         if (openBatch == null)
           openBatch = newBatch;
         else if (!openBatch.extendWith(move, elapsed, newBatch)) {
@@ -156,7 +157,8 @@ public class InsightMeasurer implements Runnable {
     game.move(move);
     if (move.trailId >= 0) {
       trails.add(move.trailId);
-      trailFinals.put(move.trailId, new TrailState(game.getTrail(move.trailId).getGrid(), minOpen));
+      trailFinals.put(move.trailId,
+          new TrailState(game.getTrail(move.trailId).getGrid(), minOpen, move.getNumeral().asSet()));
     }
     if (newBatch == null) {
       ++numSkippedMoves;
@@ -164,9 +166,9 @@ public class InsightMeasurer implements Runnable {
     }
   }
 
-  private void emitTrailheadLine(long elapsed, int numOpen, long timestamp, Collector collector) {
+  private void emitTrailheadLine(long elapsed, int numOpen, long timestamp, Collector collector, NumSet prevNums) {
     startLine(true, elapsed, numOpen, timestamp);
-    collector.emitColls(collector.moves.keySet(), Collections.<WrappedInsight> emptySet());
+    collector.emitColls(collector.moves.keySet(), prevNums, Collections.<WrappedInsight> emptySet());
     endLine();
   }
 
@@ -197,7 +199,7 @@ public class InsightMeasurer implements Runnable {
         startLine(false, elapsed, gridMarks.grid.getNumOpenLocations(), timestamp);
         StringBuilder sb = new StringBuilder();
         try {
-          Pattern.appendTo(sb, toColl(collector.errors));
+          Pattern.appendTo(sb, toColl(collector.errors, entry.getValue().prevNums));
         } catch (IOException e) {
           throw new AssertionError(e);
         }
@@ -208,10 +210,10 @@ public class InsightMeasurer implements Runnable {
     }
   }
 
-  private Pattern.Coll toColl(Iterable<WrappedInsight> insights) {
+  private static Pattern.Coll toColl(Iterable<WrappedInsight> insights, NumSet prevNums) {
     List<Pattern> ps = Lists.newArrayList();
     for (WrappedInsight w : insights)
-      ps.add(w.getPattern());
+      ps.add(w.getPattern(prevNums));
     return new Pattern.Coll(ps);
   }
 
@@ -247,10 +249,12 @@ public class InsightMeasurer implements Runnable {
   private static class TrailState {
     final Grid grid;
     final int minOpen;
+    final NumSet prevNums;
 
-    TrailState(Grid grid, int minOpen) {
+    TrailState(Grid grid, int minOpen, NumSet prevNums) {
       this.grid = grid;
       this.minOpen = minOpen;
+      this.prevNums = prevNums;
     }
   }
 
@@ -292,23 +296,63 @@ public class InsightMeasurer implements Runnable {
       }
     }
 
-    public void emitColls(Iterable<Assignment> assignments, Collection<WrappedInsight> errors) {
+    public void emitColls(Iterable<Assignment> assignments, NumSet prevNums, Collection<WrappedInsight> errors) {
       StringBuilder sb = new StringBuilder();
       try {
-        Iterable<Pattern.Coll> colls =
-            Iterables.transform(assignments, new Function<Assignment, Pattern.Coll>() {
-              @Override public Pattern.Coll apply(Assignment a) {
-                return toColl(moves.get(a));
-              }
-            });
+        List<Pattern.Coll> colls = Lists.newArrayList();
+        NumSet nums = prevNums;
+        for (Assignment a : assignments) {
+          colls.add(toColl(moves.get(a), nums));
+          nums = nums.with(a.numeral);
+        }
         if (!errors.isEmpty()) {
-          colls = Iterables.concat(colls, Collections.singleton(toColl(errors)));
+          colls.add(toColl(errors, prevNums));
         }
         Pattern.appendAllTo(sb, colls);
       } catch (IOException impossible) {
         throw new AssertionError(null, impossible);
       }
       emit(sb.toString());
+    }
+  }
+
+  private static NumSet getNumerals(Insight insight, NumSet prevNums) {
+    Numeral numeral = getNumeral(insight);
+    return numeral == null ? prevNums : prevNums.with(numeral);
+  }
+
+  @Nullable private static Numeral getNumeral(Insight insight) {
+    switch (insight.type) {
+      case CONFLICT: {
+        Conflict i = (Conflict) insight;
+        return i.getNumeral();
+      }
+      case BARRED_LOCATION:
+        return null;
+      case BARRED_NUMERAL: {
+        BarredNum i = (BarredNum) insight;
+        return i.getNumeral();
+      }
+      case FORCED_LOCATION: {
+        ForcedLoc i = (ForcedLoc) insight;
+        return i.getNumeral();
+      }
+      case FORCED_NUMERAL: {
+        ForcedNum i = (ForcedNum) insight;
+        return i.getNumeral();
+      }
+      case OVERLAP: {
+        Overlap i = (Overlap) insight;
+        return i.getNumeral();
+      }
+      case LOCKED_SET:
+        return null;
+      case IMPLICATION: {
+        Implication i = (Implication) insight;
+        return getNumeral(i.getConsequent());
+      }
+      default:
+        throw new IllegalArgumentException(insight.toShortString());
     }
   }
 
@@ -321,81 +365,47 @@ public class InsightMeasurer implements Runnable {
       this.insight = insight;
     }
 
-    Pattern getPattern() {
-      return getPattern(insight, getNumeral(insight));
+    Pattern getPattern(NumSet prevNums) {
+      return getPattern(insight, prevNums);
     }
 
-    private Pattern getPattern(Insight insight, @Nullable Numeral numeral) {
+    private Pattern getPattern(Insight insight, NumSet prevNums) {
       switch (insight.type) {
         case CONFLICT: {
           final Conflict i = (Conflict) insight;
-          return Pattern.conflict(numeral == i.getNumeral(), i.getLocations().unit);
+          return Pattern.conflict(prevNums.contains(i.getNumeral()), i.getLocations().unit);
         }
         case BARRED_LOCATION:
           return Pattern.barredLocation(Evaluator.Pattern.forInsight(insight, grid),
               ((BarredLoc) insight).getLocation(), grid);
         case BARRED_NUMERAL: {
           final BarredNum i = (BarredNum) insight;
-          return Pattern.barredNumeral(numeral == i.getNumeral(), i.getUnit());
+          return Pattern.barredNumeral(prevNums.contains(i.getNumeral()), i.getUnit());
         }
         case FORCED_LOCATION: {
           ForcedLoc i = (ForcedLoc) insight;
-          return Pattern.forcedLocation(numeral == i.getNumeral(), i.getUnit());
+          return Pattern.forcedLocation(prevNums.contains(i.getNumeral()), i.getUnit());
         }
         case FORCED_NUMERAL: {
           ForcedNum i = (ForcedNum) insight;
-          return Pattern.forcedNumeral(numeral == i.getNumeral(),
+          return Pattern.forcedNumeral(prevNums.contains(i.getNumeral()),
               Evaluator.Pattern.forInsight(insight, grid), grid, i.getLocation());
         }
         case OVERLAP: {
           Overlap i = (Overlap) insight;
-          return Pattern.overlap(numeral == i.getNumeral(), i.getUnit());
+          return Pattern.overlap(prevNums.contains(i.getNumeral()), i.getUnit());
         }
         case LOCKED_SET: {
           LockedSet i = (LockedSet) insight;
-          return Pattern.lockedSet(i.getNumerals().contains(numeral), i, grid);
+          return Pattern.lockedSet(!prevNums.and(i.getNumerals()).isEmpty(), i, grid);
         }
         case IMPLICATION: {
           Implication imp = (Implication) insight;
           List<Pattern> antecedents = Lists.newArrayList();
+          NumSet consequentNumeral = getNumerals(imp.getConsequent(), NumSet.NONE);
           for (Insight a : imp.getAntecedents())
-            antecedents.add(getPattern(a, numeral));
-          return Pattern.implication(antecedents, getPattern(imp.getConsequent(), numeral));
-        }
-        default:
-          throw new IllegalArgumentException(insight.toShortString());
-      }
-    }
-
-    @Nullable private Numeral getNumeral(Insight insight) {
-      switch (insight.type) {
-        case CONFLICT: {
-          Conflict i = (Conflict) insight;
-          return i.getNumeral();
-        }
-        case BARRED_LOCATION:
-          return null;
-        case BARRED_NUMERAL: {
-          BarredNum i = (BarredNum) insight;
-          return i.getNumeral();
-        }
-        case FORCED_LOCATION: {
-          ForcedLoc i = (ForcedLoc) insight;
-          return i.getNumeral();
-        }
-        case FORCED_NUMERAL: {
-          ForcedNum i = (ForcedNum) insight;
-          return i.getNumeral();
-        }
-        case OVERLAP: {
-          Overlap i = (Overlap) insight;
-          return i.getNumeral();
-        }
-        case LOCKED_SET:
-          return null;
-        case IMPLICATION: {
-          Implication i = (Implication) insight;
-          return getNumeral(i.getConsequent());
+            antecedents.add(getPattern(a, consequentNumeral));
+          return Pattern.implication(antecedents, getPattern(imp.getConsequent(), prevNums));
         }
         default:
           throw new IllegalArgumentException(insight.toShortString());
@@ -408,14 +418,18 @@ public class InsightMeasurer implements Runnable {
     final Move firstMove;
     final int numOpen;
     final Set<Assignment> assignments = Sets.newLinkedHashSet();
+    final NumSet prevNums;
+    NumSet nums;
     long totalElapsed;
 
-    Batch(Collector collector, Move firstMove, long elapsed, int numOpen) {
+    Batch(Collector collector, Move firstMove, long elapsed, int numOpen, NumSet prevNums) {
       this.collector = collector;
       this.firstMove = firstMove;
       this.numOpen = numOpen;
       Assignment assignment = firstMove.getAssignment();
       assignments.add(assignment);
+      this.prevNums = prevNums;
+      nums = assignment.numeral.asSet();
       totalElapsed = elapsed;
     }
 
@@ -439,15 +453,16 @@ public class InsightMeasurer implements Runnable {
           return false;
 
       assignments.add(a);
+      nums = nums.with(a.numeral);
       totalElapsed += elapsed;
       return true;
     }
 
     public void emitColls() {
-      collector.emitColls(assignments, Collections.<WrappedInsight> emptySet());
+      collector.emitColls(assignments, prevNums, Collections.<WrappedInsight> emptySet());
       Set<Assignment> missed = Sets.newLinkedHashSet(collector.moves.keySet());
       missed.removeAll(assignments);
-      collector.emitColls(missed, collector.errors);
+      collector.emitColls(missed, prevNums, collector.errors);
     }
   }
 }
