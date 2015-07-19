@@ -166,7 +166,7 @@ public class InsightMeasurer {
           }
           isSample = findSample && !hasSimpleInsight(collector, a);
         } else {
-          isSample = findSample && !isErroneousMove(grid, a);
+          isSample = findSample && !isErroneousMoveOrFirstMoveAfterTrail(grid, a);
         }
         if (isSample && emitSample) {
           System.out.printf("Move %s on grid\n%s", a, grid);
@@ -198,7 +198,10 @@ public class InsightMeasurer {
     return isSample;
   }
 
-  private boolean isErroneousMove(Grid grid, Assignment a) {
+  private boolean isErroneousMoveOrFirstMoveAfterTrail(Grid grid, Assignment a) {
+    if (moveNumber > 0 && history.get(moveNumber).trailId < 0 && history.get(moveNumber - 1).trailId >= 0) {
+      return true;
+    }
     grid = grid.toBuilder().assign(a).build();
     class ErrorSeer implements Analyzer.Callback {
       boolean errorSeen = false;
