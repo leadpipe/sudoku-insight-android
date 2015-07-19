@@ -129,7 +129,6 @@ public class InsightMeasurer implements Runnable {
       GridMarks gridMarks = new GridMarks(grid);
       Collector collector = new Collector(gridMarks);
       Analyzer.analyze(gridMarks, collector, OPTS);
-      collector.extendElims();
       boolean isTrailhead =
           move.trailId >= 0
               && (game.getTrail(move.trailId).getTrailhead() == null || game.getTrail(move.trailId)
@@ -262,7 +261,6 @@ public class InsightMeasurer implements Runnable {
     final GridMarks gridMarks;
     final Multimap<Assignment, WrappedInsight> moves = ArrayListMultimap.create();
     final List<WrappedInsight> errors = Lists.newArrayList();
-    final Set<Insight> elims = Sets.newLinkedHashSet();
 
     Collector(GridMarks gridMarks) {
       this.gridMarks = gridMarks;
@@ -275,24 +273,6 @@ public class InsightMeasurer implements Runnable {
         moves.put(a, new WrappedInsight(gridMarks, insight));
       } else if (insight.isError()) {
         errors.add(new WrappedInsight(gridMarks, insight));
-      } else {
-        elims.add(insight);
-      }
-    }
-
-    public void extendElims() {
-      GridMarks.Builder builder = gridMarks.toBuilder().apply(elims);
-      int count = elims.size();
-      while (count > 0) {
-        final Collection<Insight> e = Lists.newArrayList();
-        Analyzer.findOverlapsAndSets(builder.build(), new Analyzer.Callback() {
-          @Override public void take(Insight insight) throws StopException {
-            if (elims.add(insight))
-              e.add(insight);
-          }
-        });
-        count = e.size();
-        builder.apply(e);
       }
     }
 
