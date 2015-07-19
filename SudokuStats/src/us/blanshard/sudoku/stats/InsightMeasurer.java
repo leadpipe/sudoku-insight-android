@@ -54,9 +54,12 @@ import javax.annotation.Nullable;
  *
  * @author Luke Blanshard
  */
-public class InsightMeasurer implements Runnable {
+public class InsightMeasurer {
 
   public static void main(String[] args) throws Exception {
+    int sampleCount = 0;
+    int sampleSkip = 10;
+    boolean printSamples = sampleCount > 0;
     PrintWriter out = new PrintWriter("measurer.txt");
     int npuzzles = 0;
 
@@ -64,11 +67,22 @@ public class InsightMeasurer implements Runnable {
         Iterables.concat(Attempts.phone2013(), Attempts.tablet2014()/*, Attempts.datastoreBackup()*/);
     for (AttemptInfo attempt : attempts) {
       ++npuzzles;
-      new InsightMeasurer(attempt.clues, attempt.history, out).run();
-      System.out.print('.');
-      if (npuzzles % 100 == 0)
-        System.out.println();
-      out.flush();
+      int numSamples = new InsightMeasurer(attempt.clues, attempt.history, out)
+          .run(sampleCount, sampleSkip);
+      if (sampleSkip >= numSamples) {
+        sampleSkip -= numSamples;
+      } else {
+        sampleCount -= (numSamples - sampleSkip);
+        sampleSkip = 0;
+      }
+      if (printSamples) {
+        if (sampleCount <= 0) break;
+      } else {
+        System.out.print('.');
+        if (npuzzles % 100 == 0)
+          System.out.println();
+        out.flush();
+      }
     }
 
     out.close();
@@ -97,9 +111,11 @@ public class InsightMeasurer implements Runnable {
     this.minOpen = puzzle.getNumOpenLocations();
   }
 
-  @Override public void run() {
+  public int run(int sampleCount, int sampleSkip) {
+    int numSamples = 0;
     for (Move move : history) {
-      applyMove(move);
+      boolean shouldEmitSample = numSamples >= sampleSkip && sampleCount > numSamples - sampleSkip;
+      numSamples += applyMove(move, sampleCount > 0, shouldEmitSample) ? 1 : 0;
       ++moveNumber;
       prevTime = move.timestamp;
     }
@@ -111,14 +127,16 @@ public class InsightMeasurer implements Runnable {
     if (game.getState().getGrid().isSolved()) {
       emitAbandonedErrors();
     }
+    return numSamples;
   }
 
-  private static final Analyzer.Options OPTS = new Analyzer.Options(true, true);
+  private static final Analyzer.Options OPTS = new Analyzer.Options(false, true);
 
-  private void applyMove(Move move) {
+  private boolean applyMove(Move move, boolean findSample, boolean emitSample) {
     long elapsed = move.timestamp - prevTime;
     Batch newBatch = null;
     Batch finishedBatch = null;
+    boolean isSample = false;
     if (move instanceof Move.Set && !undoDetector.isUndoOrRedo(move)) {
       Grid grid = game.getState(move.trailId).getGrid();
       if (grid.containsKey(move.getLocation()))
@@ -136,13 +154,26 @@ public class InsightMeasurer implements Runnable {
       NumSet prevNums = openBatch == null ? NumSet.NONE : openBatch.nums;
       if (isTrailhead) {
         emitTrailheadLine(elapsed, numOpen, move.timestamp, collector, prevNums);
-      } else if (collector.moves.containsKey(move.getAssignment())) {
-        newBatch = new Batch(collector, move, elapsed, numOpen, prevNums);
-        if (openBatch == null)
-          openBatch = newBatch;
-        else if (!openBatch.extendWith(move, elapsed, newBatch)) {
-          finishedBatch = openBatch;
-          openBatch = newBatch;
+      } else {
+        Assignment a = move.getAssignment();
+        if (collector.moves.containsKey(a)) {
+          newBatch = new Batch(collector, move, elapsed, numOpen, prevNums);
+          if (openBatch == null) {
+            openBatch = newBatch;
+          } else if (!openBatch.extendWith(move, elapsed, newBatch)) {
+            finishedBatch = openBatch;
+            openBatch = newBatch;
+          }
+          isSample = findSample && !hasSimpleInsight(collector, a);
+        } else {
+          isSample = findSample && !isErroneousMove(grid, a);
+        }
+        if (isSample && emitSample) {
+          System.out.printf("Move %s on grid\n%s", a, grid);
+          for (WrappedInsight w : collector.moves.get(a)) {
+            System.out.println(w.insight);
+          }
+          System.out.println();
         }
       }
     }
@@ -156,13 +187,48 @@ public class InsightMeasurer implements Runnable {
     game.move(move);
     if (move.trailId >= 0) {
       trails.add(move.trailId);
+      NumSet set = move.getNumeral() == null ? NumSet.NONE : move.getNumeral().asSet();
       trailFinals.put(move.trailId,
-          new TrailState(game.getTrail(move.trailId).getGrid(), minOpen, move.getNumeral().asSet()));
+          new TrailState(game.getTrail(move.trailId).getGrid(), minOpen, set));
     }
     if (newBatch == null) {
       ++numSkippedMoves;
       skippedTime += elapsed;
     }
+    return isSample;
+  }
+
+  private boolean isErroneousMove(Grid grid, Assignment a) {
+    grid = grid.toBuilder().assign(a).build();
+    class ErrorSeer implements Analyzer.Callback {
+      boolean errorSeen = false;
+      @Override public void take(Insight insight) throws StopException {
+        if (insight.isError()) errorSeen = true;
+      }
+    }
+    ErrorSeer callback = new ErrorSeer();
+    Analyzer.findErrors(new GridMarks(grid), callback);
+    return callback.errorSeen;
+  }
+
+  private boolean hasSimpleInsight(Collector collector, Assignment a) {
+    boolean simpleInsight = false;
+    MOVES: for (WrappedInsight w : collector.moves.get(a)) {
+      Insight i = w.insight;
+      while (i.type == Insight.Type.IMPLICATION) {
+        Implication imp = (Implication) i;
+        for (Insight ant : imp.getAntecedents()) {
+          if (ant.type == Insight.Type.LOCKED_SET) {
+            LockedSet set = (LockedSet) ant;
+            if (set.isNakedSet()) continue MOVES;
+          }
+        }
+        i = imp.getConsequent();
+      }
+      simpleInsight = true;
+      break;
+    }
+    return simpleInsight;
   }
 
   private void emitTrailheadLine(long elapsed, int numOpen, long timestamp, Collector collector, NumSet prevNums) {
