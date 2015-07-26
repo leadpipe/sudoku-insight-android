@@ -29,12 +29,13 @@ import java.io.IOException;
  */
 public class AnalyzeThis {
   public static void main(String[] args) throws IOException {
+    System.out.println("Enter a grid:");
     Grid grid = Grid.fromString(convertStreamToString(System.in));
     Analyzer.analyze(new GridMarks(grid), new Analyzer.Callback() {
       @Override public void take(Insight insight) throws StopException {
         System.out.println(insight);
       }
-    });
+    }, new Analyzer.Options(false, false));
   }
 
   static String convertStreamToString(java.io.InputStream is) {
@@ -43,3 +44,32 @@ public class AnalyzeThis {
     return s.hasNext() ? s.next() : "";
   }
 }
+
+/*
+Example grids:
+ . 6 1 | . . . | 7 . .
+ 2 . 3 | 7 . 5 | . 6 9
+ . 7 5 | 3 . 6 | . . 2
+-------+-------+-------
+ 7 3 2 | 6 5 . | 8 1 4
+ 5 8 . | . 7 1 | 3 . 6
+ 6 1 . | . 3 . | 5 2 7
+-------+-------+-------
+ 3 . 7 | 1 . 2 | 6 . 8
+ . . 8 | . 6 7 | 2 3 .
+ . 2 6 | . . 3 | . 7 .
+(why no [3,5] set in upper right?)
+
+ . . . | . 5 . | 2 . .
+ . . 2 | . 3 . | . 8 .
+ 8 9 6 | 2 7 4 | 5 3 1
+-------+-------+-------
+ . . . | . 1 6 | 3 . 2
+ . 7 5 | 3 8 2 | . 4 .
+ . 2 3 | 7 4 . | . . 8
+-------+-------+-------
+ . . . | 1 6 7 | . 2 9
+ 9 . 1 | . 2 . | 7 6 3
+ 2 6 7 | . 9 3 | . 1 5
+(why no [9 ∈ B4 ∩ R4]?)
+*/
