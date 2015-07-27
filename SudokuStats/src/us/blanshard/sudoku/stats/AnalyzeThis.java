@@ -58,7 +58,7 @@ Example grids:
  3 . 7 | 1 . 2 | 6 . 8
  . . 8 | . 6 7 | 2 3 .
  . 2 6 | . . 3 | . 7 .
-(why no [3,5] set in upper right?)
+(why no [3,5] set in upper right? -- now fixed)
 
  . . . | . 5 . | 2 . .
  . . 2 | . 3 . | . 8 .
@@ -71,5 +71,5 @@ Example grids:
  . . . | 1 6 7 | . 2 9
  9 . 1 | . 2 . | 7 6 3
  2 6 7 | . 9 3 | . 1 5
-(why no [9 ∈ B4 ∩ R4]?)
+(why no [9 ∈ B4 ∩ R4]? -- now fixed)
 */

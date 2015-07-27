@@ -33,6 +33,9 @@ public final class NumSet extends AbstractSet<Numeral> implements Set<Numeral> {
   /** The numerals in this set expressed as a bit set. */
   public final short bits;
 
+  /** The bit pattern for a set containing every numeral. */
+  public static final int ALL_BITS = (1 << 9) - 1;
+
   private final byte[] nums;
 
   private NumSet(short bits) {
@@ -79,7 +82,7 @@ public final class NumSet extends AbstractSet<Numeral> implements Set<Numeral> {
 
   /** Returns the complement of this set. */
   public NumSet not() {
-    return instances[511 & (~this.bits)];
+    return instances[ALL_BITS & (~this.bits)];
   }
 
   /** Returns the intersection of this set and another one. */
@@ -165,7 +168,7 @@ public final class NumSet extends AbstractSet<Numeral> implements Set<Numeral> {
 
   private static final NumSet[] instances;
   static {
-    instances = new NumSet[1 << 9];
+    instances = new NumSet[ALL_BITS + 1];
     for (short i = 0; i < instances.length; ++i) {
       instances[i] = new NumSet(i);
     }

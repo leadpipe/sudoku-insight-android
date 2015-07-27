@@ -364,18 +364,31 @@ public class Analyzer {
     for (int i = 0; i < units.size(); ++i) {
       Unit unit = units.get(i);
       UnitNumeral unitNum = UnitNumeral.of(unit, num);
-      int index = Arrays.binarySearch(bits, gridMarks.marks.getBits(unitNum));
-      if (index >= 0) {
-        UnitSubset set = UnitSubset.ofBits(unit, bits[index]);
+      UnitSubset set = gridMarks.marks.get(unitNum);
+      int index = Arrays.binarySearch(bits, set.bits);
+      if (index >= 0 || set.size() == 1) {
         Unit overlappingUnit = set.get(0).unit(overlappingType);
         UnitNumeral oun = UnitNumeral.of(overlappingUnit, num);
-        if (gridMarks.marks.getSize(oun) > set.size()) {
+        UnitSubset overlappingSet = gridMarks.marks.get(oun);
+        if (overlappingSet.size() > set.size()) {
           // There's something to eliminate.
-          UnitSubset overlappingSet = gridMarks.marks.get(oun);
-          callback.take(new Overlap(unit, num, overlappingSet.minus(set)));
+          if (set.size() > 1 || getNumOpen(gridMarks, unit, overlappingUnit) > 1) {
+            // There is more than one unassigned location, ie it looks like an overlap.
+            callback.take(new Overlap(unit, num, overlappingSet.minus(set)));
+          }
         }
       }
     }
+  }
+
+  /** Returns the number of unassigned locations in the intersection of the two units. */
+  private static int getNumOpen(GridMarks gridMarks, Unit unit, Unit overlappingUnit) {
+    UnitSubset set = UnitSubset.ofBits(unit, UnitSubset.ALL_BITS).and(overlappingUnit);
+    int count = 0;
+    for (int i = 0; i < set.size(); ++i) {
+      if (!gridMarks.grid.containsKey(set.get(i))) ++count;
+    }
+    return count;
   }
 
   public static void findSets(GridMarks gridMarks, Callback callback) {
@@ -399,9 +412,10 @@ public class Analyzer {
     for (int i = 0; i < unit.size(); ++i) {
       Location loc = unit.get(i);
       NumSet possible = gridMarks.marks.get(loc);
-      if (possible.size() > 1) {
+      int possibleSize = possible.size();
+      if (possibleSize > 1 || (possibleSize == 1 && !gridMarks.hasAssignment(unit, possible.get(0)))) {
         ++unsetCount;
-        if (possible.size() <= size && !inSets.contains(loc)) {
+        if (possibleSize <= size && !inSets.contains(loc)) {
           bitsToCheck |= loc.unitSubsets.get(unit.getType()).bits;
         }
       }
@@ -438,8 +452,9 @@ public class Analyzer {
     int unsetCount = 0;
     for (int i = 0; i < Numeral.COUNT; ++i) {
       Numeral num = Numeral.ofIndex(i);
-      int possibleSize = gridMarks.marks.getSize(UnitNumeral.of(unit, num));
-      if (possibleSize > 1) {
+      UnitSubset possible = gridMarks.marks.get(UnitNumeral.of(unit, num));
+      int possibleSize = possible.size();
+      if (possibleSize > 1 || (possibleSize == 1 && !gridMarks.grid.containsKey(possible.get(0)))) {
         ++unsetCount;
         if (possibleSize <= size && !inSets.contains(num)) {
           toCheck = toCheck.with(num);

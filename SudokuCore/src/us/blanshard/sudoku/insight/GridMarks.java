@@ -20,6 +20,9 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.core.UnitNumeral;
+import us.blanshard.sudoku.core.UnitSubset;
 
 import java.util.List;
 
@@ -42,6 +45,15 @@ public class GridMarks {
     this.grid = grid;
     this.marks = marks;
     this.hasErrors = hasErrors;
+  }
+
+  /**
+   * Returns true if the grid contains an assignment of the given numeral
+   * within the given unit.
+   */
+  public boolean hasAssignment(Unit unit, Numeral num) {
+    UnitSubset set = marks.get(UnitNumeral.of(unit, num));
+    return set.size() == 1 && grid.get(set.get(0)) == num;
   }
 
   public Builder toBuilder() {

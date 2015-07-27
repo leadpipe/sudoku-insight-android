@@ -38,6 +38,9 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
   /** The locations in this set expressed as a bit set. */
   public final short bits;
 
+  /** The bit pattern for a set containing every location of a unit. */
+  public static final int ALL_BITS = NumSet.ALL_BITS;
+
   /** We piggyback on NumSet's implementation of a canonical set-of-9-elements. */
   private final NumSet set;
 
