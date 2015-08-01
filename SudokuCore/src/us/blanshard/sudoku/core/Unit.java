@@ -72,7 +72,7 @@ public abstract class Unit extends AbstractCollection<Location>
 
   /** Returns the subset of this unit that does not overlap the given locations. */
   public final UnitSubset subtract(Collection<Location> locs) {
-    return UnitSubset.ofBits(this, 511 ^ getOverlappingBits(locs));
+    return UnitSubset.ofBits(this, UnitSubset.ALL_BITS ^ getOverlappingBits(locs));
   }
 
   final short getConflictBits(Grid grid) {
@@ -99,12 +99,16 @@ public abstract class Unit extends AbstractCollection<Location>
   }
 
   final int getOverlappingBits(Collection<Location> locs) {
+    if (locs instanceof Unit) return getOverlappingBits((Unit) locs);
     int bits = 0;
     for (int i = 0; i < 9; ++i)
       if (locs.contains(get(i)))
         bits |= 1 << i;
     return bits;
   }
+
+  /** Specialized for unit-unit intersections. */
+  protected abstract int getOverlappingBits(Unit that);
 
   /** The index of this unit in {@link #allUnits}. */
   public abstract int unitIndex();

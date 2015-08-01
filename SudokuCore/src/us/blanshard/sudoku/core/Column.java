@@ -60,6 +60,23 @@ public final class Column extends Unit {
     return "C" + number;
   }
 
+  @Override protected int getOverlappingBits(Unit that) {
+    switch (that.getType()) {
+      case COLUMN:
+        return this == that ? UnitSubset.ALL_BITS : 0;
+      case BLOCK: {
+        Block block = (Block) that;
+        if (block.columnIndex() != index / 3) return 0;
+        return blockBits[block.rowIndex()];
+      }
+      case ROW: {
+        Row row = (Row) that;
+        return 1 << row.index;
+      }
+      default: throw new IllegalArgumentException();
+    }
+  }
+
   private Column(int index) {
     this.index = index;
     this.number = index + 1;
@@ -68,6 +85,7 @@ public final class Column extends Unit {
     }
   }
 
+  private static final int[] blockBits = {0007, 0070, 0700};
   private static final Column[] instances;
   private static final List<Column> ALL;
   static {

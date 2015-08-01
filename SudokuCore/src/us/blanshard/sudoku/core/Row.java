@@ -60,6 +60,23 @@ public final class Row extends Unit {
     return "R" + number;
   }
 
+  @Override protected int getOverlappingBits(Unit that) {
+    switch (that.getType()) {
+      case ROW:
+        return this == that ? UnitSubset.ALL_BITS : 0;
+      case BLOCK: {
+        Block block = (Block) that;
+        if (block.rowIndex() != index / 3) return 0;
+        return blockBits[block.columnIndex()];
+      }
+      case COLUMN: {
+        Column col = (Column) that;
+        return 1 << col.index;
+      }
+      default: throw new IllegalArgumentException();
+    }
+  }
+
   private Row(int index) {
     this.index = index;
     this.number = index + 1;
@@ -68,6 +85,7 @@ public final class Row extends Unit {
     }
   }
 
+  private static final int[] blockBits = {0007, 0070, 0700};
   private static final Row[] instances;
   private static final List<Row> ALL;
   static {
