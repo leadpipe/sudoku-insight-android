@@ -200,14 +200,14 @@ public class Probabilities {
 
     private boolean isUnlikelyForcedNumeral(Sp sp) {
       // It's unlikely if it's an implication containing at least one naked
-      // set, and leading to a forced numeral.
+      // set with !sameNumeral, and leading to a forced numeral.
       boolean containsNakedSet = false;
       while (sp.type == Sp.Type.IMPLICATION) {
         Sp.Implication imp = (Sp.Implication) sp;
         for (Sp ant : imp.antecedents) {
           if (ant.type == Sp.Type.LOCKED_SET) {
             Sp.LockedSet set = (Sp.LockedSet) ant;
-            if (set.isNaked()) containsNakedSet = true;
+            if (set.isNaked() && !set.sameNumeral) containsNakedSet = true;
           }
         }
         sp = imp.consequent;
