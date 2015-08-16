@@ -360,13 +360,14 @@ public class Analyzer {
   }
 
   private static void findOverlaps(GridMarks gridMarks, Callback callback, Numeral num,
-      List<? extends Unit> units, Unit.Type overlappingType, int[] bits) {
+      List<? extends Unit> units, Unit.Type overlappingType, int[] bitsArray) {
     for (int i = 0; i < units.size(); ++i) {
       Unit unit = units.get(i);
       UnitNumeral unitNum = UnitNumeral.of(unit, num);
-      UnitSubset set = gridMarks.marks.get(unitNum);
-      int index = Arrays.binarySearch(bits, set.bits);
-      if (index >= 0 || set.size() == 1) {
+      int bits = gridMarks.marks.getBits(unitNum);
+      int index = Arrays.binarySearch(bitsArray, bits);
+      if (index >= 0 || NumSet.ofBits(bits).size() == 1) {
+        UnitSubset set = UnitSubset.ofBits(unit, bits);
         Unit overlappingUnit = set.get(0).unit(overlappingType);
         UnitNumeral oun = UnitNumeral.of(overlappingUnit, num);
         UnitSubset overlappingSet = gridMarks.marks.get(oun);
@@ -383,7 +384,7 @@ public class Analyzer {
 
   /** Returns the number of unassigned locations in the intersection of the two units. */
   private static int getNumOpen(GridMarks gridMarks, Unit unit, Unit overlappingUnit) {
-    UnitSubset set = UnitSubset.ofBits(unit, UnitSubset.ALL_BITS).and(overlappingUnit);
+    UnitSubset set = unit.intersect(overlappingUnit);
     int count = 0;
     for (int i = 0; i < set.size(); ++i) {
       if (!gridMarks.grid.containsKey(set.get(i))) ++count;
