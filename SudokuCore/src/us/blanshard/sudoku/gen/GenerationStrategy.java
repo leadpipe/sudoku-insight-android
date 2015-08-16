@@ -17,9 +17,9 @@ package us.blanshard.sudoku.gen;
 
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Solver.Result;
+import us.blanshard.sudoku.core.SolverMarks;
 
 import com.google.common.collect.Lists;
 
@@ -132,7 +132,7 @@ public enum GenerationStrategy {
       Random random, Symmetry symmetry, Grid target, List<Location> used) {
     List<Location> randomLocs = randomLocations(random);
     Grid.Builder gridBuilder = Grid.builder();
-    Marks.Builder marksBuilder = Marks.builder();
+    SolverMarks.Builder marksBuilder = SolverMarks.builder();
 
     // Assign numerals from the target, if they aren't already implied by
     // previous assignments.

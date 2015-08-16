@@ -13,10 +13,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package us.blanshard.sudoku.core;
+package us.blanshard.sudoku.insight;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Arrays.asList;
+
+import us.blanshard.sudoku.core.Assignment;
+import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.NumSet;
+import us.blanshard.sudoku.core.Numeral;
+import us.blanshard.sudoku.core.Row;
+import us.blanshard.sudoku.core.UnitNumeral;
+import us.blanshard.sudoku.core.UnitSubset;
 
 import java.util.Arrays;
 import java.util.List;

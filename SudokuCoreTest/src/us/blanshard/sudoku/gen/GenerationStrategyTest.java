@@ -20,9 +20,9 @@ import static org.junit.Assert.assertTrue;
 
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Solver.Result;
+import us.blanshard.sudoku.insight.Marks;
 
 import com.google.common.collect.Sets;
 

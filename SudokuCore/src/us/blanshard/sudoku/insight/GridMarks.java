@@ -18,7 +18,6 @@ package us.blanshard.sudoku.insight;
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;

@@ -148,7 +148,7 @@ public final class Solver implements Iterable<Grid> {
   private final Grid start;
   private final Random random;
   private final Strategy strategy;
-  private final Marks startMarks;
+  private final SolverMarks startMarks;
   private final Location[] locations;
 
   public Solver(Grid start, Random random, Strategy strategy) {
@@ -156,13 +156,13 @@ public final class Solver implements Iterable<Grid> {
     this.random = random;
     this.strategy = strategy;
 
-    Marks.Builder builder = Marks.builder();
+    SolverMarks.Builder builder = SolverMarks.builder();
     if (!builder.assignAllRecursively(start)) {
       // This puzzle is not solvable.
       this.startMarks = null;
       this.locations = null;
     } else {
-      Marks marks = this.startMarks = builder.build();
+      SolverMarks marks = this.startMarks = builder.build();
       List<Location> locations = Lists.newArrayList();
       for (Location loc : Location.all()) {
         if (marks.get(loc).size() > 1)
@@ -316,9 +316,9 @@ public final class Solver implements Iterable<Grid> {
       int count = 0;
       while (!worklist.isEmpty() && count++ < maxSteps) {
         WorkItem item = worklist.removeFirst();
-        Marks.Builder builder = item.marks.toBuilder();
+        SolverMarks.Builder builder = item.marks.toBuilder();
         if (builder.assignRecursively(item.location, item.numeral)) {
-          Marks marks = builder.build();
+          SolverMarks marks = builder.build();
           if (!pushNextItems(marks)) {
             found = marks.toGrid();
             break;
@@ -329,7 +329,7 @@ public final class Solver implements Iterable<Grid> {
     }
 
     /** Returns true if there is more work to do. */
-    private boolean pushNextItems(Marks marks) {
+    private boolean pushNextItems(SolverMarks marks) {
       WorkItem[] items = chooseNextItems(marks);
       if (items == null) return false;  // No more work.
 
@@ -346,7 +346,7 @@ public final class Solver implements Iterable<Grid> {
      * Chooses a random set of mutually exclusive assignments from those
      * available in the given marks, or null if there aren't any left.
      */
-    @Nullable private WorkItem[] chooseNextItems(Marks marks) {
+    @Nullable private WorkItem[] chooseNextItems(SolverMarks marks) {
       int size = 9;
       int count = 0;
       Location current = null;
@@ -371,7 +371,7 @@ public final class Solver implements Iterable<Grid> {
     }
   }
 
-  private static WorkItem[] makeItems(Marks marks, Location loc) {
+  private static WorkItem[] makeItems(SolverMarks marks, Location loc) {
     NumSet set = marks.get(loc);
     WorkItem[] answer = new WorkItem[set.size()];
     int i = 0;
@@ -381,11 +381,11 @@ public final class Solver implements Iterable<Grid> {
   }
 
   private static class WorkItem {
-    final Marks marks;
+    final SolverMarks marks;
     final Location location;
     final Numeral numeral;
 
-    WorkItem(Marks marks, Location location, Numeral numeral) {
+    WorkItem(SolverMarks marks, Location location, Numeral numeral) {
       this.marks = marks;
       this.location = location;
       this.numeral = numeral;

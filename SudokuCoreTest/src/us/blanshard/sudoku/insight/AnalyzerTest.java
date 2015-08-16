@@ -28,7 +28,6 @@ import us.blanshard.sudoku.core.Block;
 import us.blanshard.sudoku.core.Column;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Marks;
 import us.blanshard.sudoku.core.NumSetTest;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Row;

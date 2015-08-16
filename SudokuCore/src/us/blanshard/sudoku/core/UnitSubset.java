@@ -72,7 +72,7 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
   }
 
   /** Returns the singleton set containing the given location within the given unit. */
-  static UnitSubset singleton(Unit unit, Location loc) {
+  public static UnitSubset singleton(Unit unit, Location loc) {
     for (int i = 0; i < 9; ++i)
       if (unit.locations[i] == loc.index)
         return ofBits(unit, 1 << i);
