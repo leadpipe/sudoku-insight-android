@@ -42,12 +42,11 @@ import javax.annotation.concurrent.NotThreadSafe;
 public final class Marks {
 
   private final short[] bits;
-  private final short[] unitBits;
   private static final short ALL_BITS = (1 << 9) - 1;
+  private static final int UNIT_OFFSET = Location.COUNT;
 
-  private Marks(short[] bits, short[] unitBits) {
+  private Marks(short[] bits) {
     this.bits = bits;
-    this.unitBits = unitBits;
   }
 
   public static Builder builder() {
@@ -98,7 +97,7 @@ public final class Marks {
    * Returns the bit-set corresponding to {@link #get(UnitNumeral)}.
    */
   public int getBits(UnitNumeral unitNum) {
-    return unitBits[unitNum.index];
+    return bits[UNIT_OFFSET + unitNum.index];
   }
 
   /**
@@ -123,7 +122,7 @@ public final class Marks {
     private boolean built;
 
     private Builder() {
-      this.marks = new Marks(new short[Location.COUNT], new short[UnitNumeral.COUNT]);
+      this.marks = new Marks(new short[Location.COUNT + UnitNumeral.COUNT]);
       this.built = false;
       clear();
     }
@@ -135,7 +134,7 @@ public final class Marks {
 
     private Marks marks() {
       if (built) {
-        Marks marks = new Marks(this.marks.bits.clone(), this.marks.unitBits.clone());
+        Marks marks = new Marks(this.marks.bits.clone());
         this.marks = marks;
         this.built = false;
       }
@@ -172,7 +171,6 @@ public final class Marks {
      */
     public Builder clear() {
       Arrays.fill(marks().bits, ALL_BITS);
-      Arrays.fill(marks.unitBits, ALL_BITS);
       return this;
     }
 
@@ -217,7 +215,7 @@ public final class Marks {
       for (int i = 0; i < 3; ++i) {
         UnitSubset unitSubset = loc.unitSubsetList.get(i);
         int index = UnitNumeral.getIndex(unitSubset.unit, num);
-        if ((marks.unitBits[index] &= ~unitSubset.bits) == 0)
+        if ((marks.bits[UNIT_OFFSET + index] &= ~unitSubset.bits) == 0)
           answer = false;  // This numeral has no possible locations left in this unit
       }
 
@@ -317,7 +315,7 @@ public final class Marks {
       // Remove this location from the possible locations within this unit
       // that this numeral may be assigned.
       UnitNumeral unitNum = UnitNumeral.of(unitSubset.unit, num);
-      marks.unitBits[unitNum.index] &= ~unitSubset.bits;
+      marks.bits[UNIT_OFFSET + unitNum.index] &= ~unitSubset.bits;
 
       UnitSubset remaining = get(unitNum);
       if (remaining.size() == 0)
