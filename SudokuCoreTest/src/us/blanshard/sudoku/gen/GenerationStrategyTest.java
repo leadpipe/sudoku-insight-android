@@ -22,7 +22,7 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Solver.Result;
-import us.blanshard.sudoku.insight.Marks;
+import us.blanshard.sudoku.core.SolverMarks;
 
 import com.google.common.collect.Sets;
 
@@ -128,7 +128,7 @@ public class GenerationStrategyTest {
   private void ensureBasicProperties(Grid grid) {
     assertEquals(true, grid.size() >= 17);
     assertEquals(true, Sets.newHashSet(grid.values()).size() >= 8);
-    assertEquals(true, Marks.builder().assignAllRecursively(grid));
+    assertEquals(true, SolverMarks.builder().assignAllRecursively(grid));
     assertEquals(1, Solver.solve(grid, random).numSolutions);
   }
 }
