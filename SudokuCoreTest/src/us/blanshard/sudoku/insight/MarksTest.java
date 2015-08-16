@@ -86,13 +86,11 @@ public class MarksTest {
 
   @Test public void strings() {
     Marks.Builder builder = Marks.builder();
-    Marks.Builder builder2 = Marks.builder();
     int start = 0;
     for (Row row : Row.all()) {
       int index = start;
       for (Location loc : row) {
-        assertEquals(true, builder.assignRecursively(loc, Numeral.ofIndex(index % 9)));
-        assertEquals(true, builder2.assign(loc, Numeral.ofIndex(index % 9)));
+        assertEquals(true, builder.assign(loc, Numeral.ofIndex(index % 9)));
         ++index;
       }
       start = start + 3 + (row.number % 3 == 0 ? 1 : 0);
@@ -103,8 +101,6 @@ public class MarksTest {
     String s = "123456789456789123789123456234567891567891234891234567345678912678912345912345678";
     assertEquals(s, grid.toFlatString());
     assertEquals(grid.toString(), marks.toString());
-    assertEquals(marks, builder2.build());
-    assertEquals(grid, builder2.asGrid());
   }
 
   @Test public void fromString() {

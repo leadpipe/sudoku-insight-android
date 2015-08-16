@@ -42,9 +42,6 @@ import javax.annotation.concurrent.NotThreadSafe;
  *
  * <p> The outer class is immutable; has a nested builder.
  *
- * <p> The builder's mutually recursive assign/eliminate methods are due to
- * Peter Norvig (http://norvig.com/sudoku.html).
- *
  * @author Luke Blanshard
  */
 @Immutable
@@ -251,90 +248,6 @@ public final class Marks {
         answer &= assign(entry.getKey(), entry.getValue());
 
       return answer;
-    }
-
-    /**
-     * Assigns the given numeral to the given location, recursively assigning
-     * numerals to other locations when they become the only possibilities.
-     * Returns true if all the assignments that follow from this assignment are
-     * consistent with the rules of Sudoku.
-     */
-    public boolean assignRecursively(Location loc, Numeral num) {
-      NumSet others = get(loc).minus(num.asSet());
-      for (Numeral other : others)
-        if (!eliminateRecursively(loc, other))
-          return false;
-      return marks.bits[loc.index] == num.bit;
-    }
-
-    /**
-     * Recursively assigns all the associated locations and numerals in the
-     * given map (note that {@link Grid} is this kind of map), returns true if
-     * they could all be assigned.
-     */
-    public boolean assignAllRecursively(Map<Location, Numeral> grid) {
-      for (Map.Entry<Location, Numeral> entry : grid.entrySet()) {
-        if (!assignRecursively(entry.getKey(), entry.getValue()))
-          return false;
-      }
-      return true;
-    }
-
-    /**
-     * Eliminates the given numeral as a possible assignment to the given
-     * location, returns true if all the ramifications of that elimination are
-     * consistent with the rules of Sudoku.
-     */
-    private boolean eliminateRecursively(Location loc, Numeral num) {
-      if (!get(loc).contains(num))
-        return true;  // already eliminated
-
-      marks().bits[loc.index] &= ~num.bit;
-
-      NumSet remaining = get(loc);
-      if (remaining.size() == 0)
-        return false;  // no possibilities left here
-
-      if (remaining.size() == 1) {
-        // Last possibility left.  Eliminate it from this location's peers.
-        Numeral last = remaining.iterator().next();
-        for (Location peer : loc.peers)
-          if (!eliminateRecursively(peer, last))
-            return false;
-      }
-
-      // Look in all units this location belongs to, to see if there's only a
-      // single remaining slot in the unit for this numeral, and if so, assign
-      // it there.
-      for (UnitSubset unitSubset : loc.unitSubsets.values()) {
-        if (!eliminateRecursivelyFromUnit(num, unitSubset))
-          return false;
-      }
-
-      return true;
-    }
-
-    /**
-     * Eliminates the location in the given unit subset from the locations in
-     * the unit that could contain the given numeral.  Returns false if a
-     * contradiction is found.  The given subset is guaranteed to be a
-     * singleton.
-     */
-    private boolean eliminateRecursivelyFromUnit(Numeral num, UnitSubset unitSubset) {
-      // Remove this location from the possible locations within this unit
-      // that this numeral may be assigned.
-      UnitNumeral unitNum = UnitNumeral.of(unitSubset.unit, num);
-      marks.bits[UNIT_OFFSET + unitNum.index] &= ~unitSubset.bits;
-
-      UnitSubset remaining = get(unitNum);
-      if (remaining.size() == 0)
-        return false;  // no possibilities left in this assignment set
-
-      if (remaining.size() == 1  // Last possibility left.  Assign it.
-          && !assignRecursively(remaining.get(0), num))
-        return false;
-
-      return true;
     }
   }
 
