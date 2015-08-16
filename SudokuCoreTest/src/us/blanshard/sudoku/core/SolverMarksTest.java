@@ -42,7 +42,7 @@ public class SolverMarksTest {
 
   private SolverMarks build() {
     SolverMarks.Builder b = SolverMarks.builder();
-    assertTrue(b.assignAll(builder.build()));
+    assertTrue(b.assignAllRecursively(builder.build()));
     return b.build();
   }
 
@@ -51,69 +51,5 @@ public class SolverMarksTest {
     assertEquals(set(3, 5, 8), marks.get(loc(4, 2)));
     assertEquals(UnitSubset.singleton(Row.of(4), loc(4, 1)), marks.get(UnitNumeral.of(Row.of(4), Numeral.of(7))));
     assertEquals(UnitSubset.ofBits(Row.of(4), 0xe4), marks.get(UnitNumeral.of(Row.of(4), Numeral.of(4))));
-  }
-
-  @Test public void assign_failure() {
-    SolverMarks.Builder builder = marks.toBuilder();
-    assertEquals(false, builder.assign(loc(1, 2), Numeral.of(1)));
-    assertEquals(0, builder.get(loc(1, 2)).size());
-    assertEquals(0, builder.get(UnitNumeral.of(Block.of(1), Numeral.of(4))).size());
-  }
-
-  @Test public void equals() {
-    SolverMarks m2 = build();
-    builder.remove(loc(6, 3));
-    SolverMarks m3 = build();
-
-    assertEquals(marks, marks);
-    assertEquals(marks, m2);
-    assertEquals(m2, marks);
-    assertEquals(marks.hashCode(), m2.hashCode());
-
-    assertEquals(false, m2.equals(m3));
-    assertEquals(false, m3.equals(m2));
-    assertEquals(false, m2.hashCode() == m3.hashCode());
-  }
-
-  @Test public void strings() {
-    SolverMarks.Builder builder = SolverMarks.builder();
-    SolverMarks.Builder builder2 = SolverMarks.builder();
-    int start = 0;
-    for (Row row : Row.all()) {
-      int index = start;
-      for (Location loc : row) {
-        assertEquals(true, builder.assignRecursively(loc, Numeral.ofIndex(index % 9)));
-        assertEquals(true, builder2.assign(loc, Numeral.ofIndex(index % 9)));
-        ++index;
-      }
-      start = start + 3 + (row.number % 3 == 0 ? 1 : 0);
-    }
-
-    SolverMarks marks = builder.build();
-    Grid grid = marks.toGrid();
-    String s = "123456789456789123789123456234567891567891234891234567345678912678912345912345678";
-    assertEquals(s, grid.toFlatString());
-    assertEquals(grid.toString(), marks.toString());
-    assertEquals(marks, builder2.build());
-    assertEquals(grid, builder2.asGrid());
-  }
-
-  @Test public void fromString() {
-    SolverMarks marks = SolverMarks.fromString(
-        "  6    37   1   |  2    3    9   |  78   4    5   " +
-        "  2   379   8   |  15   1    4   |  7    39   6   " +
-        "  34  3459 345  |  7    6    8   |  19  139   2   " +
-        "----------------+----------------+----------------" +
-        "  5    6    4   |  9    47   1   |  3    2    8   " +
-        "  8    12   9   |  6    57   23  |  4    15   7   " +
-        "  34   12   7   |  8    45   23  | 159   6    19  " +
-        "----------------+----------------+----------------" +
-        "  9    3    6   |  1    2    7   |  58   8    4   " +
-        "  7    45   45  |  3    8    6   |  2    19   19  " +
-        "  1    8    2   |  4    9    5   |  6    7    3   ");
-
-    assertEquals(set(4,5), marks.get(Location.of(8,2)));
-    assertEquals(set(3,8).bits, marks.getBits(UnitNumeral.of(Column.of(2), Numeral.of(4))));
-    assertEquals(set(3,8).bits, marks.getBits(UnitNumeral.of(Column.of(2), Numeral.of(5))));
   }
 }

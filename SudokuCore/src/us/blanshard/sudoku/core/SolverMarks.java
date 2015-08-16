@@ -15,14 +15,9 @@ limitations under the License.
 */
 package us.blanshard.sudoku.core;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Arrays.asList;
-
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -75,14 +70,7 @@ public final class SolverMarks {
    * Returns the set of numerals that could go in the given location.
    */
   public NumSet get(Location loc) {
-    return NumSet.ofBits(getBits(loc));
-  }
-
-  /**
-   * Returns the bit-set corresponding to {@link #get(Location)}.
-   */
-  public int getBits(Location loc) {
-    return bits[loc.index];
+    return NumSet.ofBits(bits[loc.index]);
   }
 
   /**
@@ -98,22 +86,6 @@ public final class SolverMarks {
    */
   public int getBits(UnitNumeral unitNum) {
     return bits[UNIT_OFFSET + unitNum.index];
-  }
-
-  /**
-   * Returns the size of the set that would be returned by {@link #get(UnitNumeral)}.
-   */
-  public int getSize(UnitNumeral unitNum) {
-    return NumSet.ofBits(getBits(unitNum)).size();
-  }
-
-  /**
-   * Returns the single location in {@link #get(UnitNumeral)}, or null.
-   */
-  @Nullable public Location getSingleton(UnitNumeral unitNum) {
-    NumSet set = NumSet.ofBits(getBits(unitNum));
-    if (set.size() != 1) return null;
-    return unitNum.unit.get(set.get(0).index);
   }
 
   @NotThreadSafe
@@ -154,10 +126,6 @@ public final class SolverMarks {
       return marks.get(loc);
     }
 
-    public int getBits(Location loc) {
-      return marks.getBits(loc);
-    }
-
     public UnitSubset get(UnitNumeral unitNum) {
       return marks.get(unitNum);
     }
@@ -172,76 +140,6 @@ public final class SolverMarks {
     public Builder clear() {
       Arrays.fill(marks().bits, ALL_BITS);
       return this;
-    }
-
-    /**
-     * Assigns the given numeral to the given location.  Returns true if this
-     * assignment is (locally) consistent with the rules of Sudoku.
-     */
-    public boolean assign(Location loc, Numeral num) {
-      boolean answer = true;
-
-      // Remove this numeral from this location's peers.
-      for (Location peer : loc.peers)
-        answer &= eliminate(peer, num);
-
-      // Remove the other numerals from this location.
-      NumSet others = get(loc).minus(num.asSet());
-      for (Numeral other : others)
-        answer &= eliminate(loc, other);
-
-      return answer && marks.bits[loc.index] == num.bit;
-    }
-
-    /**
-     * Makes the given assignment, returns true if it is (locally) consistent
-     * with the rules of Sudoku.
-     */
-    public boolean assign(Assignment assignment) {
-      return assign(assignment.location, assignment.numeral);
-    }
-
-    /**
-     * Eliminates the given numeral as a possibility for the given location, and
-     * the location as a possibility for the numeral within the location's
-     * units.  Returns false if any of these sets ends up empty.
-     */
-    public boolean eliminate(Location loc, Numeral num) {
-      boolean answer = true;
-
-      if ((marks().bits[loc.index] &= ~num.bit) == 0)
-        answer = false;  // This location has no possibilities left
-
-      for (int i = 0; i < 3; ++i) {
-        UnitSubset unitSubset = loc.unitSubsetList.get(i);
-        int index = UnitNumeral.getIndex(unitSubset.unit, num);
-        if ((marks.bits[UNIT_OFFSET + index] &= ~unitSubset.bits) == 0)
-          answer = false;  // This numeral has no possible locations left in this unit
-      }
-
-      return answer;
-    }
-
-    /**
-     * Eliminates the given assignment, returns true if this is (locally)
-     * consistent with the rules of Sudoku.
-     */
-    public boolean eliminate(Assignment assignment) {
-      return eliminate(assignment.location, assignment.numeral);
-    }
-
-    /**
-     * Assigns all the associated locations and numerals in the given map (note
-     * that {@link Grid} is this kind of map), returns true if they could all be
-     * assigned.
-     */
-    public boolean assignAll(Map<Location, Numeral> grid) {
-      boolean answer = true;
-
-      for (Map.Entry<Location, Numeral> entry : grid.entrySet())
-        answer &= assign(entry.getKey(), entry.getValue());
-
-      return answer;
     }
 
     /**
@@ -327,81 +225,5 @@ public final class SolverMarks {
 
       return true;
     }
-  }
-
-  @Override public boolean equals(Object object) {
-    if (this == object) return true;
-    if (!(object instanceof SolverMarks)) return false;
-    SolverMarks that = (SolverMarks) object;
-    return Arrays.equals(this.bits, that.bits);
-  }
-
-  @Override public int hashCode() {
-    return Arrays.hashCode(bits);
-  }
-
-  @Override public String toString() {
-    int width = 1;
-    for (Location loc : Location.all()) {
-      width = Math.max(width, get(loc).size());
-    }
-    StringBuilder sb = new StringBuilder();
-    for (Row row : Row.all()) {
-      for (Location loc : row) {
-        append(get(loc), width, sb.append(' '));
-        if (loc.column.number == 3 || loc.column.number == 6)
-          sb.append(" |");
-      }
-      sb.append('\n');
-      if (row.number == 3 || row.number == 6) {
-        append('-', 3 * width + 4, sb).append('+');
-        append('-', 3 * width + 4, sb).append('+');
-        append('-', 3 * width + 4, sb).append('\n');
-      }
-    }
-    return sb.toString();
-  }
-
-  private StringBuilder append(NumSet nums, int width, StringBuilder sb) {
-    int size = Math.max(1, nums.size());
-    append(' ', (width - size) / 2, sb);
-    if (nums.isEmpty()) {
-      sb.append('?');
-    } else {
-      for (Numeral num : nums)
-        sb.append(num.number);
-    }
-    return append(' ', width - size - (width - size) / 2, sb);
-  }
-
-  private StringBuilder append(char c, int count, StringBuilder sb) {
-    while (count-- > 0)
-      sb.append(c);
-    return sb;
-  }
-
-  /**
-   * Treats all characters besides numerals and question marks as word
-   * separators.  Requires there to be 81 words.  A word consisting of a
-   * question mark is treated as a location with no possible assignments.  A
-   * word consisting of numerals (1 through 9) is treated as a location with
-   * those numerals as the possible assignments.
-   */
-  public static SolverMarks fromString(String s) {
-    Builder builder = builder();
-    List<String> words = asList(s.split("[^1-9?]+"));
-    if (!words.isEmpty() && words.get(0).isEmpty())
-      words = words.subList(1, words.size());
-    checkArgument(words.size() == 81, "expected 81 words, got %s", words);
-    for (Location loc : Location.all()) {
-      NumSet nums = NumSet.NONE;
-      for (char c : words.get(loc.index).toCharArray()) {
-        if (c >= '1' && c <= '9')
-          nums = nums.with(Numeral.of(c - '0'));
-      }
-      for (Numeral not : nums.not())
-        builder.eliminate(loc, not);
-    }
-    return builder.build();
   }
 }
