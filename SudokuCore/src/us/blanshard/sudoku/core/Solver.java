@@ -157,11 +157,7 @@ public final class Solver implements Iterable<Grid> {
     this.strategy = strategy;
 
     SolverMarks.Builder builder = SolverMarks.builder();
-    if (!builder.assignAllRecursively(start)) {
-      // This puzzle is not solvable.
-      this.startMarks = null;
-      this.locations = null;
-    } else {
+    if (builder.assignAllRecursively(start)) {
       SolverMarks marks = this.startMarks = builder.build();
       List<Location> locations = Lists.newArrayList();
       for (Location loc : Location.all()) {
@@ -169,6 +165,10 @@ public final class Solver implements Iterable<Grid> {
           locations.add(loc);
       }
       this.locations = locations.toArray(new Location[locations.size()]);
+    } else {
+      // This puzzle is not solvable.
+      this.startMarks = null;
+      this.locations = null;
     }
   }
 
