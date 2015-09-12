@@ -42,13 +42,13 @@ import java.util.concurrent.Future;
  * class anymore because it tends to cause problems when the activity gets
  * restarted.
  *
- * <p>
- * The key to using {@link Task} and {@link ActivityTask} successfully is to
+ * <p> The key to using {@link Task} and {@link ActivityTask} successfully is to
  * ensure that all access to the fragment or activity is done via the argument
  * to the various <code>onXxx</code> methods, and not via an implicit reference
  * because the task is an inner class of the fragment. In fact, to avoid running
  * afoul of {@link StrictMode} checks, it's critical to make your tasks true
- * nested classes if they are declared inside a fragment or activity class.
+ * nested classes (ie declared as static) if they are declared inside a fragment
+ * or activity class.
  *
  * @author Luke Blanshard
  */
