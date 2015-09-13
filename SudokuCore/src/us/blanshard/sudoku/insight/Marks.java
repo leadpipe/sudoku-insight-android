@@ -47,12 +47,31 @@ import javax.annotation.concurrent.NotThreadSafe;
 @Immutable
 public final class Marks {
 
-  private final short[] bits;
+  // The data array combines 16 bits of information for each location, and 16
+  // bits of information for each unit-numeral. The location data comes first in
+  // the array.
+  //
+  // Location data is a 9-bit set of the numerals that could be assigned to the
+  // location, plus a 4-bit slot for the numeral that is currently assigned
+  // (zero means nothing currently is). In addition, we keep an error bit in the
+  // top bit of location 0's data: when set, the assignments and eliminations
+  // embodied in the Marks are not consistent with the rules of Sudoku.
+  //
+  // Unit-numeral data is a 9-bit subset of the locations within the unit that
+  // could be assigned to the numeral, plus a 4-bit slot for the number of
+  // assignments of that numeral in different units involved in getting the
+  // subset to its current state.
+  private final short[] data;
   private static final short ALL_BITS = (1 << 9) - 1;
   private static final int UNIT_OFFSET = Location.COUNT;
+  private static final int LOC_ASSIGNMENT_SHIFT = 9;
+  private static final int LOC_ASSIGNMENT_MASK = ((1 << 4) - 1) << LOC_ASSIGNMENT_SHIFT;
+  private static final int LOC0_ERROR_BIT = 1 << 15;
+  private static final int UNITNUM_COUNT_SHIFT = 9;
+  private static final int UNITNUM_COUNT_MASK = ((1 << 4) - 1) << UNITNUM_COUNT_SHIFT;
 
-  private Marks(short[] bits) {
-    this.bits = bits;
+  private Marks(short[] data) {
+    this.data = data;
   }
 
   public static Builder builder() {
@@ -78,6 +97,14 @@ public final class Marks {
   }
 
   /**
+   * Tells whether one or more of the assignments or eliminations made in this
+   * Marks resulted in there being no possible moves.
+   */
+  public boolean hasErrors() {
+    return (data[0] & LOC0_ERROR_BIT) != 0;
+  }
+
+  /**
    * Returns the set of numerals that could go in the given location.
    */
   public NumSet get(Location loc) {
@@ -88,7 +115,7 @@ public final class Marks {
    * Returns the bit-set corresponding to {@link #get(Location)}.
    */
   public int getBits(Location loc) {
-    return bits[loc.index];
+    return data[loc.index] & ALL_BITS;
   }
 
   /**
@@ -103,11 +130,12 @@ public final class Marks {
    * Returns the bit-set corresponding to {@link #get(UnitNumeral)}.
    */
   public int getBits(UnitNumeral unitNum) {
-    return bits[UNIT_OFFSET + unitNum.index];
+    return data[UNIT_OFFSET + unitNum.index] & ALL_BITS;
   }
 
   /**
-   * Returns the size of the set that would be returned by {@link #get(UnitNumeral)}.
+   * Returns the size of the set that would be returned by
+   * {@link #get(UnitNumeral)}.
    */
   public int getSize(UnitNumeral unitNum) {
     return NumSet.ofBits(getBits(unitNum)).size();
@@ -140,7 +168,7 @@ public final class Marks {
 
     private Marks marks() {
       if (built) {
-        Marks marks = new Marks(this.marks.bits.clone());
+        Marks marks = new Marks(this.marks.data.clone());
         this.marks = marks;
         this.built = false;
       }
@@ -176,7 +204,7 @@ public final class Marks {
      * Resets this builder to a state of all possibilities open.
      */
     public Builder clear() {
-      Arrays.fill(marks().bits, ALL_BITS);
+      Arrays.fill(marks().data, ALL_BITS);
       return this;
     }
 
@@ -189,14 +217,24 @@ public final class Marks {
 
       // Remove this numeral from this location's peers.
       for (Location peer : loc.peers)
-        answer &= eliminate(peer, num);
+        answer &= eliminate(peer, num, /*fromAssignment=*/ true);
 
       // Remove the other numerals from this location.
       NumSet others = get(loc).minus(num.asSet());
       for (Numeral other : others)
         answer &= eliminate(loc, other);
 
-      return answer && marks.bits[loc.index] == num.bit;
+      // Save the numeral in the location's data slot.
+      marks.data[loc.index] = (short) ((marks.data[loc.index] & ~LOC_ASSIGNMENT_MASK)
+          | (num.number << LOC_ASSIGNMENT_SHIFT));
+
+      if (answer) answer = getBits(loc) == num.bit;
+      if (!answer) setError();
+      return answer;
+    }
+
+    private void setError() {
+      marks().data[0] |= LOC0_ERROR_BIT;
     }
 
     /**
@@ -213,18 +251,35 @@ public final class Marks {
      * units.  Returns false if any of these sets ends up empty.
      */
     public boolean eliminate(Location loc, Numeral num) {
+      return eliminate(loc, num, /*fromAssignment=*/ false);
+    }
+
+    private boolean eliminate(Location loc, Numeral num, boolean fromAssignment) {
       boolean answer = true;
 
-      if ((marks().bits[loc.index] &= ~num.bit) == 0)
+      if (((marks().data[loc.index] &= ~num.bit) & ALL_BITS) == 0)
         answer = false;  // This location has no possibilities left
 
       for (int i = 0; i < 3; ++i) {
         UnitSubset unitSubset = loc.unitSubsetList.get(i);
         int index = UnitNumeral.getIndex(unitSubset.unit, num);
-        if ((marks.bits[UNIT_OFFSET + index] &= ~unitSubset.bits) == 0)
-          answer = false;  // This numeral has no possible locations left in this unit
+        short pre = marks.data[UNIT_OFFSET + index];
+        short post = (short) (pre & (~unitSubset.bits));
+        if (pre != post) {
+          if (fromAssignment) {
+            // Increment the counter that lives in the high bits.
+            int newCount = 1 + (post & UNITNUM_COUNT_MASK) >> UNITNUM_COUNT_SHIFT;
+            post &= ~UNITNUM_COUNT_MASK;
+            post |= newCount << UNITNUM_COUNT_SHIFT;
+          }
+          marks.data[UNIT_OFFSET + index] = post;
+          if ((pre & ALL_BITS) == 0)
+            answer = false;  // This numeral has no possible locations left in this unit
+        }
       }
 
+      if (!answer)
+        setError();
       return answer;
     }
 
@@ -255,11 +310,11 @@ public final class Marks {
     if (this == object) return true;
     if (!(object instanceof Marks)) return false;
     Marks that = (Marks) object;
-    return Arrays.equals(this.bits, that.bits);
+    return Arrays.equals(this.data, that.data);
   }
 
   @Override public int hashCode() {
-    return Arrays.hashCode(bits);
+    return Arrays.hashCode(data);
   }
 
   @Override public String toString() {
