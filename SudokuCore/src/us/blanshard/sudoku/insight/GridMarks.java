@@ -36,8 +36,8 @@ public class GridMarks {
   public GridMarks(Grid grid) {
     this.grid = grid;
     Marks.Builder builder = Marks.builder();
-    this.hasErrors = !builder.assignAll(grid);
-    this.marks = builder.build();
+    this.marks = builder.assignAll(grid).build();
+    this.hasErrors = this.marks.hasErrors();
   }
 
   GridMarks(Grid grid, Marks marks, boolean hasErrors) {
@@ -51,7 +51,7 @@ public class GridMarks {
    * within the given unit.
    */
   public boolean hasAssignment(Unit unit, Numeral num) {
-    UnitSubset set = marks.get(UnitNumeral.of(unit, num));
+    UnitSubset set = marks.getSet(UnitNumeral.of(unit, num));
     return set.size() == 1 && grid.get(set.get(0)) == num;
   }
 
@@ -76,7 +76,8 @@ public class GridMarks {
 
     public Builder assign(Location loc, Numeral num) {
       gridBuilder.put(loc, num);
-      hasErrors |= !marksBuilder.assign(loc, num);
+      marksBuilder.assign(loc, num);
+      hasErrors = marksBuilder.hasErrors();
       return this;
     }
 
@@ -85,7 +86,8 @@ public class GridMarks {
     }
 
     public Builder eliminate(Location loc, Numeral num) {
-      hasErrors |= !marksBuilder.eliminate(loc, num);
+      marksBuilder.eliminate(loc, num);
+      hasErrors = marksBuilder.hasErrors();
       return this;
     }
 

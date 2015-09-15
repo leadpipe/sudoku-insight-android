@@ -111,6 +111,21 @@ public final class Implication extends Insight {
     return consequent.isImpliedBy(gridMarks.toBuilder().apply(antecedents).build());
   }
 
+  @Override public void apply(Marks.Builder builder) {
+    for (int i = 0, c = antecedents.size(); i < c; ++i)
+      antecedents.get(i).apply(builder);
+    consequent.apply(builder);
+  }
+
+  @Override public boolean isImpliedBy(Marks marks) {
+    // Checks that all antecedents are implied by the given marks; if
+    // so, applies the antecedents to new builders and checks that the
+    // consequent is implied by the resulting marks.
+    for (int i = 0, c = antecedents.size(); i < c; ++i)
+      if (!antecedents.get(i).isImpliedBy(marks)) return false;
+    return consequent.isImpliedBy(marks.toBuilder().apply(antecedents).build());
+  }
+
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {
     for (int i = 0, c = antecedents.size(); i < c; ++i)
       if (antecedents.get(i).mightBeRevealedByElimination(elimination)) return true;

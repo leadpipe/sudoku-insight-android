@@ -50,7 +50,15 @@ public final class BarredNum extends Insight {
   }
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    return gridMarks.marks.get(unitNum).isEmpty();
+    return gridMarks.marks.getSet(unitNum).isEmpty();
+  }
+
+  @Override public void apply(Marks.Builder builder) {
+    // Nothing to do, it's an error.
+  }
+
+  @Override public boolean isImpliedBy(Marks marks) {
+    return marks.getSetSize(unitNum) == 0;
   }
 
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {

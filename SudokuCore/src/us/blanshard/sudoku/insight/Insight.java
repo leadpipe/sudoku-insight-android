@@ -133,6 +133,15 @@ public abstract class Insight {
   /** Tells whether this insight is implied by the given grid and marks. */
   public abstract boolean isImpliedBy(GridMarks gridMarks);
 
+  /**
+   * Applies the assignments and eliminations of this insight to the given
+   * builder.
+   */
+  public abstract void apply(Marks.Builder builder);
+
+  /** Tells whether this insight is implied by the given marks. */
+  public abstract boolean isImpliedBy(Marks marks);
+
   /** Tells whether this insight is related to the given elimination. */
   public abstract boolean mightBeRevealedByElimination(Assignment elimination);
 }

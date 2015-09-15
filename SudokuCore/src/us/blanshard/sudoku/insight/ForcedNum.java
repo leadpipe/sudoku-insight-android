@@ -56,8 +56,16 @@ public final class ForcedNum extends Insight {
   }
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    NumSet set = gridMarks.marks.get(location);
+    NumSet set = gridMarks.marks.getSet(location);
     return set.size() == 1 && set.get(0) == numeral && !gridMarks.grid.containsKey(location);
+  }
+
+  @Override public void apply(Marks.Builder builder) {
+    builder.assign(location, numeral);
+  }
+
+  @Override public boolean isImpliedBy(Marks marks) {
+    return marks.getSingleton(location) == numeral && !marks.hasAssignment(location);
   }
 
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {

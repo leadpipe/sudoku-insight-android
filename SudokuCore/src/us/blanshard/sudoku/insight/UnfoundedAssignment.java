@@ -48,6 +48,14 @@ public class UnfoundedAssignment extends Insight {
     return false;
   }
 
+  @Override public void apply(Marks.Builder builder) {
+    builder.assign(assignment);
+  }
+
+  @Override public boolean isImpliedBy(Marks marks) {
+    return false;
+  }
+
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {
     return false;
   }

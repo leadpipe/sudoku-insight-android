@@ -90,6 +90,15 @@ public final class DisprovedAssignment extends Insight {
     return resultingError.isImpliedBy(gridMarks.toBuilder().assign(assignment).build());
   }
 
+  @Override public void apply(Marks.Builder builder) {
+    builder.eliminate(assignment);
+  }
+
+  @Override public boolean isImpliedBy(Marks marks) {
+    // Applies the assignment, then checks the resulting error is implied.
+    return resultingError.isImpliedBy(marks.toBuilder().assign(assignment).build());
+  }
+
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {
     return resultingError.mightBeRevealedByElimination(elimination);
   }

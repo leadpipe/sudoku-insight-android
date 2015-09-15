@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static us.blanshard.sudoku.core.NumSetTest.set;
 import static us.blanshard.sudoku.core.UnitTest.loc;
@@ -51,20 +52,22 @@ public class MarksTest {
 
   private Marks build() {
     Marks.Builder b = Marks.builder();
-    assertTrue(b.assignAll(builder.build()));
+    b.assignAll(builder.build());
+    assertFalse(b.hasErrors());
     return b.build();
   }
 
   @Test public void get() {
-    assertEquals(set(7), marks.get(loc(4, 1)));
-    assertEquals(set(3, 5, 8), marks.get(loc(4, 2)));
-    assertEquals(UnitSubset.singleton(Row.of(4), loc(4, 1)), marks.get(UnitNumeral.of(Row.of(4), Numeral.of(7))));
-    assertEquals(UnitSubset.ofBits(Row.of(4), 0xe4), marks.get(UnitNumeral.of(Row.of(4), Numeral.of(4))));
+    assertEquals(set(7), marks.getSet(loc(4, 1)));
+    assertEquals(set(3, 5, 8), marks.getSet(loc(4, 2)));
+    assertEquals(UnitSubset.singleton(Row.of(4), loc(4, 1)), marks.getSet(UnitNumeral.of(Row.of(4), Numeral.of(7))));
+    assertEquals(UnitSubset.ofBits(Row.of(4), 0xe4), marks.getSet(UnitNumeral.of(Row.of(4), Numeral.of(4))));
   }
 
   @Test public void assign_failure() {
     Marks.Builder builder = marks.toBuilder();
-    assertEquals(false, builder.assign(loc(1, 2), Numeral.of(1)));
+    builder.assign(loc(1, 2), Numeral.of(1));
+    assertTrue(builder.hasErrors());
     assertEquals(0, builder.get(loc(1, 2)).size());
     assertEquals(0, builder.get(UnitNumeral.of(Block.of(1), Numeral.of(4))).size());
   }
@@ -90,7 +93,8 @@ public class MarksTest {
     for (Row row : Row.all()) {
       int index = start;
       for (Location loc : row) {
-        assertEquals(true, builder.assign(loc, Numeral.ofIndex(index % 9)));
+        builder.assign(loc, Numeral.ofIndex(index % 9));
+        assertFalse(builder.hasErrors());
         ++index;
       }
       start = start + 3 + (row.number % 3 == 0 ? 1 : 0);
@@ -117,7 +121,7 @@ public class MarksTest {
         "  7    45   45  |  3    8    6   |  2    19   19  " +
         "  1    8    2   |  4    9    5   |  6    7    3   ");
 
-    assertEquals(set(4,5), marks.get(Location.of(8,2)));
+    assertEquals(set(4,5), marks.getSet(Location.of(8,2)));
     assertEquals(set(3,8).bits, marks.getBits(UnitNumeral.of(Column.of(2), Numeral.of(4))));
     assertEquals(set(3,8).bits, marks.getBits(UnitNumeral.of(Column.of(2), Numeral.of(5))));
   }

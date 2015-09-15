@@ -259,7 +259,7 @@ public class Evaluator {
       if (status != RunStatus.INCONCLUSIVE) return;
 
       Location loc = randomUnsetLocation(false);
-      NumSet nums = gridMarks.marks.get(loc);
+      NumSet nums = gridMarks.marks.getSet(loc);
       GridMarks start = gridMarks;
       for (Numeral num : nums) {
         setGridMarks(start.toBuilder().assign(Assignment.of(loc, num)));
@@ -285,14 +285,14 @@ public class Evaluator {
 
     Assignment randomAssignment() {
       Location loc = randomUnsetLocation(false);
-      NumSet nums = gridMarks.marks.get(loc);
+      NumSet nums = gridMarks.marks.getSet(loc);
       return randomAssignment(loc, nums);
     }
 
     @Nullable Assignment randomErroneousAssignment() {
       Location loc = randomUnsetLocation(true);
       if (loc == null) return null;
-      NumSet nums = gridMarks.marks.get(loc).without(solutionIntersection.get(loc));
+      NumSet nums = gridMarks.marks.getSet(loc).without(solutionIntersection.get(loc));
       return randomAssignment(loc, nums);
     }
 
@@ -302,7 +302,7 @@ public class Evaluator {
       Location currentLoc = null;
       for (Location loc : Location.all()) {
         if (inIntersectionOnly && !solutionIntersection.containsKey(loc)) continue;
-        NumSet possible = gridMarks.marks.get(loc);
+        NumSet possible = gridMarks.marks.getSet(loc);
         if (possible.size() < 2 || possible.size() > size) continue;
         if (possible.size() < size) {
           count = 0;
@@ -320,12 +320,12 @@ public class Evaluator {
       List<Assignment> assignments = Lists.newArrayList();
       for (Location loc : Location.all()) {
         if (gridMarks.grid.containsKey(loc)) continue;
-        NumSet nums = gridMarks.marks.get(loc);
+        NumSet nums = gridMarks.marks.getSet(loc);
         if (nums.size() < 2) return assignments;  // it's empty at this point
         for (Numeral num : nums) {
           int rank = nums.size();
           for (Unit.Type unitType : Unit.Type.values()) {
-            UnitSubset locs = gridMarks.marks.get(UnitNumeral.of(loc.unit(unitType), num));
+            UnitSubset locs = gridMarks.marks.getSet(UnitNumeral.of(loc.unit(unitType), num));
             rank = Math.min(rank, locs.size());
           }
           byRank.put(rank, Assignment.of(loc, num));

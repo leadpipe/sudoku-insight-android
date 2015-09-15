@@ -20,6 +20,7 @@ import static java.util.Arrays.asList;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
+import us.blanshard.sudoku.core.LocSet;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
@@ -89,7 +90,7 @@ public final class Marks {
   public Grid.Builder toGridBuilder() {
     Grid.Builder builder = Grid.builder();
     for (Location loc : Location.all()) {
-      NumSet possible = get(loc);
+      NumSet possible = getSet(loc);
       if (possible.size() == 1)
         builder.put(loc, possible.iterator().next());
     }
@@ -107,27 +108,61 @@ public final class Marks {
   /**
    * Returns the set of numerals that could go in the given location.
    */
-  public NumSet get(Location loc) {
+  public NumSet getSet(Location loc) {
     return NumSet.ofBits(getBits(loc));
   }
 
   /**
-   * Returns the bit-set corresponding to {@link #get(Location)}.
+   * Returns the bit-set corresponding to {@link #getSet(Location)}.
    */
   public int getBits(Location loc) {
     return data[loc.index] & ALL_BITS;
   }
 
   /**
+   * Returns the single numeral contained in {@link #getSet(Location)}, or null.
+   */
+  @Nullable public Numeral getSingleton(Location loc) {
+    NumSet set = getSet(loc);
+    return set.size() == 1 ? set.get(0) : null;
+  }
+
+  /**
+   * Returns the numeral assigned to the given location, or null.
+   */
+  @Nullable public Numeral get(Location loc) {
+    return Numeral.numeral((data[loc.index] & LOC_ASSIGNMENT_MASK) >> LOC_ASSIGNMENT_SHIFT);
+  }
+
+  /**
+   * Tells whether the given location has a numeral assigned to it.
+   */
+  public boolean hasAssignment(Location loc) {
+    return get(loc) != null;
+  }
+
+  /**
+   * Returns a set of the locations that have assignments.
+   */
+  public LocSet getAssignedLocations() {
+    LocSet answer = new LocSet();
+    for (int index = 0; index < Location.COUNT; ++index) {
+      if ((data[index] & LOC_ASSIGNMENT_MASK) != 0)
+        answer.add(Location.of(index));
+    }
+    return answer;
+  }
+
+  /**
    * Returns the set of locations within the given unit that could hold the
    * given numeral.
    */
-  public UnitSubset get(UnitNumeral unitNum) {
+  public UnitSubset getSet(UnitNumeral unitNum) {
     return UnitSubset.ofBits(unitNum.unit, getBits(unitNum));
   }
 
   /**
-   * Returns the bit-set corresponding to {@link #get(UnitNumeral)}.
+   * Returns the bit-set corresponding to {@link #getSet(UnitNumeral)}.
    */
   public int getBits(UnitNumeral unitNum) {
     return data[UNIT_OFFSET + unitNum.index] & ALL_BITS;
@@ -135,19 +170,37 @@ public final class Marks {
 
   /**
    * Returns the size of the set that would be returned by
-   * {@link #get(UnitNumeral)}.
+   * {@link #getSet(UnitNumeral)}.
    */
-  public int getSize(UnitNumeral unitNum) {
+  public int getSetSize(UnitNumeral unitNum) {
     return NumSet.ofBits(getBits(unitNum)).size();
   }
 
   /**
-   * Returns the single location in {@link #get(UnitNumeral)}, or null.
+   * Returns the single location in {@link #getSet(UnitNumeral)}, or null.
    */
   @Nullable public Location getSingleton(UnitNumeral unitNum) {
     NumSet set = NumSet.ofBits(getBits(unitNum));
     if (set.size() != 1) return null;
     return unitNum.unit.get(set.get(0).index);
+  }
+
+  /**
+   * Returns the location assigned to the given numeral in the given unit, or
+   * null.
+   */
+  @Nullable public Location get(UnitNumeral unitNum) {
+    Location loc = getSingleton(unitNum);
+    return loc != null && get(loc) == unitNum.numeral ? loc : null;
+  }
+
+  /**
+   * Returns true if the grid contains an assignment of the given numeral
+   * within the given unit.
+   */
+  public boolean hasAssignment(UnitNumeral unitNum) {
+    Location loc = getSingleton(unitNum);
+    return loc != null && get(loc) == unitNum.numeral;
   }
 
   @NotThreadSafe
@@ -185,7 +238,7 @@ public final class Marks {
     }
 
     public NumSet get(Location loc) {
-      return marks.get(loc);
+      return marks.getSet(loc);
     }
 
     public int getBits(Location loc) {
@@ -193,11 +246,15 @@ public final class Marks {
     }
 
     public UnitSubset get(UnitNumeral unitNum) {
-      return marks.get(unitNum);
+      return marks.getSet(unitNum);
     }
 
     public int getBits(UnitNumeral unitNum) {
       return marks.getBits(unitNum);
+    }
+
+    public boolean hasErrors() {
+      return marks.hasErrors();
     }
 
     /**
@@ -209,28 +266,28 @@ public final class Marks {
     }
 
     /**
-     * Assigns the given numeral to the given location.  Returns true if this
-     * assignment is (locally) consistent with the rules of Sudoku.
+     * Assigns the given numeral to the given location.  Sets the error bit if
+     * the assignment is inconsistent with the rules of Sudoku.
      */
-    public boolean assign(Location loc, Numeral num) {
-      boolean answer = true;
+    public Builder assign(Location loc, Numeral num) {
+      boolean ok = true;
 
       // Remove this numeral from this location's peers.
       for (Location peer : loc.peers)
-        answer &= eliminate(peer, num, /*fromAssignment=*/ true);
+        ok &= eliminate(peer, num, /*fromAssignment=*/ true);
 
       // Remove the other numerals from this location.
       NumSet others = get(loc).minus(num.asSet());
       for (Numeral other : others)
-        answer &= eliminate(loc, other);
+        ok &= eliminate(loc, other, /*fromAssignment=*/ false);
 
       // Save the numeral in the location's data slot.
       marks.data[loc.index] = (short) ((marks.data[loc.index] & ~LOC_ASSIGNMENT_MASK)
           | (num.number << LOC_ASSIGNMENT_SHIFT));
 
-      if (answer) answer = getBits(loc) == num.bit;
-      if (!answer) setError();
-      return answer;
+      if (ok) ok = getBits(loc) == num.bit;
+      if (!ok) setError();
+      return this;
     }
 
     private void setError() {
@@ -238,20 +295,21 @@ public final class Marks {
     }
 
     /**
-     * Makes the given assignment, returns true if it is (locally) consistent
+     * Makes the given assignment.  Sets the error bit if the assignment is inconsistent
      * with the rules of Sudoku.
      */
-    public boolean assign(Assignment assignment) {
+    public Builder assign(Assignment assignment) {
       return assign(assignment.location, assignment.numeral);
     }
 
     /**
      * Eliminates the given numeral as a possibility for the given location, and
      * the location as a possibility for the numeral within the location's
-     * units.  Returns false if any of these sets ends up empty.
+     * units.  Sets the error bit if any of these sets ends up empty.
      */
-    public boolean eliminate(Location loc, Numeral num) {
-      return eliminate(loc, num, /*fromAssignment=*/ false);
+    public Builder eliminate(Location loc, Numeral num) {
+      eliminate(loc, num, /*fromAssignment=*/ false);
+      return this;
     }
 
     private boolean eliminate(Location loc, Numeral num, boolean fromAssignment) {
@@ -284,25 +342,38 @@ public final class Marks {
     }
 
     /**
-     * Eliminates the given assignment, returns true if this is (locally)
-     * consistent with the rules of Sudoku.
+     * Eliminates the given assignment.  Sets the error bit if this is
+     * inconsistent with the rules of Sudoku.
      */
-    public boolean eliminate(Assignment assignment) {
+    public Builder eliminate(Assignment assignment) {
       return eliminate(assignment.location, assignment.numeral);
     }
 
     /**
      * Assigns all the associated locations and numerals in the given map (note
-     * that {@link Grid} is this kind of map), returns true if they could all be
-     * assigned.
+     * that {@link Grid} is this kind of map).
      */
-    public boolean assignAll(Map<Location, Numeral> grid) {
-      boolean answer = true;
-
+    public Builder assignAll(Map<Location, Numeral> grid) {
       for (Map.Entry<Location, Numeral> entry : grid.entrySet())
-        answer &= assign(entry.getKey(), entry.getValue());
+        assign(entry.getKey(), entry.getValue());
+      return this;
+    }
 
-      return answer;
+    public Builder apply(Insight insight) {
+      insight.apply(this);
+      return this;
+    }
+
+    public Builder apply(Iterable<Insight> insights) {
+      for (Insight insight : insights)
+        insight.apply(this);
+      return this;
+    }
+
+    public Builder apply(List<Insight> insights) {
+      for (int i = 0, c = insights.size(); i < c; ++i)
+        insights.get(i).apply(this);
+      return this;
     }
   }
 
@@ -320,12 +391,12 @@ public final class Marks {
   @Override public String toString() {
     int width = 1;
     for (Location loc : Location.all()) {
-      width = Math.max(width, get(loc).size());
+      width = Math.max(width, getSet(loc).size());
     }
     StringBuilder sb = new StringBuilder();
     for (Row row : Row.all()) {
       for (Location loc : row) {
-        append(get(loc), width, sb.append(' '));
+        append(getSet(loc), width, sb.append(' '));
         if (loc.column.number == 3 || loc.column.number == 6)
           sb.append(" |");
       }

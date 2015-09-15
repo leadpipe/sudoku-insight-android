@@ -64,8 +64,17 @@ public final class ForcedLoc extends Insight {
   }
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    UnitSubset set = gridMarks.marks.get(UnitNumeral.of(unit, numeral));
+    UnitSubset set = gridMarks.marks.getSet(UnitNumeral.of(unit, numeral));
     return set.size() == 1 && set.get(0) == location && !gridMarks.grid.containsKey(location);
+  }
+
+  @Override public void apply(Marks.Builder builder) {
+    builder.assign(location, numeral);
+  }
+
+  @Override public boolean isImpliedBy(Marks marks) {
+    Location loc = marks.getSingleton(UnitNumeral.of(unit, numeral));
+    return loc != null && marks.get(loc) == null;
   }
 
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {

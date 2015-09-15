@@ -44,7 +44,15 @@ public final class BarredLoc extends Insight {
   }
 
   @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    return gridMarks.marks.get(location).isEmpty();
+    return gridMarks.marks.getSet(location).isEmpty();
+  }
+
+  @Override public void apply(Marks.Builder builder) {
+    // Nothing to do, it's an error.
+  }
+
+  @Override public boolean isImpliedBy(Marks marks) {
+    return marks.getSet(location).isEmpty();
   }
 
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {

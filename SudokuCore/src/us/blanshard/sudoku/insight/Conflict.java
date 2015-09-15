@@ -62,6 +62,18 @@ public final class Conflict extends Insight {
     return true;
   }
 
+  @Override public void apply(Marks.Builder builder) {
+    // Nothing to do, it's an error.
+  }
+
+  @Override public boolean isImpliedBy(Marks marks) {
+    for (Location loc : locations) {
+      if (marks.get(loc) != numeral)
+        return false;
+    }
+    return true;
+  }
+
   @Override public boolean mightBeRevealedByElimination(Assignment elimination) {
     return false;
   }

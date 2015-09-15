@@ -370,7 +370,7 @@ public class Analyzer {
         UnitSubset set = UnitSubset.ofBits(unit, bits);
         Unit overlappingUnit = set.get(0).unit(overlappingType);
         UnitNumeral oun = UnitNumeral.of(overlappingUnit, num);
-        UnitSubset overlappingSet = gridMarks.marks.get(oun);
+        UnitSubset overlappingSet = gridMarks.marks.getSet(oun);
         if (overlappingSet.size() > set.size()) {
           // There's something to eliminate.
           if (set.size() > 1 || getNumOpen(gridMarks, unit, overlappingUnit) > 1) {
@@ -412,7 +412,7 @@ public class Analyzer {
     int unsetCount = 0;
     for (int i = 0; i < unit.size(); ++i) {
       Location loc = unit.get(i);
-      NumSet possible = gridMarks.marks.get(loc);
+      NumSet possible = gridMarks.marks.getSet(loc);
       int possibleSize = possible.size();
       if (possibleSize > 1 || (possibleSize == 1 && !gridMarks.hasAssignment(unit, possible.get(0)))) {
         ++unsetCount;
@@ -453,7 +453,7 @@ public class Analyzer {
     int unsetCount = 0;
     for (int i = 0; i < Numeral.COUNT; ++i) {
       Numeral num = Numeral.ofIndex(i);
-      UnitSubset possible = gridMarks.marks.get(UnitNumeral.of(unit, num));
+      UnitSubset possible = gridMarks.marks.getSet(UnitNumeral.of(unit, num));
       int possibleSize = possible.size();
       if (possibleSize > 1 || (possibleSize == 1 && !gridMarks.grid.containsKey(possible.get(0)))) {
         ++unsetCount;
@@ -510,7 +510,7 @@ public class Analyzer {
     // unit.
     for (Unit unit : Unit.allUnits()) {
       for (Numeral num : Numeral.all()) {
-        if (gridMarks.marks.getSize(UnitNumeral.of(unit, num)) == 0) {
+        if (gridMarks.marks.getSetSize(UnitNumeral.of(unit, num)) == 0) {
           callback.take(new BarredNum(unit, num));
         }
       }
@@ -518,7 +518,7 @@ public class Analyzer {
 
     // Finally, look for locations that have no possible assignments left.
     for (Location loc : Location.all()) {
-      NumSet set = gridMarks.marks.get(loc);
+      NumSet set = gridMarks.marks.getSet(loc);
       if (set.isEmpty()) {
         callback.take(new BarredLoc(loc));
       }
@@ -543,7 +543,7 @@ public class Analyzer {
     for (int i = 0; i < Location.COUNT; ++i) {
       Location loc = Location.of(i);
       if (!gridMarks.grid.containsKey(loc)) {
-        NumSet set = gridMarks.marks.get(loc);
+        NumSet set = gridMarks.marks.getSet(loc);
         if (set.size() == 1)
           callback.take(new ForcedNum(loc, set.get(0)));
       }

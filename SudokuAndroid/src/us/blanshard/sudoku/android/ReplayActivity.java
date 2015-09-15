@@ -1139,16 +1139,16 @@ public class ReplayActivity extends ActivityBase
         LocSet available) {
       Queue<PossibleAssignment> possibles = Queues.newPriorityQueue();
       for (UnitNumeral unitNum : UnitNumeral.all()) {
-        UnitSubset set = current.marks.get(unitNum);
-        UnitSubset solSet = solution.marks.get(unitNum);
+        UnitSubset set = current.marks.getSet(unitNum);
+        UnitSubset solSet = solution.marks.getSet(unitNum);
         if (set.size() > 1 && solSet.size() == 1)
           for (Location loc : available.and(set.minus(solSet))) {
             possibles.add(new PossibleAssignment(loc, unitNum.numeral, set.size()));
           }
       }
       for (Location loc : available) {
-        NumSet set = current.marks.get(loc);
-        NumSet solSet = solution.marks.get(loc);
+        NumSet set = current.marks.getSet(loc);
+        NumSet solSet = solution.marks.getSet(loc);
         if (set.size() > 1 && solSet.size() == 1)
           for (Numeral num : set.minus(solSet))
             possibles.add(new PossibleAssignment(loc, num, set.size()));
