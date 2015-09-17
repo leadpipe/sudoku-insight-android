@@ -90,9 +90,8 @@ public final class Marks {
   public Grid.Builder toGridBuilder() {
     Grid.Builder builder = Grid.builder();
     for (Location loc : Location.all()) {
-      NumSet possible = getSet(loc);
-      if (possible.size() == 1)
-        builder.put(loc, possible.iterator().next());
+      Numeral num = get(loc);
+      if (num != null) builder.put(loc, num);
     }
     return builder;
   }
@@ -233,7 +232,7 @@ public final class Marks {
       return marks;
     }
 
-    public Grid asGrid() {
+    public Grid toGrid() {
       return marks.toGrid();
     }
 
@@ -396,7 +395,7 @@ public final class Marks {
     StringBuilder sb = new StringBuilder();
     for (Row row : Row.all()) {
       for (Location loc : row) {
-        append(getSet(loc), width, sb.append(' '));
+        append(getSet(loc), hasAssignment(loc), width, sb.append(' '));
         if (loc.column.number == 3 || loc.column.number == 6)
           sb.append(" |");
       }
@@ -410,7 +409,7 @@ public final class Marks {
     return sb.toString();
   }
 
-  private StringBuilder append(NumSet nums, int width, StringBuilder sb) {
+  private StringBuilder append(NumSet nums, boolean assigned, int width, StringBuilder sb) {
     int size = Math.max(1, nums.size());
     append(' ', (width - size) / 2, sb);
     if (nums.isEmpty()) {
@@ -418,6 +417,10 @@ public final class Marks {
     } else {
       for (Numeral num : nums)
         sb.append(num.number);
+      if (assigned) {
+        sb.append('!');
+        ++size;
+      }
     }
     return append(' ', width - size - (width - size) / 2, sb);
   }
@@ -429,25 +432,38 @@ public final class Marks {
   }
 
   /**
-   * Treats all characters besides numerals and question marks as word
-   * separators.  Requires there to be 81 words.  A word consisting of a
-   * question mark is treated as a location with no possible assignments.  A
-   * word consisting of numerals (1 through 9) is treated as a location with
-   * those numerals as the possible assignments.
+   * Treats all characters besides numerals, queries, and bangs as word
+   * separators.  Requires there to be 81 words. A word consisting of a question
+   * mark is treated as a location with no possible assignments.  A word
+   * consisting of numerals (1 through 9) is treated as a location with those
+   * numerals as the possible assignments; if it's just one numeral and is
+   * followed by a bang, it's treated as an assignment.
    */
   public static Marks fromString(String s) {
     Builder builder = builder();
-    List<String> words = asList(s.split("[^1-9?]+"));
+    List<String> words = asList(s.split("[^1-9?!]+"));
     if (!words.isEmpty() && words.get(0).isEmpty())
       words = words.subList(1, words.size());
     checkArgument(words.size() == 81, "expected 81 words, got %s", words);
+    NumSet[] sets = new NumSet[81];
     for (Location loc : Location.all()) {
+      boolean bang = false;
       NumSet nums = NumSet.NONE;
       for (char c : words.get(loc.index).toCharArray()) {
-        if (c >= '1' && c <= '9')
+        if (c == '!')
+          bang = true;
+        else if (c >= '1' && c <= '9')
           nums = nums.with(Numeral.of(c - '0'));
       }
-      for (Numeral not : nums.not())
+      sets[loc.index] = nums;
+      if (bang) {
+        checkArgument(nums.size() == 1, "can't assign multiple numerals to the same location");
+        builder.assign(loc, nums.get(0));
+      }
+    }
+    for (Location loc : Location.all()) {
+      NumSet nums = sets[loc.index];
+      for (Numeral not : builder.get(loc).minus(nums))
         builder.eliminate(loc, not);
     }
     return builder.build();
