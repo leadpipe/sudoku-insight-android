@@ -64,7 +64,7 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
   public static UnitSubset of(Unit unit, Location... locs) {
     short bits = 0;
     for (Location loc : locs) {
-      UnitSubset singleton = loc.unitSubsets.get(unit.getType());
+      UnitSubset singleton = loc.unitSubsets.get(unit.type);
       checkArgument(singleton.unit == unit);
       bits |= singleton.bits;
     }
@@ -81,12 +81,12 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
 
   /** Returns the union of this set with the singleton containing the given location. */
   public UnitSubset with(Location loc) {
-    return or(loc.unitSubsets.get(unit.getType()));
+    return or(loc.unitSubsets.get(unit.type));
   }
 
   /** Returns the difference of this set and the singleton containing the given location. */
   public UnitSubset without(Location loc) {
-    return minus(loc.unitSubsets.get(unit.getType()));
+    return minus(loc.unitSubsets.get(unit.type));
   }
 
   /** Returns the complement of this set. */
@@ -100,7 +100,7 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
     if (that != null) return ofBits(unit, this.bits & that.bits);
     short bits = 0;
     for (Location loc : it) {
-      UnitSubset singleton = loc.unitSubsets.get(unit.getType());
+      UnitSubset singleton = loc.unitSubsets.get(unit.type);
       if (singleton.unit == this.unit) bits |= singleton.bits;
     }
     return ofBits(unit, this.bits & bits);
@@ -112,7 +112,7 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
     if (that != null) return ofBits(unit, this.bits | that.bits);
     short bits = this.bits;
     for (Location loc : it) {
-      UnitSubset singleton = loc.unitSubsets.get(unit.getType());
+      UnitSubset singleton = loc.unitSubsets.get(unit.type);
       checkArgument(singleton.unit == unit);
       bits |= singleton.bits;
     }
@@ -125,7 +125,7 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
     if (that != null) return ofBits(unit, this.bits ^ that.bits);
     short bits = this.bits;
     for (Location loc : it) {
-      UnitSubset singleton = loc.unitSubsets.get(unit.getType());
+      UnitSubset singleton = loc.unitSubsets.get(unit.type);
       checkArgument(singleton.unit == unit);
       bits ^= singleton.bits;
     }
@@ -138,7 +138,7 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
     if (that != null) return ofBits(unit, this.bits & (~that.bits));
     short bits = 0;
     for (Location loc : it) {
-      UnitSubset singleton = loc.unitSubsets.get(unit.getType());
+      UnitSubset singleton = loc.unitSubsets.get(unit.type);
       if (singleton.unit == this.unit) bits |= singleton.bits;
     }
     return ofBits(unit, this.bits & (~bits));
@@ -161,7 +161,7 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
   }
 
   public boolean contains(Location loc) {
-    UnitSubset that = loc.unitSubsets.get(unit.getType());
+    UnitSubset that = loc.unitSubsets.get(unit.type);
     return this.unit == that.unit
         && (this.bits & that.bits) != 0;
   }
@@ -177,6 +177,10 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
     return unit.get(getIndex(index));
   }
 
+  /**
+   * Returns the index within the unit of the location at the given index within
+   * this set.
+   */
   public int getIndex(int index) {
     return set.get(index).index;
   }

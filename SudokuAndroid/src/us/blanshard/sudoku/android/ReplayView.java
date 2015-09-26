@@ -531,7 +531,7 @@ public class ReplayView extends SudokuView {
     public NumSet possiblesUnion = NumSet.NONE;
 
     public void addUnit(Unit unit) {
-      flags |= unitFlag(unit.getType());
+      flags |= unitFlag(unit.type);
     }
 
     public boolean hasUnit(Unit.Type type) {

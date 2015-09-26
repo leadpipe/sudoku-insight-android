@@ -40,6 +40,12 @@ public abstract class Unit extends AbstractCollection<Location>
     BLOCK, ROW, COLUMN
   }
 
+  /** This unit's type. */
+  public final Type type;
+
+  /** The index of this unit within {@link #allUnits()}. */
+  public final int index;
+
   /**
    * Returns a list of all the units.  The index for each unit equals what's
    * returned by {@link #unitIndex}.
@@ -110,18 +116,13 @@ public abstract class Unit extends AbstractCollection<Location>
   /** Specialized for unit-unit intersections. */
   protected abstract int getOverlappingBits(Unit that);
 
-  /** The index of this unit in {@link #allUnits}. */
-  public abstract int unitIndex();
-
-  public abstract Type getType();
-
   public final boolean contains(Location loc) {
-    return loc.unit(getType()) == this;
+    return loc.unit(type) == this;
   }
 
   /** Returns the index of the given location within this unit, or -1. */
   public final int indexOf(Location loc) {
-    UnitSubset set = loc.unitSubsets.get(getType());
+    UnitSubset set = loc.unitSubsets.get(type);
     return set.unit == this ? set.getIndex(0) : -1;
   }
 
@@ -146,17 +147,23 @@ public abstract class Unit extends AbstractCollection<Location>
   }
 
   @Override public int compareTo(Unit that) {
-    return this.unitIndex() - that.unitIndex();
+    return this.index - that.index;
   }
 
   protected final byte[] locations = new byte[9];
+
+  /** The index given is the index of the unit within its own type. */
+  protected Unit(Type type, int indexWithinType) {
+    this.type = type;
+    this.index = type.ordinal() * 9 + indexWithinType;
+  }
 
   private static enum AllUnits {
     INSTANCE;
     private final List<Unit> list;
     private AllUnits() {
       this.list = ImmutableList.<Unit>builder()
-          .addAll(Block.all())  // This order is relied on by unitIndex impls.
+          .addAll(Block.all())  // This order is relied on by the ctor
           .addAll(Row.all())
           .addAll(Column.all())
           .build();

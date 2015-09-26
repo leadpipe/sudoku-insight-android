@@ -259,7 +259,7 @@ public abstract class Pattern implements Comparable<Pattern> {
     BLOCK('b'), LINE('l');
 
     public static UnitCategory forUnit(Unit unit) {
-      return unit.getType() == Unit.Type.BLOCK ? BLOCK : LINE;
+      return unit.type == Unit.Type.BLOCK ? BLOCK : LINE;
     }
 
     public static UnitCategory value(int ordinal) {

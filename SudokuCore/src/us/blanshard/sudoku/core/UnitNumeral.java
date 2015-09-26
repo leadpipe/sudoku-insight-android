@@ -48,7 +48,7 @@ public class UnitNumeral {
   }
 
   public static int getIndex(Unit unit, Numeral numeral) {
-    return unit.unitIndex() * Numeral.COUNT + numeral.index;
+    return unit.index * Numeral.COUNT + numeral.index;
   }
 
   public static List<UnitNumeral> all() {

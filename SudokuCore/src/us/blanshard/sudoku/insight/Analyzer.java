@@ -344,7 +344,7 @@ public class Analyzer {
    */
   @Nullable public static Unit findOverlappingUnit(UnitSubset set) {
     if (set.size() < 2 || set.size() > 3) return null;
-    if (set.unit.getType() == Unit.Type.BLOCK) {
+    if (set.unit.type == Unit.Type.BLOCK) {
       int index = Arrays.binarySearch(OVERLAP_BITS, set.bits);
       if (index >= 0)
         return set.get(0).row;
@@ -417,7 +417,7 @@ public class Analyzer {
       if (possibleSize > 1 || (possibleSize == 1 && !gridMarks.hasAssignment(unit, possible.get(0)))) {
         ++unsetCount;
         if (possibleSize <= size && !inSets.contains(loc)) {
-          bitsToCheck |= loc.unitSubsets.get(unit.getType()).bits;
+          bitsToCheck |= loc.unitSubsets.get(unit.type).bits;
         }
       }
     }

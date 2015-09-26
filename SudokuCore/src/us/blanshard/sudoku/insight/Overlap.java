@@ -126,8 +126,8 @@ public final class Overlap extends Insight {
   }
 
   @Override public int hashCode() {
-    return ((unit.unitIndex() + 5) << 9)
-        | ((extra.unit.unitIndex() + 5) << 5)
+    return ((unit.index + 5) << 9)
+        | ((extra.unit.index + 5) << 5)
         | (numeral.index + 7);
   }
 }

@@ -91,7 +91,7 @@ public final class ForcedLoc extends Insight {
   }
 
   @Override public int hashCode() {
-    return ((unit.unitIndex() + 5) << 11)
+    return ((unit.index + 5) << 11)
         | ((numeral.index + 7) << 7)
         | (location.index + 17);
   }

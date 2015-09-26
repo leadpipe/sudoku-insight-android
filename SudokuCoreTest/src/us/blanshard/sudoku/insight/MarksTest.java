@@ -17,6 +17,7 @@ package us.blanshard.sudoku.insight;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static us.blanshard.sudoku.core.NumSetTest.set;
 import static us.blanshard.sudoku.core.UnitTest.loc;
@@ -27,6 +28,7 @@ import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Row;
+import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
@@ -37,6 +39,13 @@ public class MarksTest {
 
   private final Grid.Builder builder = Grid.builder();
   private Marks marks;
+
+  public static Numeral n(int num) { return Numeral.of(num); }
+  public static Row r(int num) { return Row.of(num); }
+  public static Column c(int num) { return Column.of(num); }
+  public static Block b(int num) { return Block.of(num); }
+  public static UnitNumeral un(Unit unit, int num) { return UnitNumeral.of(unit, n(num)); }
+  public static UnitSubset us(Unit unit, int... nums) { return UnitSubset.ofBits(unit, set(nums).bits); }
 
   @Before public void setUp() {
     builder.put(loc(1, 2), Numeral.of(4));
@@ -57,11 +66,29 @@ public class MarksTest {
     return b.build();
   }
 
-  @Test public void get() {
+  @Test public void getSet() {
     assertEquals(set(7), marks.getSet(loc(4, 1)));
     assertEquals(set(3, 5, 8), marks.getSet(loc(4, 2)));
-    assertEquals(UnitSubset.singleton(Row.of(4), loc(4, 1)), marks.getSet(UnitNumeral.of(Row.of(4), Numeral.of(7))));
-    assertEquals(UnitSubset.ofBits(Row.of(4), 0xe4), marks.getSet(UnitNumeral.of(Row.of(4), Numeral.of(4))));
+    assertEquals(UnitSubset.singleton(r(4), loc(4, 1)), marks.getSet(un(r(4), 7)));
+    assertEquals(UnitSubset.ofBits(r(4), 0xe4), marks.getSet(un(r(4), 4)));
+  }
+
+  @Test public void assignments() {
+    assertSame(n(4), marks.get(loc(3, 9)));
+    assertSame(loc(3, 9), marks.get(un(r(3), 4)));
+    assertSame(loc(3, 9), marks.get(un(c(9), 4)));
+    assertSame(loc(3, 9), marks.get(un(b(3), 4)));
+  }
+
+  @Test public void unassigned() {
+    assertEquals(set(1,2,3,5,6,7,8,9), marks.getUnassignedNumerals(b(1)));
+    assertEquals(us(b(1), 1,3,4,5,6,7,8,9), marks.getUnassignedLocations(b(1)));
+
+    assertEquals(set(3,4,5,6,8), marks.getUnassignedNumerals(r(4)));
+    assertEquals(us(r(4), 2,3,6,7,8), marks.getUnassignedLocations(r(4)));
+
+    assertEquals(set(1,3,5,6,7,8,9), marks.getUnassignedNumerals(c(9)));
+    assertEquals(us(c(9), 1,2,5,6,7,8,9), marks.getUnassignedLocations(c(9)));
   }
 
   @Test public void assign_failure() {
@@ -69,7 +96,7 @@ public class MarksTest {
     builder.assign(loc(1, 2), Numeral.of(1));
     assertTrue(builder.hasErrors());
     assertEquals(0, builder.get(loc(1, 2)).size());
-    assertEquals(0, builder.get(UnitNumeral.of(Block.of(1), Numeral.of(4))).size());
+    assertEquals(0, builder.get(un(b(1), 4)).size());
   }
 
   @Test public void equals() {

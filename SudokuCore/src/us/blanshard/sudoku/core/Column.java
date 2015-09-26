@@ -48,20 +48,12 @@ public final class Column extends Unit {
     return ALL;
   }
 
-  @Override public int unitIndex() {
-    return 18 + index;
-  }
-
-  @Override public Type getType() {
-    return Type.COLUMN;
-  }
-
   @Override public String toString() {
     return "C" + number;
   }
 
   @Override protected int getOverlappingBits(Unit that) {
-    switch (that.getType()) {
+    switch (that.type) {
       case COLUMN:
         return this == that ? UnitSubset.ALL_BITS : 0;
       case BLOCK: {
@@ -78,6 +70,7 @@ public final class Column extends Unit {
   }
 
   private Column(int index) {
+    super(Type.COLUMN, index);
     this.index = index;
     this.number = index + 1;
     for (int i = 0; i < 9; ++i) {

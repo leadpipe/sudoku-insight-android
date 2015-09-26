@@ -476,7 +476,7 @@ public class Evaluator {
     }
 
     private static boolean isBlock(Unit unit) {
-      return unit.getType() == Unit.Type.BLOCK;
+      return unit.type == Unit.Type.BLOCK;
     }
 
     /**

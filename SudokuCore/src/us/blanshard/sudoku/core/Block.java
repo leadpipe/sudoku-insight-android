@@ -61,20 +61,12 @@ public final class Block extends Unit {
     return ALL;
   }
 
-  @Override public int unitIndex() {
-    return 0 + index;
-  }
-
-  @Override public Type getType() {
-    return Type.BLOCK;
-  }
-
   @Override public String toString() {
     return "B" + number;
   }
 
   @Override protected int getOverlappingBits(Unit that) {
-    switch (that.getType()) {
+    switch (that.type) {
       case BLOCK:
         return this == that ? UnitSubset.ALL_BITS : 0;
       case ROW: {
@@ -92,6 +84,7 @@ public final class Block extends Unit {
   }
 
   private Block(int index) {
+    super(Type.BLOCK, index);
     this.index = index;
     this.number = index + 1;
     int ul = index / 3 * 27 + index % 3 * 3;

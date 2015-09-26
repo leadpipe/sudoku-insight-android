@@ -34,7 +34,7 @@ public class UnitTest {  // What're the odds?
     assertEquals(27, Unit.allUnits().size());
     int count = 0;
     for (Unit unit : Unit.allUnits()) {
-      assertEquals(count, unit.unitIndex());
+      assertEquals(count, unit.index);
       ++count;
     }
     assertEquals(Unit.COUNT, count);
@@ -45,7 +45,7 @@ public class UnitTest {  // What're the odds?
     assertSame(Row.ofIndex(3), Unit.ofIndex(12));
     assertSame(Column.ofIndex(3), Unit.ofIndex(21));
     for (Unit u : Unit.allUnits())
-      assertSame(u, Unit.ofIndex(u.unitIndex()));
+      assertSame(u, Unit.ofIndex(u.index));
   }
 
   @Test public void getConflicts() {
@@ -99,10 +99,10 @@ public class UnitTest {  // What're the odds?
         if (u1 == u2) {
           assertEquals(9, i.size());
           assertEquals(0, s1.size());
-        } else if (u1.getType() == u2.getType()) {
+        } else if (u1.type == u2.type) {
           assertEquals(0, i.size());
           assertEquals(9, s1.size());
-        } else if (u1.getType() == Type.BLOCK || u2.getType() == Type.BLOCK) {
+        } else if (u1.type == Type.BLOCK || u2.type == Type.BLOCK) {
           if (i.isEmpty()) {
             assertEquals(9, s1.size());
           } else {
@@ -114,8 +114,8 @@ public class UnitTest {  // What're the odds?
           assertEquals(1, i.size());
           assertEquals(8, s1.size());
           Location loc = i.get(0);
-          assertEquals(loc.unit(u1.getType()), u1);
-          assertEquals(loc.unit(u2.getType()), u2);
+          assertEquals(loc.unit(u1.type), u1);
+          assertEquals(loc.unit(u2.type), u2);
         }
       }
     assertEquals(2 * 9 * 6, blockOverlapCount);
@@ -125,7 +125,7 @@ public class UnitTest {  // What're the odds?
     for (Unit u : Unit.allUnits())
       for (Location loc : Location.all()) {
         int i = u.indexOf(loc);
-        assertEquals(i >= 0, loc.unit(u.getType()) == u);
+        assertEquals(i >= 0, loc.unit(u.type) == u);
         if (i >= 0) {
           assertEquals(loc, u.get(i));
         }

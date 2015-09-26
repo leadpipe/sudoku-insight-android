@@ -25,6 +25,7 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Row;
+import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
@@ -48,28 +49,92 @@ import javax.annotation.concurrent.NotThreadSafe;
 @Immutable
 public final class Marks {
 
-  // The data array combines 16 bits of information for each location, and 16
-  // bits of information for each unit-numeral. The location data comes first in
-  // the array.
-  //
-  // Location data is a 9-bit set of the numerals that could be assigned to the
-  // location, plus a 4-bit slot for the numeral that is currently assigned
-  // (zero means nothing currently is). In addition, we keep an error bit in the
-  // top bit of location 0's data: when set, the assignments and eliminations
-  // embodied in the Marks are not consistent with the rules of Sudoku.
-  //
-  // Unit-numeral data is a 9-bit subset of the locations within the unit that
-  // could be assigned to the numeral, plus a 4-bit slot for the number of
-  // assignments of that numeral in different units involved in getting the
-  // subset to its current state.
+  /**
+   * The data array combines 16 bits of information for each location, for each
+   * unit-numeral, and for each unit (in fact, twice for each unit).  The
+   * location data comes first in the array, then the unit-numeral data, then
+   * the unit data.
+   *
+   * <p> Location data is a 9-bit set of the numerals that could be assigned to
+   * the location, plus a 4-bit slot for the numeral that is currently assigned
+   * (zero means nothing currently is).  In addition, we keep an error bit in
+   * the top bit of location 0's data: when set, the assignments and
+   * eliminations embodied in the Marks are not consistent with the rules of
+   * Sudoku.
+   *
+   * <p> Unit-numeral data is a 9-bit subset of the locations within the unit
+   * that could be assigned to the numeral, plus a 4-bit slot for the currently
+   * assigned location.  Zero means unassigned, and one through nine mean the
+   * number of the assigned location within the unit.
+   *
+   * <p> For units, we keep two bit-sets each.  First come bit-sets meaning the
+   * numerals currently unassigned within the unit, then come bit-sets meaning
+   * the locations currently unassigned within the unit.
+   */
   private final short[] data;
+
+  /**
+   * The number of elements of {@link #data}, one for each location and
+   * unit-numeral plus two for each unit.
+   */
+  private static final int DATA_SIZE = Location.COUNT + UnitNumeral.COUNT + 2 * Unit.COUNT;
+
+  /**
+   * The number corresponding to "all bits included," used as the initial value
+   * of every element of {@link #data}.
+   */
   private static final short ALL_BITS = (1 << 9) - 1;
-  private static final int UNIT_OFFSET = Location.COUNT;
+
+  /**
+   * The mask to apply to {@link #data} values to extract just the bit-sets.
+   */
+  private static final short BITSET_MASK = ALL_BITS;
+
+  /**
+   * The number of bits to shift {@link #data} values to find assigned numerals
+   * in location slots.
+   */
   private static final int LOC_ASSIGNMENT_SHIFT = 9;
+
+  /**
+   * A mask to apply to {@link #data} values to extract just the assigned
+   * numeral in location slots.
+   */
   private static final int LOC_ASSIGNMENT_MASK = ((1 << 4) - 1) << LOC_ASSIGNMENT_SHIFT;
+
+  /**
+   * The bit mask for {@link #data} slot zero used to indicate an error.
+   */
   private static final int LOC0_ERROR_BIT = 1 << 15;
-  private static final int UNITNUM_COUNT_SHIFT = 9;
-  private static final int UNITNUM_COUNT_MASK = ((1 << 4) - 1) << UNITNUM_COUNT_SHIFT;
+
+  /**
+   * The offset within {@link #data} where unit-numeral data begins.
+   */
+  private static final int UNITNUM_OFFSET = Location.COUNT;
+
+  /**
+   * The number of bits to shift {@link #data} values to find assigned locations
+   * in unit-numeral slots.
+   */
+  private static final int UNITNUM_ASSIGNMENT_SHIFT = 9;
+
+  /**
+   * A mask to apply to {@link #data} values to extract just the assigned
+   * location in unit-numeral slots.
+   */
+  private static final int UNITNUM_ASSIGNMENT_MASK = ((1 << 4) - 1) << UNITNUM_ASSIGNMENT_SHIFT;
+
+  /**
+   * The offset within {@link #data} where unit numeral-set data begins (the set
+   * of numerals currently unassigned within the unit).
+   */
+  private static final int UNIT_NUMSET_OFFSET = UNITNUM_OFFSET + UnitNumeral.COUNT;
+
+  /**
+   * The offset within {@link #data} where unit location-set data begins (the
+   * set of locations currently unassigned within the unit).
+   */
+  private static final int UNIT_LOCSET_OFFSET = UNIT_NUMSET_OFFSET + Unit.COUNT;
 
   private Marks(short[] data) {
     this.data = data;
@@ -115,7 +180,7 @@ public final class Marks {
    * Returns the bit-set corresponding to {@link #getSet(Location)}.
    */
   public int getBits(Location loc) {
-    return data[loc.index] & ALL_BITS;
+    return data[loc.index] & BITSET_MASK;
   }
 
   /**
@@ -130,14 +195,16 @@ public final class Marks {
    * Returns the numeral assigned to the given location, or null.
    */
   @Nullable public Numeral get(Location loc) {
-    return Numeral.numeral((data[loc.index] & LOC_ASSIGNMENT_MASK) >> LOC_ASSIGNMENT_SHIFT);
+    int assigned = (data[loc.index] & LOC_ASSIGNMENT_MASK) >> LOC_ASSIGNMENT_SHIFT;
+    return assigned == 0 ? null : Numeral.of(assigned);
   }
 
   /**
    * Tells whether the given location has a numeral assigned to it.
    */
   public boolean hasAssignment(Location loc) {
-    return get(loc) != null;
+    int assigned = (data[loc.index] & LOC_ASSIGNMENT_MASK) >> LOC_ASSIGNMENT_SHIFT;
+    return assigned != 0;
   }
 
   /**
@@ -164,7 +231,7 @@ public final class Marks {
    * Returns the bit-set corresponding to {@link #getSet(UnitNumeral)}.
    */
   public int getBits(UnitNumeral unitNum) {
-    return data[UNIT_OFFSET + unitNum.index] & ALL_BITS;
+    return data[UNITNUM_OFFSET + unitNum.index] & BITSET_MASK;
   }
 
   /**
@@ -189,8 +256,8 @@ public final class Marks {
    * null.
    */
   @Nullable public Location get(UnitNumeral unitNum) {
-    Location loc = getSingleton(unitNum);
-    return loc != null && get(loc) == unitNum.numeral ? loc : null;
+    int assigned = (data[UNITNUM_OFFSET + unitNum.index] & UNITNUM_ASSIGNMENT_MASK) >> UNITNUM_ASSIGNMENT_SHIFT;
+    return assigned == 0 ? null : unitNum.unit.get(assigned - 1);
   }
 
   /**
@@ -198,8 +265,40 @@ public final class Marks {
    * within the given unit.
    */
   public boolean hasAssignment(UnitNumeral unitNum) {
-    Location loc = getSingleton(unitNum);
-    return loc != null && get(loc) == unitNum.numeral;
+    int assigned = (data[UNITNUM_OFFSET + unitNum.index] & UNITNUM_ASSIGNMENT_MASK) >> UNITNUM_ASSIGNMENT_SHIFT;
+    return assigned != 0;
+  }
+
+  /**
+   * Returns a bit-set of the numerals that do not yet have an assigned location
+   * within the given unit.
+   */
+  public int getUnassignedNumeralBits(Unit unit) {
+    return data[UNIT_NUMSET_OFFSET + unit.index] & BITSET_MASK;
+  }
+
+  /**
+   * Returns the set of numerals that are currently unassigned within the given
+   * unit.
+   */
+  public NumSet getUnassignedNumerals(Unit unit) {
+    return NumSet.ofBits(getUnassignedNumeralBits(unit));
+  }
+
+  /**
+   * Returns a bit-set of the locations within the given unit that are not
+   * currently assigned a numeral.
+   */
+  public int getUnassignedLocationBits(Unit unit) {
+    return data[UNIT_LOCSET_OFFSET + unit.index] & BITSET_MASK;
+  }
+
+  /**
+   * Returns a subset of the locations in the given unit that are not currently
+   * assigned a numeral.
+   */
+  public UnitSubset getUnassignedLocations(Unit unit) {
+    return UnitSubset.ofBits(unit, getUnassignedLocationBits(unit));
   }
 
   @NotThreadSafe
@@ -208,7 +307,7 @@ public final class Marks {
     private boolean built;
 
     private Builder() {
-      this.marks = new Marks(new short[Location.COUNT + UnitNumeral.COUNT]);
+      this.marks = new Marks(new short[DATA_SIZE]);
       this.built = false;
       clear();
     }
@@ -273,16 +372,32 @@ public final class Marks {
 
       // Remove this numeral from this location's peers.
       for (Location peer : loc.peers)
-        ok &= eliminate(peer, num, /*fromAssignment=*/ true);
+        ok &= eliminateInternal(peer, num);
 
       // Remove the other numerals from this location.
-      NumSet others = get(loc).minus(num.asSet());
+      NumSet others = get(loc).without(num);
       for (Numeral other : others)
-        ok &= eliminate(loc, other, /*fromAssignment=*/ false);
+        ok &= eliminateInternal(loc, other);
 
       // Save the numeral in the location's data slot.
-      marks.data[loc.index] = (short) ((marks.data[loc.index] & ~LOC_ASSIGNMENT_MASK)
-          | (num.number << LOC_ASSIGNMENT_SHIFT));
+      short value = marks.data[loc.index];
+      value &= ~LOC_ASSIGNMENT_MASK;
+      value |= (num.number << LOC_ASSIGNMENT_SHIFT);
+      marks.data[loc.index] = value;
+
+      // Save the location in the 3 unit-numerals' slots, and reduce the sets of
+      // available numerals and locations in each unit.
+      for (int i = 0; i < 3; ++i) {
+        UnitSubset unitSubset = loc.unitSubsetList.get(i);
+        int index = UnitNumeral.getIndex(unitSubset.unit, num);
+        value = marks.data[UNITNUM_OFFSET + index];
+        value &= ~UNITNUM_ASSIGNMENT_MASK;
+        value |= (unitSubset.getIndex(0) + 1) << UNITNUM_ASSIGNMENT_SHIFT;
+        marks.data[UNITNUM_OFFSET + index] = value;
+
+        marks.data[UNIT_NUMSET_OFFSET + unitSubset.unit.index] &= ~num.bit;
+        marks.data[UNIT_LOCSET_OFFSET + unitSubset.unit.index] &= ~unitSubset.bits;
+      }
 
       if (ok) ok = getBits(loc) == num.bit;
       if (!ok) setError();
@@ -307,32 +422,21 @@ public final class Marks {
      * units.  Sets the error bit if any of these sets ends up empty.
      */
     public Builder eliminate(Location loc, Numeral num) {
-      eliminate(loc, num, /*fromAssignment=*/ false);
+      eliminateInternal(loc, num);
       return this;
     }
 
-    private boolean eliminate(Location loc, Numeral num, boolean fromAssignment) {
+    private boolean eliminateInternal(Location loc, Numeral num) {
       boolean answer = true;
 
-      if (((marks().data[loc.index] &= ~num.bit) & ALL_BITS) == 0)
+      if (((marks().data[loc.index] &= ~num.bit) & BITSET_MASK) == 0)
         answer = false;  // This location has no possibilities left
 
       for (int i = 0; i < 3; ++i) {
         UnitSubset unitSubset = loc.unitSubsetList.get(i);
         int index = UnitNumeral.getIndex(unitSubset.unit, num);
-        short pre = marks.data[UNIT_OFFSET + index];
-        short post = (short) (pre & (~unitSubset.bits));
-        if (pre != post) {
-          if (fromAssignment) {
-            // Increment the counter that lives in the high bits.
-            int newCount = 1 + (post & UNITNUM_COUNT_MASK) >> UNITNUM_COUNT_SHIFT;
-            post &= ~UNITNUM_COUNT_MASK;
-            post |= newCount << UNITNUM_COUNT_SHIFT;
-          }
-          marks.data[UNIT_OFFSET + index] = post;
-          if ((pre & ALL_BITS) == 0)
-            answer = false;  // This numeral has no possible locations left in this unit
-        }
+        if ((marks.data[UNITNUM_OFFSET + index] &= ~unitSubset.bits) == 0)
+          answer = false;  // This numeral has no possible locations left in this unit
       }
 
       if (!answer)
