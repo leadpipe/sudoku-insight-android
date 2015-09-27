@@ -38,6 +38,7 @@ public class PatternTest {
       " . . 5 | . . . | 2 . 6" +
       " . . . | 4 6 3 | . . ." +
       " . . . | . . . | . 4 .");
+  private static final Marks marks = Marks.fromGrid(grid);
 
 
   private void testPeerMetrics(int row, int col, String expected) {
@@ -48,7 +49,7 @@ public class PatternTest {
   }
 
   private PeerMetrics peerMetrics(int row, int col) {
-    return Pattern.peerMetrics(grid, Location.of(row, col));
+    return Pattern.peerMetrics(marks, Location.of(row, col));
   }
 
   @Test public void peerMetrics() {
@@ -77,19 +78,24 @@ public class PatternTest {
   @Test public void lockedSets() {
     SetFinder finder = new SetFinder();
     Analyzer.findSets(Marks.fromGrid(grid), finder);
+    assertEquals(6, finder.sets.size());
     LockedSet set1 = finder.sets.get(0);
     LockedSet set2 = finder.sets.get(1);
     LockedSet set3 = finder.sets.get(2);
     LockedSet set4 = finder.sets.get(3);
+    LockedSet set5 = finder.sets.get(4);
+    LockedSet set6 = finder.sets.get(5);
     assertEquals(UnitSubset.ofBits(Block.of(6), 0402), set1.getLocations());
-    assertEquals(UnitSubset.ofBits(Block.of(3), 0030), set2.getLocations());
-    assertEquals(UnitSubset.ofBits(Row.of(2), 0407), set3.getLocations());
-    assertEquals(UnitSubset.ofBits(Column.of(7), 0603), set4.getLocations());
+    assertEquals(UnitSubset.ofBits(Block.of(6), 0011), set2.getLocations());
+    assertEquals(UnitSubset.ofBits(Block.of(3), 0030), set3.getLocations());
+    assertEquals(UnitSubset.ofBits(Column.of(7), 0030), set4.getLocations());
+    assertEquals(UnitSubset.ofBits(Row.of(2), 0407), set5.getLocations());
+    assertEquals(UnitSubset.ofBits(Column.of(7), 0603), set6.getLocations());
 
-    assertEquals("s:!21:b:2:h:o", Pattern.lockedSet(true, set1, grid).toString());
-    assertEquals("s:-22:l:2:h:d", Pattern.lockedSet(false, set2, grid).toString());
-    assertEquals("s:-32:l:4:n:d", Pattern.lockedSet(false, set3, grid).toString());
-    assertEquals("s:!30:l:4:h:o", Pattern.lockedSet(true, set4, grid).toString());
+    assertEquals("s:!21:b:2:h:o", Pattern.lockedSet(true, set1, marks).toString());
+    assertEquals("s:-22:l:2:h:d", Pattern.lockedSet(false, set3, marks).toString());
+    assertEquals("s:-32:l:4:n:d", Pattern.lockedSet(false, set5, marks).toString());
+    assertEquals("s:!30:l:4:h:o", Pattern.lockedSet(true, set6, marks).toString());
   }
 
   @Test public void moreLockedSets() {
@@ -107,7 +113,7 @@ public class PatternTest {
         " . . . | . . . | . . .");
     LockedSet set = new LockedSet(
         NumSet.ofBits(7), UnitSubset.ofBits(Block.of(1), 0310), false);
-    assertEquals("s:!25:b:3:h:d", Pattern.lockedSet(true, set, grid).toString());
+    assertEquals("s:!25:b:3:h:d", Pattern.lockedSet(true, set, Marks.fromGrid(grid)).toString());
 
     grid = Grid.fromString(
         " 4 5 . | . . 3 | . . ." +
@@ -121,7 +127,7 @@ public class PatternTest {
         " . . . | . . . | . . ." +
         " . . . | . . . | . . ." +
         " . . . | . . . | . . .");
-    assertEquals("s:-25:b:3:h:o", Pattern.lockedSet(false, set, grid).toString());
+    assertEquals("s:-25:b:3:h:o", Pattern.lockedSet(false, set, Marks.fromGrid(grid)).toString());
   }
 
   private void testPattern(String s1, Pattern p1) {
