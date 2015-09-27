@@ -11,9 +11,9 @@ import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Row;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.insight.Analyzer;
-import us.blanshard.sudoku.insight.GridMarks;
 import us.blanshard.sudoku.insight.Insight;
 import us.blanshard.sudoku.insight.LockedSet;
+import us.blanshard.sudoku.insight.Marks;
 import us.blanshard.sudoku.stats.Pattern.Coll;
 import us.blanshard.sudoku.stats.Pattern.PeerMetrics;
 import us.blanshard.sudoku.stats.Pattern.UnitCategory;
@@ -76,7 +76,7 @@ public class PatternTest {
 
   @Test public void lockedSets() {
     SetFinder finder = new SetFinder();
-    Analyzer.findSets(new GridMarks(grid), finder);
+    Analyzer.findSets(Marks.fromGrid(grid), finder);
     LockedSet set1 = finder.sets.get(0);
     LockedSet set2 = finder.sets.get(1);
     LockedSet set3 = finder.sets.get(2);

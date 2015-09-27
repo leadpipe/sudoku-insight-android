@@ -93,8 +93,8 @@ public class Analyzer {
    * antecedents that have nothing to do with the consequent. Call
    * {@link #minimizeImplication} to squeeze out irrelevant antecedents.
    */
-  public static boolean analyze(GridMarks gridMarks, Callback callback) {
-    return analyze(gridMarks, callback, DEFAULT_OPTIONS);
+  public static boolean analyze(Marks marks, Callback callback) {
+    return analyze(marks, callback, DEFAULT_OPTIONS);
   }
 
   private static final Options DEFAULT_OPTIONS = new Options(true, false);
@@ -103,12 +103,11 @@ public class Analyzer {
    * Like the standard version of analyze, but lets you control the detailed
    * behavior of the analyzer.
    */
-  public static boolean analyze(
-      GridMarks gridMarks, Callback callback, Options options) {
+  public static boolean analyze(Marks marks, Callback callback, Options options) {
     boolean complete = false;
 
     try {
-      findInsights(gridMarks.marks, callback, null, options);
+      findInsights(marks, callback, null, options);
       complete = true;
 
     } catch (InterruptedException e) {
@@ -125,14 +124,14 @@ public class Analyzer {
    * interrupting the thread.  Returns the original insight if either the thread
    * was interrupted or there was no way to reduce it.
    */
-  public static Insight minimize(GridMarks gridMarks, Insight insight) {
+  public static Insight minimize(Marks marks, Insight insight) {
     try {
       switch (insight.type) {
         case IMPLICATION:
-          return minimizeImplication(gridMarks, (Implication) insight);
+          return minimizeImplication(marks, (Implication) insight);
 
         case DISPROVED_ASSIGNMENT:
-          return minimizeDisproof(gridMarks, (DisprovedAssignment) insight);
+          return minimizeDisproof(marks, (DisprovedAssignment) insight);
 
         default:
           return insight;
@@ -212,7 +211,7 @@ public class Analyzer {
     }
   }
 
-  private static Insight minimizeImplication(GridMarks gridMarks, Implication implication)
+  private static Insight minimizeImplication(Marks marks, Implication implication)
       throws InterruptedException {
     Insight consequent = implication.getConsequent();
     ImmutableList<Insight> allAntecedents = ImmutableList.copyOf(implication.getAntecedents());
@@ -220,7 +219,7 @@ public class Analyzer {
 
     if (consequent instanceof Implication) {
       consequent = minimizeImplication(
-          gridMarks.toBuilder().apply(implication.getAntecedents()).build(),
+          marks.toBuilder().apply(implication.getAntecedents()).build(),
           (Implication) consequent);
     }
 
@@ -228,7 +227,7 @@ public class Analyzer {
       checkInterruption();
       Insight antecedent = allAntecedents.get(index);
       if (mayBeAntecedentTo(antecedent, consequent)) {
-        GridMarks withoutThisOne = gridMarks.toBuilder()
+        Marks withoutThisOne = marks.toBuilder()
             .apply(allAntecedents.subList(0, index))
             .apply(requiredAntecedents)
             .build();
@@ -253,10 +252,10 @@ public class Analyzer {
     return false;
   }
 
-  private static Insight minimizeDisproof(GridMarks gridMarks, DisprovedAssignment disproof)
+  private static Insight minimizeDisproof(Marks marks, DisprovedAssignment disproof)
       throws InterruptedException {
     Insight resultingError = disproof.getResultingError();
-    GridMarks postAssignment = gridMarks.toBuilder()
+    Marks postAssignment = marks.toBuilder()
         .eliminate(disproof.getDisprovedAssignment()).build();
     Insight minimizedError = minimize(postAssignment, resultingError);
     return minimizedError == resultingError ? disproof
@@ -324,13 +323,9 @@ public class Analyzer {
     if (Thread.currentThread().isInterrupted()) throw new InterruptedException();
   }
 
-  public static void findOverlapsAndSets(GridMarks gridMarks, Callback callback) {
-    findOverlaps(gridMarks, callback);
-    findSets(gridMarks, callback);
-  }
-
-  public static void findOverlaps(GridMarks gridMarks, Callback callback) {
-    findOverlaps(gridMarks.marks, callback);
+  public static void findOverlapsAndSets(Marks marks, Callback callback) {
+    findOverlaps(marks, callback);
+    findSets(marks, callback);
   }
 
   public static void findOverlaps(Marks marks, Callback callback) {
@@ -396,9 +391,6 @@ public class Analyzer {
     return count;
   }
 
-  public static void findSets(GridMarks gridMarks, Callback callback) {
-    findSets(gridMarks.marks, callback);
-  }
   public static void findSets(Marks marks, Callback callback) {
     SetState setState = new SetState();
     int[] indices = new int[MAX_SET_SIZE];
@@ -494,10 +486,6 @@ public class Analyzer {
     }
   }
 
-  public static void findErrors(GridMarks gridMarks, Callback callback) {
-    findErrors(gridMarks.marks, callback);
-  }
-
   public static void findErrors(Marks marks, Callback callback) {
     // First look for actual conflicting assignments.
     for (Unit unit : Unit.allUnits()) {
@@ -537,15 +525,6 @@ public class Analyzer {
     }
   }
 
-  public static void findAssignments(GridMarks gridMarks, Callback callback) {
-    findSingletonLocations(gridMarks, callback);
-    findSingletonNumerals(gridMarks, callback);
-  }
-
-  public static void findSingletonLocations(GridMarks gridMarks, Callback callback) {
-    findSingletonLocations(gridMarks.marks, callback);
-  }
-
   public static void findSingletonLocations(Marks marks, Callback callback) {
     for (int i = 0; i < UnitNumeral.COUNT; ++i) {
       UnitNumeral un = UnitNumeral.of(i);
@@ -553,10 +532,6 @@ public class Analyzer {
       if (loc != null && !marks.hasAssignment(loc))
         callback.take(new ForcedLoc(un.unit, un.numeral, loc));
     }
-  }
-
-  public static void findSingletonNumerals(GridMarks gridMarks, Callback callback) {
-    findSingletonNumerals(gridMarks.marks, callback);
   }
 
   public static void findSingletonNumerals(Marks marks, Callback callback) {

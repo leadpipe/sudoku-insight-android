@@ -858,7 +858,7 @@ public class ReplayActivity extends ActivityBase
 
     boolean minimize(GridMarks gridMarks) {
       if (!minimized) {
-        insight = Analyzer.minimize(gridMarks, insight);
+        insight = Analyzer.minimize(gridMarks.marks, insight);
         minimized = !Thread.currentThread().isInterrupted();
       }
       return minimized;
@@ -1005,7 +1005,7 @@ public class ReplayActivity extends ActivityBase
     }
 
     private void doFullAnalysis(final Insights answer) {
-      Analyzer.analyze(answer.gridMarks, new Analyzer.Callback() {
+      Analyzer.analyze(answer.gridMarks.marks, new Analyzer.Callback() {
         @Override public void take(Insight insight) {
           if (insight.isError()) {
             answer.error = new InsightMin(insight);
@@ -1020,7 +1020,7 @@ public class ReplayActivity extends ActivityBase
     }
 
     private void doTargetedAnalysis(final Insights answer) {
-      Analyzer.analyze(answer.gridMarks, new Analyzer.Callback() {
+      Analyzer.analyze(answer.gridMarks.marks, new Analyzer.Callback() {
         @Override public void take(Insight insight) {
           if (insight.isAssignment() && mTarget.equals(insight.getImpliedAssignment())) {
             InsightMin insightMin = new InsightMin(insight);
@@ -1033,7 +1033,7 @@ public class ReplayActivity extends ActivityBase
       if (mSolution.get(mTarget.location) != mTarget.numeral) {
         ErrorGrabber grabber = new ErrorGrabber();
         GridMarks postTarget = answer.gridMarks.toBuilder().assign(mTarget).build();
-        Analyzer.analyze(postTarget, grabber);
+        Analyzer.analyze(postTarget.marks, grabber);
         if (grabber.error != null) {
           answer.error = new InsightMin(grabber.error);
           //answer.error.minimize(postTarget);
@@ -1158,13 +1158,13 @@ public class ReplayActivity extends ActivityBase
 
     private void checkForDisproof(GridMarks current, PossibleAssignment p) {
       ErrorGrabber grabber = new ErrorGrabber();
-      Analyzer.analyze(current.toBuilder().assign(p.loc, p.num).build(), grabber);
+      Analyzer.analyze(current.marks.toBuilder().assign(p.loc, p.num).build(), grabber);
 
       if (grabber.error != null) {
         mSetSize = p.setSize;
         DisprovedAssignment disproof = new DisprovedAssignment(p.toAssignment(), grabber.error);
         CoverageMeasurer cm = new CoverageMeasurer(mInsights.available);
-        Analyzer.analyze(current.toBuilder().eliminate(p.loc, p.num).build(), cm);
+        Analyzer.analyze(current.marks.toBuilder().eliminate(p.loc, p.num).build(), cm);
         publishProgress(new InsightMin(disproof, cm.getFractionCovered()));
       }
     }

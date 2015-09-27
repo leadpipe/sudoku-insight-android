@@ -106,7 +106,7 @@ public class AnalyzerTest {
     setAll(game.getState(), state);
     setAll(game.getTrail(0), trail);
 
-    boolean complete = Analyzer.analyze(new GridMarks(state), callback);
+    boolean complete = Analyzer.analyze(Marks.fromGrid(state), callback);
 
     assertTrue(complete);
     verify(callback, never()).take(isA(Conflict.class));
@@ -144,7 +144,7 @@ public class AnalyzerTest {
     Sudoku game = new Sudoku(puzzle, Sudoku.nullRegistry()).resume();
     setAll(game.getState(), state);
 
-    boolean complete = Analyzer.analyze(new GridMarks(state), callback);
+    boolean complete = Analyzer.analyze(Marks.fromGrid(state), callback);
 
     assertTrue(complete);
     verify(callback, never()).take(isA(Conflict.class));
@@ -153,35 +153,22 @@ public class AnalyzerTest {
   }
 
   @Test public void correctSets() {
-    Grid grid = Grid.fromString(
-        " 6 . 1 | 2 . 9 | . 4 5 " +
-        " 2 . 8 | . . 4 | . . 6 " +
-        " . . . | 7 6 8 | . . 2 " +
-        "-------+-------+-------" +
-        " 5 6 . | 9 . 1 | 3 2 8 " +
-        " 8 . 9 | 6 . . | 4 . . " +
-        " . . 7 | 8 . . | . 6 . " +
-        "-------+-------+-------" +
-        " 9 . 6 | . 2 7 | . . . " +
-        " 7 . . | 3 8 6 | 2 . . " +
-        " 1 8 2 | 4 9 5 | 6 7 3 ");
-
     Marks marks = Marks.fromString(
-        "  6    37   1   |  2    3    9   |  78   4    5   " +
-        "  2   379   8   |  15   1    4   |  7    39   6   " +
-        "  34  3459 345  |  7    6    8   |  19  139   2   " +
+        "  6!   37   1!  |  2!   3    9!  |  78   4!   5!  " +
+        "  2!  379   8!  |  15   1    4!  |  7    39   6!  " +
+        "  34  3459 345  |  7!   6!   8!  |  19  139   2!  " +
         "----------------+----------------+----------------" +
-        "  5    6    4   |  9    47   1   |  3    2    8   " +
-        "  8    12   9   |  6    57   23  |  4    15   7   " +
-        "  34   12   7   |  8    45   23  | 159   6    19  " +
+        "  5!   6!   4   |  9!   47   1!  |  3!   2!   8!  " +
+        "  8!   12   9!  |  6!   57   23  |  4!   15   7   " +
+        "  34   12   7!  |  8!   45   23  | 159   6!   19  " +
         "----------------+----------------+----------------" +
-        "  9    3    6   |  1    2    7   |  58   8    4   " +
-        "  7    45   45  |  3    8    6   |  2    19   19  " +
-        "  1    8    2   |  4    9    5   |  6    7    3   ");
+        "  9!   3    6!  |  1    2!   7!  |  58   8    4   " +
+        "  7!   45   45  |  3!   8!   6!  |  2!   19   19  " +
+        "  1!   8!   2!  |  4!   9!   5!  |  6!   7!   3!  ");
 
     Collector collector = new Collector();
 
-    Analyzer.findOverlapsAndSets(new GridMarks(grid, marks, false), collector);
+    Analyzer.findOverlapsAndSets(marks, collector);
 
     Unit c2 = Column.of(2);
     assertTrue(collector.taken.contains(new LockedSet(set(1,2), locs(c2, 5, 6), false)));
@@ -203,9 +190,9 @@ public class AnalyzerTest {
         " 1 3 . | . . . | 5 . . ");
 
     Collector collector = new Collector();
-    GridMarks gridMarks = new GridMarks(grid);
+    Marks marks = Marks.fromGrid(grid);
 
-    Analyzer.analyze(gridMarks, collector);
+    Analyzer.analyze(marks, collector);
 
     Unit b3 = Block.of(3);
     assertTrue(collector.taken.contains(new LockedSet(set(4,9), locs(b3, 4, 5), false)));
@@ -216,7 +203,7 @@ public class AnalyzerTest {
     Implication imp = (Implication) Iterables.find(collector.taken, Predicates.instanceOf(Implication.class));
     assertEquals(new ForcedLoc(Block.of(2), Numeral.of(2), Location.of(2, 5)), imp.getConsequent());
 
-    Implication imp2 = (Implication) Analyzer.minimize(gridMarks, imp);
+    Implication imp2 = (Implication) Analyzer.minimize(marks, imp);
     assertEquals(Lists.newArrayList(set26), imp2.getAntecedents());
   }
 
@@ -235,14 +222,14 @@ public class AnalyzerTest {
         " . . . | . . . | . . . ");
 
     Collector collector = new Collector();
-    GridMarks gridMarks = new GridMarks(grid);
+    Marks marks = Marks.fromGrid(grid);
 
-    Analyzer.analyze(gridMarks, collector, new Analyzer.Options(false, false));
+    Analyzer.analyze(marks, collector, new Analyzer.Options(false, false));
 
     boolean found = false;
     for (Insight i : collector.taken) {
       if (i.getImpliedAssignment() == Assignment.of(Location.of(2, 1), Numeral.of(2))) {
-        Implication imp = (Implication) Analyzer.minimize(gridMarks, i);
+        Implication imp = (Implication) Analyzer.minimize(marks, i);
         if (imp.getConsequent().type == Insight.Type.FORCED_NUMERAL) {
           found = true;
           assertEquals(Arrays.asList(

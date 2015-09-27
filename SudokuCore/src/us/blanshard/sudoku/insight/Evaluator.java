@@ -186,7 +186,7 @@ public class Evaluator {
       status = null;
       do {
         Collector collector = new Collector(gridMarks, minOpen, numOpen, random);
-        if (Analyzer.analyze(gridMarks, collector, OPTS)) {
+        if (Analyzer.analyze(gridMarks.marks, collector, OPTS)) {
           score += collector.getElapsedMinutes();
           if (callback != null) callback.updateEstimate(score);
           if (collector.assignmentsWon()) {
@@ -547,7 +547,7 @@ public class Evaluator {
     @Override public void take(Insight insight) throws StopException {
       Assignment a = insight.getImpliedAssignment();
       if (a == null && !insight.isError()) return;
-      insight = Analyzer.minimize(gridMarks, insight);
+      insight = Analyzer.minimize(gridMarks.marks, insight);
       double p = getProbability(insight, gridMarks.grid, minOpen);
       totalWeight += p;
       Object key = a == null ? ERRORS : a;

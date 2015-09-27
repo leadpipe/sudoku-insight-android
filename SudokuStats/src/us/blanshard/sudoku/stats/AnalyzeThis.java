@@ -18,8 +18,8 @@ package us.blanshard.sudoku.stats;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.insight.Analyzer;
 import us.blanshard.sudoku.insight.Analyzer.StopException;
-import us.blanshard.sudoku.insight.GridMarks;
 import us.blanshard.sudoku.insight.Insight;
+import us.blanshard.sudoku.insight.Marks;
 
 import java.io.IOException;
 
@@ -31,7 +31,7 @@ public class AnalyzeThis {
   public static void main(String[] args) throws IOException {
     System.out.println("Enter a grid:");
     Grid grid = Grid.fromString(convertStreamToString(System.in));
-    Analyzer.analyze(new GridMarks(grid), new Analyzer.Callback() {
+    Analyzer.analyze(Marks.fromGrid(grid), new Analyzer.Callback() {
       @Override public void take(Insight insight) throws StopException {
         System.out.println(insight);
       }

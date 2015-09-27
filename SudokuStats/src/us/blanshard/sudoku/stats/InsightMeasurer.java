@@ -34,6 +34,7 @@ import us.blanshard.sudoku.insight.GridMarks;
 import us.blanshard.sudoku.insight.Implication;
 import us.blanshard.sudoku.insight.Insight;
 import us.blanshard.sudoku.insight.LockedSet;
+import us.blanshard.sudoku.insight.Marks;
 import us.blanshard.sudoku.insight.Overlap;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -151,7 +152,7 @@ public class InsightMeasurer {
         minOpen = numOpen;
       GridMarks gridMarks = new GridMarks(grid);
       Collector collector = new Collector(gridMarks);
-      Analyzer.analyze(gridMarks, collector, OPTS);
+      Analyzer.analyze(gridMarks.marks, collector, OPTS);
       boolean isTrailhead =
           move.trailId >= 0
               && (game.getTrail(move.trailId).getTrailhead() == null || game.getTrail(move.trailId)
@@ -215,7 +216,7 @@ public class InsightMeasurer {
       }
     }
     ErrorSeer callback = new ErrorSeer();
-    Analyzer.findErrors(new GridMarks(grid), callback);
+    Analyzer.findErrors(Marks.fromGrid(grid), callback);
     return callback.errorSeen;
   }
 
@@ -256,7 +257,7 @@ public class InsightMeasurer {
       GridMarks gridMarks = new GridMarks(entry.getValue().grid);
       if (gridMarks.hasErrors) {
         Collector collector = new Collector(gridMarks);
-        Analyzer.analyze(gridMarks, collector, OPTS);
+        Analyzer.analyze(gridMarks.marks, collector, OPTS);
         long timestamp = 0;
         long elapsed = 0;
         int trailId = entry.getKey();
@@ -341,7 +342,7 @@ public class InsightMeasurer {
     }
 
     @Override public void take(Insight insight) throws StopException {
-      insight = Analyzer.minimize(gridMarks, insight);
+      insight = Analyzer.minimize(gridMarks.marks, insight);
       Assignment a = insight.getImpliedAssignment();
       if (a != null) {
         moves.put(a, new WrappedInsight(gridMarks, insight));
