@@ -30,7 +30,6 @@ import us.blanshard.sudoku.insight.Conflict;
 import us.blanshard.sudoku.insight.Evaluator;
 import us.blanshard.sudoku.insight.ForcedLoc;
 import us.blanshard.sudoku.insight.ForcedNum;
-import us.blanshard.sudoku.insight.GridMarks;
 import us.blanshard.sudoku.insight.Implication;
 import us.blanshard.sudoku.insight.Insight;
 import us.blanshard.sudoku.insight.LockedSet;
@@ -150,9 +149,9 @@ public class InsightMeasurer {
       int numOpen = grid.getNumOpenLocations();
       if (numOpen < minOpen)
         minOpen = numOpen;
-      GridMarks gridMarks = new GridMarks(grid);
-      Collector collector = new Collector(gridMarks);
-      Analyzer.analyze(gridMarks.marks, collector, OPTS);
+      Marks marks = Marks.fromGrid(grid);
+      Collector collector = new Collector(marks);
+      Analyzer.analyze(marks, collector, OPTS);
       boolean isTrailhead =
           move.trailId >= 0
               && (game.getTrail(move.trailId).getTrailhead() == null || game.getTrail(move.trailId)
@@ -254,10 +253,10 @@ public class InsightMeasurer {
 
   private void emitAbandonedErrors() {
     for (Map.Entry<Integer, TrailState> entry : trailFinals.entrySet()) {
-      GridMarks gridMarks = new GridMarks(entry.getValue().grid);
-      if (gridMarks.hasErrors) {
-        Collector collector = new Collector(gridMarks);
-        Analyzer.analyze(gridMarks.marks, collector, OPTS);
+      Marks marks = Marks.fromGrid(entry.getValue().grid);
+      if (marks.hasErrors()) {
+        Collector collector = new Collector(marks);
+        Analyzer.analyze(marks, collector, OPTS);
         long timestamp = 0;
         long elapsed = 0;
         int trailId = entry.getKey();
@@ -270,7 +269,7 @@ public class InsightMeasurer {
           }
         }
         minOpen = entry.getValue().minOpen;
-        startLine(false, elapsed, gridMarks.grid.getNumOpenLocations(), timestamp);
+        startLine(false, elapsed, marks.getNumOpenLocations(), timestamp);
         StringBuilder sb = new StringBuilder();
         try {
           Pattern.appendTo(sb, toColl(collector.errors, entry.getValue().prevNums));
@@ -333,21 +332,21 @@ public class InsightMeasurer {
   }
 
   private class Collector implements Analyzer.Callback {
-    final GridMarks gridMarks;
+    final Marks marks;
     final Multimap<Assignment, WrappedInsight> moves = ArrayListMultimap.create();
     final List<WrappedInsight> errors = Lists.newArrayList();
 
-    Collector(GridMarks gridMarks) {
-      this.gridMarks = gridMarks;
+    Collector(Marks marks) {
+      this.marks = marks;
     }
 
     @Override public void take(Insight insight) throws StopException {
-      insight = Analyzer.minimize(gridMarks.marks, insight);
+      insight = Analyzer.minimize(marks, insight);
       Assignment a = insight.getImpliedAssignment();
       if (a != null) {
-        moves.put(a, new WrappedInsight(gridMarks, insight));
+        moves.put(a, new WrappedInsight(marks, insight));
       } else if (insight.isError()) {
-        errors.add(new WrappedInsight(gridMarks, insight));
+        errors.add(new WrappedInsight(marks, insight));
       }
     }
 
@@ -412,11 +411,11 @@ public class InsightMeasurer {
   }
 
   private static class WrappedInsight {
-    final Grid grid;
+    final Marks marks;
     final Insight insight;
 
-    WrappedInsight(GridMarks gridMarks, Insight insight) {
-      this.grid = gridMarks.grid;
+    WrappedInsight(Marks marks, Insight insight) {
+      this.marks = marks;
       this.insight = insight;
     }
 
@@ -431,8 +430,8 @@ public class InsightMeasurer {
           return Pattern.conflict(prevNums.contains(i.getNumeral()), i.getLocations().unit);
         }
         case BARRED_LOCATION:
-          return Pattern.barredLocation(Evaluator.Pattern.forInsight(insight, grid),
-              ((BarredLoc) insight).getLocation(), grid);
+          return Pattern.barredLocation(Evaluator.Pattern.forInsight(insight, marks),
+              ((BarredLoc) insight).getLocation(), marks);
         case BARRED_NUMERAL: {
           final BarredNum i = (BarredNum) insight;
           return Pattern.barredNumeral(prevNums.contains(i.getNumeral()), i.getUnit());
@@ -444,7 +443,7 @@ public class InsightMeasurer {
         case FORCED_NUMERAL: {
           ForcedNum i = (ForcedNum) insight;
           return Pattern.forcedNumeral(prevNums.contains(i.getNumeral()),
-              Evaluator.Pattern.forInsight(insight, grid), grid, i.getLocation());
+              Evaluator.Pattern.forInsight(insight, marks), marks, i.getLocation());
         }
         case OVERLAP: {
           Overlap i = (Overlap) insight;
@@ -452,7 +451,7 @@ public class InsightMeasurer {
         }
         case LOCKED_SET: {
           LockedSet i = (LockedSet) insight;
-          return Pattern.lockedSet(!prevNums.and(i.getNumerals()).isEmpty(), i, grid);
+          return Pattern.lockedSet(!prevNums.and(i.getNumerals()).isEmpty(), i, marks);
         }
         case IMPLICATION: {
           Implication imp = (Implication) insight;

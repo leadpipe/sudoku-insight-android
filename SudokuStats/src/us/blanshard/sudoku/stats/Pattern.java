@@ -18,7 +18,6 @@ package us.blanshard.sudoku.stats;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
@@ -26,6 +25,7 @@ import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
 import us.blanshard.sudoku.insight.Analyzer;
 import us.blanshard.sudoku.insight.Evaluator;
+import us.blanshard.sudoku.insight.Marks;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -445,12 +445,12 @@ public abstract class Pattern implements Comparable<Pattern> {
   /**
    * Calculates the peer metrics for a location in a grid.
    */
-  public static PeerMetrics peerMetrics(Grid grid, Location loc) {
+  public static PeerMetrics peerMetrics(Marks marks, Location loc) {
     NumSet[] unitNums = {NumSet.NONE, NumSet.NONE, NumSet.NONE};
     for (Unit.Type type : Unit.Type.values())
       for (Location peer : loc.unit(type))
-        if (peer != loc && grid.containsKey(peer))
-          unitNums[type.ordinal()] = unitNums[type.ordinal()].with(grid.get(peer));
+        if (peer != loc && marks.hasAssignment(peer))
+          unitNums[type.ordinal()] = unitNums[type.ordinal()].with(marks.get(peer));
 
     byte[] categories = new byte[27];
     int index = 0;
@@ -459,8 +459,8 @@ public abstract class Pattern implements Comparable<Pattern> {
         byte category = PeerMetrics.UNSET;
         if (peer == loc)
           category = PeerMetrics.TARGET;
-        else if (grid.containsKey(peer)) {
-          Numeral numeral = grid.get(peer);
+        else if (marks.hasAssignment(peer)) {
+          Numeral numeral = marks.get(peer);
           for (Unit.Type t2 : Unit.Type.values())
             if (unitNums[t2.ordinal()].contains(numeral))
               category |= PeerMetrics.unitBit(t2);
@@ -547,8 +547,8 @@ public abstract class Pattern implements Comparable<Pattern> {
     return new BarredLoc(evaluatorPattern, metrics);
   }
 
-  public static BarredLoc barredLocation(Evaluator.Pattern evaluatorPattern, Location loc, Grid grid) {
-    return barredLocation(evaluatorPattern, peerMetrics(grid, loc));
+  public static BarredLoc barredLocation(Evaluator.Pattern evaluatorPattern, Location loc, Marks marks) {
+    return barredLocation(evaluatorPattern, peerMetrics(marks, loc));
   }
 
   /**
@@ -614,8 +614,8 @@ public abstract class Pattern implements Comparable<Pattern> {
     return new ForcedNum(sameNumeral, evaluatorPattern, metrics);
   }
 
-  public static ForcedNum forcedNumeral(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, Grid grid, Location loc) {
-    return new ForcedNum(sameNumeral, evaluatorPattern, peerMetrics(grid, loc));
+  public static ForcedNum forcedNumeral(boolean sameNumeral, Evaluator.Pattern evaluatorPattern, Marks marks, Location loc) {
+    return new ForcedNum(sameNumeral, evaluatorPattern, peerMetrics(marks, loc));
   }
 
   /**
@@ -727,14 +727,11 @@ public abstract class Pattern implements Comparable<Pattern> {
    * Returns the difference between the given set and all numerals assigned to
    * locations within the given unit, in the given grid.
    */
-  private static NumSet minusAllInUnit(NumSet nums, Unit unit, Grid grid) {
-    for (Location loc : unit)
-      if (grid.containsKey(loc))
-        nums = nums.without(grid.get(loc));
-    return nums;
+  private static NumSet minusAllInUnit(NumSet nums, Unit unit, Marks marks) {
+    return nums.minus(marks.getUnassignedNumerals(unit).not());
   }
 
-  public static Pattern lockedSet(boolean sameNumeral, us.blanshard.sudoku.insight.LockedSet set, Grid grid) {
+  public static Pattern lockedSet(boolean sameNumeral, us.blanshard.sudoku.insight.LockedSet set, Marks marks) {
     UnitCategory category = UnitCategory.forUnit(set.getLocations().unit);
     int setSize = set.getLocations().size();
     boolean isNaked = set.isNakedSet();
@@ -748,8 +745,8 @@ public abstract class Pattern implements Comparable<Pattern> {
       Unit overlap = set.getOverlappingUnit();
       if (overlap != null) {
         NumSet remaining = NumSet.ALL.minus(set.getNumerals());
-        remaining = minusAllInUnit(remaining, set.getLocations().unit, grid);
-        remaining = minusAllInUnit(remaining, overlap, grid);
+        remaining = minusAllInUnit(remaining, set.getLocations().unit, marks);
+        remaining = minusAllInUnit(remaining, overlap, marks);
         isOverlapped = remaining.isEmpty();
       }
     } else {
@@ -757,7 +754,7 @@ public abstract class Pattern implements Comparable<Pattern> {
       // an overlapping unit, and all numerals in the set appear in this unit.
       UnitSubset taken = set.getLocations();
       for (Location loc : taken.unit) {
-        if (grid.containsKey(loc))
+        if (marks.hasAssignment(loc))
           taken = taken.with(loc);
       }
       UnitSubset open = taken.not();
@@ -767,15 +764,15 @@ public abstract class Pattern implements Comparable<Pattern> {
         if (category == UnitCategory.LINE) {
           overlap = loc.block;
         } else {
-          isOverlapped = minusAllInUnit(set.getNumerals(), loc.row, grid).isEmpty()
-              || minusAllInUnit(set.getNumerals(), loc.column, grid).isEmpty();
+          isOverlapped = minusAllInUnit(set.getNumerals(), loc.row, marks).isEmpty()
+              || minusAllInUnit(set.getNumerals(), loc.column, marks).isEmpty();
         }
       }
       if (overlap != null) {
-        isOverlapped = minusAllInUnit(set.getNumerals(), overlap, grid).isEmpty();
+        isOverlapped = minusAllInUnit(set.getNumerals(), overlap, marks).isEmpty();
       }
     }
-    return new LockedSet(sameNumeral, Evaluator.Pattern.forInsight(set, grid), category, setSize, isNaked, isOverlapped);
+    return new LockedSet(sameNumeral, Evaluator.Pattern.forInsight(set, marks), category, setSize, isNaked, isOverlapped);
   }
 
   /**
