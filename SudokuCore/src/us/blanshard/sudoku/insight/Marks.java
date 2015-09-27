@@ -224,6 +224,32 @@ public final class Marks {
   }
 
   /**
+   * Returns the number of locations that have been assigned numerals.
+   */
+  public int getNumAssignments() {
+    int answer = 0;
+    for (int index = 0; index < Location.COUNT; ++index) {
+      if ((data[index] & LOC_ASSIGNMENT_MASK) != 0)
+        ++answer;
+    }
+    return answer;
+  }
+
+  /**
+   * Returns the number of locations that have not been assigned numerals.
+   */
+  public int getNumOpenLocations() {
+    return Location.COUNT - getNumAssignments();
+  }
+
+  /**
+   * Is this grid correctly solved?
+   */
+  public boolean isSolved() {
+    return getNumOpenLocations() == 0 && !hasErrors();
+  }
+
+  /**
    * Returns the set of locations within the given unit that could hold the
    * given numeral.
    */

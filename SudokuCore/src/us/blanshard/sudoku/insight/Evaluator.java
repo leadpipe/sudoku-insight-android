@@ -103,14 +103,14 @@ public class Evaluator {
   public Rating evaluate(@Nullable Callback callback, int trialCount) {
     checkArgument(trialCount >= 1);
     double[] scores = new double[trialCount];
-    GridMarks gridMarks = new GridMarks(puzzle);
+    Marks marks = Marks.fromGrid(puzzle);
     int numOpen = puzzle.getNumOpenLocations();
     boolean uninterrupted = true;
     double totalScore = 0;
     int[] difficultyCounts = new int[Difficulty.values().length];
     int numEvaluations = 0;
     while (uninterrupted && numEvaluations++ < trialCount) {
-      Run run = new Run(gridMarks, numOpen);
+      Run run = new Run(marks, numOpen);
       run.run(new InnerCallback(callback, totalScore / trialCount, trialCount));
       uninterrupted = run.uninterrupted();
       scores[numEvaluations - 1] = run.score;
@@ -158,7 +158,7 @@ public class Evaluator {
   private static final Analyzer.Options OPTS = new Analyzer.Options(false, false);
 
   private class Run {
-    GridMarks gridMarks;
+    Marks marks;
     int minOpen;
     int numOpen;
     double score;
@@ -166,8 +166,8 @@ public class Evaluator {
     boolean foundSolution;
     Difficulty difficulty = Difficulty.NO_DISPROOFS;
 
-    Run(GridMarks gridMarks, int numOpen) {
-      this.gridMarks = gridMarks;
+    Run(Marks marks, int numOpen) {
+      this.marks = marks;
       this.minOpen = numOpen;
       this.numOpen = numOpen;
     }
@@ -185,20 +185,20 @@ public class Evaluator {
       if (status == RunStatus.INTERRUPTED) return;
       status = null;
       do {
-        Collector collector = new Collector(gridMarks, minOpen, numOpen, random);
-        if (Analyzer.analyze(gridMarks.marks, collector, OPTS)) {
+        Collector collector = new Collector(marks, minOpen, numOpen, random);
+        if (Analyzer.analyze(marks, collector, OPTS)) {
           score += collector.getElapsedMinutes();
           if (callback != null) callback.updateEstimate(score);
           if (collector.assignmentsWon()) {
-            GridMarks.Builder builder = gridMarks.toBuilder();
+            Marks.Builder builder = marks.toBuilder();
             for (Assignment a : collector.getAssignments())
               builder.assign(a);
-            setGridMarks(builder);
-            if (gridMarks.grid.isSolved()) status = RunStatus.COMPLETE;
+            setMarks(builder);
+            if (marks.isSolved()) status = RunStatus.COMPLETE;
           } else if (collector.errorsWon()) {
             status = RunStatus.ERROR;
           } else if (collector.noPlaysPossible() && onlyAmbiguousAssignmentsRemaining()) {
-            setGridMarks(gridMarks.toBuilder().assign(randomAssignment()));
+            setMarks(marks.toBuilder().assign(randomAssignment()));
           } else {
             status = RunStatus.INCONCLUSIVE;
           }
@@ -208,14 +208,14 @@ public class Evaluator {
       } while (status == null);
     }
 
-    private void setGridMarks(GridMarks.Builder builder) {
-      gridMarks = builder.build();
-      numOpen = gridMarks.grid.getNumOpenLocations();
+    private void setMarks(Marks.Builder builder) {
+      marks = builder.build();
+      numOpen = marks.getNumOpenLocations();
       if (numOpen < minOpen) minOpen = numOpen;
     }
 
     private void eliminateOne(@Nullable Callback callback) {
-      GridMarks start = gridMarks;
+      Marks start = marks;
       switch (difficulty) {
         case NO_DISPROOFS:
           difficulty = Difficulty.SIMPLE_DISPROOFS;
@@ -232,10 +232,10 @@ public class Evaluator {
               return;
             if (foundSolution && solutionIntersection.get(a.location) == a.numeral)
               continue;
-            setGridMarks(start.toBuilder().assign(a));
+            setMarks(start.toBuilder().assign(a));
             runStraightShot(callback);
             if (status == RunStatus.ERROR) {
-              setGridMarks(start.toBuilder().eliminate(a));
+              setMarks(start.toBuilder().eliminate(a));
               return;
             } else if (status == RunStatus.COMPLETE) {
               foundSolution = true;
@@ -243,14 +243,14 @@ public class Evaluator {
           }
           // If we make it here, we've exhausted the simple disproofs.
           difficulty = Difficulty.RECURSIVE_DISPROOFS;
-          setGridMarks(start.toBuilder());
+          setMarks(start.toBuilder());
           // Fall through:
         case RECURSIVE_DISPROOFS:
           Assignment impossible = randomErroneousAssignment();
           if (impossible == null) return;
-          setGridMarks(start.toBuilder().assign(impossible));
+          setMarks(start.toBuilder().assign(impossible));
           runErrorSearch(callback);
-          setGridMarks(start.toBuilder().eliminate(impossible));
+          setMarks(start.toBuilder().eliminate(impossible));
       }
     }
 
@@ -259,10 +259,10 @@ public class Evaluator {
       if (status != RunStatus.INCONCLUSIVE) return;
 
       Location loc = randomUnsetLocation(false);
-      NumSet nums = gridMarks.marks.getSet(loc);
-      GridMarks start = gridMarks;
+      NumSet nums = marks.getSet(loc);
+      Marks start = marks;
       for (Numeral num : nums) {
-        setGridMarks(start.toBuilder().assign(Assignment.of(loc, num)));
+        setMarks(start.toBuilder().assign(Assignment.of(loc, num)));
         runErrorSearch(callback);
       }
     }
@@ -273,7 +273,7 @@ public class Evaluator {
 
     private boolean onlyAmbiguousAssignmentsRemaining() {
       for (Location loc : Location.all()) {
-        if (!gridMarks.grid.containsKey(loc) && solutionIntersection.containsKey(loc))
+        if (!marks.hasAssignment(loc) && solutionIntersection.containsKey(loc))
           return false;
       }
       return true;
@@ -285,14 +285,14 @@ public class Evaluator {
 
     Assignment randomAssignment() {
       Location loc = randomUnsetLocation(false);
-      NumSet nums = gridMarks.marks.getSet(loc);
+      NumSet nums = marks.getSet(loc);
       return randomAssignment(loc, nums);
     }
 
     @Nullable Assignment randomErroneousAssignment() {
       Location loc = randomUnsetLocation(true);
       if (loc == null) return null;
-      NumSet nums = gridMarks.marks.getSet(loc).without(solutionIntersection.get(loc));
+      NumSet nums = marks.getSet(loc).without(solutionIntersection.get(loc));
       return randomAssignment(loc, nums);
     }
 
@@ -302,7 +302,7 @@ public class Evaluator {
       Location currentLoc = null;
       for (Location loc : Location.all()) {
         if (inIntersectionOnly && !solutionIntersection.containsKey(loc)) continue;
-        NumSet possible = gridMarks.marks.getSet(loc);
+        NumSet possible = marks.getSet(loc);
         if (possible.size() < 2 || possible.size() > size) continue;
         if (possible.size() < size) {
           count = 0;
@@ -319,13 +319,13 @@ public class Evaluator {
       Multimap<Integer, Assignment> byRank = ArrayListMultimap.create();
       List<Assignment> assignments = Lists.newArrayList();
       for (Location loc : Location.all()) {
-        if (gridMarks.grid.containsKey(loc)) continue;
-        NumSet nums = gridMarks.marks.getSet(loc);
+        if (marks.hasAssignment(loc)) continue;
+        NumSet nums = marks.getSet(loc);
         if (nums.size() < 2) return assignments;  // it's empty at this point
         for (Numeral num : nums) {
           int rank = nums.size();
           for (Unit.Type unitType : Unit.Type.values()) {
-            UnitSubset locs = gridMarks.marks.getSet(UnitNumeral.of(loc.unit(unitType), num));
+            UnitSubset locs = marks.getSet(UnitNumeral.of(loc.unit(unitType), num));
             rank = Math.min(rank, locs.size());
           }
           byRank.put(rank, Assignment.of(loc, num));
@@ -399,7 +399,7 @@ public class Evaluator {
      * Returns the pattern corresponding to the given insight within the given
      * grid.  Throws for non-atomic insights.
      */
-    public static Pattern forInsight(Insight insight, Grid grid) {
+    public static Pattern forInsight(Insight insight, Marks marks) {
       switch (insight.type) {
         case CONFLICT: {
           Conflict i = (Conflict) insight;
@@ -407,7 +407,7 @@ public class Evaluator {
         }
         case BARRED_LOCATION: {
           BarredLoc i = (BarredLoc) insight;
-          switch (getMaxDeltaAboveAverage(i.getLocation(), grid)) {
+          switch (getMaxDeltaAboveAverage(i.getLocation(), marks)) {
             default:
             case 5: return BARRED_LOC_5;
             case 4: return BARRED_LOC_4;
@@ -427,7 +427,7 @@ public class Evaluator {
         }
         case FORCED_NUMERAL: {
           ForcedNum i = (ForcedNum) insight;
-          switch (getMaxDeltaAboveAverage(i.getLocation(), grid)) {
+          switch (getMaxDeltaAboveAverage(i.getLocation(), marks)) {
             default:
             case 6: return FORCED_NUM_6;
             case 5: return FORCED_NUM_5;
@@ -485,21 +485,17 @@ public class Evaluator {
      * number of assignments per unit.  The larger that delta, the likelier the
      * given insight is to be played.
      */
-    private static int getMaxDeltaAboveAverage(Location loc, Grid grid) {
+    private static int getMaxDeltaAboveAverage(Location loc, Marks marks) {
       int maxSet = 0;
       for (Unit.Type unitType : Unit.Type.values()) {
-        maxSet = Math.max(maxSet, numSetInUnit(loc.unit(unitType), grid, loc));
+        maxSet = Math.max(maxSet, numSetInUnit(loc.unit(unitType), marks, loc));
       }
-      int averageSetPerUnit = grid.size() / 9;
+      int averageSetPerUnit = marks.getNumAssignments() / 9;
       return Math.max(0, maxSet - averageSetPerUnit);
     }
 
-    private static int numSetInUnit(Unit unit, Grid grid, Location skip) {
-      int answer = 0;
-      for (Location loc : unit)
-        if (loc != skip && grid.containsKey(loc))
-          ++answer;
-      return answer;
+    private static int numSetInUnit(Unit unit, Marks marks, Location skip) {
+      return marks.getUnassignedLocations(unit).with(skip).not().size();
     }
   }
 
@@ -508,14 +504,14 @@ public class Evaluator {
    * given grid and the given smallest number of open locations seen so far.
    * Only works for atomic insights and implications.
    */
-  public static double getProbability(Insight insight, Grid grid, int minOpen) {
+  public static double getProbability(Insight insight, Marks marks, int minOpen) {
     if (insight.type != Insight.Type.IMPLICATION) {
-      return Pattern.forInsight(insight, grid).getWeight(minOpen);
+      return Pattern.forInsight(insight, marks).getWeight(minOpen);
     }
     Implication imp = (Implication) insight;
-    double answer = getProbability(imp.getConsequent(), grid, minOpen);
+    double answer = getProbability(imp.getConsequent(), marks, minOpen);
     for (Insight a : imp.getAntecedents())
-      answer *= Pattern.forInsight(a, grid).getWeight(minOpen);
+      answer *= Pattern.forInsight(a, marks).getWeight(minOpen);
     return answer;
   }
 
@@ -525,7 +521,7 @@ public class Evaluator {
   }
 
   public static class Collector implements Analyzer.Callback {
-    private final GridMarks gridMarks;
+    private final Marks marks;
     private final int numOpen;
     private final int minOpen;
     private final Random random;
@@ -537,8 +533,8 @@ public class Evaluator {
     private static final double[] TRAILHEAD_SECONDS = {0.821, 1.225, 1.528, 1.839, 2.080, 2.480};
     private static final double[] PLAYED_SECONDS    = {0.680, 0.667, 0.696, 0.716, 0.817, 0.893};
 
-    public Collector(GridMarks gridMarks, int numOpen, int minOpen, Random random) {
-      this.gridMarks = gridMarks;
+    public Collector(Marks marks, int numOpen, int minOpen, Random random) {
+      this.marks = marks;
       this.numOpen = numOpen;
       this.minOpen = minOpen;
       this.random = random;
@@ -547,8 +543,8 @@ public class Evaluator {
     @Override public void take(Insight insight) throws StopException {
       Assignment a = insight.getImpliedAssignment();
       if (a == null && !insight.isError()) return;
-      insight = Analyzer.minimize(gridMarks.marks, insight);
-      double p = getProbability(insight, gridMarks.grid, minOpen);
+      insight = Analyzer.minimize(marks, insight);
+      double p = getProbability(insight, marks, minOpen);
       totalWeight += p;
       Object key = a == null ? ERRORS : a;
       Weight w = weights.get(key);
