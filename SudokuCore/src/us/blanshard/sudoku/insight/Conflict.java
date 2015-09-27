@@ -16,7 +16,6 @@ limitations under the License.
 package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
-import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.UnitSubset;
@@ -36,7 +35,7 @@ public final class Conflict extends Insight {
   private final Numeral numeral;
   private final UnitSubset locations;
 
-  Conflict(Grid grid, Numeral numeral, UnitSubset locations) {
+  Conflict(Numeral numeral, UnitSubset locations) {
     super(Type.CONFLICT);
     this.numeral = numeral;
     this.locations = locations;

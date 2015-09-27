@@ -108,7 +108,7 @@ public class Analyzer {
     boolean complete = false;
 
     try {
-      findInsights(gridMarks, callback, null, options);
+      findInsights(gridMarks.marks, callback, null, options);
       complete = true;
 
     } catch (InterruptedException e) {
@@ -144,43 +144,43 @@ public class Analyzer {
   }
 
   private static void findInsights(
-      GridMarks gridMarks, Callback callback,
+      Marks marks, Callback callback,
       @Nullable Set<Insight> index, Options options) throws InterruptedException {
 
     index = index == null ? Sets.<Insight>newHashSet() : Sets.newHashSet(index);
     Collector collector;
 
-    if (gridMarks.hasErrors) {
+    if (marks.hasErrors()) {
       collector = new Collector(callback, index, false);
-      findErrors(gridMarks, collector);
+      findErrors(marks, collector);
       checkInterruption();
     }
 
     collector = new Collector(callback, index, options.followAssignments);
 
-    findSingletonLocations(gridMarks, collector);
+    findSingletonLocations(marks, collector);
     checkInterruption();
-    findSingletonNumerals(gridMarks, collector);
+    findSingletonNumerals(marks, collector);
     checkInterruption();
 
     if (!options.followAssignments)
       collector = new Collector(callback, index, true);
 
-    findOverlaps(gridMarks, collector);
+    findOverlaps(marks, collector);
     checkInterruption();
-    findSets(gridMarks, collector);
+    findSets(marks, collector);
     checkInterruption();
 
     if (!collector.list.isEmpty()) {
-      findImplications(gridMarks, collector, callback, options);
+      findImplications(marks, collector, callback, options);
     }
   }
 
-  private static void findImplications(GridMarks gridMarks, Collector antecedents,
+  private static void findImplications(Marks marks, Collector antecedents,
       Callback callback, Options options) throws InterruptedException {
 
     Collector collector = new Collector(null, antecedents.index, true);
-    findInsights(gridMarks.toBuilder().apply(antecedents.list).build(), collector,
+    findInsights(marks.toBuilder().apply(antecedents.list).build(), collector,
         antecedents.index, options);
 
     if (!collector.list.isEmpty()) {
@@ -330,11 +330,15 @@ public class Analyzer {
   }
 
   public static void findOverlaps(GridMarks gridMarks, Callback callback) {
+    findOverlaps(gridMarks.marks, callback);
+  }
+
+  public static void findOverlaps(Marks marks, Callback callback) {
     for (Numeral num : Numeral.all()) {
-      findOverlaps(gridMarks, callback, num, Block.all(), Unit.Type.ROW, OVERLAP_BITS);
-      findOverlaps(gridMarks, callback, num, Block.all(), Unit.Type.COLUMN, OVERLAP_BITS_2);
-      findOverlaps(gridMarks, callback, num, Row.all(), Unit.Type.BLOCK, OVERLAP_BITS);
-      findOverlaps(gridMarks, callback, num, Column.all(), Unit.Type.BLOCK, OVERLAP_BITS);
+      findOverlaps(marks, callback, num, Block.all(), Unit.Type.ROW, OVERLAP_BITS);
+      findOverlaps(marks, callback, num, Block.all(), Unit.Type.COLUMN, OVERLAP_BITS_2);
+      findOverlaps(marks, callback, num, Row.all(), Unit.Type.BLOCK, OVERLAP_BITS);
+      findOverlaps(marks, callback, num, Column.all(), Unit.Type.BLOCK, OVERLAP_BITS);
     }
   }
 
@@ -359,21 +363,21 @@ public class Analyzer {
     return null;
   }
 
-  private static void findOverlaps(GridMarks gridMarks, Callback callback, Numeral num,
+  private static void findOverlaps(Marks marks, Callback callback, Numeral num,
       List<? extends Unit> units, Unit.Type overlappingType, int[] bitsArray) {
     for (int i = 0; i < units.size(); ++i) {
       Unit unit = units.get(i);
       UnitNumeral unitNum = UnitNumeral.of(unit, num);
-      int bits = gridMarks.marks.getBits(unitNum);
+      int bits = marks.getBits(unitNum);
       int index = Arrays.binarySearch(bitsArray, bits);
       if (index >= 0 || NumSet.ofBits(bits).size() == 1) {
         UnitSubset set = UnitSubset.ofBits(unit, bits);
         Unit overlappingUnit = set.get(0).unit(overlappingType);
         UnitNumeral oun = UnitNumeral.of(overlappingUnit, num);
-        UnitSubset overlappingSet = gridMarks.marks.getSet(oun);
+        UnitSubset overlappingSet = marks.getSet(oun);
         if (overlappingSet.size() > set.size()) {
           // There's something to eliminate.
-          if (set.size() > 1 || getNumOpen(gridMarks, unit, overlappingUnit) > 1) {
+          if (set.size() > 1 || getNumOpen(marks, unit, overlappingUnit) > 1) {
             // There is more than one unassigned location, ie it looks like an overlap.
             callback.take(new Overlap(unit, num, overlappingSet.minus(set)));
           }
@@ -383,38 +387,42 @@ public class Analyzer {
   }
 
   /** Returns the number of unassigned locations in the intersection of the two units. */
-  private static int getNumOpen(GridMarks gridMarks, Unit unit, Unit overlappingUnit) {
+  private static int getNumOpen(Marks marks, Unit unit, Unit overlappingUnit) {
     UnitSubset set = unit.intersect(overlappingUnit);
     int count = 0;
     for (int i = 0; i < set.size(); ++i) {
-      if (!gridMarks.grid.containsKey(set.get(i))) ++count;
+      if (!marks.hasAssignment(set.get(i))) ++count;
     }
     return count;
   }
 
   public static void findSets(GridMarks gridMarks, Callback callback) {
+    findSets(gridMarks.marks, callback);
+  }
+  public static void findSets(Marks marks, Callback callback) {
     SetState setState = new SetState();
     int[] indices = new int[MAX_SET_SIZE];
     for (int size = 2; size <= MAX_SET_SIZE; ++size) {
       for (Unit unit : Unit.allUnits()) {
         // We look for hidden sets at each size first, because they tend to be
         // easier to see.
-        findHiddenSets(gridMarks, callback, setState, unit, size, indices);
-        findNakedSets(gridMarks, callback, setState, unit, size, indices);
+        findHiddenSets(marks, callback, setState, unit, size, indices);
+        findNakedSets(marks, callback, setState, unit, size, indices);
       }
     }
   }
 
-  private static void findNakedSets(GridMarks gridMarks, Callback callback,
+  private static void findNakedSets(Marks marks, Callback callback,
       SetState setState, Unit unit, int size, int[] indices) {
     UnitSubset inSets = setState.getLocs(unit);
     int bitsToCheck = 0;
     int unsetCount = 0;
     for (int i = 0; i < unit.size(); ++i) {
       Location loc = unit.get(i);
-      NumSet possible = gridMarks.marks.getSet(loc);
+      NumSet possible = marks.getSet(loc);
       int possibleSize = possible.size();
-      if (possibleSize > 1 || (possibleSize == 1 && !gridMarks.hasAssignment(unit, possible.get(0)))) {
+      if (possibleSize > 1 ||
+          (possibleSize == 1 && !marks.hasAssignment(UnitNumeral.of(unit, possible.get(0))))) {
         ++unsetCount;
         if (possibleSize <= size && !inSets.contains(loc)) {
           bitsToCheck |= loc.unitSubsets.get(unit.type).bits;
@@ -429,7 +437,7 @@ public class Analyzer {
         boolean alreadyUsed = false;
         for (int i = 0; i < size; ++i) {
           Location loc = toCheck.get(indices[i]);
-          bits |= gridMarks.marks.getBits(loc);
+          bits |= marks.getBits(loc);
           alreadyUsed |= inSets.contains(loc);
         }
         if (alreadyUsed) continue;
@@ -446,16 +454,16 @@ public class Analyzer {
     }
   }
 
-  private static void findHiddenSets(GridMarks gridMarks, Callback callback,
+  private static void findHiddenSets(Marks marks, Callback callback,
       SetState setState, Unit unit, int size, int[] indices) {
     NumSet inSets = setState.getNums(unit);
     NumSet toCheck = NumSet.NONE;
     int unsetCount = 0;
     for (int i = 0; i < Numeral.COUNT; ++i) {
       Numeral num = Numeral.ofIndex(i);
-      UnitSubset possible = gridMarks.marks.getSet(UnitNumeral.of(unit, num));
+      UnitSubset possible = marks.getSet(UnitNumeral.of(unit, num));
       int possibleSize = possible.size();
-      if (possibleSize > 1 || (possibleSize == 1 && !gridMarks.grid.containsKey(possible.get(0)))) {
+      if (possibleSize > 1 || (possibleSize == 1 && !marks.hasAssignment(possible.get(0)))) {
         ++unsetCount;
         if (possibleSize <= size && !inSets.contains(num)) {
           toCheck = toCheck.with(num);
@@ -469,7 +477,7 @@ public class Analyzer {
         boolean alreadyUsed = false;
         for (int i = 0; i < size; ++i) {
           Numeral num = toCheck.get(indices[i]);
-          bits |= gridMarks.marks.getBits(UnitNumeral.of(unit, num));
+          bits |= marks.getBits(UnitNumeral.of(unit, num));
           alreadyUsed |= inSets.contains(num);
         }
         if (alreadyUsed) continue;
@@ -487,12 +495,16 @@ public class Analyzer {
   }
 
   public static void findErrors(GridMarks gridMarks, Callback callback) {
+    findErrors(gridMarks.marks, callback);
+  }
+
+  public static void findErrors(Marks marks, Callback callback) {
     // First look for actual conflicting assignments.
     for (Unit unit : Unit.allUnits()) {
       NumSet seen = NumSet.NONE;
       NumSet conflicting = NumSet.NONE;
       for (Location loc : unit) {
-        Numeral num = gridMarks.grid.get(loc);
+        Numeral num = marks.get(loc);
         if (num != null) {
           if (seen.contains(num)) conflicting = conflicting.with(num);
           seen = seen.with(num);
@@ -501,8 +513,8 @@ public class Analyzer {
       for (Numeral num : conflicting) {
         UnitSubset locs = UnitSubset.ofBits(unit, 0);
         for (Location loc : unit)
-          if (gridMarks.grid.get(loc) == num) locs = locs.with(loc);
-        callback.take(new Conflict(gridMarks.grid, num, locs));
+          if (marks.get(loc) == num) locs = locs.with(loc);
+        callback.take(new Conflict(num, locs));
       }
     }
 
@@ -510,7 +522,7 @@ public class Analyzer {
     // unit.
     for (Unit unit : Unit.allUnits()) {
       for (Numeral num : Numeral.all()) {
-        if (gridMarks.marks.getSetSize(UnitNumeral.of(unit, num)) == 0) {
+        if (marks.getSetSize(UnitNumeral.of(unit, num)) == 0) {
           callback.take(new BarredNum(unit, num));
         }
       }
@@ -518,7 +530,7 @@ public class Analyzer {
 
     // Finally, look for locations that have no possible assignments left.
     for (Location loc : Location.all()) {
-      NumSet set = gridMarks.marks.getSet(loc);
+      NumSet set = marks.getSet(loc);
       if (set.isEmpty()) {
         callback.take(new BarredLoc(loc));
       }
@@ -531,19 +543,27 @@ public class Analyzer {
   }
 
   public static void findSingletonLocations(GridMarks gridMarks, Callback callback) {
+    findSingletonLocations(gridMarks.marks, callback);
+  }
+
+  public static void findSingletonLocations(Marks marks, Callback callback) {
     for (int i = 0; i < UnitNumeral.COUNT; ++i) {
       UnitNumeral un = UnitNumeral.of(i);
-      Location loc = gridMarks.marks.getSingleton(un);
-      if (loc != null && !gridMarks.grid.containsKey(loc))
+      Location loc = marks.getSingleton(un);
+      if (loc != null && !marks.hasAssignment(loc))
         callback.take(new ForcedLoc(un.unit, un.numeral, loc));
     }
   }
 
   public static void findSingletonNumerals(GridMarks gridMarks, Callback callback) {
+    findSingletonNumerals(gridMarks.marks, callback);
+  }
+
+  public static void findSingletonNumerals(Marks marks, Callback callback) {
     for (int i = 0; i < Location.COUNT; ++i) {
       Location loc = Location.of(i);
-      if (!gridMarks.grid.containsKey(loc)) {
-        NumSet set = gridMarks.marks.getSet(loc);
+      if (!marks.hasAssignment(loc)) {
+        NumSet set = marks.getSet(loc);
         if (set.size() == 1)
           callback.take(new ForcedNum(loc, set.get(0)));
       }
