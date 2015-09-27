@@ -140,6 +140,10 @@ public final class Marks {
     this.data = data;
   }
 
+  public static Marks fromGrid(Grid grid) {
+    return builder().assignAll(grid).build();
+  }
+
   public static Builder builder() {
     return new Builder();
   }
