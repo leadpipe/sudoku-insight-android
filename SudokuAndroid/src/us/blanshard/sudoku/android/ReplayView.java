@@ -28,10 +28,10 @@ import us.blanshard.sudoku.insight.Conflict;
 import us.blanshard.sudoku.insight.DisprovedAssignment;
 import us.blanshard.sudoku.insight.ForcedLoc;
 import us.blanshard.sudoku.insight.ForcedNum;
-import us.blanshard.sudoku.insight.GridMarks;
 import us.blanshard.sudoku.insight.Implication;
 import us.blanshard.sudoku.insight.Insight;
 import us.blanshard.sudoku.insight.LockedSet;
+import us.blanshard.sudoku.insight.Marks;
 import us.blanshard.sudoku.insight.Overlap;
 import us.blanshard.sudoku.insight.UnfoundedAssignment;
 
@@ -166,19 +166,17 @@ public class ReplayView extends SudokuView {
     invalidateLocation(elimination.location);
   }
 
-  public GridMarks getGridMarks(@Nullable Location clear) {
+  public Marks getMarks(@Nullable Location clear) {
     Grid grid = getInputState().getGrid();
     if (clear != null)
       grid = grid.toBuilder().remove(clear).build();
-    GridMarks gm = new GridMarks(grid);
+    Marks.Builder builder = Marks.builder().assignAll(grid);
     if (getInputState().getId() < 0 && mEliminations != null) {
-      GridMarks.Builder builder = gm.toBuilder();
       for (Map.Entry<Location, NumSet> entry : mEliminations.entrySet())
         for (Numeral num : entry.getValue())
           builder.eliminate(entry.getKey(), num);
-      gm = builder.build();
     }
-    return gm;
+    return builder.build();
   }
 
   public void clearInsights() {
