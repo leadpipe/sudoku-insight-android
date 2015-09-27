@@ -81,15 +81,6 @@ public final class DisprovedAssignment extends Insight {
     return getPrefix() + resultingError.toShortString();
   }
 
-  @Override public void apply(GridMarks.Builder builder) {
-    builder.eliminate(assignment);
-  }
-
-  @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    // Applies the assignment, then checks the resulting error is implied.
-    return resultingError.isImpliedBy(gridMarks.toBuilder().assign(assignment).build());
-  }
-
   @Override public void apply(Marks.Builder builder) {
     builder.eliminate(assignment);
   }

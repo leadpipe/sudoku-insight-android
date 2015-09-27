@@ -45,14 +45,6 @@ public final class BarredNum extends Insight {
     return unitNum.numeral;
   }
 
-  @Override public void apply(GridMarks.Builder builder) {
-    // Nothing to do, it's an error.
-  }
-
-  @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    return gridMarks.marks.getSet(unitNum).isEmpty();
-  }
-
   @Override public void apply(Marks.Builder builder) {
     // Nothing to do, it's an error.
   }

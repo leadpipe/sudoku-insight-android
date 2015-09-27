@@ -83,17 +83,6 @@ public final class Overlap extends Insight {
     return unit + ":" + numeral + ":" + extra.unit;
   }
 
-  @Override public void apply(GridMarks.Builder builder) {
-    for (int i = 0; i < extra.size(); ++i)
-      builder.eliminate(extra.get(i), numeral);
-  }
-
-  @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    // Ensures that all possible locations for the numeral in the unit lie in
-    // the overlapping unit.
-    return gridMarks.marks.getSet(UnitNumeral.of(unit, numeral)).minus(extra.unit).isEmpty();
-  }
-
   @Override public void apply(Marks.Builder builder) {
     for (int i = 0; i < extra.size(); ++i)
       builder.eliminate(extra.get(i), numeral);

@@ -49,18 +49,6 @@ public final class Conflict extends Insight {
     return locations;
   }
 
-  @Override public void apply(GridMarks.Builder builder) {
-    // Nothing to do, it's an error.
-  }
-
-  @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    for (Location loc : locations) {
-      if (gridMarks.grid.get(loc) != numeral)
-        return false;
-    }
-    return true;
-  }
-
   @Override public void apply(Marks.Builder builder) {
     // Nothing to do, it's an error.
   }

@@ -93,24 +93,6 @@ public final class LockedSet extends Insight {
     return extraElims == null ? null : extraElims.unit;
   }
 
-  @Override public void apply(GridMarks.Builder builder) {
-    for (int i = 0, count = getEliminations().size(); i < count; ++i)
-      builder.eliminate(eliminations.get(i));
-  }
-
-  @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    if (isNakedSet()) {
-      for (int i = 0, c = locs.size(); i < c; ++i)
-        if (!gridMarks.marks.getSet(locs.get(i)).isSubsetOf(nums)) return false;
-    } else {
-      for (int i = 0, c = nums.size(); i < c; ++i)
-        if (!locs.isSupersetOfBits(gridMarks.marks.getBits(
-            UnitNumeral.of(locs.unit, nums.get(i)))))
-          return false;
-    }
-    return true;
-  }
-
   @Override public void apply(Marks.Builder builder) {
     for (int i = 0, count = getEliminations().size(); i < count; ++i)
       builder.eliminate(eliminations.get(i));

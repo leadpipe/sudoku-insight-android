@@ -20,7 +20,6 @@ import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
-import us.blanshard.sudoku.core.UnitSubset;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -57,15 +56,6 @@ public final class ForcedLoc extends Insight {
 
   @Override public Assignment getImpliedAssignment() {
     return Assignment.of(location, numeral);
-  }
-
-  @Override public void apply(GridMarks.Builder builder) {
-    builder.assign(location, numeral);
-  }
-
-  @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    UnitSubset set = gridMarks.marks.getSet(UnitNumeral.of(unit, numeral));
-    return set.size() == 1 && set.get(0) == location && !gridMarks.grid.containsKey(location);
   }
 
   @Override public void apply(Marks.Builder builder) {

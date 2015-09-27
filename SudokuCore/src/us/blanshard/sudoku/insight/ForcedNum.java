@@ -17,7 +17,6 @@ package us.blanshard.sudoku.insight;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.NumSet;
 import us.blanshard.sudoku.core.Numeral;
 
 import javax.annotation.concurrent.Immutable;
@@ -49,15 +48,6 @@ public final class ForcedNum extends Insight {
 
   @Override public Assignment getImpliedAssignment() {
     return Assignment.of(location, numeral);
-  }
-
-  @Override public void apply(GridMarks.Builder builder) {
-    builder.assign(location, numeral);
-  }
-
-  @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    NumSet set = gridMarks.marks.getSet(location);
-    return set.size() == 1 && set.get(0) == numeral && !gridMarks.grid.containsKey(location);
   }
 
   @Override public void apply(Marks.Builder builder) {

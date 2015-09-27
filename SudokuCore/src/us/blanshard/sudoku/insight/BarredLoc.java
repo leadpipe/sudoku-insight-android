@@ -39,14 +39,6 @@ public final class BarredLoc extends Insight {
     return location;
   }
 
-  @Override public void apply(GridMarks.Builder builder) {
-    // Nothing to do, it's an error.
-  }
-
-  @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    return gridMarks.marks.getSet(location).isEmpty();
-  }
-
   @Override public void apply(Marks.Builder builder) {
     // Nothing to do, it's an error.
   }

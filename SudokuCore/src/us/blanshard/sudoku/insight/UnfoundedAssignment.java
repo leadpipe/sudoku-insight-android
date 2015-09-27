@@ -40,14 +40,6 @@ public class UnfoundedAssignment extends Insight {
     return assignment;
   }
 
-  @Override public void apply(GridMarks.Builder builder) {
-    builder.assign(assignment);
-  }
-
-  @Override public boolean isImpliedBy(GridMarks gridMarks) {
-    return false;
-  }
-
   @Override public void apply(Marks.Builder builder) {
     builder.assign(assignment);
   }
