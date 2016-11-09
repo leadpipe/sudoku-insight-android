@@ -1,0 +1,3435 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Sudoku Solving Stats Summary</title>
+<style>
+  h1, h2 {
+    text-align: center;
+  }
+  table {
+    border-collapse: collapse;
+  }
+  td {
+    vertical-align: top;
+    padding: 1ex 1em;
+  }
+  td.solns {
+    padding: 2ex 0;
+    border: solid 2px #777;
+  }
+  td.solns td {
+    padding: 0 0.5em;
+  }
+  td.solns tr {
+    whitespace: nowrap;
+  }
+  tr.b {
+    background: #f7f7f7;
+  }
+  div.overall {
+    text-align: center;
+    margin: 1ex 1em 2ex;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>Summary of 10,000 Puzzles</h1>
+<h2>12/10/2011 2:02 p.m.</h2>
+<table>
+<tr>
+  <td>Strategy
+  
+  <th>BASE
+  
+  <th>LIST
+  
+  <th>SHUFFLE
+  
+  <th>CYCLE10
+  
+  <th>CYCLE25
+  
+  <th>CYCLE60
+  
+<tr>
+  <td>
+  
+    <td align=center>  23.124 avg steps
+        <div>σ:   114.78</div>
+  
+    <td align=center>  23.124 avg steps
+        <div>σ:   114.78</div>
+  
+    <td align=center>  22.977 avg steps
+        <div>σ:   118.07</div>
+  
+    <td align=center>  55.426 avg steps
+        <div>σ:  2,496.9</div>
+  
+    <td align=center>   34.92 avg steps
+        <div>σ:   887.25</div>
+  
+    <td align=center>  31.578 avg steps
+        <div>σ:    793.3</div>
+  
+<tr>
+  <td>
+  
+    <td align=center>  15.077 µs/step
+        <div>σ:   14.936</div>
+  
+    <td align=center>  14.577 µs/step
+        <div>σ:   11.096</div>
+  
+    <td align=center>  13.934 µs/step
+        <div>σ:   12.327</div>
+  
+    <td align=center>  15.931 µs/step
+        <div>σ:   20.601</div>
+  
+    <td align=center>  14.646 µs/step
+        <div>σ:   10.202</div>
+  
+    <td align=center>  14.762 µs/step
+        <div>σ:   17.089</div>
+  
+
+
+<tr class=solns>
+  <td>0 solutions, by #steps
+  
+    <td class=solns>
+      
+      
+      <div class=overall>
+         3,464.6 µs
+        avg of 42
+        <div>σ:   14,575</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>2
+            <td align=right>19
+            <td align=right>  130.84 µs
+            <td align=right>σ:   18.494
+        
+        <tr class=b>
+            <td align=right>4
+            <td align=right>3
+            <td align=right>     171 µs
+            <td align=right>σ:   56.321
+        
+        <tr class=a>
+            <td align=right>6
+            <td align=right>3
+            <td align=right>     145 µs
+            <td align=right>σ:   13.748
+        
+        <tr class=b>
+            <td align=right>9
+            <td align=right>2
+            <td align=right>   174.5 µs
+            <td align=right>σ:   23.335
+        
+        <tr class=a>
+            <td align=right>11
+            <td align=right>1
+            <td align=right>     201 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>14
+            <td align=right>1
+            <td align=right>     214 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>16
+            <td align=right>1
+            <td align=right>     262 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>24
+            <td align=right>1
+            <td align=right>     287 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>26
+            <td align=right>2
+            <td align=right>   376.5 µs
+            <td align=right>σ:   84.146
+        
+        <tr class=b>
+            <td align=right>30
+            <td align=right>1
+            <td align=right>     249 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>52
+            <td align=right>1
+            <td align=right>     696 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>78
+            <td align=right>1
+            <td align=right>   1,076 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>120
+            <td align=right>1
+            <td align=right>   1,773 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>157
+            <td align=right>1
+            <td align=right>   1,628 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>290
+            <td align=right>1
+            <td align=right>   2,173 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>450
+            <td align=right>1
+            <td align=right>   5,619 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>4581
+            <td align=right>1
+            <td align=right>  39,628 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>10463
+            <td align=right>1
+            <td align=right>  87,171 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+      
+      
+      
+      
+  
+    <td class=solns>
+      
+      
+      <div class=overall>
+         3,262.3 µs
+        avg of 42
+        <div>σ:   13,849</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>2
+            <td align=right>19
+            <td align=right>  139.32 µs
+            <td align=right>σ:   49.515
+        
+        <tr class=b>
+            <td align=right>4
+            <td align=right>3
+            <td align=right>  175.67 µs
+            <td align=right>σ:   58.398
+        
+        <tr class=a>
+            <td align=right>6
+            <td align=right>3
+            <td align=right>  145.33 µs
+            <td align=right>σ:   7.5056
+        
+        <tr class=b>
+            <td align=right>9
+            <td align=right>2
+            <td align=right>   175.5 µs
+            <td align=right>σ:   26.163
+        
+        <tr class=a>
+            <td align=right>11
+            <td align=right>1
+            <td align=right>     201 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>14
+            <td align=right>1
+            <td align=right>     209 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>16
+            <td align=right>1
+            <td align=right>     256 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>24
+            <td align=right>1
+            <td align=right>     281 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>26
+            <td align=right>2
+            <td align=right>     371 µs
+            <td align=right>σ:   86.267
+        
+        <tr class=b>
+            <td align=right>30
+            <td align=right>1
+            <td align=right>     240 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>52
+            <td align=right>1
+            <td align=right>     674 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>78
+            <td align=right>1
+            <td align=right>   1,834 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>120
+            <td align=right>1
+            <td align=right>   1,028 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>157
+            <td align=right>1
+            <td align=right>   1,222 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>290
+            <td align=right>1
+            <td align=right>   2,390 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>450
+            <td align=right>1
+            <td align=right>   3,628 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>4581
+            <td align=right>1
+            <td align=right>  37,350 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>10463
+            <td align=right>1
+            <td align=right>  83,001 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+      
+      
+      
+      
+  
+    <td class=solns>
+      
+      
+      <div class=overall>
+         3,152.3 µs
+        avg of 42
+        <div>σ:   13,572</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>2
+            <td align=right>16
+            <td align=right>  178.06 µs
+            <td align=right>σ:   197.12
+        
+        <tr class=b>
+            <td align=right>4
+            <td align=right>3
+            <td align=right>  127.33 µs
+            <td align=right>σ:   6.6583
+        
+        <tr class=a>
+            <td align=right>6
+            <td align=right>4
+            <td align=right>     170 µs
+            <td align=right>σ:   42.071
+        
+        <tr class=b>
+            <td align=right>8
+            <td align=right>1
+            <td align=right>     164 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>9
+            <td align=right>2
+            <td align=right>     187 µs
+            <td align=right>σ:   21.213
+        
+        <tr class=b>
+            <td align=right>10
+            <td align=right>2
+            <td align=right>     199 µs
+            <td align=right>σ:   41.012
+        
+        <tr class=a>
+            <td align=right>12
+            <td align=right>1
+            <td align=right>     193 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>13
+            <td align=right>1
+            <td align=right>     198 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>16
+            <td align=right>1
+            <td align=right>     329 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>22
+            <td align=right>3
+            <td align=right>  247.67 µs
+            <td align=right>σ:   58.244
+        
+        <tr class=a>
+            <td align=right>25
+            <td align=right>1
+            <td align=right>     331 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>32
+            <td align=right>1
+            <td align=right>     207 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>46
+            <td align=right>1
+            <td align=right>     454 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>50
+            <td align=right>1
+            <td align=right>     327 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>124
+            <td align=right>1
+            <td align=right>   1,156 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>162
+            <td align=right>1
+            <td align=right>   1,431 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>5920
+            <td align=right>1
+            <td align=right>  45,279 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>10237
+            <td align=right>1
+            <td align=right>  76,900 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+      
+      
+      
+      
+  
+    <td class=solns>
+      
+      
+      <div class=overall>
+          68,726 µs
+        avg of 42
+        <div>σ: 3.0297e+05</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>2
+            <td align=right>1
+            <td align=right>     125 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>3
+            <td align=right>1
+            <td align=right>     904 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>5
+            <td align=right>1
+            <td align=right>     142 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>7
+            <td align=right>1
+            <td align=right>     167 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>8
+            <td align=right>1
+            <td align=right>     163 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>9
+            <td align=right>1
+            <td align=right>     168 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>11
+            <td align=right>2
+            <td align=right>   188.5 µs
+            <td align=right>σ:  0.70711
+        
+        <tr class=b>
+            <td align=right>14
+            <td align=right>1
+            <td align=right>     179 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>17
+            <td align=right>2
+            <td align=right>     199 µs
+            <td align=right>σ:   18.385
+        
+        <tr class=b>
+            <td align=right>24
+            <td align=right>1
+            <td align=right>     221 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>27
+            <td align=right>1
+            <td align=right>     444 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>47
+            <td align=right>1
+            <td align=right>     322 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>54
+            <td align=right>1
+            <td align=right>     508 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>55
+            <td align=right>1
+            <td align=right>     401 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>58
+            <td align=right>1
+            <td align=right>     519 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>59
+            <td align=right>1
+            <td align=right>     811 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>63
+            <td align=right>2
+            <td align=right>     811 µs
+            <td align=right>σ:   240.42
+        
+        <tr class=b>
+            <td align=right>66
+            <td align=right>1
+            <td align=right>     507 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>73
+            <td align=right>1
+            <td align=right>     813 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>74
+            <td align=right>1
+            <td align=right>     789 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>86
+            <td align=right>1
+            <td align=right>     564 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>131
+            <td align=right>1
+            <td align=right>     675 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>167
+            <td align=right>1
+            <td align=right>   1,123 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>194
+            <td align=right>1
+            <td align=right>   1,170 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>198
+            <td align=right>1
+            <td align=right>   1,042 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>199
+            <td align=right>1
+            <td align=right>   1,207 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>295
+            <td align=right>1
+            <td align=right>   2,146 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>450
+            <td align=right>1
+            <td align=right>   3,851 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>467
+            <td align=right>1
+            <td align=right>   4,648 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>485
+            <td align=right>1
+            <td align=right>   4,139 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>505
+            <td align=right>1
+            <td align=right>   3,937 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>1170
+            <td align=right>1
+            <td align=right>  10,943 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>1442
+            <td align=right>1
+            <td align=right>  12,928 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>3336
+            <td align=right>1
+            <td align=right>  32,014 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>5783
+            <td align=right>1
+            <td align=right>  33,565 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>6036
+            <td align=right>1
+            <td align=right>  27,673 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>11769
+            <td align=right>1
+            <td align=right>1.0911e+05 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>95771
+            <td align=right>1
+            <td align=right>8.1401e+05 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>230110
+            <td align=right>1
+            <td align=right>1.8122e+06 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+      
+      
+      
+      
+  
+    <td class=solns>
+      
+      
+      <div class=overall>
+          25,540 µs
+        avg of 42
+        <div>σ: 1.0277e+05</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>2
+            <td align=right>1
+            <td align=right>     125 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>3
+            <td align=right>1
+            <td align=right>     156 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>4
+            <td align=right>1
+            <td align=right>     135 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>5
+            <td align=right>1
+            <td align=right>     142 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>7
+            <td align=right>1
+            <td align=right>     166 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>9
+            <td align=right>1
+            <td align=right>     170 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>11
+            <td align=right>1
+            <td align=right>     185 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>12
+            <td align=right>1
+            <td align=right>     217 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>16
+            <td align=right>2
+            <td align=right>     257 µs
+            <td align=right>σ:    63.64
+        
+        <tr class=b>
+            <td align=right>17
+            <td align=right>1
+            <td align=right>     203 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>18
+            <td align=right>1
+            <td align=right>     202 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>21
+            <td align=right>1
+            <td align=right>     280 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>22
+            <td align=right>2
+            <td align=right>   263.5 µs
+            <td align=right>σ:   88.388
+        
+        <tr class=b>
+            <td align=right>23
+            <td align=right>1
+            <td align=right>     203 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>25
+            <td align=right>1
+            <td align=right>     346 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>27
+            <td align=right>1
+            <td align=right>     444 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>29
+            <td align=right>2
+            <td align=right>     346 µs
+            <td align=right>σ:   5.6569
+        
+        <tr class=b>
+            <td align=right>34
+            <td align=right>3
+            <td align=right>  350.67 µs
+            <td align=right>σ:   179.45
+        
+        <tr class=a>
+            <td align=right>51
+            <td align=right>1
+            <td align=right>     337 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>53
+            <td align=right>1
+            <td align=right>     330 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>58
+            <td align=right>2
+            <td align=right>     656 µs
+            <td align=right>σ:   319.61
+        
+        <tr class=b>
+            <td align=right>66
+            <td align=right>1
+            <td align=right>     350 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>67
+            <td align=right>1
+            <td align=right>     671 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>105
+            <td align=right>1
+            <td align=right>     620 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>132
+            <td align=right>1
+            <td align=right>     794 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>310
+            <td align=right>1
+            <td align=right>   2,136 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>314
+            <td align=right>1
+            <td align=right>   2,184 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>335
+            <td align=right>1
+            <td align=right>   1,573 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>337
+            <td align=right>1
+            <td align=right>   3,519 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>354
+            <td align=right>1
+            <td align=right>   3,290 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>679
+            <td align=right>1
+            <td align=right>   5,621 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>1103
+            <td align=right>1
+            <td align=right>   8,653 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>3006
+            <td align=right>1
+            <td align=right>  15,264 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>7823
+            <td align=right>1
+            <td align=right>  66,260 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>61314
+            <td align=right>1
+            <td align=right>4.5983e+05 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>63436
+            <td align=right>1
+            <td align=right>4.9416e+05 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+      
+      
+      
+      
+  
+    <td class=solns>
+      
+      
+      <div class=overall>
+          18,255 µs
+        avg of 42
+        <div>σ:   92,607</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>2
+            <td align=right>1
+            <td align=right>     123 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>3
+            <td align=right>1
+            <td align=right>     157 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>4
+            <td align=right>1
+            <td align=right>     136 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>5
+            <td align=right>1
+            <td align=right>     141 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>6
+            <td align=right>1
+            <td align=right>     182 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>7
+            <td align=right>1
+            <td align=right>     140 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>9
+            <td align=right>1
+            <td align=right>     168 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>10
+            <td align=right>1
+            <td align=right>     171 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>11
+            <td align=right>1
+            <td align=right>     288 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>14
+            <td align=right>1
+            <td align=right>     165 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>15
+            <td align=right>1
+            <td align=right>     401 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>16
+            <td align=right>1
+            <td align=right>     214 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>17
+            <td align=right>3
+            <td align=right>  280.33 µs
+            <td align=right>σ:   85.237
+        
+        <tr class=b>
+            <td align=right>18
+            <td align=right>1
+            <td align=right>     285 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>21
+            <td align=right>1
+            <td align=right>     256 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>22
+            <td align=right>1
+            <td align=right>     200 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>23
+            <td align=right>1
+            <td align=right>     206 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>26
+            <td align=right>1
+            <td align=right>     305 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>27
+            <td align=right>1
+            <td align=right>     464 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>29
+            <td align=right>2
+            <td align=right>   387.5 µs
+            <td align=right>σ:   64.347
+        
+        <tr class=a>
+            <td align=right>34
+            <td align=right>3
+            <td align=right>     248 µs
+            <td align=right>σ:   17.436
+        
+        <tr class=b>
+            <td align=right>38
+            <td align=right>1
+            <td align=right>     316 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>39
+            <td align=right>1
+            <td align=right>     347 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>41
+            <td align=right>1
+            <td align=right>     456 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>43
+            <td align=right>1
+            <td align=right>     317 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>58
+            <td align=right>1
+            <td align=right>     446 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>66
+            <td align=right>1
+            <td align=right>     592 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>105
+            <td align=right>1
+            <td align=right>     620 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>165
+            <td align=right>1
+            <td align=right>   1,449 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>198
+            <td align=right>1
+            <td align=right>   1,126 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>269
+            <td align=right>1
+            <td align=right>   2,499 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>344
+            <td align=right>1
+            <td align=right>   3,449 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>679
+            <td align=right>1
+            <td align=right>   5,869 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>2308
+            <td align=right>1
+            <td align=right>  10,848 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>7586
+            <td align=right>1
+            <td align=right>  60,647 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>9292
+            <td align=right>1
+            <td align=right>  74,555 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>78182
+            <td align=right>1
+            <td align=right>5.9682e+05 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+      
+      
+      
+      
+  
+
+<tr class=solns>
+  <td>1 solution, by #steps
+  
+    <td class=solns>
+      
+      
+      
+      
+      <div class=overall>
+             264 µs
+        avg of 1
+        <div>σ:        0</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>0
+            <td align=right>1
+            <td align=right>     264 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+      
+      
+  
+    <td class=solns>
+      
+      
+      
+      
+      <div class=overall>
+             250 µs
+        avg of 1
+        <div>σ:        0</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>0
+            <td align=right>1
+            <td align=right>     250 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+      
+      
+  
+    <td class=solns>
+      
+      
+      
+      
+      <div class=overall>
+             241 µs
+        avg of 1
+        <div>σ:        0</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>0
+            <td align=right>1
+            <td align=right>     241 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+      
+      
+  
+    <td class=solns>
+      
+      
+      
+      
+      <div class=overall>
+             244 µs
+        avg of 1
+        <div>σ:        0</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>0
+            <td align=right>1
+            <td align=right>     244 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+      
+      
+  
+    <td class=solns>
+      
+      
+      
+      
+      <div class=overall>
+             231 µs
+        avg of 1
+        <div>σ:        0</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>0
+            <td align=right>1
+            <td align=right>     231 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+      
+      
+  
+    <td class=solns>
+      
+      
+      
+      
+      <div class=overall>
+             231 µs
+        avg of 1
+        <div>σ:        0</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>0
+            <td align=right>1
+            <td align=right>     231 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+      
+      
+  
+
+<tr class=solns>
+  <td>2 solutions, by #steps
+  
+    <td class=solns>
+      
+      
+      
+      
+      
+      
+      <div class=overall>
+           309.8 µs
+        avg of 9,957
+        <div>σ:   263.55</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>3
+            <td align=right>2
+            <td align=right>     251 µs
+            <td align=right>σ:   2.8284
+        
+        <tr class=b>
+            <td align=right>4
+            <td align=right>1
+            <td align=right>     248 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>5
+            <td align=right>3
+            <td align=right>  334.67 µs
+            <td align=right>σ:   144.92
+        
+        <tr class=b>
+            <td align=right>6
+            <td align=right>4
+            <td align=right>   245.5 µs
+            <td align=right>σ:   8.2664
+        
+        <tr class=a>
+            <td align=right>7
+            <td align=right>6
+            <td align=right>   249.5 µs
+            <td align=right>σ:    5.282
+        
+        <tr class=b>
+            <td align=right>8
+            <td align=right>13
+            <td align=right>  326.77 µs
+            <td align=right>σ:   221.57
+        
+        <tr class=a>
+            <td align=right>9
+            <td align=right>10
+            <td align=right>   261.9 µs
+            <td align=right>σ:   12.706
+        
+        <tr class=b>
+            <td align=right>10
+            <td align=right>27
+            <td align=right>  306.63 µs
+            <td align=right>σ:   145.92
+        
+        <tr class=a>
+            <td align=right>11
+            <td align=right>32
+            <td align=right>  282.47 µs
+            <td align=right>σ:   53.489
+        
+        <tr class=b>
+            <td align=right>12
+            <td align=right>56
+            <td align=right>  280.45 µs
+            <td align=right>σ:   56.855
+        
+        <tr class=a>
+            <td align=right>13
+            <td align=right>90
+            <td align=right>  285.32 µs
+            <td align=right>σ:   42.258
+        
+        <tr class=b>
+            <td align=right>14
+            <td align=right>122
+            <td align=right>  279.71 µs
+            <td align=right>σ:   20.229
+        
+        <tr class=a>
+            <td align=right>15
+            <td align=right>237
+            <td align=right>   312.3 µs
+            <td align=right>σ:   240.31
+        
+        <tr class=b>
+            <td align=right>16
+            <td align=right>330
+            <td align=right>     362 µs
+            <td align=right>σ:  1,070.6
+        
+        <tr class=a>
+            <td align=right>17
+            <td align=right>468
+            <td align=right>  287.41 µs
+            <td align=right>σ:   59.288
+        
+        <tr class=b>
+            <td align=right>18
+            <td align=right>683
+            <td align=right>  300.33 µs
+            <td align=right>σ:   184.13
+        
+        <tr class=a>
+            <td align=right>19
+            <td align=right>824
+            <td align=right>  300.09 µs
+            <td align=right>σ:   162.59
+        
+        <tr class=b>
+            <td align=right>20
+            <td align=right>997
+            <td align=right>  306.83 µs
+            <td align=right>σ:   142.77
+        
+        <tr class=a>
+            <td align=right>21
+            <td align=right>1,137
+            <td align=right>  307.14 µs
+            <td align=right>σ:   138.52
+        
+        <tr class=b>
+            <td align=right>22
+            <td align=right>1,095
+            <td align=right>  306.22 µs
+            <td align=right>σ:   137.06
+        
+        <tr class=a>
+            <td align=right>23
+            <td align=right>1,023
+            <td align=right>  308.65 µs
+            <td align=right>σ:   131.61
+        
+        <tr class=b>
+            <td align=right>24
+            <td align=right>893
+            <td align=right>  306.73 µs
+            <td align=right>σ:   98.033
+        
+        <tr class=a>
+            <td align=right>25
+            <td align=right>696
+            <td align=right>  321.61 µs
+            <td align=right>σ:   315.16
+        
+        <tr class=b>
+            <td align=right>26
+            <td align=right>485
+            <td align=right>  307.74 µs
+            <td align=right>σ:   77.585
+        
+        <tr class=a>
+            <td align=right>27
+            <td align=right>302
+            <td align=right>  309.09 µs
+            <td align=right>σ:   60.361
+        
+        <tr class=b>
+            <td align=right>28
+            <td align=right>193
+            <td align=right>  312.72 µs
+            <td align=right>σ:   49.708
+        
+        <tr class=a>
+            <td align=right>29
+            <td align=right>107
+            <td align=right>  322.64 µs
+            <td align=right>σ:   82.472
+        
+        <tr class=b>
+            <td align=right>30
+            <td align=right>52
+            <td align=right>  320.69 µs
+            <td align=right>σ:   43.106
+        
+        <tr class=a>
+            <td align=right>31
+            <td align=right>27
+            <td align=right>  365.67 µs
+            <td align=right>σ:   130.91
+        
+        <tr class=b>
+            <td align=right>32
+            <td align=right>15
+            <td align=right>   351.6 µs
+            <td align=right>σ:   87.304
+        
+        <tr class=a>
+            <td align=right>34
+            <td align=right>3
+            <td align=right>     357 µs
+            <td align=right>σ:   15.133
+        
+        <tr class=b>
+            <td align=right>35
+            <td align=right>1
+            <td align=right>     513 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>36
+            <td align=right>2
+            <td align=right>   413.5 µs
+            <td align=right>σ:   17.678
+        
+        <tr class=b>
+            <td align=right>37
+            <td align=right>1
+            <td align=right>     526 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>38
+            <td align=right>1
+            <td align=right>     332 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>39
+            <td align=right>1
+            <td align=right>     333 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>41
+            <td align=right>1
+            <td align=right>     419 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>42
+            <td align=right>1
+            <td align=right>     387 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>43
+            <td align=right>1
+            <td align=right>     422 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>46
+            <td align=right>1
+            <td align=right>     488 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>51
+            <td align=right>1
+            <td align=right>     675 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>52
+            <td align=right>1
+            <td align=right>     395 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>56
+            <td align=right>1
+            <td align=right>     454 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>67
+            <td align=right>1
+            <td align=right>     567 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>70
+            <td align=right>1
+            <td align=right>     627 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>73
+            <td align=right>1
+            <td align=right>     616 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>75
+            <td align=right>2
+            <td align=right>   756.5 µs
+            <td align=right>σ:    58.69
+        
+        <tr class=b>
+            <td align=right>87
+            <td align=right>1
+            <td align=right>     751 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>97
+            <td align=right>1
+            <td align=right>     641 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>102
+            <td align=right>1
+            <td align=right>     848 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>152
+            <td align=right>1
+            <td align=right>   1,201 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>843
+            <td align=right>1
+            <td align=right>   6,145 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>908
+            <td align=right>1
+            <td align=right>   7,417 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+  
+    <td class=solns>
+      
+      
+      
+      
+      
+      
+      <div class=overall>
+          300.49 µs
+        avg of 9,957
+        <div>σ:   237.47</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>3
+            <td align=right>2
+            <td align=right>   234.5 µs
+            <td align=right>σ:   7.7782
+        
+        <tr class=b>
+            <td align=right>4
+            <td align=right>1
+            <td align=right>     248 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>5
+            <td align=right>3
+            <td align=right>  251.33 µs
+            <td align=right>σ:   1.1547
+        
+        <tr class=b>
+            <td align=right>6
+            <td align=right>4
+            <td align=right>  246.75 µs
+            <td align=right>σ:      7.5
+        
+        <tr class=a>
+            <td align=right>7
+            <td align=right>6
+            <td align=right>  262.67 µs
+            <td align=right>σ:   39.256
+        
+        <tr class=b>
+            <td align=right>8
+            <td align=right>13
+            <td align=right>  263.46 µs
+            <td align=right>σ:    15.57
+        
+        <tr class=a>
+            <td align=right>9
+            <td align=right>10
+            <td align=right>     265 µs
+            <td align=right>σ:   22.593
+        
+        <tr class=b>
+            <td align=right>10
+            <td align=right>27
+            <td align=right>  269.63 µs
+            <td align=right>σ:   18.774
+        
+        <tr class=a>
+            <td align=right>11
+            <td align=right>32
+            <td align=right>  274.41 µs
+            <td align=right>σ:   27.624
+        
+        <tr class=b>
+            <td align=right>12
+            <td align=right>56
+            <td align=right>  270.11 µs
+            <td align=right>σ:    28.02
+        
+        <tr class=a>
+            <td align=right>13
+            <td align=right>90
+            <td align=right>  280.92 µs
+            <td align=right>σ:   81.545
+        
+        <tr class=b>
+            <td align=right>14
+            <td align=right>122
+            <td align=right>  276.94 µs
+            <td align=right>σ:   53.097
+        
+        <tr class=a>
+            <td align=right>15
+            <td align=right>237
+            <td align=right>  279.55 µs
+            <td align=right>σ:   72.603
+        
+        <tr class=b>
+            <td align=right>16
+            <td align=right>330
+            <td align=right>  288.05 µs
+            <td align=right>σ:   104.09
+        
+        <tr class=a>
+            <td align=right>17
+            <td align=right>468
+            <td align=right>  284.84 µs
+            <td align=right>σ:    74.49
+        
+        <tr class=b>
+            <td align=right>18
+            <td align=right>683
+            <td align=right>  295.53 µs
+            <td align=right>σ:   274.76
+        
+        <tr class=a>
+            <td align=right>19
+            <td align=right>824
+            <td align=right>   298.2 µs
+            <td align=right>σ:   337.82
+        
+        <tr class=b>
+            <td align=right>20
+            <td align=right>997
+            <td align=right>  297.51 µs
+            <td align=right>σ:    146.7
+        
+        <tr class=a>
+            <td align=right>21
+            <td align=right>1,137
+            <td align=right>  296.26 µs
+            <td align=right>σ:   190.72
+        
+        <tr class=b>
+            <td align=right>22
+            <td align=right>1,095
+            <td align=right>  292.05 µs
+            <td align=right>σ:   102.23
+        
+        <tr class=a>
+            <td align=right>23
+            <td align=right>1,023
+            <td align=right>  298.86 µs
+            <td align=right>σ:   158.53
+        
+        <tr class=b>
+            <td align=right>24
+            <td align=right>893
+            <td align=right>  309.27 µs
+            <td align=right>σ:   276.03
+        
+        <tr class=a>
+            <td align=right>25
+            <td align=right>696
+            <td align=right>  299.38 µs
+            <td align=right>σ:    137.4
+        
+        <tr class=b>
+            <td align=right>26
+            <td align=right>485
+            <td align=right>  331.16 µs
+            <td align=right>σ:   447.25
+        
+        <tr class=a>
+            <td align=right>27
+            <td align=right>302
+            <td align=right>  294.32 µs
+            <td align=right>σ:   58.382
+        
+        <tr class=b>
+            <td align=right>28
+            <td align=right>193
+            <td align=right>  348.62 µs
+            <td align=right>σ:   503.25
+        
+        <tr class=a>
+            <td align=right>29
+            <td align=right>107
+            <td align=right>  301.92 µs
+            <td align=right>σ:   100.87
+        
+        <tr class=b>
+            <td align=right>30
+            <td align=right>52
+            <td align=right>   320.6 µs
+            <td align=right>σ:   138.63
+        
+        <tr class=a>
+            <td align=right>31
+            <td align=right>27
+            <td align=right>  338.74 µs
+            <td align=right>σ:   131.15
+        
+        <tr class=b>
+            <td align=right>32
+            <td align=right>15
+            <td align=right>  339.33 µs
+            <td align=right>σ:   92.968
+        
+        <tr class=a>
+            <td align=right>34
+            <td align=right>3
+            <td align=right>  341.67 µs
+            <td align=right>σ:   17.898
+        
+        <tr class=b>
+            <td align=right>35
+            <td align=right>1
+            <td align=right>     440 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>36
+            <td align=right>2
+            <td align=right>   464.5 µs
+            <td align=right>σ:   144.96
+        
+        <tr class=b>
+            <td align=right>37
+            <td align=right>1
+            <td align=right>     513 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>38
+            <td align=right>1
+            <td align=right>     313 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>39
+            <td align=right>1
+            <td align=right>     335 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>41
+            <td align=right>1
+            <td align=right>     617 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>42
+            <td align=right>1
+            <td align=right>     372 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>43
+            <td align=right>1
+            <td align=right>     399 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>46
+            <td align=right>1
+            <td align=right>     456 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>51
+            <td align=right>1
+            <td align=right>     463 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>52
+            <td align=right>1
+            <td align=right>     371 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>56
+            <td align=right>1
+            <td align=right>     432 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>67
+            <td align=right>1
+            <td align=right>     553 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>70
+            <td align=right>1
+            <td align=right>     614 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>73
+            <td align=right>1
+            <td align=right>     574 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>75
+            <td align=right>2
+            <td align=right>     752 µs
+            <td align=right>σ:   16.971
+        
+        <tr class=b>
+            <td align=right>87
+            <td align=right>1
+            <td align=right>     710 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>97
+            <td align=right>1
+            <td align=right>     601 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>102
+            <td align=right>1
+            <td align=right>     789 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>152
+            <td align=right>1
+            <td align=right>   1,162 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>843
+            <td align=right>1
+            <td align=right>   6,291 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>908
+            <td align=right>1
+            <td align=right>   6,440 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+  
+    <td class=solns>
+      
+      
+      
+      
+      
+      
+      <div class=overall>
+          284.41 µs
+        avg of 9,957
+        <div>σ:   221.66</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>3
+            <td align=right>1
+            <td align=right>     238 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>4
+            <td align=right>3
+            <td align=right>  247.67 µs
+            <td align=right>σ:   11.676
+        
+        <tr class=a>
+            <td align=right>5
+            <td align=right>3
+            <td align=right>     265 µs
+            <td align=right>σ:    26.23
+        
+        <tr class=b>
+            <td align=right>6
+            <td align=right>4
+            <td align=right>     245 µs
+            <td align=right>σ:    8.165
+        
+        <tr class=a>
+            <td align=right>7
+            <td align=right>10
+            <td align=right>   251.7 µs
+            <td align=right>σ:   9.6845
+        
+        <tr class=b>
+            <td align=right>8
+            <td align=right>10
+            <td align=right>   249.5 µs
+            <td align=right>σ:   9.7895
+        
+        <tr class=a>
+            <td align=right>9
+            <td align=right>7
+            <td align=right>  254.86 µs
+            <td align=right>σ:   16.688
+        
+        <tr class=b>
+            <td align=right>10
+            <td align=right>19
+            <td align=right>  265.63 µs
+            <td align=right>σ:   26.692
+        
+        <tr class=a>
+            <td align=right>11
+            <td align=right>38
+            <td align=right>  266.26 µs
+            <td align=right>σ:   41.244
+        
+        <tr class=b>
+            <td align=right>12
+            <td align=right>47
+            <td align=right>  282.94 µs
+            <td align=right>σ:   107.47
+        
+        <tr class=a>
+            <td align=right>13
+            <td align=right>76
+            <td align=right>  283.32 µs
+            <td align=right>σ:   216.97
+        
+        <tr class=b>
+            <td align=right>14
+            <td align=right>139
+            <td align=right>  297.14 µs
+            <td align=right>σ:   277.99
+        
+        <tr class=a>
+            <td align=right>15
+            <td align=right>230
+            <td align=right>   268.5 µs
+            <td align=right>σ:   69.634
+        
+        <tr class=b>
+            <td align=right>16
+            <td align=right>365
+            <td align=right>  270.07 µs
+            <td align=right>σ:   65.177
+        
+        <tr class=a>
+            <td align=right>17
+            <td align=right>476
+            <td align=right>  272.66 µs
+            <td align=right>σ:   68.299
+        
+        <tr class=b>
+            <td align=right>18
+            <td align=right>655
+            <td align=right>  301.32 µs
+            <td align=right>σ:    427.5
+        
+        <tr class=a>
+            <td align=right>19
+            <td align=right>832
+            <td align=right>  279.42 µs
+            <td align=right>σ:   114.87
+        
+        <tr class=b>
+            <td align=right>20
+            <td align=right>1,023
+            <td align=right>   287.4 µs
+            <td align=right>σ:   271.42
+        
+        <tr class=a>
+            <td align=right>21
+            <td align=right>1,028
+            <td align=right>  286.59 µs
+            <td align=right>σ:   197.94
+        
+        <tr class=b>
+            <td align=right>22
+            <td align=right>1,120
+            <td align=right>  276.56 µs
+            <td align=right>σ:    132.1
+        
+        <tr class=a>
+            <td align=right>23
+            <td align=right>1,071
+            <td align=right>  277.63 µs
+            <td align=right>σ:   162.36
+        
+        <tr class=b>
+            <td align=right>24
+            <td align=right>918
+            <td align=right>  283.34 µs
+            <td align=right>σ:    138.3
+        
+        <tr class=a>
+            <td align=right>25
+            <td align=right>693
+            <td align=right>  292.81 µs
+            <td align=right>σ:    408.6
+        
+        <tr class=b>
+            <td align=right>26
+            <td align=right>517
+            <td align=right>  283.06 µs
+            <td align=right>σ:    133.8
+        
+        <tr class=a>
+            <td align=right>27
+            <td align=right>317
+            <td align=right>  310.87 µs
+            <td align=right>σ:   278.66
+        
+        <tr class=b>
+            <td align=right>28
+            <td align=right>178
+            <td align=right>  271.19 µs
+            <td align=right>σ:   24.486
+        
+        <tr class=a>
+            <td align=right>29
+            <td align=right>89
+            <td align=right>  291.91 µs
+            <td align=right>σ:   114.21
+        
+        <tr class=b>
+            <td align=right>30
+            <td align=right>48
+            <td align=right>   322.1 µs
+            <td align=right>σ:   203.69
+        
+        <tr class=a>
+            <td align=right>31
+            <td align=right>13
+            <td align=right>  307.69 µs
+            <td align=right>σ:   74.503
+        
+        <tr class=b>
+            <td align=right>33
+            <td align=right>2
+            <td align=right>   320.5 µs
+            <td align=right>σ:   79.903
+        
+        <tr class=a>
+            <td align=right>34
+            <td align=right>5
+            <td align=right>   384.4 µs
+            <td align=right>σ:   91.448
+        
+        <tr class=b>
+            <td align=right>35
+            <td align=right>3
+            <td align=right>  364.67 µs
+            <td align=right>σ:   45.797
+        
+        <tr class=a>
+            <td align=right>36
+            <td align=right>2
+            <td align=right>     345 µs
+            <td align=right>σ:   59.397
+        
+        <tr class=b>
+            <td align=right>37
+            <td align=right>1
+            <td align=right>     379 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>38
+            <td align=right>2
+            <td align=right>   382.5 µs
+            <td align=right>σ:   19.092
+        
+        <tr class=b>
+            <td align=right>39
+            <td align=right>1
+            <td align=right>     351 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>41
+            <td align=right>1
+            <td align=right>     342 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>42
+            <td align=right>1
+            <td align=right>     744 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>44
+            <td align=right>3
+            <td align=right>  405.67 µs
+            <td align=right>σ:   57.726
+        
+        <tr class=b>
+            <td align=right>47
+            <td align=right>2
+            <td align=right>   387.5 µs
+            <td align=right>σ:   37.477
+        
+        <tr class=a>
+            <td align=right>129
+            <td align=right>1
+            <td align=right>     892 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>137
+            <td align=right>1
+            <td align=right>     808 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>147
+            <td align=right>1
+            <td align=right>   1,076 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>227
+            <td align=right>1
+            <td align=right>   1,989 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+  
+    <td class=solns>
+      
+      
+      
+      
+      
+      
+      <div class=overall>
+          291.51 µs
+        avg of 9,957
+        <div>σ:   437.45</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>3
+            <td align=right>1
+            <td align=right>     240 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>4
+            <td align=right>3
+            <td align=right>  309.33 µs
+            <td align=right>σ:   72.009
+        
+        <tr class=a>
+            <td align=right>5
+            <td align=right>3
+            <td align=right>  247.67 µs
+            <td align=right>σ:   8.3267
+        
+        <tr class=b>
+            <td align=right>6
+            <td align=right>8
+            <td align=right>  246.75 µs
+            <td align=right>σ:   8.0134
+        
+        <tr class=a>
+            <td align=right>7
+            <td align=right>17
+            <td align=right>  295.12 µs
+            <td align=right>σ:   163.79
+        
+        <tr class=b>
+            <td align=right>8
+            <td align=right>18
+            <td align=right>  256.67 µs
+            <td align=right>σ:   15.952
+        
+        <tr class=a>
+            <td align=right>9
+            <td align=right>32
+            <td align=right>  259.66 µs
+            <td align=right>σ:   31.923
+        
+        <tr class=b>
+            <td align=right>10
+            <td align=right>52
+            <td align=right>  267.54 µs
+            <td align=right>σ:   25.299
+        
+        <tr class=a>
+            <td align=right>11
+            <td align=right>93
+            <td align=right>  285.99 µs
+            <td align=right>σ:   197.61
+        
+        <tr class=b>
+            <td align=right>12
+            <td align=right>176
+            <td align=right>   296.8 µs
+            <td align=right>σ:   322.81
+        
+        <tr class=a>
+            <td align=right>13
+            <td align=right>289
+            <td align=right>   272.6 µs
+            <td align=right>σ:   116.47
+        
+        <tr class=b>
+            <td align=right>14
+            <td align=right>440
+            <td align=right>  271.27 µs
+            <td align=right>σ:   77.031
+        
+        <tr class=a>
+            <td align=right>15
+            <td align=right>644
+            <td align=right>  337.57 µs
+            <td align=right>σ:  1,029.6
+        
+        <tr class=b>
+            <td align=right>16
+            <td align=right>787
+            <td align=right>   284.5 µs
+            <td align=right>σ:   231.62
+        
+        <tr class=a>
+            <td align=right>17
+            <td align=right>955
+            <td align=right>  279.55 µs
+            <td align=right>σ:   171.73
+        
+        <tr class=b>
+            <td align=right>18
+            <td align=right>1,116
+            <td align=right>  287.42 µs
+            <td align=right>σ:   266.01
+        
+        <tr class=a>
+            <td align=right>19
+            <td align=right>1,174
+            <td align=right>  278.55 µs
+            <td align=right>σ:   120.27
+        
+        <tr class=b>
+            <td align=right>20
+            <td align=right>1,109
+            <td align=right>  275.54 µs
+            <td align=right>σ:   80.525
+        
+        <tr class=a>
+            <td align=right>21
+            <td align=right>933
+            <td align=right>  279.51 µs
+            <td align=right>σ:   95.137
+        
+        <tr class=b>
+            <td align=right>22
+            <td align=right>712
+            <td align=right>  277.45 µs
+            <td align=right>σ:   138.32
+        
+        <tr class=a>
+            <td align=right>23
+            <td align=right>524
+            <td align=right>  285.58 µs
+            <td align=right>σ:   249.83
+        
+        <tr class=b>
+            <td align=right>24
+            <td align=right>388
+            <td align=right>  286.13 µs
+            <td align=right>σ:   120.72
+        
+        <tr class=a>
+            <td align=right>25
+            <td align=right>226
+            <td align=right>  292.29 µs
+            <td align=right>σ:   153.49
+        
+        <tr class=b>
+            <td align=right>26
+            <td align=right>90
+            <td align=right>  324.02 µs
+            <td align=right>σ:   293.54
+        
+        <tr class=a>
+            <td align=right>27
+            <td align=right>65
+            <td align=right>  286.48 µs
+            <td align=right>σ:   93.591
+        
+        <tr class=b>
+            <td align=right>28
+            <td align=right>28
+            <td align=right>  278.68 µs
+            <td align=right>σ:   37.148
+        
+        <tr class=a>
+            <td align=right>29
+            <td align=right>14
+            <td align=right>  312.21 µs
+            <td align=right>σ:   49.467
+        
+        <tr class=b>
+            <td align=right>30
+            <td align=right>7
+            <td align=right>  328.29 µs
+            <td align=right>σ:   42.735
+        
+        <tr class=a>
+            <td align=right>31
+            <td align=right>7
+            <td align=right>  329.14 µs
+            <td align=right>σ:   58.755
+        
+        <tr class=b>
+            <td align=right>32
+            <td align=right>2
+            <td align=right>   329.5 µs
+            <td align=right>σ:   41.719
+        
+        <tr class=a>
+            <td align=right>34
+            <td align=right>2
+            <td align=right>     374 µs
+            <td align=right>σ:   1.4142
+        
+        <tr class=b>
+            <td align=right>35
+            <td align=right>4
+            <td align=right>   350.5 µs
+            <td align=right>σ:   47.655
+        
+        <tr class=a>
+            <td align=right>36
+            <td align=right>1
+            <td align=right>     420 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>37
+            <td align=right>4
+            <td align=right>     424 µs
+            <td align=right>σ:   78.964
+        
+        <tr class=a>
+            <td align=right>38
+            <td align=right>2
+            <td align=right>     442 µs
+            <td align=right>σ:   16.971
+        
+        <tr class=b>
+            <td align=right>40
+            <td align=right>1
+            <td align=right>     452 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>41
+            <td align=right>1
+            <td align=right>     357 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>44
+            <td align=right>1
+            <td align=right>     394 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>47
+            <td align=right>1
+            <td align=right>     435 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>50
+            <td align=right>1
+            <td align=right>     656 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>52
+            <td align=right>1
+            <td align=right>     434 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>58
+            <td align=right>1
+            <td align=right>     490 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>60
+            <td align=right>1
+            <td align=right>     624 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>61
+            <td align=right>1
+            <td align=right>     622 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>65
+            <td align=right>3
+            <td align=right> 1,117.3 µs
+            <td align=right>σ:    854.7
+        
+        <tr class=b>
+            <td align=right>67
+            <td align=right>1
+            <td align=right>     664 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>83
+            <td align=right>1
+            <td align=right>     688 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>88
+            <td align=right>1
+            <td align=right>     562 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>90
+            <td align=right>1
+            <td align=right>     632 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>95
+            <td align=right>1
+            <td align=right>     734 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>96
+            <td align=right>1
+            <td align=right>     648 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>108
+            <td align=right>1
+            <td align=right>     698 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>116
+            <td align=right>1
+            <td align=right>     953 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>131
+            <td align=right>1
+            <td align=right>     853 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>144
+            <td align=right>1
+            <td align=right>   1,086 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>146
+            <td align=right>1
+            <td align=right>     758 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>170
+            <td align=right>1
+            <td align=right>   1,520 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>183
+            <td align=right>1
+            <td align=right>   1,835 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>278
+            <td align=right>1
+            <td align=right>   2,895 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>364
+            <td align=right>1
+            <td align=right>   2,245 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>389
+            <td align=right>1
+            <td align=right>   2,624 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>637
+            <td align=right>1
+            <td align=right>   4,940 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>1495
+            <td align=right>1
+            <td align=right>  13,599 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>3795
+            <td align=right>1
+            <td align=right>  27,110 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+  
+    <td class=solns>
+      
+      
+      
+      
+      
+      
+      <div class=overall>
+          287.94 µs
+        avg of 9,957
+        <div>σ:   376.21</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>3
+            <td align=right>1
+            <td align=right>     238 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>4
+            <td align=right>3
+            <td align=right>  266.33 µs
+            <td align=right>σ:   37.581
+        
+        <tr class=a>
+            <td align=right>5
+            <td align=right>3
+            <td align=right>     247 µs
+            <td align=right>σ:    6.245
+        
+        <tr class=b>
+            <td align=right>6
+            <td align=right>4
+            <td align=right>  243.75 µs
+            <td align=right>σ:   9.6393
+        
+        <tr class=a>
+            <td align=right>7
+            <td align=right>15
+            <td align=right>   255.8 µs
+            <td align=right>σ:   14.785
+        
+        <tr class=b>
+            <td align=right>8
+            <td align=right>19
+            <td align=right>  259.11 µs
+            <td align=right>σ:   19.131
+        
+        <tr class=a>
+            <td align=right>9
+            <td align=right>18
+            <td align=right>  266.44 µs
+            <td align=right>σ:   36.969
+        
+        <tr class=b>
+            <td align=right>10
+            <td align=right>43
+            <td align=right>  261.05 µs
+            <td align=right>σ:   20.381
+        
+        <tr class=a>
+            <td align=right>11
+            <td align=right>66
+            <td align=right>  291.05 µs
+            <td align=right>σ:   133.02
+        
+        <tr class=b>
+            <td align=right>12
+            <td align=right>102
+            <td align=right>  275.56 µs
+            <td align=right>σ:   71.877
+        
+        <tr class=a>
+            <td align=right>13
+            <td align=right>173
+            <td align=right>  268.94 µs
+            <td align=right>σ:   70.979
+        
+        <tr class=b>
+            <td align=right>14
+            <td align=right>263
+            <td align=right>  284.32 µs
+            <td align=right>σ:   232.76
+        
+        <tr class=a>
+            <td align=right>15
+            <td align=right>424
+            <td align=right>  268.35 µs
+            <td align=right>σ:   59.533
+        
+        <tr class=b>
+            <td align=right>16
+            <td align=right>558
+            <td align=right>  269.01 µs
+            <td align=right>σ:   47.367
+        
+        <tr class=a>
+            <td align=right>17
+            <td align=right>763
+            <td align=right>  272.45 µs
+            <td align=right>σ:   99.604
+        
+        <tr class=b>
+            <td align=right>18
+            <td align=right>895
+            <td align=right>  281.54 µs
+            <td align=right>σ:   150.79
+        
+        <tr class=a>
+            <td align=right>19
+            <td align=right>1,049
+            <td align=right>  277.05 µs
+            <td align=right>σ:   107.82
+        
+        <tr class=b>
+            <td align=right>20
+            <td align=right>1,121
+            <td align=right>  289.01 µs
+            <td align=right>σ:   370.18
+        
+        <tr class=a>
+            <td align=right>21
+            <td align=right>1,084
+            <td align=right>  282.36 µs
+            <td align=right>σ:   137.75
+        
+        <tr class=b>
+            <td align=right>22
+            <td align=right>960
+            <td align=right>  282.57 µs
+            <td align=right>σ:   165.14
+        
+        <tr class=a>
+            <td align=right>23
+            <td align=right>763
+            <td align=right>  279.66 µs
+            <td align=right>σ:   94.552
+        
+        <tr class=b>
+            <td align=right>24
+            <td align=right>613
+            <td align=right>  285.71 µs
+            <td align=right>σ:   242.24
+        
+        <tr class=a>
+            <td align=right>25
+            <td align=right>409
+            <td align=right>  272.21 µs
+            <td align=right>σ:   46.166
+        
+        <tr class=b>
+            <td align=right>26
+            <td align=right>257
+            <td align=right>  273.55 µs
+            <td align=right>σ:   47.495
+        
+        <tr class=a>
+            <td align=right>27
+            <td align=right>156
+            <td align=right>  288.58 µs
+            <td align=right>σ:   121.38
+        
+        <tr class=b>
+            <td align=right>28
+            <td align=right>78
+            <td align=right>  290.03 µs
+            <td align=right>σ:   95.828
+        
+        <tr class=a>
+            <td align=right>29
+            <td align=right>43
+            <td align=right>  472.93 µs
+            <td align=right>σ:  1,295.5
+        
+        <tr class=b>
+            <td align=right>30
+            <td align=right>18
+            <td align=right>  287.11 µs
+            <td align=right>σ:   38.245
+        
+        <tr class=a>
+            <td align=right>31
+            <td align=right>8
+            <td align=right>  317.25 µs
+            <td align=right>σ:   29.899
+        
+        <tr class=b>
+            <td align=right>32
+            <td align=right>7
+            <td align=right>  460.29 µs
+            <td align=right>σ:   336.86
+        
+        <tr class=a>
+            <td align=right>33
+            <td align=right>4
+            <td align=right>  333.75 µs
+            <td align=right>σ:   37.402
+        
+        <tr class=b>
+            <td align=right>36
+            <td align=right>3
+            <td align=right>  355.67 µs
+            <td align=right>σ:    64.26
+        
+        <tr class=a>
+            <td align=right>37
+            <td align=right>2
+            <td align=right>     338 µs
+            <td align=right>σ:    26.87
+        
+        <tr class=b>
+            <td align=right>38
+            <td align=right>2
+            <td align=right>     357 µs
+            <td align=right>σ:   70.711
+        
+        <tr class=a>
+            <td align=right>39
+            <td align=right>1
+            <td align=right>     370 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>40
+            <td align=right>2
+            <td align=right>   402.5 µs
+            <td align=right>σ:   65.761
+        
+        <tr class=a>
+            <td align=right>41
+            <td align=right>2
+            <td align=right>     481 µs
+            <td align=right>σ:   190.92
+        
+        <tr class=b>
+            <td align=right>43
+            <td align=right>1
+            <td align=right>     374 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>45
+            <td align=right>2
+            <td align=right>   348.5 µs
+            <td align=right>σ:   12.021
+        
+        <tr class=b>
+            <td align=right>51
+            <td align=right>1
+            <td align=right>     527 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>56
+            <td align=right>1
+            <td align=right>     472 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>58
+            <td align=right>1
+            <td align=right>     531 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>59
+            <td align=right>1
+            <td align=right>     451 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>60
+            <td align=right>1
+            <td align=right>     602 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>62
+            <td align=right>1
+            <td align=right>     486 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>68
+            <td align=right>2
+            <td align=right>     594 µs
+            <td align=right>σ:   33.941
+        
+        <tr class=a>
+            <td align=right>69
+            <td align=right>1
+            <td align=right>     658 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>80
+            <td align=right>1
+            <td align=right>     579 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>90
+            <td align=right>1
+            <td align=right>     730 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>94
+            <td align=right>1
+            <td align=right>     712 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>110
+            <td align=right>1
+            <td align=right>     932 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>165
+            <td align=right>1
+            <td align=right>   1,276 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>180
+            <td align=right>1
+            <td align=right>   1,690 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>196
+            <td align=right>1
+            <td align=right>   1,391 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>363
+            <td align=right>1
+            <td align=right>   2,739 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>1013
+            <td align=right>1
+            <td align=right>   9,833 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>1111
+            <td align=right>1
+            <td align=right>   4,837 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>1364
+            <td align=right>1
+            <td align=right>  10,271 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>2103
+            <td align=right>1
+            <td align=right>  14,083 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>3821
+            <td align=right>1
+            <td align=right>  25,076 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+  
+    <td class=solns>
+      
+      
+      
+      
+      
+      
+      <div class=overall>
+          298.12 µs
+        avg of 9,957
+        <div>σ:   530.77</div>
+      </div>
+      <table width=100%>
+        
+        <tr class=a>
+            <td align=right>3
+            <td align=right>1
+            <td align=right>     238 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>4
+            <td align=right>3
+            <td align=right>  512.33 µs
+            <td align=right>σ:   403.25
+        
+        <tr class=a>
+            <td align=right>5
+            <td align=right>3
+            <td align=right>     253 µs
+            <td align=right>σ:   8.7178
+        
+        <tr class=b>
+            <td align=right>6
+            <td align=right>4
+            <td align=right>  242.75 µs
+            <td align=right>σ:   7.0887
+        
+        <tr class=a>
+            <td align=right>7
+            <td align=right>15
+            <td align=right>  261.87 µs
+            <td align=right>σ:     28.5
+        
+        <tr class=b>
+            <td align=right>8
+            <td align=right>20
+            <td align=right>  260.45 µs
+            <td align=right>σ:   23.825
+        
+        <tr class=a>
+            <td align=right>9
+            <td align=right>15
+            <td align=right>  265.53 µs
+            <td align=right>σ:   34.295
+        
+        <tr class=b>
+            <td align=right>10
+            <td align=right>37
+            <td align=right>  310.81 µs
+            <td align=right>σ:   264.28
+        
+        <tr class=a>
+            <td align=right>11
+            <td align=right>60
+            <td align=right>   282.3 µs
+            <td align=right>σ:   117.35
+        
+        <tr class=b>
+            <td align=right>12
+            <td align=right>86
+            <td align=right>  268.05 µs
+            <td align=right>σ:   48.855
+        
+        <tr class=a>
+            <td align=right>13
+            <td align=right>147
+            <td align=right>  354.53 µs
+            <td align=right>σ:   765.66
+        
+        <tr class=b>
+            <td align=right>14
+            <td align=right>200
+            <td align=right>  272.58 µs
+            <td align=right>σ:   93.908
+        
+        <tr class=a>
+            <td align=right>15
+            <td align=right>320
+            <td align=right>  281.28 µs
+            <td align=right>σ:   142.64
+        
+        <tr class=b>
+            <td align=right>16
+            <td align=right>471
+            <td align=right>  272.14 µs
+            <td align=right>σ:   74.138
+        
+        <tr class=a>
+            <td align=right>17
+            <td align=right>683
+            <td align=right>   282.9 µs
+            <td align=right>σ:   166.36
+        
+        <tr class=b>
+            <td align=right>18
+            <td align=right>771
+            <td align=right>  292.52 µs
+            <td align=right>σ:   236.15
+        
+        <tr class=a>
+            <td align=right>19
+            <td align=right>992
+            <td align=right>  293.46 µs
+            <td align=right>σ:   386.75
+        
+        <tr class=b>
+            <td align=right>20
+            <td align=right>1,032
+            <td align=right>  287.27 µs
+            <td align=right>σ:    213.9
+        
+        <tr class=a>
+            <td align=right>21
+            <td align=right>1,090
+            <td align=right>  282.52 µs
+            <td align=right>σ:   112.58
+        
+        <tr class=b>
+            <td align=right>22
+            <td align=right>1,025
+            <td align=right>  282.12 µs
+            <td align=right>σ:   123.24
+        
+        <tr class=a>
+            <td align=right>23
+            <td align=right>885
+            <td align=right>  304.67 µs
+            <td align=right>σ:   719.32
+        
+        <tr class=b>
+            <td align=right>24
+            <td align=right>704
+            <td align=right>  293.17 µs
+            <td align=right>σ:   369.35
+        
+        <tr class=a>
+            <td align=right>25
+            <td align=right>522
+            <td align=right>  279.07 µs
+            <td align=right>σ:   73.782
+        
+        <tr class=b>
+            <td align=right>26
+            <td align=right>380
+            <td align=right>  326.11 µs
+            <td align=right>σ:   689.26
+        
+        <tr class=a>
+            <td align=right>27
+            <td align=right>241
+            <td align=right>  284.54 µs
+            <td align=right>σ:   129.27
+        
+        <tr class=b>
+            <td align=right>28
+            <td align=right>115
+            <td align=right>   290.3 µs
+            <td align=right>σ:   120.48
+        
+        <tr class=a>
+            <td align=right>29
+            <td align=right>56
+            <td align=right>     276 µs
+            <td align=right>σ:   24.832
+        
+        <tr class=b>
+            <td align=right>30
+            <td align=right>25
+            <td align=right>   285.6 µs
+            <td align=right>σ:   26.994
+        
+        <tr class=a>
+            <td align=right>31
+            <td align=right>10
+            <td align=right>   325.3 µs
+            <td align=right>σ:   38.615
+        
+        <tr class=b>
+            <td align=right>32
+            <td align=right>9
+            <td align=right>  300.56 µs
+            <td align=right>σ:   29.963
+        
+        <tr class=a>
+            <td align=right>33
+            <td align=right>3
+            <td align=right>  337.33 µs
+            <td align=right>σ:   35.529
+        
+        <tr class=b>
+            <td align=right>34
+            <td align=right>6
+            <td align=right>  318.17 µs
+            <td align=right>σ:   53.289
+        
+        <tr class=a>
+            <td align=right>35
+            <td align=right>1
+            <td align=right>     303 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>36
+            <td align=right>3
+            <td align=right>  481.67 µs
+            <td align=right>σ:   68.995
+        
+        <tr class=a>
+            <td align=right>37
+            <td align=right>1
+            <td align=right>     302 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>38
+            <td align=right>4
+            <td align=right>  379.25 µs
+            <td align=right>σ:   68.432
+        
+        <tr class=a>
+            <td align=right>39
+            <td align=right>1
+            <td align=right>     336 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>41
+            <td align=right>1
+            <td align=right>     616 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>45
+            <td align=right>1
+            <td align=right>     350 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>46
+            <td align=right>1
+            <td align=right>     391 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>51
+            <td align=right>1
+            <td align=right>     523 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>59
+            <td align=right>1
+            <td align=right>     453 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>69
+            <td align=right>1
+            <td align=right>     630 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>74
+            <td align=right>1
+            <td align=right>     786 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>79
+            <td align=right>1
+            <td align=right>     693 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>96
+            <td align=right>1
+            <td align=right>     739 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>100
+            <td align=right>1
+            <td align=right>     842 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>156
+            <td align=right>1
+            <td align=right>   1,175 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>1021
+            <td align=right>1
+            <td align=right>   7,883 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>1856
+            <td align=right>1
+            <td align=right>  13,337 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>1876
+            <td align=right>1
+            <td align=right>  12,388 µs
+            <td align=right>σ:        0
+        
+        <tr class=b>
+            <td align=right>1890
+            <td align=right>1
+            <td align=right>  15,113 µs
+            <td align=right>σ:        0
+        
+        <tr class=a>
+            <td align=right>4925
+            <td align=right>1
+            <td align=right>  33,128 µs
+            <td align=right>σ:        0
+        
+      </table>
+      
+      
+  
+
+
+</table>
+
+</body>
+</html>

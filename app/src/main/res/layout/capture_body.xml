@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+    
+    <TextView 
+        android:id="@+id/notice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone"
+        android:textSize="20sp"
+        android:padding="20dp"
+        />
+    
+    <AutoCompleteTextView 
+        android:id="@+id/capture_source"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/notice"
+        android:lines="1"
+        android:hint="@string/hint_capture_source"
+        android:completionThreshold="1"
+        android:inputType="textShortMessage|textCapSentences|textAutoCorrect|textMultiLine"
+        />
+    
+    <us.blanshard.sudoku.android.SudokuView
+        android:id="@+id/sudoku_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/capture_source"
+        android:layout_centerHorizontal="true"
+        android:padding="30dp"
+        />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/sudoku_view"
+        android:layout_centerHorizontal="true"
+        >
+        
+	    <Button
+	        android:id="@+id/capture_play"
+	        android:text="@string/button_capture_play"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_margin="5dp"
+	        />
+
+	    <Button
+	        android:id="@+id/capture_save"
+	        android:text="@string/button_capture_save"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_margin="5dp"
+	        />
+
+    </LinearLayout>
+
+</RelativeLayout>

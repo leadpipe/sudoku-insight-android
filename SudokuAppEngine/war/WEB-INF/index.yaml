@@ -1,7 +1,0 @@
-indexes:
-
-- kind: InstallationPuzzle
-  ancestor: yes
-  properties:
-  - name: puzzle
-    direction: asc

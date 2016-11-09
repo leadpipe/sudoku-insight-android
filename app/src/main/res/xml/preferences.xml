@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    
+    <CheckBoxPreference
+        android:key="shareData"
+        android:title="@string/prefs_share_data"
+        android:summaryOn="@string/prefs_share_desc"
+        android:summaryOff="@string/prefs_no_share_desc"
+        />
+    
+    <ListPreference
+        android:key="googleUserId"
+        android:title="@string/prefs_user_id"
+        />
+    
+    <EditTextPreference
+        android:key="deviceName"
+        android:title="@string/prefs_device_name"
+        android:dependency="googleUserId"
+        />
+    
+    <ListPreference
+        android:key="stream"
+        android:title="@string/prefs_stream"
+        android:persistent="false"
+        />
+    
+    <CheckBoxPreference
+        android:key="properOnly"
+        android:title="@string/prefs_proper_only"
+        android:summaryOn="@string/prefs_proper_desc"
+        android:summaryOff="@string/prefs_improper_desc"
+        />
+    
+</PreferenceScreen>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    >
+
+    <include layout="@layout/sudoku_frame"
+	    android:layout_width="0dp"
+	    android:layout_height="480dp"
+	    android:layout_weight="1"
+	    android:layout_gravity="right|center_vertical"
+        />
+
+    <include layout="@layout/rest_of_board"
+	    android:layout_width="0dp"
+	    android:layout_height="400dp"
+	    android:layout_weight="1"
+	    android:layout_gravity="left|center_vertical"
+        />
+
+</LinearLayout>

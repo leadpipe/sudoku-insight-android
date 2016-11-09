@@ -1,0 +1,47 @@
+# This line is a comment, and will be skipped.
+# Empty lines are skipped too.
+
+# Backup files left behind by the Emacs editor.
+*~
+
+# Lock files used by the Emacs editor.
+# Notice that the "#" character is quoted with a backslash.
+# This prevents it from being interpreted as starting a comment.
+.\#*
+
+# Temporary files used by the vim editor.
+.*.swp
+
+# A hidden file created by the Mac OS X Finder.
+.DS_Store
+
+# Compiled python files
+*.pyc
+
+# Compiled java files
+*.class
+
+# Eclipse bin directories
+bin
+
+# Maven dependencies
+SharedLibs/*.jar
+
+# Android copies of those jars
+SudokuAndroid/libs/*.jar
+
+# Proguard output
+SudokuAndroid/proguard/*.txt
+
+# Java appserver stuff
+**/WEB-INF/lib/*.jar
+**/WEB-INF/*/*.xml
+**/WEB-INF/*.xml
+**/WEB-INF/appengine-generated/*
+.google_apis/*
+
+# Data files
+data/*.tsv
+stats/*.tsv
+SudokuStats/*.txt
+SudokuStats/*.ods

@@ -1,0 +1,25 @@
+application: sudoku-insight
+version: 1-dev
+runtime: java
+threadsafe: true
+
+handlers:
+
+- url: /rpc
+  secure: always
+  servlet: us.blanshard.sudoku.appengine.RpcServlet
+
+- url: /installation/*
+  secure: optional
+  servlet: us.blanshard.sudoku.appengine.InstallationsServlet
+
+- url: /puzzle/*
+  secure: optional
+  servlet: us.blanshard.sudoku.appengine.PuzzlesServlet
+
+
+system_properties:
+  java.util.logging.config.file: WEB-INF/logging.properties
+
+welcome_files:
+  - index.html
