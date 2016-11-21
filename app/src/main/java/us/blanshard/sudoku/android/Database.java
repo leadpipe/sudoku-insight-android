@@ -86,7 +86,7 @@ public class Database {
         numbersToValues[s.number] = s;
     }
 
-    private AttemptState(int number) {
+    AttemptState(int number) {
       this.number = number;
     }
 
@@ -124,7 +124,6 @@ public class Database {
 
     // Optional other stuff
     public Grid clues;
-    public InstallationInfo installation;
     public String properties;
     public Rating rating;
     public List<Element> elements;
@@ -136,12 +135,6 @@ public class Database {
         throw new Error(e);
       }
     }
-  }
-
-  public static class InstallationInfo {
-    public long _id;
-    public String id;
-    public String name;
   }
 
   public static class CollectionInfo {
@@ -381,9 +374,8 @@ public class Database {
     String query = checkForOldVersion
         ? "SELECT [_id], [rating] FROM [Puzzle]"
         : "SELECT [_id] FROM [Puzzle] WHERE [rating] IS NULL";
-    Cursor cursor = db.rawQuery(query, null);
     List<Long> answer = Lists.newArrayList();
-    try {
+    try (Cursor cursor = db.rawQuery(query, null)) {
       while (cursor.moveToNext()) {
         Long id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
         if (checkForOldVersion) {
@@ -396,8 +388,6 @@ public class Database {
         }
         answer.add(id);
       }
-    } finally {
-      cursor.close();
     }
     return answer;
   }
@@ -438,8 +428,7 @@ public class Database {
   }
 
   private static Attempt fetchAttempt(SQLiteDatabase db, String sql, String... args) throws SQLException {
-    Cursor cursor = db.rawQuery(sql, args);
-    try {
+    try (Cursor cursor = db.rawQuery(sql, args)) {
       if (cursor.moveToFirst()) {
         Attempt answer = attemptFromCursor(cursor);
         answer.clues = Grid.fromString(cursor.getString(cursor.getColumnIndexOrThrow("clues")));
@@ -450,8 +439,6 @@ public class Database {
         return answer;
       }
       return null;
-    } finally {
-      cursor.close();
     }
   }
 
@@ -489,23 +476,17 @@ public class Database {
 
   private static List<Element> getPuzzleElements(SQLiteDatabase db, long puzzleId) throws SQLException {
     List<Element> answer = Lists.newArrayList();
-    Cursor cursor = db.rawQuery("SELECT * FROM [Element] WHERE [puzzleId] = ?",
-        new String[] { Long.toString(puzzleId) });
-    try {
+    try (Cursor cursor = db.rawQuery("SELECT * FROM [Element] WHERE [puzzleId] = ?",
+            new String[]{Long.toString(puzzleId)})) {
       while (cursor.moveToNext()) {
         Element element = elementFromCursor(cursor);
-        Cursor c2 = db.rawQuery("SELECT * FROM [Collection] WHERE [_id] = ?",
-            new String[] { Long.toString(cursor.getLong(cursor.getColumnIndexOrThrow("collectionId"))) });
-        try {
+        try (Cursor c2 = db.rawQuery("SELECT * FROM [Collection] WHERE [_id] = ?",
+                new String[]{Long.toString(cursor.getLong(cursor.getColumnIndexOrThrow("collectionId")))})) {
           c2.moveToFirst();
           element.collection = collectionFromCursor(c2);
-        } finally {
-          c2.close();
         }
         answer.add(element);
       }
-    } finally {
-      cursor.close();
     }
     return answer;
   }
@@ -565,9 +546,8 @@ public class Database {
         + "WHERE [attemptState] IN (?, ?) "
         + "AND EXISTS (SELECT _id FROM [Element] WHERE puzzleId = p._id AND collectionId = ?) "
         + "ORDER BY p._id ASC, [lastTime] ASC";
-    Attempt answer = fetchAttempt(db, sql, Integer.toString(AttemptState.UNSTARTED.getNumber()),
+    return fetchAttempt(db, sql, Integer.toString(AttemptState.UNSTARTED.getNumber()),
         Integer.toString(AttemptState.STARTED.getNumber()), Long.toString(collectionId));
-    return answer;
   }
 
   /**
@@ -578,9 +558,8 @@ public class Database {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
     String sql = ATTEMPT_SELECT_AND_FROM_CLAUSE
         + "WHERE [attemptState] IN (?, ?) ORDER BY p._id ASC, [lastTime] ASC";
-    Attempt answer = fetchAttempt(db, sql, Integer.toString(AttemptState.UNSTARTED.getNumber()),
+    return fetchAttempt(db, sql, Integer.toString(AttemptState.UNSTARTED.getNumber()),
         Integer.toString(AttemptState.STARTED.getNumber()));
-    return answer;
   }
 
   /**
@@ -589,13 +568,10 @@ public class Database {
   public int getNumOpenAttempts() throws SQLException {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
     String sql = "SELECT COUNT(*) FROM [Attempt] WHERE [attemptState] IN (?, ?)";
-    Cursor cursor = db.rawQuery(sql, new String[] {Integer.toString(AttemptState.UNSTARTED.getNumber()),
-        Integer.toString(AttemptState.STARTED.getNumber())});
-    try {
+    try (Cursor cursor = db.rawQuery(sql, new String[]{Integer.toString(AttemptState.UNSTARTED.getNumber()),
+            Integer.toString(AttemptState.STARTED.getNumber())})) {
       cursor.moveToFirst();
       return cursor.getInt(0);
-    } finally {
-      cursor.close();
     }
   }
 
@@ -608,19 +584,16 @@ public class Database {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
     String sql = ATTEMPT_SELECT_AND_FROM_CLAUSE
         + "WHERE [attemptState] IN (?, ?) AND ([saved] IS NULL OR NOT [saved]) ORDER BY [lastTime] ASC";
-    Cursor cursor = db.rawQuery(sql, new String[] {
-        Integer.toString(AttemptState.FINISHED.getNumber()),
-        Integer.toString(AttemptState.GAVE_UP.getNumber()),
-    });
-    try {
+    try (Cursor cursor = db.rawQuery(sql, new String[]{
+            Integer.toString(AttemptState.FINISHED.getNumber()),
+            Integer.toString(AttemptState.GAVE_UP.getNumber()),
+    })) {
       while (cursor.moveToNext()) {
         Attempt attempt = attemptFromCursor(cursor);
         attempt.clues = Grid.fromString(cursor.getString(cursor.getColumnIndexOrThrow("clues")));
         attempt.properties = cursor.getString(cursor.getColumnIndexOrThrow("properties"));
         answer.add(attempt);
       }
-    } finally {
-      cursor.close();
     }
     return answer;
   }
@@ -739,14 +712,11 @@ public class Database {
   public List<Puzzle> getPuzzlesWithUnsavedVotes() throws SQLException {
     List<Puzzle> answer = Lists.newArrayList();
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    Cursor cursor = db.rawQuery(
-        "SELECT * FROM [Puzzle] WHERE NOT [voteSaved] ORDER BY [_id]", null);
-    try {
+    try (Cursor cursor = db.rawQuery(
+            "SELECT * FROM [Puzzle] WHERE NOT [voteSaved] ORDER BY [_id]", null)) {
       while (cursor.moveToNext()) {
         answer.add(puzzleFromCursor(cursor));
       }
-    } finally {
-      cursor.close();
     }
     return answer;
   }
@@ -754,15 +724,12 @@ public class Database {
   public List<Puzzle> getPuzzlesWithOldStats(long cutoff) throws SQLException {
     List<Puzzle> answer = Lists.newArrayList();
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    Cursor cursor = db.rawQuery(
-        "SELECT * FROM [Puzzle] WHERE [statsTime] < ? ORDER BY [_id]",
-        new String[] {Long.toString(cutoff)});
-    try {
+    try (Cursor cursor = db.rawQuery(
+            "SELECT * FROM [Puzzle] WHERE [statsTime] < ? ORDER BY [_id]",
+            new String[]{Long.toString(cutoff)})) {
       while (cursor.moveToNext()) {
         answer.add(puzzleFromCursor(cursor));
       }
-    } finally {
-      cursor.close();
     }
     return answer;
   }
@@ -770,14 +737,11 @@ public class Database {
   public List<CollectionInfo> getAllCollections() throws SQLException {
     List<CollectionInfo> answer = Lists.newArrayList();
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    Cursor cursor = db.rawQuery("SELECT * FROM [Collection]", null);
-    try {
+    try (Cursor cursor = db.rawQuery("SELECT * FROM [Collection]", null)) {
       while (cursor.moveToNext()) {
         CollectionInfo collection = collectionFromCursor(cursor);
         answer.add(collection);
       }
-    } finally {
-      cursor.close();
     }
     return answer;
   }
@@ -818,20 +782,17 @@ public class Database {
   /** Returns the set of ratings we have precomputed. */
   public List<RatingInfo> getRatingInfo() {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    Cursor cursor = db.rawQuery("SELECT * FROM [Rating]", null);
     List<RatingInfo> answer = Lists.newArrayList();
-    try {
+    try (Cursor cursor = db.rawQuery("SELECT * FROM [Rating]", null)) {
       while (cursor.moveToNext()) {
         RatingInfo info = new RatingInfo();
         info._id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"));
         info.rating = Rating.deserialize(
-            cursor.getString(cursor.getColumnIndexOrThrow("rating")));
+                cursor.getString(cursor.getColumnIndexOrThrow("rating")));
         info.properties = new JsonParser().parse(
-            cursor.getString(cursor.getColumnIndexOrThrow("properties"))).getAsJsonObject();
+                cursor.getString(cursor.getColumnIndexOrThrow("properties"))).getAsJsonObject();
         answer.add(info);
       }
-    } finally {
-      cursor.close();
     }
     return answer;
   }
@@ -868,41 +829,32 @@ public class Database {
   /** Returns the set of source strings present in the Puzzle table. */
   public List<String> getPuzzleSources() {
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    Cursor cursor = db.rawQuery(
-        "SELECT DISTINCT [source] FROM [Puzzle] WHERE [source] IS NOT NULL ORDER BY [source]", null);
     List<String> answer = Lists.newArrayList();
-    try {
+    try (Cursor cursor = db.rawQuery(
+            "SELECT DISTINCT [source] FROM [Puzzle] WHERE [source] IS NOT NULL ORDER BY [source]", null)) {
       while (cursor.moveToNext())
         answer.add(cursor.getString(0));
-    } finally {
-      cursor.close();
     }
     return answer;
   }
 
   /** Returns null if not found in the given database. */
   private static Long getPuzzleId(SQLiteDatabase db, String clues) throws SQLException {
-    Cursor cursor = db.rawQuery("SELECT [_id] FROM [Puzzle] WHERE [clues] = ?",
-        new String[]{ clues });
-    try {
+    try (Cursor cursor = db.rawQuery("SELECT [_id] FROM [Puzzle] WHERE [clues] = ?",
+            new String[]{clues})) {
       if (cursor.moveToFirst()) return cursor.getLong(0);
       return null;
-    } finally {
-      cursor.close();
     }
   }
 
   /** Returns null if the element isn't found. */
   private static Long getElementId(SQLiteDatabase db, long puzzleId, long collectionId)
       throws SQLException {
-    Cursor cursor = db.rawQuery(
-        "SELECT [_id] FROM [Element] WHERE [puzzleId] = ? AND [collectionId] = ?",
-        new String[]{ String.valueOf(puzzleId), String.valueOf(collectionId) });
-    try {
+    try (Cursor cursor = db.rawQuery(
+            "SELECT [_id] FROM [Element] WHERE [puzzleId] = ? AND [collectionId] = ?",
+            new String[]{String.valueOf(puzzleId), String.valueOf(collectionId)})) {
       if (cursor.moveToFirst()) return cursor.getLong(0);
       return null;
-    } finally {
-      cursor.close();
     }
   }
 
