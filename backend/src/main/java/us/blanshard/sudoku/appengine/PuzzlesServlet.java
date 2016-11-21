@@ -43,7 +43,7 @@ public class PuzzlesServlet extends HttpServlet {
     if (matcher.group(1) == null)
       getPuzzles(req, resp);
     else
-      getPuzzle(matcher.group(1), req, resp);
+      getPuzzle(matcher.group(1), resp);
   }
 
   private void getPuzzles(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -76,8 +76,7 @@ public class PuzzlesServlet extends HttpServlet {
     GSON.toJson(answer, resp.getWriter());
   }
 
-  private void getPuzzle(String puzzle, HttpServletRequest req, HttpServletResponse resp)
-      throws IOException {
+  private void getPuzzle(String puzzle, HttpServletResponse resp) throws IOException {
     DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
     Key key = KeyFactory.createKey(Schema.Puzzle.KIND, puzzle);
     Entity entity;
