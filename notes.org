@@ -1,23 +1,15 @@
 * Insights
 ** Evaluator
+*** TODO Revert to prior category approach, but more sophisticated
+- include recency of use of the numeral used
+  - should subsume special case for same numeral
+- measure probabilities of choosing between each pair of categories
+- use more rounds.  Pelánek et al used 30 rounds.
+  - alternatively, use a variable number of rounds and stop when a statistical test says to
+  - how good could that be?  investigate I guess
 *** TODO Investigate recent puzzles
 - categories: estimate way too high, way too low, high, low, close to perfect
 - add columns for the pattern that the estimator found, and patterns matching actual move
-*** TODO One more round needed [2/6]
-- [ ] change to always simulate n times; add std dev to rating
-- [ ] instead of playable boolean, have probability of playing per pattern
-- [X] update locked-set pattern to include enough info to recognize "simple" hidden sets
-- [ ] have InsightMeasurer emit info about errors: need to compute likelihood of seeing errors
-  - every move made while an error is present counts as not having seen
-  - every trail abandoned with an error counts as having seen it
-  - every undo from an erroneous state to a good state counts as having seen it
-- [X] have InsightMeasurer gather info using patterns or Sp
-  what we want to end up with:
-  - probability of seeing a given pattern, possibly by stage of game
-  - so: ratio of played moves to found insights
-- [ ] tweak ScanPoints and Sp to tease apart info about combinations of insights
-*** TODO Investigate distribution of times for multiple puzzles generated from the same end state
-
 ** Getting games with history from a sqlite db into a tsv file:
 sqlite3 phone-2013-12-01.db <<END
 .mode tabs
@@ -29,24 +21,26 @@ END
 ** TODO Rename getState to... what?
 
 * App
-
+** New UI ideas
+*** TODO Undo the off-center input circle
+*** TODO Add a translucent splotch showing the last move
+*** TODO Show antecedent explicit assignments in review page
+*** TODO Add a way to input multiple numerals to a square
+- nontrivial, need to alter the Sudoku class to allow this
+- and add a new kind of move to the history
+- etc.
+*** TODO Add dots along the timeline for notable points:
+- jump between trails (like now)
+- long time taken to move
+- hard move?
+- erroneous move?
+*** TODO Kill the animated playback
+*** TODO Look for a different approach than the fast-forward/reverse buttons
+- ...to choosing notable timeline points
+- just have a way to pop up a list, and choose from it?
 ** Bugs
 *** TODO bug: 1:1:2013-11:191 showed up with a series of different ratings, ever increasing
 - not just on the board, but in the list as well
-*** DONE bug: 1:5:2013-12:57 failed to register a completion
-- played it, finished it, reviewed it, backed out of the review page and the
-  details page, and ended up back at the play page, ready to play it again
-- backed out again; next time I started the app, the next puzzle showed.
-- but the following time, 57 showed again, from scratch
-- no remaining record of the initial play
-**** I believe I understand what causes this (it's happened more than once):
-- I think we start with 2 SudokuActivities.  When we've finished the puzzle and
-  backed out, we've completed just one of them; the other one is waiting to be
-  resumed, and does resume when it gets control.
-- Why does this happen?  I assume it's an Android bug.
-- How to mitigate?  Not sure, but I bet it's possible.
-**** singleTop should do the trick
-
 ** App/UI cleanups
 *** TODO Show rating overlay on resume instead of just diving back into the puzzle
 - need alternate button names
@@ -166,3 +160,12 @@ END
 - The other dimension where 7 appears is ~7 levels of absolute judgement, eg
   loudness of a sound, or pitch, or location along a line.  This really
   _doesn't_ apply to Sudoku.  It's all working memory.
+** Radek Pelánek
+- http://www.fi.muni.cz/~xpelanek/publications/sudoku-arxiv.pdf
+- Difficulty Rating of Sudoku Puzzles: An Overview and Evaluation
+- Discusses Constraint Satisfaction Problems (CSPs), and the way people solve
+  them: constraint propagation combined with backtracking if necessary.
+
+* Possible future ideas
+** TODO Investigate distribution of times for multiple puzzles generated from the same end state
+

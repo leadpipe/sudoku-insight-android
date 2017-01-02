@@ -1,5 +1,5 @@
 /*
-Copyright 2013 Luke Blanshard
+Copyright 2016 Luke Blanshard
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,7 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package us.blanshard.sudoku.insight;
+package us.blanshard.sudoku.insight2;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.primitives.Ints;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Arrays.asList;
@@ -30,8 +34,12 @@ import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -40,7 +48,8 @@ import javax.annotation.concurrent.NotThreadSafe;
 /**
  * Keeps track of the possible numerals that could go in each location, like the
  * marks some people fill in to Sudoku grids.  Also keeps track of the possible
- * locations within each unit that each numeral could occupy.
+ * locations within each unit that each numeral could occupy.  And tracks the
+ * Insights that led to each set of numerals and locations.
  *
  * <p> The outer class is immutable; has a nested builder.
  *
@@ -72,6 +81,17 @@ public final class Marks {
    * the locations currently unassigned within the unit.
    */
   private final short[] data;
+
+  /**
+   * For eliminated assignments, the insights that disprove them.
+   */
+  private final ListMultimap<Assignment, Insight> eliminations;
+
+  /**
+   * The eliminated assignments whose corresponding lists in {@link
+   * #eliminations} are not in sorted order.
+   */
+  private final Set<Assignment> unsortedEliminations;
 
   /**
    * The number of elements of {@link #data}, one for each location and
@@ -136,16 +156,15 @@ public final class Marks {
    */
   private static final int UNIT_LOCSET_OFFSET = UNIT_NUMSET_OFFSET + Unit.COUNT;
 
-  private Marks(short[] data) {
+  private Marks(short[] data, ListMultimap<Assignment, Insight> eliminations,
+                Set<Assignment> unsortedEliminations) {
     this.data = data;
+    this.eliminations = eliminations;
+    this.unsortedEliminations = unsortedEliminations;
   }
 
-  public static Marks fromGrid(Grid grid) {
-    return builder().assignAll(grid).build();
-  }
-
-  public static Builder builder() {
-    return new Builder();
+  public static Builder builder(Grid grid) {
+    return new Builder(grid);
   }
 
   public Builder toBuilder() {
@@ -167,7 +186,7 @@ public final class Marks {
 
   /**
    * Tells whether one or more of the assignments or eliminations made in this
-   * Marks resulted in there being no possible moves.
+   * Marks resulted in the rules of Sudoku being broken.
    */
   public boolean hasErrors() {
     return (data[0] & LOC0_ERROR_BIT) != 0;
@@ -331,15 +350,35 @@ public final class Marks {
     return UnitSubset.ofBits(unit, getUnassignedLocationBits(unit));
   }
 
+  /**
+   * Returns the list of insights that imply the given assignment is not
+   * possible.  The returned list is guaranteed to be sorted in cost order.
+   */
+  public synchronized List<Insight> getEliminationInsights(Assignment elimination) {
+    List<Insight> list = eliminations.get(elimination);
+    if (list.size() > 1 && unsortedEliminations.remove(elimination)) {
+      Collections.sort(list, new Comparator<Insight>(){
+          @Override public int compare(Insight a, Insight b) {
+            return Ints.compare(a.getCost(), b.getCost());
+          }
+        });
+    }
+    return Collections.unmodifiableList(list);
+  }
+
   @NotThreadSafe
   public static final class Builder {
     private Marks marks;
     private boolean built;
 
-    private Builder() {
-      this.marks = new Marks(new short[DATA_SIZE]);
+    private Builder(Grid grid) {
+      this.marks = new Marks(new short[DATA_SIZE],
+          ArrayListMultimap.<Assignment, Insight>create(), new HashSet<Assignment>());
       this.built = false;
-      clear();
+      Arrays.fill(marks.data, ALL_BITS);
+      for (Map.Entry<Location, Numeral> entry : grid.entrySet()) {
+        add(new ExplicitAssignment(Assignment.of(entry.getKey(), entry.getValue())));
+      }
     }
 
     private Builder(Marks marks) {
@@ -349,7 +388,10 @@ public final class Marks {
 
     private Marks marks() {
       if (built) {
-        this.marks = new Marks(this.marks.data.clone());
+        this.marks = new Marks(
+            this.marks.data.clone(),
+            ArrayListMultimap.create(this.marks.eliminations),
+            new HashSet<>(this.marks.unsortedEliminations));
         this.built = false;
       }
       return this.marks;
@@ -364,7 +406,7 @@ public final class Marks {
       return marks.toGrid();
     }
 
-    public NumSet get(Location loc) {
+    public NumSet getSet(Location loc) {
       return marks.getSet(loc);
     }
 
@@ -372,7 +414,7 @@ public final class Marks {
       return marks.getBits(loc);
     }
 
-    public UnitSubset get(UnitNumeral unitNum) {
+    public UnitSubset getSet(UnitNumeral unitNum) {
       return marks.getSet(unitNum);
     }
 
@@ -385,10 +427,17 @@ public final class Marks {
     }
 
     /**
-     * Resets this builder to a state of all possibilities open.
+     * Adds the given insight to this builder, assigning or eliminating as
+     * needed.
      */
-    public Builder clear() {
-      Arrays.fill(marks().data, ALL_BITS);
+    public Builder add(Insight insight) {
+      if (insight.isAssignment()) {
+        assign(insight);
+      } else if (insight.isElimination()) {
+        for (Assignment a : insight.getEliminations()) {
+          eliminate(a, insight);
+        }
+      }
       return this;
     }
 
@@ -396,17 +445,24 @@ public final class Marks {
      * Assigns the given numeral to the given location.  Sets the error bit if
      * the assignment is inconsistent with the rules of Sudoku.
      */
-    public Builder assign(Location loc, Numeral num) {
+    private void assign(Insight insight) {
+      Assignment assignment = insight.getAssignment();
+      assert assignment != null;
+      Location loc = assignment.location;
+      Numeral num = assignment.numeral;
+
       boolean ok = true;
 
-      // Remove this numeral from this location's peers.
+      // Remove this numeral from this location's peers, marking the
+      // eliminations with the insight.
       for (Location peer : loc.peers)
-        ok &= eliminateInternal(peer, num);
+        ok &= eliminate(Assignment.of(peer, num), insight);
 
-      // Remove the other numerals from this location.
-      NumSet others = get(loc).without(num);
+      // Remove the other numerals from this location, WITHOUT marking with the
+      // insight.
+      NumSet others = getSet(loc).without(num);
       for (Numeral other : others)
-        ok &= eliminateInternal(loc, other);
+        ok &= eliminate(Assignment.of(loc, other), null);
 
       // Save the numeral in the location's data slot.
       short value = marks.data[loc.index];
@@ -430,7 +486,6 @@ public final class Marks {
 
       if (ok) ok = getBits(loc) == num.bit;
       if (!ok) setError();
-      return this;
     }
 
     private void setError() {
@@ -438,24 +493,12 @@ public final class Marks {
     }
 
     /**
-     * Makes the given assignment.  Sets the error bit if the assignment is inconsistent
-     * with the rules of Sudoku.
+     * Eliminates the given assignment.  Sets the error bit if this is
+     * inconsistent with the rules of Sudoku.
      */
-    public Builder assign(Assignment assignment) {
-      return assign(assignment.location, assignment.numeral);
-    }
-
-    /**
-     * Eliminates the given numeral as a possibility for the given location, and
-     * the location as a possibility for the numeral within the location's
-     * units.  Sets the error bit if any of these sets ends up empty.
-     */
-    public Builder eliminate(Location loc, Numeral num) {
-      eliminateInternal(loc, num);
-      return this;
-    }
-
-    private boolean eliminateInternal(Location loc, Numeral num) {
+    private boolean eliminate(Assignment assignment, @Nullable Insight insight) {
+      Location loc = assignment.location;
+      Numeral num =  assignment.numeral;
       boolean answer = true;
 
       if (((marks().data[loc.index] &= ~num.bit) & BITSET_MASK) == 0)
@@ -468,56 +511,17 @@ public final class Marks {
           answer = false;  // This numeral has no possible locations left in this unit
       }
 
-      if (!answer)
-        setError();
+      if (insight != null) {
+        List<Insight> insights = marks.eliminations.get(assignment);
+        insights.add(insight);
+        if (insights.size() > 1) {
+          marks.unsortedEliminations.add(assignment);
+        }
+      }
+
+      if (!answer) setError();
       return answer;
     }
-
-    /**
-     * Eliminates the given assignment.  Sets the error bit if this is
-     * inconsistent with the rules of Sudoku.
-     */
-    public Builder eliminate(Assignment assignment) {
-      return eliminate(assignment.location, assignment.numeral);
-    }
-
-    /**
-     * Assigns all the associated locations and numerals in the given map (note
-     * that {@link Grid} is this kind of map).
-     */
-    public Builder assignAll(Map<Location, Numeral> grid) {
-      for (Map.Entry<Location, Numeral> entry : grid.entrySet())
-        assign(entry.getKey(), entry.getValue());
-      return this;
-    }
-
-    public Builder apply(Insight insight) {
-      insight.apply(this);
-      return this;
-    }
-
-    public Builder apply(Iterable<Insight> insights) {
-      for (Insight insight : insights)
-        insight.apply(this);
-      return this;
-    }
-
-    public Builder apply(List<Insight> insights) {
-      for (int i = 0, c = insights.size(); i < c; ++i)
-        insights.get(i).apply(this);
-      return this;
-    }
-  }
-
-  @Override public boolean equals(Object object) {
-    if (this == object) return true;
-    if (!(object instanceof Marks)) return false;
-    Marks that = (Marks) object;
-    return Arrays.equals(this.data, that.data);
-  }
-
-  @Override public int hashCode() {
-    return Arrays.hashCode(data);
   }
 
   @Override public String toString() {
@@ -573,7 +577,7 @@ public final class Marks {
    * followed by a bang, it's treated as an assignment.
    */
   public static Marks fromString(String s) {
-    Builder builder = builder();
+    Builder builder = builder(Grid.BLANK);
     List<String> words = asList(s.split("[^1-9?!]+"));
     if (!words.isEmpty() && words.get(0).isEmpty())
       words = words.subList(1, words.size());
@@ -591,13 +595,14 @@ public final class Marks {
       sets[loc.index] = nums;
       if (bang) {
         checkArgument(nums.size() == 1, "can't assign multiple numerals to the same location");
-        builder.assign(loc, nums.get(0));
+        builder.add(new ExplicitAssignment(Assignment.of(loc, nums.get(0))));
       }
     }
     for (Location loc : Location.all()) {
       NumSet nums = sets[loc.index];
-      for (Numeral not : builder.get(loc).minus(nums))
-        builder.eliminate(loc, not);
+      for (Numeral not : builder.getSet(loc).minus(nums)) {
+        builder.add(new ExplicitElimination(Assignment.of(loc, not)));
+      }
     }
     return builder.build();
   }
