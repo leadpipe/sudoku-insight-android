@@ -3,12 +3,13 @@ apply plugin: 'java'
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
-    compile 'com.google.guava:guava:14.0.1'
-    compile 'com.google.code.gson:gson:2.2.2'
+    compile 'com.google.guava:guava:20.0'
+    compile 'com.google.code.gson:gson:2.8.0'
     compile 'com.google.code.findbugs:jsr305:1.3.9'
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-all:1.9.0'
+    testCompile "com.google.truth:truth:0.31"
 }
 
 sourceCompatibility = "1.7"

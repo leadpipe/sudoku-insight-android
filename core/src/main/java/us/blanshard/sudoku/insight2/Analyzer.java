@@ -34,6 +34,7 @@ import com.google.common.collect.Sets;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,9 +53,9 @@ public class Analyzer {
     private static final long serialVersionUID = 1L;
   }
 
-  /**
-   * Controls the behavior of {@link #analyze}.
-   */
+//  /**
+//   * Controls the behavior of {@link #analyze}.
+//   */
   @Immutable
   public static final class Options {
     /**
@@ -75,10 +76,10 @@ public class Analyzer {
     }
   }
 
-  /**
-   * Called by {@link #analyze} for each insight found.  The callback may cut the
-   * work short by throwing a "stop" exception.
-   */
+//  /**
+//   * Called by {@link #analyze} for each insight found.  The callback may cut the
+//   * work short by throwing a "stop" exception.
+//   */
   public interface Callback {
     void take(Insight insight) throws StopException;
   }
@@ -89,78 +90,78 @@ public class Analyzer {
    * time-consuming operation; if run as a background thread it can be stopped
    * early by interrupting the thread.
    */
-  public static boolean analyze(Marks marks, Callback callback) {
-    return analyze(marks, callback, DEFAULT_OPTIONS);
-  }
+//  public static boolean analyze(Marks marks, Callback callback) {
+//    return analyze(marks, callback, DEFAULT_OPTIONS);
+//  }
 
-  private static final Options DEFAULT_OPTIONS = new Options(true, false);
+//  private static final Options DEFAULT_OPTIONS = new Options(true, false);
 
   /**
    * Like the standard version of analyze, but lets you control the detailed
    * behavior of the analyzer.
    */
-  public static boolean analyze(Marks marks, Callback callback, Options options) {
-    boolean complete = false;
+//  public static boolean analyze(Marks marks, Callback callback, Options options) {
+//    boolean complete = false;
+//
+//    try {
+//      findInsights(marks, callback, null, options);
+//      complete = true;
+//
+//    } catch (InterruptedException | StopException e) {
+//      // A normal event
+//    }
+//    return complete;
+//  }
 
-    try {
-      findInsights(marks, callback, null, options);
-      complete = true;
+//  private static void findInsights(
+//      Marks marks, Callback callback,
+//      @Nullable Set<Insight> index, Options options) throws InterruptedException {
+//
+//    index = index == null ? Sets.<Insight>newHashSet() : Sets.newHashSet(index);
+//    Collector collector;
+//
+//    if (marks.hasErrors()) {
+//      collector = new Collector(callback, index, false);
+//      findErrors(marks, collector);
+//      checkInterruption();
+//    }
+//
+//    collector = new Collector(callback, index, options.followAssignments);
+//
+//    findSingletonLocations(marks, collector);
+//    checkInterruption();
+//    findSingletonNumerals(marks, collector);
+//    checkInterruption();
+//
+//    if (!options.followAssignments)
+//      collector = new Collector(callback, index, true);
+//
+//    findOverlaps(marks, collector);
+//    checkInterruption();
+//    findSets(marks, collector);
+//    checkInterruption();
+//
+//    if (!collector.list.isEmpty()) {
+//      findImplications(marks, collector, callback, options);
+//    }
+//  }
 
-    } catch (InterruptedException | StopException e) {
-      // A normal event
-    }
-    return complete;
-  }
-
-  private static void findInsights(
-      Marks marks, Callback callback,
-      @Nullable Set<Insight> index, Options options) throws InterruptedException {
-
-    index = index == null ? Sets.<Insight>newHashSet() : Sets.newHashSet(index);
-    Collector collector;
-
-    if (marks.hasErrors()) {
-      collector = new Collector(callback, index, false);
-      findErrors(marks, collector);
-      checkInterruption();
-    }
-
-    collector = new Collector(callback, index, options.followAssignments);
-
-    findSingletonLocations(marks, collector);
-    checkInterruption();
-    findSingletonNumerals(marks, collector);
-    checkInterruption();
-
-    if (!options.followAssignments)
-      collector = new Collector(callback, index, true);
-
-    findOverlaps(marks, collector);
-    checkInterruption();
-    findSets(marks, collector);
-    checkInterruption();
-
-    if (!collector.list.isEmpty()) {
-      findImplications(marks, collector, callback, options);
-    }
-  }
-
-  private static void findImplications(Marks marks, Collector antecedents,
-      Callback callback, Options options) throws InterruptedException {
-
-    Collector collector = new Collector(null, antecedents.index, true);
-    findInsights(marks.toBuilder().apply(antecedents.list).build(), collector,
-        antecedents.index, options);
-
-    if (!collector.list.isEmpty()) {
-      List<Insight> antecedentsList = ImmutableList.copyOf(antecedents.list);
-      for (Insight insight : collector.list)
-        if (insight.isElimination())
-          callback.take(insight);
-        else
-          callback.take(new Implication(antecedentsList, insight));
-    }
-  }
+//  private static void findImplications(Marks marks, Collector antecedents,
+//      Callback callback, Options options) throws InterruptedException {
+//
+//    Collector collector = new Collector(null, antecedents.index, true);
+//    findInsights(marks.toBuilder().apply(antecedents.list).build(), collector,
+//        antecedents.index, options);
+//
+//    if (!collector.list.isEmpty()) {
+//      List<Insight> antecedentsList = ImmutableList.copyOf(antecedents.list);
+//      for (Insight insight : collector.list)
+//        if (insight.isElimination())
+//          callback.take(insight);
+//        else
+//          callback.take(new Implication(antecedentsList, insight));
+//    }
+//  }
 
   private static class Collector implements Callback {
     @Nullable final Callback delegate;
@@ -295,23 +296,56 @@ public class Analyzer {
         UnitSubset overlappingSet = marks.getSet(oun);
         if (overlappingSet.size() > set.size()) {
           // There's something to eliminate.
-          if (set.size() > 1 || getNumOpen(marks, unit, overlappingUnit) > 1) {
-            // There is more than one unassigned location, ie it looks like an overlap.
+          if (set.size() > 1) {
             callback.take(new Overlap(unit, num, overlappingSet.minus(set)));
+          } else {
+            UnitSubset intersection = unit.intersect(overlappingUnit);
+            UnitSubset unassigned = marks.getUnassignedLocations(unit);
+            UnitSubset possibles = intersection.and(unassigned).minus(set);
+            if (!possibles.isEmpty()) {
+              // There is more than one unassigned location, so it might include
+              // an overlap.  We count it as an overlap if removing the insights
+              // that eliminate 2 or more of the overlapping locations still
+              // leaves all of the remaining open locations eliminated.
+              //
+              // Note that arriving at this branch implies that there is exactly
+              // one possible location for the current numeral within the
+              // current unit.  That is, one of the 3 locations in the
+              // intersection between the two units is NOT currently eliminated.
+              // Therefore, we can just examine the insights that eliminate the
+              // other 2 locations (those left in the "possibles" set), and in
+              // isolation.
+              boolean found = false;
+              UnitSubset required = unassigned.minus(intersection);
+              Set<Insight> insights = new HashSet<>();
+              OUTER:
+              for (int j = 0; j < possibles.size(); ++j) {
+                insights.clear();
+                insights.addAll(marks.getEliminationInsights(Assignment.of(possibles.get(j), num)));
+                for (int k = 0; k < required.size(); ++k) {
+                  if (insights.containsAll(marks.getEliminationInsights(Assignment.of(required.get(k), num)))) {
+                    // Dropping all of these insights would mean this
+                    // required-to-be-eliminated location is no longer
+                    // eliminated.  So this iteration of j fails.  Go on to the
+                    // next.
+                    continue OUTER;
+                  }
+                }
+                // This currently eliminated location in the intersection could
+                // have all of its eliminating insights removed without
+                // restoring any of the other unassigned locations in the unit.
+                // So we've found a non-obvious elimination.
+                found = true;
+                break;
+              }
+              if (found) {
+                callback.take(new Overlap(unit, num, overlappingSet.minus(set)));
+              }
+            }
           }
         }
       }
     }
-  }
-
-  /** Returns the number of unassigned locations in the intersection of the two units. */
-  private static int getNumOpen(Marks marks, Unit unit, Unit overlappingUnit) {
-    UnitSubset set = unit.intersect(overlappingUnit);
-    int count = 0;
-    for (int i = 0; i < set.size(); ++i) {
-      if (!marks.hasAssignment(set.get(i))) ++count;
-    }
-    return count;
   }
 
   public static void findSets(Marks marks, Callback callback) {

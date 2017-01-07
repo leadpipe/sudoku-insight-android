@@ -84,7 +84,7 @@ public final class Sudoku {
     this.registry = checkNotNull(registry);
     this.history = Lists.newArrayList(history);
     this.initialMillis = initialMillis;
-    this.stopwatch = new Stopwatch(ticker);
+    this.stopwatch = Stopwatch.createUnstarted(ticker);
     this.state = new State();
 
     for (Move move : history) {

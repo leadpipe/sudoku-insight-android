@@ -26,8 +26,8 @@ import us.blanshard.sudoku.core.Solver;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
-import us.blanshard.sudoku.insight.Analyzer.StopException;
-import us.blanshard.sudoku.insight.Rating.Difficulty;
+import us.blanshard.sudoku.insight2.Analyzer.StopException;
+import us.blanshard.sudoku.insight2.Rating.Difficulty;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
@@ -103,7 +103,7 @@ public class Evaluator {
   public Rating evaluate(@Nullable Callback callback, int trialCount) {
     checkArgument(trialCount >= 1);
     double[] scores = new double[trialCount];
-    Marks marks = Marks.fromGrid(puzzle);
+    Marks marks = Marks.builder(puzzle).build();
     int numOpen = puzzle.getNumOpenLocations();
     boolean uninterrupted = true;
     double totalScore = 0;
@@ -186,25 +186,25 @@ public class Evaluator {
       status = null;
       do {
         Collector collector = new Collector(marks, minOpen, numOpen, random);
-        if (Analyzer.analyze(marks, collector, OPTS)) {
-          score += collector.getElapsedMinutes();
-          if (callback != null) callback.updateEstimate(score);
-          if (collector.assignmentsWon()) {
-            Marks.Builder builder = marks.toBuilder();
-            for (Assignment a : collector.getAssignments())
-              builder.assign(a);
-            setMarks(builder);
-            if (marks.isSolved()) status = RunStatus.COMPLETE;
-          } else if (collector.errorsWon()) {
-            status = RunStatus.ERROR;
-          } else if (collector.noPlaysPossible() && onlyAmbiguousAssignmentsRemaining()) {
-            setMarks(marks.toBuilder().assign(randomAssignment()));
-          } else {
-            status = RunStatus.INCONCLUSIVE;
-          }
-        } else {
-          status = RunStatus.INTERRUPTED;
-        }
+//        if (Analyzer.analyze(marks, collector, OPTS)) {
+//          score += collector.getElapsedMinutes();
+//          if (callback != null) callback.updateEstimate(score);
+//          if (collector.assignmentsWon()) {
+//            Marks.Builder builder = marks.toBuilder();
+//            for (Assignment a : collector.getAssignments())
+//              builder.assign(a);
+//            setMarks(builder);
+//            if (marks.isSolved()) status = RunStatus.COMPLETE;
+//          } else if (collector.errorsWon()) {
+//            status = RunStatus.ERROR;
+//          } else if (collector.noPlaysPossible() && onlyAmbiguousAssignmentsRemaining()) {
+//            setMarks(marks.toBuilder().assign(randomAssignment()));
+//          } else {
+//            status = RunStatus.INCONCLUSIVE;
+//          }
+//        } else {
+//          status = RunStatus.INTERRUPTED;
+//        }
       } while (status == null);
     }
 
@@ -232,14 +232,14 @@ public class Evaluator {
               return;
             if (foundSolution && solutionIntersection.get(a.location) == a.numeral)
               continue;
-            setMarks(start.toBuilder().assign(a));
-            runStraightShot(callback);
-            if (status == RunStatus.ERROR) {
-              setMarks(start.toBuilder().eliminate(a));
-              return;
-            } else if (status == RunStatus.COMPLETE) {
-              foundSolution = true;
-            }
+//            setMarks(start.toBuilder().assign(a));
+//            runStraightShot(callback);
+//            if (status == RunStatus.ERROR) {
+//              setMarks(start.toBuilder().eliminate(a));
+//              return;
+//            } else if (status == RunStatus.COMPLETE) {
+//              foundSolution = true;
+//            }
           }
           // If we make it here, we've exhausted the simple disproofs.
           difficulty = Difficulty.RECURSIVE_DISPROOFS;
@@ -248,9 +248,9 @@ public class Evaluator {
         case RECURSIVE_DISPROOFS:
           Assignment impossible = randomErroneousAssignment();
           if (impossible == null) return;
-          setMarks(start.toBuilder().assign(impossible));
-          runErrorSearch(callback);
-          setMarks(start.toBuilder().eliminate(impossible));
+//          setMarks(start.toBuilder().assign(impossible));
+//          runErrorSearch(callback);
+//          setMarks(start.toBuilder().eliminate(impossible));
       }
     }
 
@@ -262,7 +262,7 @@ public class Evaluator {
       NumSet nums = marks.getSet(loc);
       Marks start = marks;
       for (Numeral num : nums) {
-        setMarks(start.toBuilder().assign(Assignment.of(loc, num)));
+//        setMarks(start.toBuilder().assign(Assignment.of(loc, num)));
         runErrorSearch(callback);
       }
     }
@@ -541,9 +541,9 @@ public class Evaluator {
     }
 
     @Override public void take(Insight insight) throws StopException {
-      Assignment a = insight.getImpliedAssignment();
+      Assignment a = insight.getAssignment();
       if (a == null && !insight.isError()) return;
-      insight = Analyzer.minimize(marks, insight);
+//      insight = Analyzer.minimize(marks, insight);
       double p = getProbability(insight, marks, minOpen);
       totalWeight += p;
       Object key = a == null ? ERRORS : a;
