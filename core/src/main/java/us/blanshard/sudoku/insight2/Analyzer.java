@@ -296,56 +296,54 @@ public class Analyzer {
         UnitSubset overlappingSet = marks.getSet(oun);
         if (overlappingSet.size() > set.size()) {
           // There's something to eliminate.
-          if (set.size() > 1) {
+          if (set.size() > 1 ||
+              forcedLocationCountsAsOverlap(marks, num, unit, set, overlappingUnit)) {
             callback.take(new Overlap(unit, num, overlappingSet.minus(set)));
-          } else {
-            UnitSubset intersection = unit.intersect(overlappingUnit);
-            UnitSubset unassigned = marks.getUnassignedLocations(unit);
-            UnitSubset possibles = intersection.and(unassigned).minus(set);
-            if (!possibles.isEmpty()) {
-              // There is more than one unassigned location, so it might include
-              // an overlap.  We count it as an overlap if removing the insights
-              // that eliminate 2 or more of the overlapping locations still
-              // leaves all of the remaining open locations eliminated.
-              //
-              // Note that arriving at this branch implies that there is exactly
-              // one possible location for the current numeral within the
-              // current unit.  That is, one of the 3 locations in the
-              // intersection between the two units is NOT currently eliminated.
-              // Therefore, we can just examine the insights that eliminate the
-              // other 2 locations (those left in the "possibles" set), and in
-              // isolation.
-              boolean found = false;
-              UnitSubset required = unassigned.minus(intersection);
-              Set<Insight> insights = new HashSet<>();
-              OUTER:
-              for (int j = 0; j < possibles.size(); ++j) {
-                insights.clear();
-                insights.addAll(marks.getEliminationInsights(Assignment.of(possibles.get(j), num)));
-                for (int k = 0; k < required.size(); ++k) {
-                  if (insights.containsAll(marks.getEliminationInsights(Assignment.of(required.get(k), num)))) {
-                    // Dropping all of these insights would mean this
-                    // required-to-be-eliminated location is no longer
-                    // eliminated.  So this iteration of j fails.  Go on to the
-                    // next.
-                    continue OUTER;
-                  }
-                }
-                // This currently eliminated location in the intersection could
-                // have all of its eliminating insights removed without
-                // restoring any of the other unassigned locations in the unit.
-                // So we've found a non-obvious elimination.
-                found = true;
-                break;
-              }
-              if (found) {
-                callback.take(new Overlap(unit, num, overlappingSet.minus(set)));
-              }
-            }
           }
         }
       }
     }
+  }
+
+  private static boolean forcedLocationCountsAsOverlap(
+      Marks marks, Numeral num, Unit unit, UnitSubset set, Unit overlappingUnit) {
+    UnitSubset intersection = unit.intersect(overlappingUnit);
+    UnitSubset unassigned = marks.getUnassignedLocations(unit);
+    UnitSubset possibles = intersection.and(unassigned).minus(set);
+    if (!possibles.isEmpty()) {
+      // There is more than one unassigned location, so it might include an
+      // overlap.  We count it as an overlap if removing the insights that
+      // eliminate 2 or more of the overlapping locations still leaves all of
+      // the remaining open locations eliminated.
+      //
+      // Note that arriving at this branch implies that there is exactly one
+      // possible location for the current numeral within the current unit.
+      // That is, one of the 3 locations in the intersection between the two
+      // units is NOT currently eliminated.  Therefore, we can just examine the
+      // insights that eliminate the other 2 locations (those left in the
+      // "possibles" set), and in isolation.
+      UnitSubset required = unassigned.minus(intersection);
+      Set<Insight> insights = new HashSet<>();
+      OUTER:
+      for (int i = 0; i < possibles.size(); ++i) {
+        insights.clear();
+        insights.addAll(marks.getEliminationInsights(Assignment.of(possibles.get(i), num)));
+        for (int j = 0; j < required.size(); ++j) {
+          if (insights.containsAll(marks.getEliminationInsights(Assignment.of(required.get(j), num)))) {
+            // Dropping all of these insights would mean this
+            // required-to-be-eliminated location is no longer eliminated.  So
+            // this iteration of i fails.  Go on to the next.
+            continue OUTER;
+          }
+        }
+        // This currently eliminated location in the intersection could have all
+        // of its eliminating insights removed without restoring any of the
+        // other unassigned locations in the unit.  So we've found a non-obvious
+        // elimination.
+        return true;
+      }
+    }
+    return false;
   }
 
   public static void findSets(Marks marks, Callback callback) {
