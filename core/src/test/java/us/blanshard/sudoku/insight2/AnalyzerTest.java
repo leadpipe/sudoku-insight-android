@@ -16,6 +16,7 @@ import us.blanshard.sudoku.core.UnitSubset;
 
 import static com.google.common.truth.Truth.assertThat;
 import static us.blanshard.sudoku.core.NumSetTest.set;
+import static us.blanshard.sudoku.insight2.TestHelper.*;
 
 public class AnalyzerTest implements Analyzer.Callback {
   private final Collection<Insight> taken = new ArrayList<>();
@@ -273,12 +274,4 @@ public class AnalyzerTest implements Analyzer.Callback {
           " . . . | . . 1 | . . . "), this);
     assertThat(taken).containsExactly();
   }
-
-  private static Marks m(String s) { return Marks.builder(Grid.fromString(s)).build(); }
-  private static Numeral n(int num) { return Numeral.of(num); }
-  private static Row r(int num) { return Row.of(num); }
-  private static Column c(int num) { return Column.of(num); }
-  private static Block b(int num) { return Block.of(num); }
-  private static UnitNumeral un(Unit unit, int num) { return UnitNumeral.of(unit, n(num)); }
-  private static UnitSubset us(Unit unit, int... nums) { return UnitSubset.ofBits(unit, set(nums).bits); }
 }

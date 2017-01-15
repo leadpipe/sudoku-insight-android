@@ -15,6 +15,7 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight2;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import java.util.List;
@@ -41,12 +42,30 @@ public final class LockedSet extends Insight {
   private final boolean isNaked;
   private volatile List<Assignment> eliminations;
 
-  public LockedSet(NumSet nums, UnitSubset locs, boolean isNaked) {
-    super(Type.LOCKED_SET, ((nums.bits << 9) | locs.bits) ^ LockedSet.class.hashCode());
+  public static LockedSet newNaked(NumSet nums, UnitSubset locs) {
+    Unit overlap = Analyzer.findOverlappingUnit(locs);
+    if (overlap != null && overlap.type == Unit.Type.BLOCK) {
+      // Naked sets with overlaps behave the same regardless of which unit is
+      // considered "the" unit.  So we force "the" unit to be the block in this
+      // case.
+      UnitSubset blockLocs = overlap.intersect(locs);
+      overlap = locs.unit;
+      locs = blockLocs;
+    }
+    return new LockedSet(nums, locs, /* isNaked = */ true, overlap);
+  }
+
+  public static LockedSet newHidden(NumSet nums, UnitSubset locs) {
+    // Hidden sets with overlaps behave differently when each unit is
+    // considered "the" unit.  So we don't normalize the order.
+    return new LockedSet(nums, locs, /* isNaked = */ false, Analyzer.findOverlappingUnit(locs));
+  }
+
+  private LockedSet(NumSet nums, UnitSubset locs, boolean isNaked, @Nullable Unit overlap) {
+    super(Type.LOCKED_SET, Objects.hashCode(LockedSet.class, nums, locs, isNaked));
     this.nums = nums;
     this.locs = locs;
     this.isNaked = isNaked;
-    Unit overlap = Analyzer.findOverlappingUnit(locs);
     this.extraElims = overlap == null ? null : overlap.subtract(locs.unit);
   }
 
@@ -77,7 +96,7 @@ public final class LockedSet extends Insight {
   }
 
   public boolean isHiddenSet() {
-    return !isNakedSet();
+    return !isNaked;
   }
 
   public NumSet getNumerals() {
@@ -97,7 +116,8 @@ public final class LockedSet extends Insight {
     if (o == null || o.getClass() != getClass()) return false;
     LockedSet that = (LockedSet) o;
     return this.nums.equals(that.nums)
-        && this.locs.equals(that.locs);
+        && this.locs.equals(that.locs)
+        && this.isNaked == that.isNaked;
   }
 
   @Override public String toString() {

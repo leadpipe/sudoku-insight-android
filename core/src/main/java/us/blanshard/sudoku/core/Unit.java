@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -47,8 +48,8 @@ public abstract class Unit extends AbstractCollection<Location>
   public final int index;
 
   /**
-   * Returns a list of all the units.  The index for each unit equals what's
-   * returned by {@link #unitIndex}.
+   * Returns a list of all the units.  {@link #index} holds the index for this
+   * unit within this list.
    */
   public static List<Unit> allUnits() {
     return AllUnits.INSTANCE.list;
@@ -136,17 +137,14 @@ public abstract class Unit extends AbstractCollection<Location>
   }
 
   @Override public final boolean contains(Object o) {
-    if (o instanceof Location) {
-      return contains((Location) o);
-    }
-    return false;
+    return o instanceof Location && contains((Location) o);
   }
 
-  @Override public final Iterator<Location> iterator() {
+  @Override @Nonnull public final Iterator<Location> iterator() {
     return Location.iterator(locations);
   }
 
-  @Override public int compareTo(Unit that) {
+  @Override public int compareTo(@Nonnull Unit that) {
     return this.index - that.index;
   }
 
@@ -158,10 +156,10 @@ public abstract class Unit extends AbstractCollection<Location>
     this.index = type.ordinal() * 9 + indexWithinType;
   }
 
-  private static enum AllUnits {
+  private enum AllUnits {
     INSTANCE;
     private final List<Unit> list;
-    private AllUnits() {
+    AllUnits() {
       this.list = ImmutableList.<Unit>builder()
           .addAll(Block.all())  // This order is relied on by the ctor
           .addAll(Row.all())

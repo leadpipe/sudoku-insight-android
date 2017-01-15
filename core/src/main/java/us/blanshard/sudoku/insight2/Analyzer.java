@@ -349,10 +349,8 @@ public class Analyzer {
   public static void findSets(Marks marks, Callback callback) {
     SetState setState = new SetState();
     int[] indices = new int[MAX_SET_SIZE];
-    for (int size = 2; size <= MAX_SET_SIZE; ++size) {
-      for (Unit unit : Unit.allUnits()) {
-        // We look for hidden sets at each size first, because they tend to be
-        // easier to see.
+    for (Unit unit : Unit.allUnits()) {
+      for (int size = 2; size <= MAX_SET_SIZE; ++size) {
         findHiddenSets(marks, callback, setState, unit, size, indices);
         findNakedSets(marks, callback, setState, unit, size, indices);
       }
@@ -394,7 +392,7 @@ public class Analyzer {
           for (int i = 0; i < size; ++i)
             locs = locs.with(toCheck.get(indices[i]));
           setState.add(nums, locs);
-          callback.take(new LockedSet(nums, locs, true));
+          callback.take(LockedSet.newNaked(nums, locs));
           inSets = inSets.or(locs);
         }
       } while (nextSubset(size, indices, toCheck.size()));
@@ -434,7 +432,7 @@ public class Analyzer {
           for (int i = 0; i < size; ++i)
             nums = nums.with(toCheck.get(indices[i]));
           setState.add(nums, locs);
-          callback.take(new LockedSet(nums, locs, false));
+          callback.take(LockedSet.newHidden(nums, locs));
           inSets = inSets.or(nums);
         }
       } while (nextSubset(size, indices, toCheck.size()));
