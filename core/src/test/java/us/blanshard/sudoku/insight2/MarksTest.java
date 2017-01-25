@@ -34,7 +34,9 @@ public class MarksTest {
     assertThat(marks.getOnlyPossibleLocation(un(b(1), 4))).isSameAs(l(1, 2));
     assertThat(marks.getOnlyPossibleLocation(un(b(1), 1))).isNull();
     assertThat(marks.isPossibleAssignment(l(1, 1), n(1))).isTrue();
+    assertThat(marks.isEliminatedByAssignment(l(1, 1), n(1))).isFalse();
     assertThat(marks.isPossibleAssignment(l(1, 1), n(7))).isFalse();
+    assertThat(marks.isEliminatedByAssignment(l(1, 1), n(7))).isTrue();
   }
 
   @Test public void assignments() {
@@ -66,6 +68,8 @@ public class MarksTest {
     assertThat(marks.getNumAssignments()).isEqualTo(7);
     assertThat(marks.getNumOpenLocations()).isEqualTo(74);
     assertThat(marks.isSolved()).isFalse();
+    assertThat(marks.isEliminatedByAssignment(l(1, 2), n(4))).isFalse();
+    assertThat(marks.isEliminatedByAssignment(l(1, 2), n(5))).isTrue();
   }
 
   @Test public void unassigned() {
@@ -111,6 +115,7 @@ public class MarksTest {
     assertThat(builder.hasErrors()).isFalse();
     assertThat(marks.isPossibleAssignment(l(1, 1), n(1))).isTrue();
     assertThat(builder.build().isPossibleAssignment(l(1, 1), n(1))).isFalse();
+    assertThat(builder.build().isEliminatedByAssignment(l(1, 1), n(1))).isFalse();
   }
 
   @Test public void add_failure() {
