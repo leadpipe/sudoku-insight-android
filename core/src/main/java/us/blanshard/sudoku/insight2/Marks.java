@@ -355,6 +355,25 @@ public final class Marks {
   }
 
   /**
+   * Tells whether the given location-numeral pair has been eliminated as a
+   * possible assignment by another assignment.
+   */
+  public boolean isEliminatedByAssignment(Location loc, Numeral num) {
+    Numeral alreadyNum = getAssignedNumeral(loc);
+    if (alreadyNum != null) {
+      return alreadyNum != num;
+    }
+    for (int i = 0; i < 3; ++i) {
+      UnitNumeral un = UnitNumeral.of(loc.unitSubsetList.get(i).unit, num);
+      Location alreadyLoc = getAssignedLocation(un);
+      if (alreadyLoc != null) {
+        return alreadyLoc != loc;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Returns the list of insights that imply the given assignment is not
    * possible.  The returned list is guaranteed to be sorted in cost order.
    */
