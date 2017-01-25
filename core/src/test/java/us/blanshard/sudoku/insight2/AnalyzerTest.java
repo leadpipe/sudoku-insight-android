@@ -285,26 +285,6 @@ public class AnalyzerTest implements Analyzer.Callback {
   }
 
   @Test
-  public void findSets_naked_atLeastOne() {
-    // Both b2 and c6 have naked sets, but the block one isn't found because we
-    // ignore sets unless they are smaller than the unassigned part of the unit.
-    Analyzer.findSets(
-        m(" . . . | 1 4 . | . . . " +
-          " . . . | 2 5 . | . . . " +
-          " . . . | 3 6 . | . . . " +
-          "-------+-------+-------" +
-          " . . . | . . . | . . . " +
-          " . . . | . . . | . . . " +
-          " . . . | . . . | . . . " +
-          "-------+-------+-------" +
-          " . . . | . . . | . . . " +
-          " . . . | . . . | . . . " +
-          " . . . | . . . | . . . "), this);
-    assertThat(taken).containsExactly(
-        new LockedSet(ns(7, 8, 9), us(c(6), 1, 2, 3), /*isNaked = */true));
-  }
-
-  @Test
   public void findSets_hidden() {
     Analyzer.findSets(
         m(" . . . | 1 . . | . . . " +
@@ -341,6 +321,25 @@ public class AnalyzerTest implements Analyzer.Callback {
         new LockedSet(ns(1, 2, 3), us(b(8), 3, 6, 9), /*isNaked = */false),
         new LockedSet(ns(4, 5, 6), us(c(4), 2, 4, 6), /*isNaked = */false),
         new LockedSet(ns(7, 8, 9), us(b(8), 1, 4, 7), /*isNaked = */true));
+  }
+
+  @Test
+  public void findSets_both_allOpen() {
+    Analyzer.findSets(
+        m(" . . . | 1 4 . | . . . " +
+          " . . . | 2 5 . | . . . " +
+          " . . . | 3 6 . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . "), this);
+    assertThat(taken).containsExactly(
+        new LockedSet(ns(7, 8, 9), us(b(2), 3, 6, 9), /*isNaked = */true),
+        new LockedSet(ns(7, 8, 9), us(b(2), 3, 6, 9), /*isNaked = */false));
   }
 
   @Test

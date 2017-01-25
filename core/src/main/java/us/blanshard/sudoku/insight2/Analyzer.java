@@ -26,6 +26,7 @@ import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.util.Arrays;
@@ -331,20 +332,18 @@ public class Analyzer {
 
   private static void findNakedSets(Marks marks, Callback callback, Unit unit, int size, int[] indices) {
     int bitsToCheck = 0;
-    int unsetCount = 0;
     for (int i = 0; i < Unit.UNIT_SIZE; ++i) {
       Location loc = unit.get(i);
       NumSet possible = marks.getPossibleNumerals(loc);
       int possibleSize = possible.size();
       if (possibleSize > 1 ||
           (possibleSize == 1 && !marks.hasAssignment(UnitNumeral.of(unit, possible.get(0))))) {
-        ++unsetCount;
         if (possibleSize <= size) {
           bitsToCheck |= loc.unitSubsets.get(unit.type).bits;
         }
       }
     }
-    if (UnitSubset.bitsSize(bitsToCheck) >= size && unsetCount > size) {
+    if (UnitSubset.bitsSize(bitsToCheck) >= size) {
       UnitSubset toCheck = UnitSubset.ofBits(unit, bitsToCheck);
       firstSubset(size, indices);
       do {
@@ -361,42 +360,33 @@ public class Analyzer {
           Unit overlap = findOverlappingUnit(locs);
           if (overlap != null && overlap.type == Unit.Type.BLOCK) {
             // Block and line naked sets have identical results.  Do not emit
-            // both of them.  But make sure the block-level one would actually
-            // be emitted before skipping this one.
-            if (marks.getUnassignedNumerals(overlap).size() > size) continue;
+            // both of them.
+            continue;
           }
+          ImmutableList<Assignment> eliminations = LockedSet.makeEliminations(
+              nums, locs, /*isNaked = */true, overlap, marks);
           // Make sure there is work for the insight to do before emitting it.
-          if (nakedSetWouldEliminateSomething(marks, nums, locs, overlap)) {
-            callback.take(new LockedSet(nums, locs, /*isNaked = */true, overlap, null));
+          if (!eliminations.isEmpty()) {
+            callback.take(new LockedSet(nums, locs, /*isNaked = */true, overlap, eliminations));
           }
         }
       } while (nextSubset(size, indices, toCheck.size()));
     }
   }
 
-  private static boolean nakedSetWouldEliminateSomething(
-      Marks marks, NumSet nums, UnitSubset locs, @Nullable Unit overlap) {
-    for (int i = 0; i < nums.size(); ++i) {
-      
-    }
-    return true;
-  }
-
   private static void findHiddenSets(Marks marks, Callback callback, Unit unit, int size, int[] indices) {
     NumSet toCheck = NumSet.NONE;
-    int unsetCount = 0;
     for (int i = 0; i < Numeral.COUNT; ++i) {
       Numeral num = Numeral.ofIndex(i);
       UnitSubset possible = marks.getPossibleLocations(UnitNumeral.of(unit, num));
       int possibleSize = possible.size();
       if (possibleSize > 1 || (possibleSize == 1 && !marks.hasAssignment(possible.get(0)))) {
-        ++unsetCount;
         if (possibleSize <= size) {
           toCheck = toCheck.with(num);
         }
       }
     }
-    if (toCheck.size() >= size && unsetCount > size) {
+    if (toCheck.size() >= size) {
       firstSubset(size, indices);
       do {
         int bits = 0;
@@ -409,7 +399,13 @@ public class Analyzer {
           NumSet nums = NumSet.NONE;
           for (int i = 0; i < size; ++i)
             nums = nums.with(toCheck.get(indices[i]));
-          callback.take(new LockedSet(nums, locs, /*isNaked = */false));
+          Unit overlap = findOverlappingUnit(locs);
+          ImmutableList<Assignment> eliminations = LockedSet.makeEliminations(
+              nums, locs, /*isNaked = */false, overlap, marks);
+          // Make sure there is work for the insight to do before emitting it.
+          if (!eliminations.isEmpty()) {
+            callback.take(new LockedSet(nums, locs, /*isNaked = */false, overlap, eliminations));
+          }
         }
       } while (nextSubset(size, indices, toCheck.size()));
     }
