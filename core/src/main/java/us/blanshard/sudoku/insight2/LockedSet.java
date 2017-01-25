@@ -60,7 +60,8 @@ public final class LockedSet extends Insight {
 
   /**
    * Constructs a list of those eliminations implied by a locked set that have
-   * not already been eliminated in the given Marks (if one is supplied).
+   * not already been eliminated by an assignment in the given Marks (if one is
+   * supplied).
    */
   public static ImmutableList<Assignment> makeEliminations(
       NumSet nums, UnitSubset locs, boolean isNaked, @Nullable Unit overlap, @Nullable Marks marks) {
@@ -82,7 +83,8 @@ public final class LockedSet extends Insight {
 
   private static void addIfPossibleAssignment(
       ImmutableList.Builder<Assignment> builder, Location loc, Numeral num, @Nullable Marks marks) {
-    if (marks == null || marks.isPossibleAssignment(loc, num)) {
+    if (marks == null || marks.isPossibleAssignment(loc, num)
+        || !marks.isEliminatedByAssignment(loc, num)) {
       builder.add(Assignment.of(loc, num));
     }
   }
