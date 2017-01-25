@@ -35,7 +35,8 @@ import javax.annotation.concurrent.Immutable;
 public abstract class Unit extends AbstractCollection<Location>
     implements Collection<Location>, Comparable<Unit> {
 
-  public static final int COUNT = 3 * 9;  // 9 each of rows, columns, and blocks.
+  public static final int UNIT_SIZE = 9;  // Every unit has this many locations.
+  public static final int COUNT = 3 * UNIT_SIZE;  // 9 each of rows, columns, and blocks.
 
   public enum Type {
     BLOCK, ROW, COLUMN
