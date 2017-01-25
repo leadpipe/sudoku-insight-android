@@ -129,6 +129,6 @@ public final class LockedSet extends Insight {
   }
 
   @Override public String toString() {
-    return nums + " \u2194 " + locs;
+    return nums + " \u2194 " + locs + (isNaked ? "n" : "h");
   }
 }
