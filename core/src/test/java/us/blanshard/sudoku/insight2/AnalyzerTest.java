@@ -5,17 +5,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import us.blanshard.sudoku.core.Block;
-import us.blanshard.sudoku.core.Column;
-import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.core.Numeral;
-import us.blanshard.sudoku.core.Row;
-import us.blanshard.sudoku.core.Unit;
-import us.blanshard.sudoku.core.UnitNumeral;
-import us.blanshard.sudoku.core.UnitSubset;
-
 import static com.google.common.truth.Truth.assertThat;
-import static us.blanshard.sudoku.core.NumSetTest.set;
 import static us.blanshard.sudoku.insight2.TestHelper.*;
 
 public class AnalyzerTest implements Analyzer.Callback {
@@ -272,6 +262,102 @@ public class AnalyzerTest implements Analyzer.Callback {
           " . . . | . . . | . . . " +
           " . . . | . . . | . . . " +
           " . . . | . . 1 | . . . "), this);
+    assertThat(taken).containsExactly();
+  }
+
+  @Test
+  public void findSets_naked_justOne() {
+    // Both b8 and c4 have naked sets, but they are equivalent.
+    Analyzer.findSets(
+        m(" . . . | 1 . . | . . . " +
+          " . . . | 2 . . | . . . " +
+          " . . . | 3 . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | 4 . . | . . . " +
+          " . . . | 5 . . | . . . " +
+          " . . . | . . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | . . 6 | . . . "), this);
+    assertThat(taken).containsExactly(
+        new LockedSet(ns(7, 8, 9), us(b(8), 1, 4, 7), /*isNaked = */true));
+  }
+
+  @Test
+  public void findSets_naked_atLeastOne() {
+    // Both b2 and c6 have naked sets, but the block one isn't found because we
+    // ignore sets unless they are smaller than the unassigned part of the unit.
+    Analyzer.findSets(
+        m(" . . . | 1 4 . | . . . " +
+          " . . . | 2 5 . | . . . " +
+          " . . . | 3 6 . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . "), this);
+    assertThat(taken).containsExactly(
+        new LockedSet(ns(7, 8, 9), us(c(6), 1, 2, 3), /*isNaked = */true));
+  }
+
+  @Test
+  public void findSets_hidden() {
+    Analyzer.findSets(
+        m(" . . . | 1 . . | . . . " +
+          " . . . | 2 . . | . . . " +
+          " . . . | 3 . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . 1 . | . . . " +
+          " . . . | . 2 . | . . . " +
+          " . . . | . 3 . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . "), this);
+    assertThat(taken).containsExactly(
+        new LockedSet(ns(1, 2, 3), us(b(8), 3, 6, 9), /*isNaked = */false),
+        new LockedSet(ns(1, 2, 3), us(c(6), 7, 8, 9), /*isNaked = */false));
+  }
+
+  @Test
+  public void findSets_both() {
+    Analyzer.findSets(
+        m(" . . . | 1 . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | 2 . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . . | 3 . . | . . . " +
+          " . . . | . . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . 4 . | . . . " +
+          " . . . | . 5 . | . . . " +
+          " . . . | . 6 . | . . . "), this);
+    assertThat(taken).containsExactly(
+        new LockedSet(ns(1, 2, 3), us(b(8), 3, 6, 9), /*isNaked = */false),
+        new LockedSet(ns(4, 5, 6), us(c(4), 2, 4, 6), /*isNaked = */false),
+        new LockedSet(ns(7, 8, 9), us(b(8), 1, 4, 7), /*isNaked = */true));
+  }
+
+  @Test
+  public void findSets_none_nothingToDo() {
+    // Lots of sets, but none that eliminates anything new.
+    Analyzer.findSets(
+        m(" . . . | 1 . . | . . . " +
+          " . . . | 2 . . | . . . " +
+          " . . . | 3 . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . 4 . | . . . " +
+          " . . . | . 5 . | . . . " +
+          " . . . | . 6 . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . 7 | . . . " +
+          " . . . | . . 8 | . . . " +
+          " . . . | . . 9 | . . . "), this);
     assertThat(taken).containsExactly();
   }
 }

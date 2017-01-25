@@ -24,7 +24,9 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 import us.blanshard.sudoku.core.Assignment;
+import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.NumSet;
+import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitSubset;
 
@@ -38,35 +40,51 @@ import us.blanshard.sudoku.core.UnitSubset;
 public final class LockedSet extends Insight {
   private final NumSet nums;
   private final UnitSubset locs;
-  @Nullable private final UnitSubset extraElims;
+  @Nullable private final Unit overlap;
   private final boolean isNaked;
   private volatile List<Assignment> eliminations;
 
-  public static LockedSet newNaked(NumSet nums, UnitSubset locs) {
-    Unit overlap = Analyzer.findOverlappingUnit(locs);
-    if (overlap != null && overlap.type == Unit.Type.BLOCK) {
-      // Naked sets with overlaps behave the same regardless of which unit is
-      // considered "the" unit.  So we force "the" unit to be the block in this
-      // case.
-      UnitSubset blockLocs = overlap.intersect(locs);
-      overlap = locs.unit;
-      locs = blockLocs;
-    }
-    return new LockedSet(nums, locs, /* isNaked = */ true, overlap);
+  public LockedSet(NumSet nums, UnitSubset locs, boolean isNaked) {
+    this(nums, locs, isNaked, Analyzer.findOverlappingUnit(locs), null);
   }
 
-  public static LockedSet newHidden(NumSet nums, UnitSubset locs) {
-    // Hidden sets with overlaps behave differently when each unit is
-    // considered "the" unit.  So we don't normalize the order.
-    return new LockedSet(nums, locs, /* isNaked = */ false, Analyzer.findOverlappingUnit(locs));
-  }
-
-  private LockedSet(NumSet nums, UnitSubset locs, boolean isNaked, @Nullable Unit overlap) {
+  LockedSet(NumSet nums, UnitSubset locs, boolean isNaked, @Nullable Unit overlap,
+            @Nullable ImmutableList<Assignment> eliminations) {
     super(Type.LOCKED_SET, Objects.hashCode(LockedSet.class, nums, locs, isNaked));
     this.nums = nums;
     this.locs = locs;
     this.isNaked = isNaked;
-    this.extraElims = overlap == null ? null : overlap.subtract(locs.unit);
+    this.overlap = overlap;
+    this.eliminations = eliminations;
+  }
+
+  /**
+   * Constructs a list of those eliminations implied by a locked set that have
+   * not already been eliminated in the given Marks (if one is supplied).
+   */
+  public static ImmutableList<Assignment> makeEliminations(
+      NumSet nums, UnitSubset locs, boolean isNaked, @Nullable Unit overlap, @Nullable Marks marks) {
+    ImmutableList.Builder<Assignment> builder = ImmutableList.builder();
+    if (!isNaked) nums = nums.not();
+    if (isNaked) locs = locs.not();
+    for (int i = 0; i < nums.size(); ++i)
+      for (int j = 0; j < locs.size(); ++j)
+        addIfPossibleAssignment(builder, locs.get(j), nums.get(i), marks);
+    if (overlap != null) {
+      if (!isNaked) nums = nums.not();
+      UnitSubset extraLocs = overlap.subtract(locs.unit);
+      for (int i = 0; i < nums.size(); ++i)
+        for (int j = 0; j < extraLocs.size(); ++j)
+          addIfPossibleAssignment(builder, extraLocs.get(j), nums.get(i), marks);
+    }
+    return builder.build();
+  }
+
+  private static void addIfPossibleAssignment(
+      ImmutableList.Builder<Assignment> builder, Location loc, Numeral num, @Nullable Marks marks) {
+    if (marks == null || marks.isPossibleAssignment(loc, num)) {
+      builder.add(Assignment.of(loc, num));
+    }
   }
 
   @Override public List<Assignment> getEliminations() {
@@ -74,17 +92,7 @@ public final class LockedSet extends Insight {
     if (answer == null) {
       synchronized (this) {
         if ((answer = eliminations) == null) {
-          ImmutableList.Builder<Assignment> builder = ImmutableList.builder();
-          NumSet nums = isNaked ? this.nums : this.nums.not();
-          UnitSubset locs = isNaked ? this.locs.not() : this.locs;
-          for (int i = 0; i < nums.size(); ++i)
-            for (int j = 0; j < locs.size(); ++j)
-              builder.add(Assignment.of(locs.get(j), nums.get(i)));
-          if (extraElims != null)
-            for (int i = 0; i < this.nums.size(); ++i)
-              for (int j = 0; j < extraElims.size(); ++j)
-                builder.add(Assignment.of(extraElims.get(j), this.nums.get(i)));
-          answer = eliminations = builder.build();
+          answer = eliminations = makeEliminations(nums, locs, isNaked, overlap, null);
         }
       }
     }
@@ -108,7 +116,7 @@ public final class LockedSet extends Insight {
   }
 
   @Nullable public Unit getOverlappingUnit() {
-    return extraElims == null ? null : extraElims.unit;
+    return overlap;
   }
 
   @Override public boolean equals(Object o) {

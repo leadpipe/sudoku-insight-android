@@ -10,8 +10,8 @@ import static us.blanshard.sudoku.insight2.TestHelper.*;
 
 public class LockedSetTest {
   @Test public void getEliminations_naked_overlap() {
-    LockedSet set = LockedSet.newNaked(ns(1, 2), us(r(1), 1, 2));
-    assertThat(set.getLocations()).isEqualTo(us(b(1), 1, 2));
+    LockedSet set = new LockedSet(ns(1, 2), us(r(1), 1, 2), /*isNaked = */true);
+    assertThat((Object) set.getOverlappingUnit()).isEqualTo(b(1));
     assertThat(set.getEliminations()).containsExactly(a(1, 3, 1), a(1, 3, 2),
         a(2, 1, 1), a(2, 1, 2), a(2, 2, 1), a(2, 2, 2), a(2, 3, 1), a(2, 3, 2),
         a(3, 1, 1), a(3, 1, 2), a(3, 2, 1), a(3, 2, 2), a(3, 3, 1), a(3, 3, 2),
@@ -20,8 +20,7 @@ public class LockedSetTest {
   }
 
   @Test public void getEliminations_naked_noOverlap() {
-    LockedSet set = LockedSet.newNaked(ns(1, 2), us(b(1), 1, 5));
-    assertThat(set.getLocations()).isEqualTo(us(b(1), 1, 5));
+    LockedSet set = new LockedSet(ns(1, 2), us(b(1), 1, 5), /*isNaked = */true);
     assertThat(set.getEliminations()).containsExactly(
         a(1, 2, 1), a(1, 2, 2), a(1, 3, 1), a(1, 3, 2),
         a(2, 1, 1), a(2, 1, 2), a(2, 3, 1), a(2, 3, 2),
@@ -29,7 +28,7 @@ public class LockedSetTest {
   }
 
   @Test public void getEliminations_hidden_overlap_block() {
-    LockedSet set = LockedSet.newHidden(ns(1, 2), us(b(1), 1, 2));
+    LockedSet set = new LockedSet(ns(1, 2), us(b(1), 1, 2), /*isNaked = */false);
     assertThat(set.getEliminations()).containsExactly(
         a(1, 1, 3), a(1, 1, 4), a(1, 1, 5), a(1, 1, 6), a(1, 1, 7), a(1, 1, 8), a(1, 1, 9),
         a(1, 2, 3), a(1, 2, 4), a(1, 2, 5), a(1, 2, 6), a(1, 2, 7), a(1, 2, 8), a(1, 2, 9),
@@ -38,7 +37,7 @@ public class LockedSetTest {
   }
 
   @Test public void getEliminations_hidden_overlap_line() {
-    LockedSet set = LockedSet.newHidden(ns(1, 2), us(r(1), 1, 2));
+    LockedSet set = new LockedSet(ns(1, 2), us(r(1), 1, 2), /*isNaked = */false);
     assertThat(set.getEliminations()).containsExactly(
         a(1, 1, 3), a(1, 1, 4), a(1, 1, 5), a(1, 1, 6), a(1, 1, 7), a(1, 1, 8), a(1, 1, 9),
         a(1, 2, 3), a(1, 2, 4), a(1, 2, 5), a(1, 2, 6), a(1, 2, 7), a(1, 2, 8), a(1, 2, 9),
@@ -47,7 +46,7 @@ public class LockedSetTest {
   }
 
   @Test public void getEliminations_hidden_noOverlap() {
-    LockedSet set = LockedSet.newHidden(ns(1, 2), us(b(1), 1, 5));
+    LockedSet set = new LockedSet(ns(1, 2), us(b(1), 1, 5), /*isNaked = */false);
     assertThat(set.getEliminations()).containsExactly(
         a(1, 1, 3), a(1, 1, 4), a(1, 1, 5), a(1, 1, 6), a(1, 1, 7), a(1, 1, 8), a(1, 1, 9),
         a(2, 2, 3), a(2, 2, 4), a(2, 2, 5), a(2, 2, 6), a(2, 2, 7), a(2, 2, 8), a(2, 2, 9));

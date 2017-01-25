@@ -1,126 +1,208 @@
 package us.blanshard.sudoku.insight2;
 
-import org.junit.Before;
 import org.junit.Test;
 
-import us.blanshard.sudoku.core.Block;
-import us.blanshard.sudoku.core.Column;
 import us.blanshard.sudoku.core.Grid;
-import us.blanshard.sudoku.core.Location;
-import us.blanshard.sudoku.core.Numeral;
-import us.blanshard.sudoku.core.Row;
-import us.blanshard.sudoku.core.Unit;
-import us.blanshard.sudoku.core.UnitNumeral;
-import us.blanshard.sudoku.core.UnitSubset;
 
-import static org.junit.Assert.*;
-import static us.blanshard.sudoku.core.NumSetTest.set;
-import static us.blanshard.sudoku.core.UnitTest.loc;
+import static com.google.common.truth.Truth.assertThat;
+import static us.blanshard.sudoku.insight2.TestHelper.*;
 
 public class MarksTest {
 
-  private final Grid.Builder builder = Grid.builder();
-  private us.blanshard.sudoku.insight.Marks marks;
-
-  public static Numeral n(int num) { return Numeral.of(num); }
-  public static Row r(int num) { return Row.of(num); }
-  public static Column c(int num) { return Column.of(num); }
-  public static Block b(int num) { return Block.of(num); }
-  public static UnitNumeral un(Unit unit, int num) { return UnitNumeral.of(unit, n(num)); }
-  public static UnitSubset us(Unit unit, int... nums) { return UnitSubset.ofBits(unit, set(nums).bits); }
-
-  @Before
-  public void setUp() {
-    builder.put(loc(1, 2), Numeral.of(4));
-    builder.put(loc(4, 1), Numeral.of(7));
-    builder.put(loc(6, 3), Numeral.of(6));
-    builder.put(loc(4, 9), Numeral.of(2));
-    builder.put(loc(3, 9), Numeral.of(4));
-    builder.put(loc(4, 4), Numeral.of(1));
-    builder.put(loc(4, 5), Numeral.of(9));
-
-    marks = build();
-  }
-
-  private us.blanshard.sudoku.insight.Marks build() {
-    us.blanshard.sudoku.insight.Marks.Builder b = us.blanshard.sudoku.insight.Marks.builder();
-    b.assignAll(builder.build());
-    assertFalse(b.hasErrors());
-    return b.build();
-  }
-
   @Test
-  public void getSet() {
-    assertEquals(set(7), marks.getSet(loc(4, 1)));
-    assertEquals(set(3, 5, 8), marks.getSet(loc(4, 2)));
-    assertEquals(UnitSubset.singleton(r(4), loc(4, 1)), marks.getSet(un(r(4), 7)));
-    assertEquals(UnitSubset.ofBits(r(4), 0xe4), marks.getSet(un(r(4), 4)));
+  public void possibles() {
+    Marks marks = m(
+        " . 4 . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . 4 " +
+        "-------+-------+-------" +
+        " 7 . . | 1 9 . | . . 2 " +
+        " . . . | . . . | . . . " +
+        " . . 6 | . . . | . . . " +
+        "-------+-------+-------" +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . ");
+
+    assertThat(marks.getPossibleNumerals(l(4, 1))).isEqualTo(ns(7));
+    assertThat(marks.getOnlyPossibleNumeral(l(4, 1))).isSameAs(n(7));
+    assertThat(marks.getOnlyPossibleNumeral(l(4, 2))).isNull();
+    assertThat(marks.getPossibleNumerals(l(4, 2))).isEqualTo(ns(3, 5, 8));
+    assertThat(marks.getPossibleLocations(un(r(4), 7))).isEqualTo(us(r(4), 1));
+    assertThat(marks.toBuilder().getBitsForPossibleLocations(un(r(4), 4))).isEqualTo(0xe4);
+    assertThat(marks.getSizeOfPossibleLocations(un(r(4), 4))).isEqualTo(4);
+    assertThat(marks.getOnlyPossibleLocation(un(b(1), 4))).isSameAs(l(1, 2));
+    assertThat(marks.getOnlyPossibleLocation(un(b(1), 1))).isNull();
+    assertThat(marks.isPossibleAssignment(l(1, 1), n(1))).isTrue();
+    assertThat(marks.isPossibleAssignment(l(1, 1), n(7))).isFalse();
   }
 
   @Test public void assignments() {
-    assertSame(n(4), marks.get(loc(3, 9)));
-    assertSame(loc(3, 9), marks.get(un(r(3), 4)));
-    assertSame(loc(3, 9), marks.get(un(c(9), 4)));
-    assertSame(loc(3, 9), marks.get(un(b(3), 4)));
+    Grid grid = g(
+        " . 4 . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . 4 " +
+        "-------+-------+-------" +
+        " 7 . . | 1 9 . | . . 2 " +
+        " . . . | . . . | . . . " +
+        " . . 6 | . . . | . . . " +
+        "-------+-------+-------" +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . ");
+    Marks marks = m(grid);
+
+    assertThat(marks.getAssignedNumeral(l(3, 9))).isSameAs(n(4));
+    assertThat(marks.getAssignedNumeral(l(3, 8))).isNull();
+    assertThat(marks.getAssignedLocation(un(r(3), 4))).isSameAs(l(3, 9));
+    assertThat(marks.getAssignedLocation(un(c(9), 4))).isSameAs(l(3, 9));
+    assertThat(marks.getAssignedLocation(un(b(3), 4))).isSameAs(l(3, 9));
+    assertThat(marks.getAssignedLocation(un(b(1), 5))).isNull();
+    assertThat(marks.hasAssignment(un(b(1), 4))).isTrue();
+    assertThat(marks.hasAssignment(un(b(1), 5))).isFalse();
+    assertThat(marks.getAssignedLocations())
+        .isEqualTo(ls(l(1, 2), l(3, 9), l(4, 1), l(4, 4), l(4, 5), l(4, 9), l(6, 3)));
+    assertThat(marks.toBuilder().toGrid()).isEqualTo(grid);
+    assertThat(marks.getNumAssignments()).isEqualTo(7);
+    assertThat(marks.getNumOpenLocations()).isEqualTo(74);
+    assertThat(marks.isSolved()).isFalse();
   }
 
   @Test public void unassigned() {
-    assertEquals(set(1,2,3,5,6,7,8,9), marks.getUnassignedNumerals(b(1)));
-    assertEquals(us(b(1), 1,3,4,5,6,7,8,9), marks.getUnassignedLocations(b(1)));
+    Marks marks = m(
+        " . 4 . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . 4 " +
+        "-------+-------+-------" +
+        " 7 . . | 1 9 . | . . 2 " +
+        " . . . | . . . | . . . " +
+        " . . 6 | . . . | . . . " +
+        "-------+-------+-------" +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . ");
 
-    assertEquals(set(3,4,5,6,8), marks.getUnassignedNumerals(r(4)));
-    assertEquals(us(r(4), 2,3,6,7,8), marks.getUnassignedLocations(r(4)));
+    assertThat(marks.getUnassignedNumerals(b(1))).isEqualTo(ns(1,2,3,5,6,7,8,9));
+    assertThat(marks.getUnassignedLocations(b(1))).isEqualTo(us(b(1), 1,3,4,5,6,7,8,9));
 
-    assertEquals(set(1,3,5,6,7,8,9), marks.getUnassignedNumerals(c(9)));
-    assertEquals(us(c(9), 1,2,5,6,7,8,9), marks.getUnassignedLocations(c(9)));
+    assertThat(marks.getUnassignedNumerals(r(4))).isEqualTo(ns(3,4,5,6,8));
+    assertThat(marks.getUnassignedLocations(r(4))).isEqualTo(us(r(4), 2,3,6,7,8));
+
+    assertThat(marks.getUnassignedNumerals(c(9))).isEqualTo(ns(1,3,5,6,7,8,9));
+    assertThat(marks.getUnassignedLocations(c(9))).isEqualTo(us(c(9), 1,2,5,6,7,8,9));
   }
 
-  @Test public void assign_failure() {
-    us.blanshard.sudoku.insight.Marks.Builder builder = marks.toBuilder();
-    builder.assign(loc(1, 2), Numeral.of(1));
-    assertTrue(builder.hasErrors());
-    assertEquals(0, builder.get(loc(1, 2)).size());
-    assertEquals(0, builder.get(un(b(1), 4)).size());
+  @Test public void add() {
+    Marks marks = m(
+        " . 4 . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . 4 " +
+        "-------+-------+-------" +
+        " 7 . . | 1 9 . | . . 2 " +
+        " . . . | . . . | . . . " +
+        " . . 6 | . . . | . . . " +
+        "-------+-------+-------" +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . ");
+
+    Marks.Builder builder = marks.toBuilder();
+    builder.add(ee(1, 1, 1));
+    assertThat(builder.hasErrors()).isFalse();
+    assertThat(marks.isPossibleAssignment(l(1, 1), n(1))).isTrue();
+    assertThat(builder.build().isPossibleAssignment(l(1, 1), n(1))).isFalse();
   }
 
-  @Test public void equals() {
-    us.blanshard.sudoku.insight.Marks m2 = build();
-    builder.remove(loc(6, 3));
-    us.blanshard.sudoku.insight.Marks m3 = build();
+  @Test public void add_failure() {
+    Marks marks = m(
+        " . 4 . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . 4 " +
+        "-------+-------+-------" +
+        " 7 . . | 1 9 . | . . 2 " +
+        " . . . | . . . | . . . " +
+        " . . 6 | . . . | . . . " +
+        "-------+-------+-------" +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . ");
 
-    assertEquals(marks, marks);
-    assertEquals(marks, m2);
-    assertEquals(m2, marks);
-    assertEquals(marks.hashCode(), m2.hashCode());
-
-    assertEquals(false, m2.equals(m3));
-    assertEquals(false, m3.equals(m2));
-    assertEquals(false, m2.hashCode() == m3.hashCode());
+    Marks.Builder builder = marks.toBuilder();
+    builder.add(ea(1, 2, 1));
+    assertThat(builder.hasErrors()).isTrue();
+    assertThat(builder.getPossibleNumerals(l(1, 2))).isEmpty();
+    assertThat(builder.getPossibleLocations(un(b(1), 4))).isEmpty();
   }
 
-  @Test public void strings() {
-    String s =
-        "  6!   37   1!  |  2    3    9   |  78   4    5  \n" +
-        "  2!  379   8!  |  15   1    4   |  7    39   6  \n" +
-        "  34  3459 345  |  7    6    8   |  19  139   2  \n" +
-        "----------------+----------------+----------------\n" +
-        "  5    6    4   |  9    47   1   |  3    2    8  \n" +
-        "  8    12   9   |  6    57   23  |  4    15   7  \n" +
-        "  34   12   7   |  8    45   23  | 159   6    19 \n" +
-        "----------------+----------------+----------------\n" +
-        "  9    3    6   |  1    2    7   |  58   8    4  \n" +
-        "  7    45   45  |  3    8    6   |  2    19   19 \n" +
-        "  1    8    2   |  4    9    5   |  6    7    3  \n";
-    us.blanshard.sudoku.insight.Marks marks = us.blanshard.sudoku.insight.Marks.fromString(s);
-    assertEquals(s, marks.toString());
+  @Test public void getEliminationInsights() {
+    Marks marks = m(
+        " . 4 . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . 4 " +
+        "-------+-------+-------" +
+        " 7 . . | 1 9 . | . . 2 " +
+        " . . . | . . 4 | . . . " +
+        " . . 6 | . . . | . . . " +
+        "-------+-------+-------" +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . ");
 
-    assertEquals("6.1......2.8.....................................................................",
-        marks.toGrid().toFlatString());
+    assertThat(marks.getEliminationInsights(a(5, 2, 4))).containsExactly(ea(1, 2, 4), ea(5, 6, 4));
+  }
 
-    assertEquals(set(4,5), marks.getSet(Location.of(8,2)));
-    assertEquals(set(3,8).bits, marks.getBits(UnitNumeral.of(Column.of(2), Numeral.of(4))));
-    assertEquals(set(3,8).bits, marks.getBits(UnitNumeral.of(Column.of(2), Numeral.of(5))));
+  @Test public void string() {
+    Marks marks = m(
+        " . 4 . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . 4 " +
+        "-------+-------+-------" +
+        " 7 . . | 1 9 . | . . 2 " +
+        " . . . | . . . | . . . " +
+        " . . 6 | . . . | . . . " +
+        "-------+-------+-------" +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . ");
 
+    assertThat(marks.toString()).isEqualTo(
+        "  1235689     4!      1235789  |  2356789   1235678  12356789  | 12356789  12356789   1356789 \n" +
+        "  1235689  12356789   1235789  | 23456789  12345678  123456789 | 12356789  12356789   1356789 \n" +
+        "  1235689  12356789   1235789  |  2356789   1235678  12356789  | 12356789  12356789     4!    \n" +
+        "-------------------------------+-------------------------------+-------------------------------\n" +
+        "    7!        358      3458    |    1!        9!       34568   |   34568     34568      2!    \n" +
+        "  1234589   123589    1234589  |  2345678   2345678   2345678  | 13456789  13456789   1356789 \n" +
+        "  1234589   123589      6!     |  234578    234578    234578   |  1345789   1345789   135789  \n" +
+        "-------------------------------+-------------------------------+-------------------------------\n" +
+        " 12345689  12356789  12345789  | 23456789  12345678  123456789 | 123456789 123456789  1356789 \n" +
+        " 12345689  12356789  12345789  | 23456789  12345678  123456789 | 123456789 123456789  1356789 \n" +
+        " 12345689  12356789  12345789  | 23456789  12345678  123456789 | 123456789 123456789  1356789 \n");
 
+    marks = m(
+        " 1 2 3 | 4 5 6 | 7 8 9 " +
+        " 4 5 6 | 7 8 9 | 1 2 3 " +
+        " 7 8 9 | 1 2 3 | 4 5 6 " +
+        "-------+-------+-------" +
+        " 2 3 4 | 5 6 7 | 8 9 1 " +
+        " 5 6 7 | 8 9 1 | 2 3 4 " +
+        " 8 9 1 | 2 3 4 | 5 6 7 " +
+        "-------+-------+-------" +
+        " 3 4 5 | 6 7 8 | 9 1 2 " +
+        " 6 7 8 | 9 1 2 | 3 4 5 " +
+        " 9 1 2 | 3 4 5 | 6 7 8 ");
+
+    assertThat(marks.toString()).isEqualTo(
+        " 1! 2! 3! | 4! 5! 6! | 7! 8! 9!\n" +
+        " 4! 5! 6! | 7! 8! 9! | 1! 2! 3!\n" +
+        " 7! 8! 9! | 1! 2! 3! | 4! 5! 6!\n" +
+        "----------+----------+----------\n" +
+        " 2! 3! 4! | 5! 6! 7! | 8! 9! 1!\n" +
+        " 5! 6! 7! | 8! 9! 1! | 2! 3! 4!\n" +
+        " 8! 9! 1! | 2! 3! 4! | 5! 6! 7!\n" +
+        "----------+----------+----------\n" +
+        " 3! 4! 5! | 6! 7! 8! | 9! 1! 2!\n" +
+        " 6! 7! 8! | 9! 1! 2! | 3! 4! 5!\n" +
+        " 9! 1! 2! | 3! 4! 5! | 6! 7! 8!\n");
+    assertThat(marks.isSolved()).isTrue();
   }
 }

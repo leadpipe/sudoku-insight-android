@@ -19,9 +19,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.primitives.Ints;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Arrays.asList;
-
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Grid;
 import us.blanshard.sudoku.core.LocSet;
@@ -178,7 +175,7 @@ public final class Marks {
   public Grid.Builder toGridBuilder() {
     Grid.Builder builder = Grid.builder();
     for (Location loc : Location.all()) {
-      Numeral num = get(loc);
+      Numeral num = getAssignedNumeral(loc);
       if (num != null) builder.put(loc, num);
     }
     return builder;
@@ -195,29 +192,29 @@ public final class Marks {
   /**
    * Returns the set of numerals that could go in the given location.
    */
-  public NumSet getSet(Location loc) {
-    return NumSet.ofBits(getBits(loc));
+  public NumSet getPossibleNumerals(Location loc) {
+    return NumSet.ofBits(getBitsForPossibleNumerals(loc));
   }
 
   /**
-   * Returns the bit-set corresponding to {@link #getSet(Location)}.
+   * Returns the bit-set corresponding to {@link #getPossibleNumerals(Location)}.
    */
-  public int getBits(Location loc) {
+  public int getBitsForPossibleNumerals(Location loc) {
     return data[loc.index] & BITSET_MASK;
   }
 
   /**
-   * Returns the single numeral contained in {@link #getSet(Location)}, or null.
+   * Returns the single numeral contained in {@link #getPossibleNumerals(Location)}, or null.
    */
-  @Nullable public Numeral getSingleton(Location loc) {
-    NumSet set = getSet(loc);
+  @Nullable public Numeral getOnlyPossibleNumeral(Location loc) {
+    NumSet set = getPossibleNumerals(loc);
     return set.size() == 1 ? set.get(0) : null;
   }
 
   /**
    * Returns the numeral assigned to the given location, or null.
    */
-  @Nullable public Numeral get(Location loc) {
+  @Nullable public Numeral getAssignedNumeral(Location loc) {
     int assigned = (data[loc.index] & LOC_ASSIGNMENT_MASK) >> LOC_ASSIGNMENT_SHIFT;
     return assigned == 0 ? null : Numeral.of(assigned);
   }
@@ -272,30 +269,30 @@ public final class Marks {
    * Returns the set of locations within the given unit that could hold the
    * given numeral.
    */
-  public UnitSubset getSet(UnitNumeral unitNum) {
-    return UnitSubset.ofBits(unitNum.unit, getBits(unitNum));
+  public UnitSubset getPossibleLocations(UnitNumeral unitNum) {
+    return UnitSubset.ofBits(unitNum.unit, getBitsForPossibleLocations(unitNum));
   }
 
   /**
-   * Returns the bit-set corresponding to {@link #getSet(UnitNumeral)}.
+   * Returns the bit-set corresponding to {@link #getPossibleLocations(UnitNumeral)}.
    */
-  public int getBits(UnitNumeral unitNum) {
+  public int getBitsForPossibleLocations(UnitNumeral unitNum) {
     return data[UNITNUM_OFFSET + unitNum.index] & BITSET_MASK;
   }
 
   /**
    * Returns the size of the set that would be returned by
-   * {@link #getSet(UnitNumeral)}.
+   * {@link #getPossibleLocations(UnitNumeral)}.
    */
-  public int getSetSize(UnitNumeral unitNum) {
-    return NumSet.ofBits(getBits(unitNum)).size();
+  public int getSizeOfPossibleLocations(UnitNumeral unitNum) {
+    return NumSet.ofBits(getBitsForPossibleLocations(unitNum)).size();
   }
 
   /**
-   * Returns the single location in {@link #getSet(UnitNumeral)}, or null.
+   * Returns the single location in {@link #getPossibleLocations(UnitNumeral)}, or null.
    */
-  @Nullable public Location getSingleton(UnitNumeral unitNum) {
-    NumSet set = NumSet.ofBits(getBits(unitNum));
+  @Nullable public Location getOnlyPossibleLocation(UnitNumeral unitNum) {
+    NumSet set = NumSet.ofBits(getBitsForPossibleLocations(unitNum));
     if (set.size() != 1) return null;
     return unitNum.unit.get(set.get(0).index);
   }
@@ -304,7 +301,7 @@ public final class Marks {
    * Returns the location assigned to the given numeral in the given unit, or
    * null.
    */
-  @Nullable public Location get(UnitNumeral unitNum) {
+  @Nullable public Location getAssignedLocation(UnitNumeral unitNum) {
     int assigned = (data[UNITNUM_OFFSET + unitNum.index] & UNITNUM_ASSIGNMENT_MASK) >> UNITNUM_ASSIGNMENT_SHIFT;
     return assigned == 0 ? null : unitNum.unit.get(assigned - 1);
   }
@@ -322,7 +319,7 @@ public final class Marks {
    * Returns a bit-set of the numerals that do not yet have an assigned location
    * within the given unit.
    */
-  public int getUnassignedNumeralBits(Unit unit) {
+  public int getBitsForUnassignedNumerals(Unit unit) {
     return data[UNIT_NUMSET_OFFSET + unit.index] & BITSET_MASK;
   }
 
@@ -331,14 +328,14 @@ public final class Marks {
    * unit.
    */
   public NumSet getUnassignedNumerals(Unit unit) {
-    return NumSet.ofBits(getUnassignedNumeralBits(unit));
+    return NumSet.ofBits(getBitsForUnassignedNumerals(unit));
   }
 
   /**
    * Returns a bit-set of the locations within the given unit that are not
    * currently assigned a numeral.
    */
-  public int getUnassignedLocationBits(Unit unit) {
+  public int getBitsForUnassignedLocations(Unit unit) {
     return data[UNIT_LOCSET_OFFSET + unit.index] & BITSET_MASK;
   }
 
@@ -347,7 +344,14 @@ public final class Marks {
    * assigned a numeral.
    */
   public UnitSubset getUnassignedLocations(Unit unit) {
-    return UnitSubset.ofBits(unit, getUnassignedLocationBits(unit));
+    return UnitSubset.ofBits(unit, getBitsForUnassignedLocations(unit));
+  }
+
+  /**
+   * Tells whether the given numeral could be assigned to the given location.
+   */
+  public boolean isPossibleAssignment(Location loc, Numeral num) {
+    return (data[loc.index] & num.bit) != 0;
   }
 
   /**
@@ -406,20 +410,20 @@ public final class Marks {
       return marks.toGrid();
     }
 
-    public NumSet getSet(Location loc) {
-      return marks.getSet(loc);
+    public NumSet getPossibleNumerals(Location loc) {
+      return marks.getPossibleNumerals(loc);
     }
 
-    public int getBits(Location loc) {
-      return marks.getBits(loc);
+    public int getBitsForPossibleNumerals(Location loc) {
+      return marks.getBitsForPossibleNumerals(loc);
     }
 
-    public UnitSubset getSet(UnitNumeral unitNum) {
-      return marks.getSet(unitNum);
+    public UnitSubset getPossibleLocations(UnitNumeral unitNum) {
+      return marks.getPossibleLocations(unitNum);
     }
 
-    public int getBits(UnitNumeral unitNum) {
-      return marks.getBits(unitNum);
+    public int getBitsForPossibleLocations(UnitNumeral unitNum) {
+      return marks.getBitsForPossibleLocations(unitNum);
     }
 
     public boolean hasErrors() {
@@ -460,7 +464,7 @@ public final class Marks {
 
       // Remove the other numerals from this location, WITHOUT marking with the
       // insight.
-      NumSet others = getSet(loc).without(num);
+      NumSet others = getPossibleNumerals(loc).without(num);
       for (Numeral other : others)
         ok &= eliminate(Assignment.of(loc, other), null);
 
@@ -484,7 +488,7 @@ public final class Marks {
         marks.data[UNIT_LOCSET_OFFSET + unitSubset.unit.index] &= ~unitSubset.bits;
       }
 
-      if (ok) ok = getBits(loc) == num.bit;
+      if (ok) ok = getBitsForPossibleNumerals(loc) == num.bit;
       if (!ok) setError();
     }
 
@@ -493,8 +497,8 @@ public final class Marks {
     }
 
     /**
-     * Eliminates the given assignment.  Sets the error bit if this is
-     * inconsistent with the rules of Sudoku.
+     * Eliminates the given assignment.  Sets the error bit, and returns false,
+     * if this is inconsistent with the rules of Sudoku.
      */
     private boolean eliminate(Assignment assignment, @Nullable Insight insight) {
       Location loc = assignment.location;
@@ -527,12 +531,15 @@ public final class Marks {
   @Override public String toString() {
     int width = 1;
     for (Location loc : Location.all()) {
-      width = Math.max(width, getSet(loc).size());
+      width = Math.max(width, getPossibleNumerals(loc).size());
+      if (width == 1 && hasAssignment(loc)) {
+        width = 2;
+      }
     }
     StringBuilder sb = new StringBuilder();
     for (Row row : Row.all()) {
       for (Location loc : row) {
-        append(getSet(loc), hasAssignment(loc), width, sb.append(' '));
+        append(getPossibleNumerals(loc), hasAssignment(loc), width, sb.append(' '));
         if (loc.column.number == 3 || loc.column.number == 6)
           sb.append(" |");
       }
@@ -547,7 +554,7 @@ public final class Marks {
   }
 
   private StringBuilder append(NumSet nums, boolean assigned, int width, StringBuilder sb) {
-    int size = Math.max(1, nums.size());
+    int size = Math.max(1, nums.size()) + (assigned ? 1 : 0);
     append(' ', (width - size) / 2, sb);
     if (nums.isEmpty()) {
       sb.append('?');
@@ -556,7 +563,6 @@ public final class Marks {
         sb.append(num.number);
       if (assigned) {
         sb.append('!');
-        ++size;
       }
     }
     return append(' ', width - size - (width - size) / 2, sb);
@@ -566,44 +572,5 @@ public final class Marks {
     while (count-- > 0)
       sb.append(c);
     return sb;
-  }
-
-  /**
-   * Treats all characters besides numerals, queries, and bangs as word
-   * separators.  Requires there to be 81 words. A word consisting of a question
-   * mark is treated as a location with no possible assignments.  A word
-   * consisting of numerals (1 through 9) is treated as a location with those
-   * numerals as the possible assignments; if it's just one numeral and is
-   * followed by a bang, it's treated as an assignment.
-   */
-  public static Marks fromString(String s) {
-    Builder builder = builder(Grid.BLANK);
-    List<String> words = asList(s.split("[^1-9?!]+"));
-    if (!words.isEmpty() && words.get(0).isEmpty())
-      words = words.subList(1, words.size());
-    checkArgument(words.size() == 81, "expected 81 words, got %s", words);
-    NumSet[] sets = new NumSet[81];
-    for (Location loc : Location.all()) {
-      boolean bang = false;
-      NumSet nums = NumSet.NONE;
-      for (char c : words.get(loc.index).toCharArray()) {
-        if (c == '!')
-          bang = true;
-        else if (c >= '1' && c <= '9')
-          nums = nums.with(Numeral.of(c - '0'));
-      }
-      sets[loc.index] = nums;
-      if (bang) {
-        checkArgument(nums.size() == 1, "can't assign multiple numerals to the same location");
-        builder.add(new ExplicitAssignment(Assignment.of(loc, nums.get(0))));
-      }
-    }
-    for (Location loc : Location.all()) {
-      NumSet nums = sets[loc.index];
-      for (Numeral not : builder.getSet(loc).minus(nums)) {
-        builder.add(new ExplicitElimination(Assignment.of(loc, not)));
-      }
-    }
-    return builder.build();
   }
 }

@@ -26,17 +26,11 @@ import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Queues;
-import com.google.common.collect.Sets;
 
-import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -182,27 +176,6 @@ public class Analyzer {
     }
   }
 
-  private static class SetState {
-    private final Map<Unit, NumSet> nums = Maps.newHashMap();
-    private final Map<Unit, UnitSubset> locs = Maps.newHashMap();
-
-    NumSet getNums(Unit unit) {
-      NumSet set = nums.get(unit);
-      return set == null ? NumSet.NONE : set;
-    }
-
-    UnitSubset getLocs(Unit unit) {
-      UnitSubset set = locs.get(unit);
-      if (set == null) locs.put(unit, (set = UnitSubset.of(unit)));
-      return set;
-    }
-
-    void add(NumSet nums, UnitSubset locs) {
-      this.nums.put(locs.unit, nums.or(getNums(locs.unit)));
-      this.locs.put(locs.unit, locs.or(getLocs(locs.unit)));
-    }
-  }
-
   /**
    * The bit patterns for unit subsets of overlapping units with 2 or 3
    * locations, for rows or columns overlapping with blocks, and for blocks
@@ -287,13 +260,13 @@ public class Analyzer {
     for (int i = 0; i < units.size(); ++i) {
       Unit unit = units.get(i);
       UnitNumeral unitNum = UnitNumeral.of(unit, num);
-      int bits = marks.getBits(unitNum);
+      int bits = marks.getBitsForPossibleLocations(unitNum);
       int index = Arrays.binarySearch(bitsArray, bits);
       if (index >= 0 || NumSet.ofBits(bits).size() == 1) {
         UnitSubset set = UnitSubset.ofBits(unit, bits);
         Unit overlappingUnit = set.get(0).unit(overlappingType);
         UnitNumeral oun = UnitNumeral.of(overlappingUnit, num);
-        UnitSubset overlappingSet = marks.getSet(oun);
+        UnitSubset overlappingSet = marks.getPossibleLocations(oun);
         if (overlappingSet.size() > set.size()) {
           // There's something to eliminate.
           if (set.size() > 1 ||
@@ -347,93 +320,96 @@ public class Analyzer {
   }
 
   public static void findSets(Marks marks, Callback callback) {
-    SetState setState = new SetState();
     int[] indices = new int[MAX_SET_SIZE];
     for (Unit unit : Unit.allUnits()) {
       for (int size = 2; size <= MAX_SET_SIZE; ++size) {
-        findHiddenSets(marks, callback, setState, unit, size, indices);
-        findNakedSets(marks, callback, setState, unit, size, indices);
+        findHiddenSets(marks, callback, unit, size, indices);
+        findNakedSets(marks, callback, unit, size, indices);
       }
     }
   }
 
-  private static void findNakedSets(Marks marks, Callback callback,
-      SetState setState, Unit unit, int size, int[] indices) {
-    UnitSubset inSets = setState.getLocs(unit);
+  private static void findNakedSets(Marks marks, Callback callback, Unit unit, int size, int[] indices) {
     int bitsToCheck = 0;
     int unsetCount = 0;
-    for (int i = 0; i < unit.size(); ++i) {
+    for (int i = 0; i < Unit.UNIT_SIZE; ++i) {
       Location loc = unit.get(i);
-      NumSet possible = marks.getSet(loc);
+      NumSet possible = marks.getPossibleNumerals(loc);
       int possibleSize = possible.size();
       if (possibleSize > 1 ||
           (possibleSize == 1 && !marks.hasAssignment(UnitNumeral.of(unit, possible.get(0))))) {
         ++unsetCount;
-        if (possibleSize <= size && !inSets.contains(loc)) {
+        if (possibleSize <= size) {
           bitsToCheck |= loc.unitSubsets.get(unit.type).bits;
         }
       }
     }
-    if (UnitSubset.bitsSize(bitsToCheck) >= size && unsetCount > size + 1) {
+    if (UnitSubset.bitsSize(bitsToCheck) >= size && unsetCount > size) {
       UnitSubset toCheck = UnitSubset.ofBits(unit, bitsToCheck);
       firstSubset(size, indices);
       do {
         int bits = 0;
-        boolean alreadyUsed = false;
         for (int i = 0; i < size; ++i) {
           Location loc = toCheck.get(indices[i]);
-          bits |= marks.getBits(loc);
-          alreadyUsed |= inSets.contains(loc);
+          bits |= marks.getBitsForPossibleNumerals(loc);
         }
-        if (alreadyUsed) continue;
         NumSet nums = NumSet.ofBits(bits);
         if (nums.size() == size) {
           UnitSubset locs = UnitSubset.of(unit);
           for (int i = 0; i < size; ++i)
             locs = locs.with(toCheck.get(indices[i]));
-          setState.add(nums, locs);
-          callback.take(LockedSet.newNaked(nums, locs));
-          inSets = inSets.or(locs);
+          Unit overlap = findOverlappingUnit(locs);
+          if (overlap != null && overlap.type == Unit.Type.BLOCK) {
+            // Block and line naked sets have identical results.  Do not emit
+            // both of them.  But make sure the block-level one would actually
+            // be emitted before skipping this one.
+            if (marks.getUnassignedNumerals(overlap).size() > size) continue;
+          }
+          // Make sure there is work for the insight to do before emitting it.
+          if (nakedSetWouldEliminateSomething(marks, nums, locs, overlap)) {
+            callback.take(new LockedSet(nums, locs, /*isNaked = */true, overlap, null));
+          }
         }
       } while (nextSubset(size, indices, toCheck.size()));
     }
   }
 
-  private static void findHiddenSets(Marks marks, Callback callback,
-      SetState setState, Unit unit, int size, int[] indices) {
-    NumSet inSets = setState.getNums(unit);
+  private static boolean nakedSetWouldEliminateSomething(
+      Marks marks, NumSet nums, UnitSubset locs, @Nullable Unit overlap) {
+    for (int i = 0; i < nums.size(); ++i) {
+      
+    }
+    return true;
+  }
+
+  private static void findHiddenSets(Marks marks, Callback callback, Unit unit, int size, int[] indices) {
     NumSet toCheck = NumSet.NONE;
     int unsetCount = 0;
     for (int i = 0; i < Numeral.COUNT; ++i) {
       Numeral num = Numeral.ofIndex(i);
-      UnitSubset possible = marks.getSet(UnitNumeral.of(unit, num));
+      UnitSubset possible = marks.getPossibleLocations(UnitNumeral.of(unit, num));
       int possibleSize = possible.size();
       if (possibleSize > 1 || (possibleSize == 1 && !marks.hasAssignment(possible.get(0)))) {
         ++unsetCount;
-        if (possibleSize <= size && !inSets.contains(num)) {
+        if (possibleSize <= size) {
           toCheck = toCheck.with(num);
         }
       }
     }
-    if (toCheck.size() >= size && unsetCount > size + 1) {
+    if (toCheck.size() >= size && unsetCount > size) {
       firstSubset(size, indices);
       do {
         int bits = 0;
-        boolean alreadyUsed = false;
         for (int i = 0; i < size; ++i) {
           Numeral num = toCheck.get(indices[i]);
-          bits |= marks.getBits(UnitNumeral.of(unit, num));
-          alreadyUsed |= inSets.contains(num);
+          bits |= marks.getBitsForPossibleLocations(UnitNumeral.of(unit, num));
         }
-        if (alreadyUsed) continue;
         if (UnitSubset.bitsSize(bits) == size) {
           UnitSubset locs = UnitSubset.ofBits(unit, bits);
           NumSet nums = NumSet.NONE;
           for (int i = 0; i < size; ++i)
             nums = nums.with(toCheck.get(indices[i]));
-          setState.add(nums, locs);
-          callback.take(LockedSet.newHidden(nums, locs));
-          inSets = inSets.or(nums);
+          callback.take(new LockedSet(nums, locs, /*isNaked = */false));
         }
       } while (nextSubset(size, indices, toCheck.size()));
     }
@@ -445,7 +421,7 @@ public class Analyzer {
       NumSet seen = NumSet.NONE;
       NumSet conflicting = NumSet.NONE;
       for (Location loc : unit) {
-        Numeral num = marks.get(loc);
+        Numeral num = marks.getAssignedNumeral(loc);
         if (num != null) {
           if (seen.contains(num)) conflicting = conflicting.with(num);
           seen = seen.with(num);
@@ -454,7 +430,7 @@ public class Analyzer {
       for (Numeral num : conflicting) {
         UnitSubset locs = UnitSubset.ofBits(unit, 0);
         for (Location loc : unit)
-          if (marks.get(loc) == num) locs = locs.with(loc);
+          if (marks.getAssignedNumeral(loc) == num) locs = locs.with(loc);
         callback.take(new Conflict(num, locs));
       }
     }
@@ -464,7 +440,7 @@ public class Analyzer {
     for (Unit unit : Unit.allUnits()) {
       for (Numeral num : Numeral.all()) {
         UnitNumeral unitNum = UnitNumeral.of(unit, num);
-        if (marks.getSetSize(unitNum) == 0) {
+        if (marks.getSizeOfPossibleLocations(unitNum) == 0) {
           callback.take(new BarredNum(unitNum));
         }
       }
@@ -472,7 +448,7 @@ public class Analyzer {
 
     // Finally, look for locations that have no possible assignments left.
     for (Location loc : Location.all()) {
-      NumSet set = marks.getSet(loc);
+      NumSet set = marks.getPossibleNumerals(loc);
       if (set.isEmpty()) {
         callback.take(new BarredLoc(loc));
       }
@@ -482,7 +458,7 @@ public class Analyzer {
   public static void findSingletonLocations(Marks marks, Callback callback) {
     for (int i = 0; i < UnitNumeral.COUNT; ++i) {
       UnitNumeral un = UnitNumeral.of(i);
-      Location loc = marks.getSingleton(un);
+      Location loc = marks.getOnlyPossibleLocation(un);
       if (loc != null && !marks.hasAssignment(loc))
         callback.take(new ForcedLoc(un.unit, un.numeral, loc));
     }
@@ -492,7 +468,7 @@ public class Analyzer {
     for (int i = 0; i < Location.COUNT; ++i) {
       Location loc = Location.of(i);
       if (!marks.hasAssignment(loc)) {
-        NumSet set = marks.getSet(loc);
+        NumSet set = marks.getPossibleNumerals(loc);
         if (set.size() == 1)
           callback.take(new ForcedNum(loc, set.get(0)));
       }
