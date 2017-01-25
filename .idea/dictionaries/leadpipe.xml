@@ -1,12 +1,16 @@
 <component name="ProjectDictionaryState">
   <dictionary name="leadpipe">
     <words>
+      <w>bitset</w>
       <w>blanshard</w>
       <w>ctor</w>
       <w>infos</w>
       <w>locs</w>
+      <w>locset</w>
       <w>nums</w>
+      <w>numset</w>
       <w>sudoku</w>
+      <w>unitnum</w>
       <w>unstarted</w>
     </words>
   </dictionary>
