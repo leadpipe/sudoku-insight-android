@@ -17,6 +17,7 @@ package us.blanshard.sudoku.core;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -40,10 +41,10 @@ public class UnitSubsetTest {
   }
 
   @Test public void of() {
-    assertEquals(set(), ImmutableSet.<Location>of());
-    assertEquals(set(4), ImmutableSet.of(Location.of(5, 4)));
+    assertEquals(new LocSet(set()), ImmutableSet.<Location>of());
+    assertEquals(new LocSet(set(4)), ImmutableSet.of(Location.of(5, 4)));
     assertSame(unit.get(4 - 1), Location.of(5, 4));
-    assertEquals(set(1, 8), ImmutableSet.of(Location.of(4, 4), Location.of(6, 5)));
+    assertEquals(new LocSet(set(1, 8)), ImmutableSet.of(Location.of(4, 4), Location.of(6, 5)));
   }
 
   @Test public void not() {
@@ -111,12 +112,12 @@ public class UnitSubsetTest {
   }
 
   @Test public void equals() {
-    Set<Location> otherSet = ImmutableSet.of(unit.get(2 - 1), unit.get(4 - 1), unit.get(6 - 1));
-    UnitSubset set = set(2, 4, 6);
-    assertEquals(set, otherSet);
-    assertEquals(otherSet, set);
-    assertEquals(set.hashCode(), otherSet.hashCode());
-    assertEquals(false, set(1,2,3).equals(set(1,2)));
+    UnitSubset set = set(2, 5, 8);
+    UnitSubset otherSet = Column.of(5).intersect(unit);
+    assertEquals(new LocSet(set), new LocSet(otherSet));
+    assertNotEquals(set, otherSet);
+    assertNotEquals(otherSet, set);
+    assertNotEquals(set.hashCode(), otherSet.hashCode());
   }
 
   @Test public void string() {

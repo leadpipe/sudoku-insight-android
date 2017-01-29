@@ -17,20 +17,22 @@ package us.blanshard.sudoku.core;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import java.util.AbstractSet;
+import java.util.AbstractCollection;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 /**
- * An immutable set of Locations, always a subset of the locations in a
- * particular unit.
+ * An immutable collection of Locations, always a subset of the locations in a
+ * particular unit.  Two UnitSubsets containing the same locations but belonging
+ * to two different Units compare as different.
  *
  * @author Luke Blanshard
  */
 @Immutable
-public final class UnitSubset extends AbstractSet<Location> implements Set<Location> {
+public final class UnitSubset extends AbstractCollection<Location> implements Collection<Location> {
 
   /** The unit this is a subset of. */
   public final Unit unit;
@@ -167,10 +169,7 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
   }
 
   @Override public boolean contains(Object o) {
-    if (o instanceof Location) {
-      return contains((Location) o);
-    }
-    return false;
+    return o instanceof Location && contains((Location) o);
   }
 
   public Location get(int index) {
@@ -185,7 +184,7 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
     return set.get(index).index;
   }
 
-  @Override public Iterator<Location> iterator() {
+  @Override @Nonnull public Iterator<Location> iterator() {
     return new Iter();
   }
 
@@ -197,14 +196,13 @@ public final class UnitSubset extends AbstractSet<Location> implements Set<Locat
     if (this == o) return true;
     if (o instanceof UnitSubset) {
       UnitSubset that = (UnitSubset) o;
-      if (this.unit == that.unit) return this.bits == that.bits;
+      return this.unit == that.unit && this.bits == that.bits;
     }
-    return super.equals(o);
+    return false;
   }
 
   @Override public int hashCode() {
-    // Must match Set's contract, no shortcut to iterating and adding.
-    return super.hashCode();
+    return unit.hashCode() ^ bits;
   }
 
   private UnitSubset sameUnit(Iterable<Location> it) {

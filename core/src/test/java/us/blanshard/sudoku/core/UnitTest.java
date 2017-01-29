@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.core;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 import static us.blanshard.sudoku.core.NumSetTest.set;
 
@@ -89,13 +90,14 @@ public class UnitTest {  // What're the odds?
     for (Unit u1 : Unit.allUnits())
       for (Unit u2 : Unit.allUnits()) {
         UnitSubset i = u1.intersect(u2);
-        assertEquals(i, u2.intersect(u1));
-        assertEquals(LocSet.intersect(u1, u2), i);
+        if (u1 == u2) assertEquals(i, u2.intersect(u1));
+        else assertNotEquals(i, u2.intersect(u1));
+        assertEquals(LocSet.intersect(u1, u2), new LocSet(i));
         UnitSubset s1 = u1.subtract(u2);
         UnitSubset s2 = u2.subtract(u1);
         assertEquals(s1.size(), s2.size());
-        assertEquals(LocSet.subtract(u1, u2), s1);
-        assertEquals(LocSet.subtract(u2, u1), s2);
+        assertEquals(LocSet.subtract(u1, u2), new LocSet(s1));
+        assertEquals(LocSet.subtract(u2, u1), new LocSet(s2));
         if (u1 == u2) {
           assertEquals(9, i.size());
           assertEquals(0, s1.size());
