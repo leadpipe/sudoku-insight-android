@@ -56,6 +56,6 @@ public final class Conflict extends Insight {
   }
 
   @Override public String toString() {
-    return numeral + " \u2208 " + locations.unit + " \u219b " + locations;  // element-of, right-arrow
+    return numeral + " \u2208 " + locations;  // element-of
   }
 }

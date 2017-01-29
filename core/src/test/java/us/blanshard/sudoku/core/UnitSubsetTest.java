@@ -121,6 +121,6 @@ public class UnitSubsetTest {
   }
 
   @Test public void string() {
-    assertEquals("[(4, 6), (5, 4), (6, 5), (6, 6)]", set(3, 4, 8, 9).toString());
+    assertEquals("B5 \u2287 [(4, 6), (5, 4), (6, 5), (6, 6)]", set(3, 4, 8, 9).toString());
   }
 }

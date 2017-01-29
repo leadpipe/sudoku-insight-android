@@ -205,6 +205,10 @@ public final class UnitSubset extends AbstractCollection<Location> implements Co
     return unit.hashCode() ^ bits;
   }
 
+  @Override public String toString() {
+    return unit + " \u2287 " + super.toString();  // superset
+  }
+
   private UnitSubset sameUnit(Iterable<Location> it) {
     if (it instanceof UnitSubset) {
       UnitSubset that = (UnitSubset) it;
