@@ -29,6 +29,11 @@ END
 - nontrivial, need to alter the Sudoku class to allow this
 - and add a new kind of move to the history
 - etc.
+**** Idea: numeric toggle buttons arranged in clockface locations
+- OK button in center of circle
+- Cancel button at 10:00
+- In a trail, becomes single-select (?)
+- Long-press to activate, or new 11:00 choice from normal popup
 *** TODO Add dots along the timeline for notable points:
 - jump between trails (like now)
 - long time taken to move
