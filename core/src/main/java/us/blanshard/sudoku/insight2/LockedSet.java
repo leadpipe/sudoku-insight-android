@@ -121,6 +121,14 @@ public final class LockedSet extends Insight {
     return overlap;
   }
 
+  public int size() {
+    return nums.size();
+  }
+
+  public Unit getUnit() {
+    return locs.unit;
+  }
+
   @Override public boolean equals(Object o) {
     if (o == this) return true;
     if (o == null || o.getClass() != getClass()) return false;

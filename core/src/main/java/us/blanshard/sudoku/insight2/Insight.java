@@ -38,6 +38,7 @@ public abstract class Insight {
    * All the types of insight we recognize.
    */
   public enum Type {
+    // This order is relied upon by Marks.compare().
     EXPLICIT_ASSIGNMENT,
     FORCED_LOCATION,
     FORCED_NUMERAL,

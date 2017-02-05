@@ -1,5 +1,7 @@
 package us.blanshard.sudoku.insight2;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Test;
 
 import us.blanshard.sudoku.core.Grid;
@@ -9,8 +11,7 @@ import static us.blanshard.sudoku.insight2.TestHelper.*;
 
 public class MarksTest {
 
-  @Test
-  public void possibles() {
+  @Test public void possibles() {
     Marks marks = m(
         " . 4 . | . . . | . . . " +
         " . . . | . . . | . . . " +
@@ -154,6 +155,73 @@ public class MarksTest {
         " . . . | . . . | . . . ");
 
     assertThat(marks.getEliminationInsights(a(5, 2, 4))).containsExactly(ea(1, 2, 4), ea(5, 6, 4));
+  }
+
+  private void assertCompareEqual(Marks marks, Insight a, Insight b) {
+    assertThat(marks.compare(a, b)).isEqualTo(0);
+    assertThat(marks.compare(b, a)).isEqualTo(0);
+  }
+
+  private void assertCompareInOrder(Marks marks, Insight a, Insight b) {
+    assertThat(marks.compare(a, b)).isLessThan(0);
+    assertThat(marks.compare(b, a)).isGreaterThan(0);
+  }
+
+  @Test public void compare() {
+    Marks marks = m(
+        " . 4 . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . 4 " +
+        "-------+-------+-------" +
+        " 7 . . | 1 9 . | . . 2 " +
+        " . . . | . . . | . . . " +
+        " . . 6 | . . . | . . . " +
+        "-------+-------+-------" +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . ");
+
+    // Note these insights are not realistic.
+    ExplicitAssignment ea = ea(4, 1, 7);
+    Overlap overlap = new Overlap(b(5), n(7), us(r(5), 7, 8, 9));
+    ForcedLoc flb = new ForcedLoc(b(4), n(3), l(4, 2));
+    ForcedLoc fll = new ForcedLoc(c(2), n(3), l(4, 2));
+
+    assertCompareInOrder(marks, ea,
+                         new Implication(ImmutableList.of(ea), overlap));  // cost
+    assertCompareInOrder(marks, ea, overlap);  // type
+    assertCompareInOrder(marks,
+                         new Implication(ImmutableList.of(ea), flb),
+                         new Implication(ImmutableList.of(ea), overlap));  // nub type
+
+    assertCompareInOrder(marks, flb, fll);  // blocks before lines
+    assertCompareInOrder(marks, ea(4, 9, 2), ea(4, 6, 5));  // 5,7,8 vs 5,7,9 open
+    assertCompareInOrder(marks, ea, ea(4, 9, 2));  // same open, earlier location
+    assertCompareEqual(marks, ea, ea);
+
+    assertCompareInOrder(marks, overlap,
+                         new Overlap(r(5), n(7), us(b(5), 7, 8, 9)));  // blocks before lines
+    assertCompareInOrder(marks, overlap,
+                         new Overlap(b(2), n(7), us(c(5), 7, 8, 9)));  // fuller block first
+    assertCompareInOrder(marks, new Overlap(b(4), n(5), us(r(6), 7, 8, 9)),
+                         overlap);  // unit order
+    assertCompareEqual(marks, overlap, new Overlap(b(5), n(5), us(r(6), 7, 8, 9)));
+
+    assertCompareInOrder(marks,
+                         new LockedSet(ns(3, 4), us(b(5), 3, 4), true),
+                         new LockedSet(ns(3, 4, 5), us(b(5), 3, 4, 7), true));  // size
+    assertCompareInOrder(marks,
+                         new LockedSet(ns(3, 4), us(b(5), 3, 4), false),
+                         new LockedSet(ns(3, 5), us(b(2), 4, 5), true));  // hidden first
+    assertCompareInOrder(marks,
+                         new LockedSet(ns(3, 4), us(b(5), 3, 4), false),
+                         new LockedSet(ns(3, 5), us(b(2), 4, 5), false));  // fuller block first
+    assertCompareInOrder(marks,
+                         new LockedSet(ns(3, 4), us(b(4), 3, 4), false),
+                         new LockedSet(ns(3, 5), us(b(5), 4, 5), false));  // unit order
+    assertCompareEqual(marks,
+                       new LockedSet(ns(3, 4), us(b(5), 3, 4), false),
+                       new LockedSet(ns(3, 5), us(b(5), 4, 5), false));
   }
 
   @Test public void string() {

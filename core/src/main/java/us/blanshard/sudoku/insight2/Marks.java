@@ -16,7 +16,9 @@ limitations under the License.
 package us.blanshard.sudoku.insight2;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ListMultimap;
+import com.google.common.primitives.Booleans;
 import com.google.common.primitives.Ints;
 
 import us.blanshard.sudoku.core.Assignment;
@@ -53,7 +55,7 @@ import javax.annotation.concurrent.NotThreadSafe;
  * @author Luke Blanshard
  */
 @Immutable
-public final class Marks {
+public final class Marks implements Comparator<Insight> {
 
   /**
    * The data array combines 16 bits of information for each location, for each
@@ -223,8 +225,7 @@ public final class Marks {
    * Tells whether the given location has a numeral assigned to it.
    */
   public boolean hasAssignment(Location loc) {
-    int assigned = (data[loc.index] & LOC_ASSIGNMENT_MASK) >> LOC_ASSIGNMENT_SHIFT;
-    return assigned != 0;
+    return (data[loc.index] & LOC_ASSIGNMENT_MASK) != 0;
   }
 
   /**
@@ -256,6 +257,17 @@ public final class Marks {
    */
   public int getNumOpenLocations() {
     return Location.COUNT - getNumAssignments();
+  }
+
+  /**
+   * Returns the number of unassigned locations within the given unit.
+   */
+  public int getNumOpenLocations(Unit unit) {
+    int answer = 0;
+    for (int i = 0; i < Unit.UNIT_SIZE; ++i) {
+      if (!hasAssignment(unit.get(i))) ++answer;
+    }
+    return answer;
   }
 
   /**
@@ -380,13 +392,104 @@ public final class Marks {
   public synchronized List<Insight> getEliminationInsights(Assignment elimination) {
     List<Insight> list = eliminations.get(elimination);
     if (list.size() > 1 && unsortedEliminations.remove(elimination)) {
-      Collections.sort(list, new Comparator<Insight>(){
-          @Override public int compare(Insight a, Insight b) {
-            return Ints.compare(a.getCost(), b.getCost());
-          }
-        });
+      Collections.sort(list, this);  // Uses this.compare()
     }
     return Collections.unmodifiableList(list);
+  }
+
+  /**
+   * Compares two insights, with cost the dominant comparison.  Used to order
+   * the insights that eliminated a given assignment, with cheaper and easier to
+   * see insights coming first.
+   */
+  @Override
+  public int compare(Insight a, Insight b) {
+    int result = ComparisonChain.start()
+        .compare(a.getCost(), b.getCost())
+        .compare(a.type, b.type)
+        .result();
+    if (result == 0) {
+      a = a.getNub();
+      b = b.getNub();
+      result = a.type.compareTo(b.type);
+    }
+    if (result == 0) {
+      if (a.type.isAssignment()) {
+        result = compareAssignments(a, b);
+      } else if (a.type == Insight.Type.OVERLAP) {
+        result = compareOverlaps((Overlap) a, (Overlap) b);
+      } else if (a.type == Insight.Type.LOCKED_SET) {
+        result = compareSets((LockedSet) a, (LockedSet) b);
+      }
+    }
+    return result;
+  }
+
+  private int compareAssignments(Insight a, Insight b) {
+    int result = 0;
+    if (a.type == Insight.Type.FORCED_LOCATION) {
+      ForcedLoc fla = (ForcedLoc) a;
+      ForcedLoc flb = (ForcedLoc) b;
+      result = compareBlocksFirst(fla.getUnit(), flb.getUnit());
+    }
+    // Note a and b are both guaranteed to be assignment insights.
+    @SuppressWarnings("ConstantConditions") Location la = a.getAssignment().location;
+    @SuppressWarnings("ConstantConditions") Location lb = b.getAssignment().location;
+    if (result == 0 && la != lb) {
+      // Puts assignments from crowded units first.
+      result = Ints.lexicographicalComparator()
+          .compare(smallestUnitOpenCounts(la), smallestUnitOpenCounts(lb));
+    }
+    if (result == 0) {
+      // Last chance, choose something deterministic.
+      result = la.compareTo(lb);
+    }
+    return result;
+  }
+
+  private int compareBlocksFirst(Unit a, Unit b) {
+    // Puts blocks before lines.
+    return Booleans.compare(a.type != Unit.Type.BLOCK, b.type != Unit.Type.BLOCK);
+  }
+
+  /**
+   * Returns the number of unassigned locations in each of the given location's
+   * units, ordered numerically.
+   */
+  private int[] smallestUnitOpenCounts(Location loc) {
+    int[] answer = {
+      getNumOpenLocations(loc.block),
+      getNumOpenLocations(loc.row),
+      getNumOpenLocations(loc.column)};
+    Arrays.sort(answer);
+    return answer;
+  }
+
+  private int compareOverlaps(Overlap a, Overlap b) {
+    return compareUnits(a.getUnit(), b.getUnit());
+  }
+
+  private int compareSets(LockedSet a, LockedSet b) {
+    int result = Ints.compare(a.size(), b.size());
+    if (result == 0) {
+      // Hidden before naked.
+      result = Booleans.compare(a.isNakedSet(), b.isNakedSet());
+    }
+    if (result == 0) {
+      result = compareUnits(a.getUnit(), b.getUnit());
+    }
+    return result;
+  }
+
+  private int compareUnits(Unit a, Unit b) {
+    int result = compareBlocksFirst(a, b);
+    if (result == 0) {
+      result = Ints.compare(getNumOpenLocations(a), getNumOpenLocations(b));
+    }
+    if (result == 0) {
+      result = a.compareTo(b);
+    }
+    return result;
   }
 
   @NotThreadSafe
