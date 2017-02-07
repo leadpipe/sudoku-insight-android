@@ -1,6 +1,7 @@
 package us.blanshard.sudoku.insight2;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Truth;
 
 import org.junit.Test;
 
@@ -155,6 +156,28 @@ public class MarksTest {
         " . . . | . . . | . . . ");
 
     assertThat(marks.getEliminationInsights(a(5, 2, 4))).containsExactly(ea(1, 2, 4), ea(5, 6, 4));
+  }
+
+  @Test public void getAssignmentInsight() {
+    Marks marks = m(
+        " . 4 . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . 4 " +
+        "-------+-------+-------" +
+        " 7 . . | 1 9 . | . . 2 " +
+        " . . . | . . 4 | . . . " +
+        " . . 6 | . . . | . . . " +
+        "-------+-------+-------" +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . " +
+        " . . . | . . . | . . . ");
+
+    assertThat(marks.getAssignmentInsight(a(4, 1, 7))).isEqualTo(ea(4, 1, 7));
+    try {
+      marks.getAssignmentInsight(a(4, 1, 6));
+      Truth.THROW_ASSERTION_ERROR.fail("Expected exception");
+    } catch (RuntimeException ignored) {
+    }
   }
 
   private void assertCompareEqual(Marks marks, Insight a, Insight b) {

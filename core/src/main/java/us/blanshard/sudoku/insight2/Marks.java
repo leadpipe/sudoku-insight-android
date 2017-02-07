@@ -387,14 +387,32 @@ public final class Marks implements Comparator<Insight> {
 
   /**
    * Returns the list of insights that imply the given assignment is not
-   * possible.  The returned list is guaranteed to be sorted in cost order.
+   * possible.  The returned list is guaranteed to be sorted in a deterministic
+   * order dominated by cost.
+   * @see #compare
    */
-  public synchronized List<Insight> getEliminationInsights(Assignment elimination) {
+  public List<Insight> getEliminationInsights(Assignment elimination) {
+    return Collections.unmodifiableList(getEliminationInsightsInternal(elimination));
+  }
+
+  /**
+   * Returns the insight corresponding to the given assignment, throwing if
+   * there isn't one.
+   */
+  public Insight getAssignmentInsight(Assignment assignment) {
+    for (Insight i : getEliminationInsightsInternal(
+             Assignment.of(assignment.location.getPeer(0), assignment.numeral))) {
+      if (i.getAssignment() == assignment) return i;
+    }
+    throw new IllegalArgumentException("No assignment insight found for " + assignment);
+  }
+
+  private synchronized List<Insight> getEliminationInsightsInternal(Assignment elimination) {
     List<Insight> list = eliminations.get(elimination);
     if (list.size() > 1 && unsortedEliminations.remove(elimination)) {
       Collections.sort(list, this);  // Uses this.compare()
     }
-    return Collections.unmodifiableList(list);
+    return list;
   }
 
   /**
