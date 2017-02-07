@@ -19,7 +19,9 @@ import static us.blanshard.sudoku.core.NumSetTest.set;
 
 public class TestHelper {
   public static Grid g(String s) { return Grid.fromString(s); }
-  public static Marks m(Grid g) { return Marks.builder(g).build(); }
+  public static Marks.Builder mb(Grid g) { return Marks.builder(g); }
+  public static Marks.Builder mb(String s) { return mb(g(s)); }
+  public static Marks m(Grid g) { return mb(g).build(); }
   public static Marks m(String s) { return m(g(s)); }
   public static Numeral n(int num) { return Numeral.of(num); }
   public static NumSet ns(int... nums) { return set(nums); }

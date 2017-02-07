@@ -359,4 +359,83 @@ public class AnalyzerTest implements Analyzer.Callback {
           " . . . | . . 9 | . . . "), this);
     assertThat(taken).containsExactly();
   }
+
+  @Test
+  public void findErrors_conflict() {
+    Analyzer.findErrors(
+        m(" . . . | . . 2 | . . . " +
+          " . . . | 1 1 . | . . . " +
+          " . . . | . 2 2 | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . "), this);
+    assertThat(taken).containsExactly(new Conflict(n(1), us(b(2), 4, 5)),
+                                      new Conflict(n(2), us(b(2), 3, 8, 9)),
+                                      new Conflict(n(1), us(r(2), 4, 5)),
+                                      new Conflict(n(2), us(c(6), 1, 3)),
+                                      new Conflict(n(2), us(r(3), 5, 6)));
+  }
+
+  @Test
+  public void findErrors_barredLoc() {
+    Analyzer.findErrors(
+        m(" . . . | . 1 . | . . . " +
+          " . . . | . 2 . | . . . " +
+          " . . . | . 3 . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " 4 5 6 | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . 7 . | . . . " +
+          " . . . | . 8 . | . . . " +
+          " . . . | . 9 . | . . . "), this);
+    assertThat(taken).containsExactly(new BarredLoc(l(5, 5)));
+  }
+
+  @Test
+  public void findErrors_barredNum() {
+    Analyzer.findErrors(
+        m(" . . . | . . 1 | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          "-------+-------+-------" +
+          " 1 . . | . . . | . . . " +
+          " . . . | . 2 . | . . . " +
+          " . . . | . . . | . . 1 " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | 1 . . | . . . "), this);
+    assertThat(taken).containsExactly(new BarredNum(un(b(5), 1)),
+                                      new BarredNum(un(r(5), 1)),
+                                      new BarredNum(un(c(5), 1)));
+  }
+
+  @Test
+  public void findErrors_noConflict() {
+    Analyzer.findErrors(
+        mb(" . . . | . . . | . . . " +
+           " . . . | . . . | . . . " +
+           " . . . | . . . | . . . " +
+           "-------+-------+-------" +
+           " . . . | . . . | . . . " +
+           " . . . | . 1 . | . . . " +
+           " . . . | . . . | . . . " +
+           "-------+-------+-------" +
+           " . . . | . . . | . . . " +
+           " . . . | . . . | . . . " +
+           " . . . | . . . | . . . ")
+        .add(ee(5, 5, 1))
+        .build(), this);
+    assertThat(taken).containsExactly(new BarredLoc(l(5, 5)),
+                                      new BarredNum(un(b(5), 1)),
+                                      new BarredNum(un(r(5), 1)),
+                                      new BarredNum(un(c(5), 1)));
+  }
 }

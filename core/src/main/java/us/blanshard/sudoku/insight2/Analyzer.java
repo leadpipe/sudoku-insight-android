@@ -413,6 +413,7 @@ public class Analyzer {
 
   public static void findErrors(Marks marks, Callback callback) {
     // First look for actual conflicting assignments.
+    boolean conflictFound = false;
     for (Unit unit : Unit.allUnits()) {
       NumSet seen = NumSet.NONE;
       NumSet conflicting = NumSet.NONE;
@@ -428,6 +429,7 @@ public class Analyzer {
         for (Location loc : unit)
           if (marks.getAssignedNumeral(loc) == num) locs = locs.with(loc);
         callback.take(new Conflict(num, locs));
+        conflictFound = true;
       }
     }
 
@@ -436,7 +438,9 @@ public class Analyzer {
     for (Unit unit : Unit.allUnits()) {
       for (Numeral num : Numeral.all()) {
         UnitNumeral unitNum = UnitNumeral.of(unit, num);
-        if (marks.getSizeOfPossibleLocations(unitNum) == 0) {
+        if (marks.getSizeOfPossibleLocations(unitNum) == 0 &&
+            // Skip if the numeral is already assigned, if there was a conflict.
+            (!conflictFound || !marks.hasAssignment(unitNum))) {
           callback.take(new BarredNum(unitNum));
         }
       }
@@ -444,8 +448,9 @@ public class Analyzer {
 
     // Finally, look for locations that have no possible assignments left.
     for (Location loc : Location.all()) {
-      NumSet set = marks.getPossibleNumerals(loc);
-      if (set.isEmpty()) {
+      if (marks.getPossibleNumerals(loc).isEmpty() &&
+          // Skip if the location is already assigned, if there was a conflict.
+          (!conflictFound || !marks.hasAssignment(loc))) {
         callback.take(new BarredLoc(loc));
       }
     }
