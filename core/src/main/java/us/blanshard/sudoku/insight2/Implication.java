@@ -40,7 +40,7 @@ public final class Implication extends Insight {
   private final Insight consequent;
   private final int cost;
 
-  public Implication(Collection<? extends Insight> antecedents, Insight consequent) {
+  public Implication(ImmutableList<? extends Insight> antecedents, Insight consequent) {
     super(Type.IMPLICATION, Objects.hashCode(antecedents, consequent));
     checkArgument(!antecedents.isEmpty());
     this.antecedents = ImmutableList.copyOf(antecedents);

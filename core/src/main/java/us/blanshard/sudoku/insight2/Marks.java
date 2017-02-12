@@ -17,6 +17,7 @@ package us.blanshard.sudoku.insight2;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.google.common.primitives.Booleans;
 import com.google.common.primitives.Ints;
@@ -32,11 +33,13 @@ import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -65,10 +68,10 @@ public final class Marks implements Comparator<Insight> {
    *
    * <p> Location data is a 9-bit set of the numerals that could be assigned to
    * the location, plus a 4-bit slot for the numeral that is currently assigned
-   * (zero means nothing currently is).  In addition, we keep an error bit in
-   * the top bit of location 0's data: when set, the assignments and
-   * eliminations embodied in the Marks are not consistent with the rules of
-   * Sudoku.
+   * (zero means nothing currently is), plus a single bit that's set when the
+   * assignment is explicit.  In addition, we keep an error bit in the top bit
+   * of location 0's data: when set, the assignments and eliminations embodied
+   * in the Marks are not consistent with the rules of Sudoku.
    *
    * <p> Unit-numeral data is a 9-bit subset of the locations within the unit
    * that could be assigned to the numeral, plus a 4-bit slot for the currently
@@ -120,6 +123,12 @@ public final class Marks implements Comparator<Insight> {
    * numeral in location slots.
    */
   private static final int LOC_ASSIGNMENT_MASK = ((1 << 4) - 1) << LOC_ASSIGNMENT_SHIFT;
+
+  /**
+   * A mask to apply to {@link #data} values to extract or set the
+   * explicitly-assigned bit in location slots.
+   */
+  private static final int LOC_EXPLICIT_MASK = 1 << (9 + 4);
 
   /**
    * The bit mask for {@link #data} slot zero used to indicate an error.
@@ -219,6 +228,16 @@ public final class Marks implements Comparator<Insight> {
   @Nullable public Numeral getAssignedNumeral(Location loc) {
     int assigned = (data[loc.index] & LOC_ASSIGNMENT_MASK) >> LOC_ASSIGNMENT_SHIFT;
     return assigned == 0 ? null : Numeral.of(assigned);
+  }
+
+  /**
+   * Returns the numeral explicitly assigned to the given location, or null.
+   */
+  @Nullable public Numeral getExplicitlyAssignedNumeral(Location loc) {
+    int data = this.data[loc.index];
+    boolean explicit = (data & LOC_EXPLICIT_MASK) != 0;
+    int assigned = (data & LOC_ASSIGNMENT_MASK) >> LOC_ASSIGNMENT_SHIFT;
+    return assigned == 0 ? null : explicit ? Numeral.of(assigned) : null;
   }
 
   /**
@@ -416,6 +435,46 @@ public final class Marks implements Comparator<Insight> {
   }
 
   /**
+   * Finds a set of insights that collectively eliminate all the assignments in
+   * the cross product of the given sets of locations and numerals.
+   */
+  public ImmutableList<Insight> collectAntecedents(UnitSubset us, NumSet ns) {
+    List<List<Insight>> lists = new ArrayList<>(us.size() * ns.size());
+    synchronized (this) {
+      for (int i = 0, ic = us.size(); i < ic; ++i) {
+        for (int j = 0, jc = ns.size(); j < jc; ++j) {
+          Assignment elimination = Assignment.of(us.get(i), ns.get(j));
+          Numeral n = getExplicitlyAssignedNumeral(elimination.location);
+          // Skip explicitly assigned locations unless we're looking for
+          // eliminations of the actual assigned numeral.
+          if (n != null && n != elimination.numeral) continue;
+
+          lists.add(getEliminationInsightsInternal(elimination));
+        }
+      }
+    }
+    Collections.sort(lists, new Comparator<List<Insight>>() {
+      @Override public int compare(List<Insight> a, List<Insight> b) {
+        // Will throw if either list is empty.
+        return Marks.this.compare(a.get(0), b.get(0));
+      }
+    });
+    ImmutableList.Builder<Insight> builder = new ImmutableList.Builder<>();
+    while (!lists.isEmpty()) {
+      int lastIndex = lists.size() - 1;
+      Insight insight = lists.get(lastIndex).get(0);
+      builder.add(insight);
+      lists.remove(lastIndex);
+      for (ListIterator<List<Insight>> it = lists.listIterator(lastIndex); it.hasPrevious(); ) {
+        if (it.previous().contains(insight)) {
+          it.remove();
+        }
+      }
+    }
+    return builder.build();
+  }
+
+  /**
    * Compares two insights, with cost the dominant comparison.  Used to order
    * the insights that eliminated a given assignment, with cheaper and easier to
    * see insights coming first.
@@ -602,16 +661,18 @@ public final class Marks implements Comparator<Insight> {
       for (Location peer : loc.peers)
         ok &= eliminate(Assignment.of(peer, num), insight);
 
-      // Remove the other numerals from this location, WITHOUT marking with the
-      // insight.
+      // Remove the other numerals from this location, marking with the insight
+      // ONLY IF it is NOT an explicit assignment.
       NumSet others = getPossibleNumerals(loc).without(num);
+      boolean explicit = insight instanceof ExplicitAssignment;
       for (Numeral other : others)
-        ok &= eliminate(Assignment.of(loc, other), null);
+        ok &= eliminate(Assignment.of(loc, other), explicit ? null : insight);
 
       // Save the numeral in the location's data slot.
       short value = marks.data[loc.index];
       value &= ~LOC_ASSIGNMENT_MASK;
       value |= (num.number << LOC_ASSIGNMENT_SHIFT);
+      if (explicit) value |= LOC_EXPLICIT_MASK;
       marks.data[loc.index] = value;
 
       // Save the location in the 3 unit-numerals' slots, and reduce the sets of
