@@ -19,7 +19,6 @@ import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
-import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
 import com.google.common.base.Objects;
@@ -39,14 +38,14 @@ import javax.annotation.concurrent.Immutable;
 public final class Overlap extends Insight {
   private final Unit unit;
   private final Numeral numeral;
-  private final UnitSubset extra;
+  private final UnitSubset eliminatedLocations;
   private volatile List<Assignment> eliminations;
 
-  public Overlap(Unit unit, Numeral numeral, UnitSubset extra) {
-    super(Type.OVERLAP, Objects.hashCode(unit, numeral, extra.unit));
+  public Overlap(Unit unit, Numeral numeral, UnitSubset eliminatedLocations) {
+    super(Type.OVERLAP, Objects.hashCode(unit, numeral, eliminatedLocations.unit));
     this.unit = unit;
     this.numeral = numeral;
-    this.extra = extra;
+    this.eliminatedLocations = eliminatedLocations;
   }
 
   @Override public List<Assignment> getEliminations() {
@@ -55,7 +54,7 @@ public final class Overlap extends Insight {
       synchronized (this) {
         if ((answer = eliminations) == null) {
           ImmutableList.Builder<Assignment> builder = ImmutableList.builder();
-          for (Location loc : extra)
+          for (Location loc : eliminatedLocations)
             builder.add(Assignment.of(loc, numeral));
           eliminations = answer = builder.build();
         }
@@ -73,19 +72,19 @@ public final class Overlap extends Insight {
   }
 
   public Unit getOverlappingUnit() {
-    return extra.unit;
+    return eliminatedLocations.unit;
   }
 
-  public UnitSubset getExtra() {
-    return extra;
+  public UnitSubset getEliminatedLocations() {
+    return eliminatedLocations;
   }
 
   public String toBasicString() {
-    return unit + ":" + numeral + ":" + extra.unit;
+    return unit + ":" + numeral + ":" + eliminatedLocations.unit;
   }
 
   @Override public String toString() {
-    return numeral + " \u2208 " + unit + " \u2229 " + extra.unit;
+    return numeral + " \u2208 " + unit + " \u2229 " + eliminatedLocations.unit;
   }
 
   @Override public boolean equals(Object o) {
@@ -94,7 +93,7 @@ public final class Overlap extends Insight {
     Overlap that = (Overlap) o;
     return this.unit.equals(that.unit)
         && this.numeral.equals(that.numeral)
-        && this.extra.unit.equals(that.extra.unit);
-    // Note that the "extra" ivar doesn't identify the insight.
+        && this.eliminatedLocations.unit.equals(that.eliminatedLocations.unit);
+    // Note that the "eliminatedLocations" ivar doesn't identify the insight.
   }
 }
