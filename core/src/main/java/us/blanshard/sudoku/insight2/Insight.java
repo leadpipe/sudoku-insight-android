@@ -156,7 +156,7 @@ public abstract class Insight {
    * by the given marks.
    */
   protected ImmutableSet<Insight> collectAntecedents(Marks marks) {
-    return ImmutableSet.of();
+    throw new IllegalStateException("This insight (" + this + ") is not implicit in a Marks");
   }
 
   @Override public final int hashCode() {
