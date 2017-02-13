@@ -65,7 +65,7 @@ public final class ForcedNum extends Insight {
     return location + " \u2190 " + numeral.number;  // That's a left arrow
   }
 
-  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+  @Override protected ImmutableSet<Insight> collectAntecedents(Marks marks) {
     return marks.collectAntecedents(location.unitSubsetList.get(0), numeral.asSet().not());
   }
 }

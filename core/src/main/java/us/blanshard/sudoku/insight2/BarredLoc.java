@@ -52,7 +52,7 @@ public final class BarredLoc extends Insight {
     return location + " \u2190 \u2205";  // assignment empty-set
   }
 
-  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+  @Override protected ImmutableSet<Insight> collectAntecedents(Marks marks) {
     return marks.collectAntecedents(location.unitSubsetList.get(0), NumSet.ALL);
   }
 }

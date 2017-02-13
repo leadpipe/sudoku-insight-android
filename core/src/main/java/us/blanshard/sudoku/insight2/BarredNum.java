@@ -57,7 +57,7 @@ public final class BarredNum extends Insight {
     return unitNum.numeral + " \u2209 " + unitNum.unit;  // not-element-of
   }
 
-  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+  @Override protected ImmutableSet<Insight> collectAntecedents(Marks marks) {
     return marks.collectAntecedents(unitNum.unit.asFullSubset(), unitNum.numeral.asSet());
   }
 }

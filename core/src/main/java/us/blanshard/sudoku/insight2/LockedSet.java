@@ -143,7 +143,7 @@ public final class LockedSet extends Insight {
     return nums + " \u2194 " + locs + (isNaked ? "n" : "h");
   }
 
-  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+  @Override protected ImmutableSet<Insight> collectAntecedents(Marks marks) {
     UnitSubset locs = isNaked ? this.locs : this.locs.not();
     NumSet nums = isNaked ? this.nums.not() : this.nums;
     return marks.collectAntecedents(locs, nums);

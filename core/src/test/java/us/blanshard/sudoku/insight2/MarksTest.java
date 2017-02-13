@@ -248,7 +248,7 @@ public class MarksTest {
   }
 
   private static Implication makeImplication(Marks marks, Insight insight) {
-    return new Implication(insight.getAntecedents(marks), insight);
+    return new Implication(insight.collectAntecedents(marks), insight);
   }
 
   @Test public void collectAntecedents() {

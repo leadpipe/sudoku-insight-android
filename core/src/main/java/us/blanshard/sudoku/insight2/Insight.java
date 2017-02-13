@@ -155,7 +155,9 @@ public abstract class Insight {
    * may be empty.  This method may throw if this insight is not in fact proven
    * by the given marks.
    */
-  protected abstract ImmutableSet<Insight> getAntecedents(Marks marks);
+  protected ImmutableSet<Insight> collectAntecedents(Marks marks) {
+    return ImmutableSet.of();
+  }
 
   @Override public final int hashCode() {
     return hashCode;

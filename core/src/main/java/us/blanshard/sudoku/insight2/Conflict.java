@@ -62,7 +62,7 @@ public final class Conflict extends Insight {
     return numeral + " \u2208 " + locations;  // element-of
   }
 
-  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+  @Override protected ImmutableSet<Insight> collectAntecedents(Marks marks) {
     ImmutableSet.Builder<Insight> builder = ImmutableSet.builder();
     for (Location loc : locations) {
       builder.add(marks.getAssignmentInsight(Assignment.of(loc, numeral)));

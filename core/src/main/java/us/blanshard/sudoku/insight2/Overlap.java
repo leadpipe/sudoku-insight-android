@@ -98,7 +98,7 @@ public final class Overlap extends Insight {
     // Note that the "eliminatedLocations" ivar doesn't identify the insight.
   }
 
-  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+  @Override protected ImmutableSet<Insight> collectAntecedents(Marks marks) {
     return marks.collectAntecedents(unit.subtract(eliminatedLocations.unit), numeral.asSet());
   }
 }

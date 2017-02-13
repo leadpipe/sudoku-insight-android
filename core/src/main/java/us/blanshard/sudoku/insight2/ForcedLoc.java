@@ -74,7 +74,7 @@ public final class ForcedLoc extends Insight {
     return numeral + " \u2208 " + unit + " \u2192 " + location;  // element-of, right-arrow
   }
 
-  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+  @Override protected ImmutableSet<Insight> collectAntecedents(Marks marks) {
     return marks.collectAntecedents(UnitSubset.of(unit, location).not(), numeral.asSet());
   }
 }

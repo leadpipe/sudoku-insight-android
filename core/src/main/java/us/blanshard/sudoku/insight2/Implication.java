@@ -110,8 +110,4 @@ public final class Implication extends Insight {
   @Override public String toString() {
     return consequent + " \u2235 " + antecedents;  // "because" symbol
   }
-
-  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
-    return ImmutableSet.of();
-  }
 }
