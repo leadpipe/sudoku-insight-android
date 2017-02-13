@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight2;
 
+import com.google.common.collect.ImmutableSet;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import us.blanshard.sudoku.core.Assignment;
@@ -49,5 +51,9 @@ public class ExplicitAssignment extends Insight {
 
   @Override public String toString() {
     return assignment.toString();
+  }
+
+  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+    return ImmutableSet.of();
   }
 }

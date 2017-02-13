@@ -23,6 +23,7 @@ import us.blanshard.sudoku.core.UnitSubset;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 
@@ -95,5 +96,9 @@ public final class Overlap extends Insight {
         && this.numeral.equals(that.numeral)
         && this.eliminatedLocations.unit.equals(that.eliminatedLocations.unit);
     // Note that the "eliminatedLocations" ivar doesn't identify the insight.
+  }
+
+  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+    return marks.collectAntecedents(unit.subtract(eliminatedLocations.unit), numeral.asSet());
   }
 }

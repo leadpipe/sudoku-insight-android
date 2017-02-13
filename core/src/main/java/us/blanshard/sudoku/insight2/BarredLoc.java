@@ -15,10 +15,10 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight2;
 
-import java.util.Collection;
+import com.google.common.collect.ImmutableSet;
 
-import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
+import us.blanshard.sudoku.core.NumSet;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -50,5 +50,9 @@ public final class BarredLoc extends Insight {
 
   @Override public String toString() {
     return location + " \u2190 \u2205";  // assignment empty-set
+  }
+
+  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+    return marks.collectAntecedents(location.unitSubsetList.get(0), NumSet.ALL);
   }
 }

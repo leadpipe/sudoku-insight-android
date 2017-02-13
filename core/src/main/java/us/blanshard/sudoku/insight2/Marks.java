@@ -17,7 +17,7 @@ package us.blanshard.sudoku.insight2;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.primitives.Booleans;
 import com.google.common.primitives.Ints;
@@ -438,7 +438,7 @@ public final class Marks implements Comparator<Insight> {
    * Finds a set of insights that collectively eliminate all the assignments in
    * the cross product of the given sets of locations and numerals.
    */
-  public ImmutableList<Insight> collectAntecedents(UnitSubset us, NumSet ns) {
+  public ImmutableSet<Insight> collectAntecedents(UnitSubset us, NumSet ns) {
     List<List<Insight>> lists = new ArrayList<>(us.size() * ns.size());
     synchronized (this) {
       for (int i = 0, ic = us.size(); i < ic; ++i) {
@@ -459,7 +459,7 @@ public final class Marks implements Comparator<Insight> {
         return Marks.this.compare(a.get(0), b.get(0));
       }
     });
-    ImmutableList.Builder<Insight> builder = new ImmutableList.Builder<>();
+    ImmutableSet.Builder<Insight> builder = new ImmutableSet.Builder<>();
     while (!lists.isEmpty()) {
       int lastIndex = lists.size() - 1;
       Insight insight = lists.get(lastIndex).get(0);

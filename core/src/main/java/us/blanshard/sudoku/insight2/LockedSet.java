@@ -17,6 +17,7 @@ package us.blanshard.sudoku.insight2;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 
@@ -140,5 +141,11 @@ public final class LockedSet extends Insight {
 
   @Override public String toString() {
     return nums + " \u2194 " + locs + (isNaked ? "n" : "h");
+  }
+
+  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+    UnitSubset locs = isNaked ? this.locs : this.locs.not();
+    NumSet nums = isNaked ? this.nums.not() : this.nums;
+    return marks.collectAntecedents(locs, nums);
   }
 }

@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight2;
 
+import com.google.common.collect.ImmutableSet;
+
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
 import us.blanshard.sudoku.core.UnitNumeral;
@@ -53,5 +55,9 @@ public final class BarredNum extends Insight {
 
   @Override public String toString() {
     return unitNum.numeral + " \u2209 " + unitNum.unit;  // not-element-of
+  }
+
+  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+    return marks.collectAntecedents(unitNum.unit.asFullSubset(), unitNum.numeral.asSet());
   }
 }

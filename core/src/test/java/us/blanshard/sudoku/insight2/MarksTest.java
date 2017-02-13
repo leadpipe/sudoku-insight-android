@@ -1,6 +1,6 @@
 package us.blanshard.sudoku.insight2;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
 
 import org.junit.Test;
@@ -180,12 +180,12 @@ public class MarksTest {
     }
   }
 
-  private void assertCompareEqual(Marks marks, Insight a, Insight b) {
+  private static void assertCompareEqual(Marks marks, Insight a, Insight b) {
     assertThat(marks.compare(a, b)).isEqualTo(0);
     assertThat(marks.compare(b, a)).isEqualTo(0);
   }
 
-  private void assertCompareInOrder(Marks marks, Insight a, Insight b) {
+  private static void assertCompareInOrder(Marks marks, Insight a, Insight b) {
     assertThat(marks.compare(a, b)).isLessThan(0);
     assertThat(marks.compare(b, a)).isGreaterThan(0);
   }
@@ -211,11 +211,11 @@ public class MarksTest {
     ForcedLoc fll = new ForcedLoc(c(2), n(3), l(4, 2));
 
     assertCompareInOrder(marks, ea,
-                         new Implication(ImmutableList.of(ea), overlap));  // cost
+                         new Implication(ImmutableSet.of(ea), overlap));  // cost
     assertCompareInOrder(marks, ea, overlap);  // type
     assertCompareInOrder(marks,
-                         new Implication(ImmutableList.of(ea), flb),
-                         new Implication(ImmutableList.of(ea), overlap));  // nub type
+                         new Implication(ImmutableSet.of(ea), flb),
+                         new Implication(ImmutableSet.of(ea), overlap));  // nub type
 
     assertCompareInOrder(marks, flb, fll);  // blocks before lines
     assertCompareInOrder(marks, ea(4, 9, 2), ea(4, 6, 5));  // 5,7,8 vs 5,7,9 open
@@ -247,6 +247,10 @@ public class MarksTest {
                        new LockedSet(ns(3, 5), us(b(5), 4, 5), false));
   }
 
+  private static Implication makeImplication(Marks marks, Insight insight) {
+    return new Implication(insight.getAntecedents(marks), insight);
+  }
+
   @Test public void collectAntecedents() {
     // Puzzle 1:2:2017-2:67
     Marks marks = m(
@@ -262,25 +266,21 @@ public class MarksTest {
         " 6 . 3 | 7 . . | . . . " +
         " 9 . . | 8 . 1 | . . 5 ");
 
-    Implication b7_fn7 = new Implication(marks.collectAntecedents(us(b(7), 8), ns(7).not()),
-                                        new ForcedNum(l(8,2), n(7)));
+    Implication b7_fn7 = makeImplication(marks, new ForcedNum(l(9,2), n(7)));
     assertThat(b7_fn7.getAntecedents()).containsExactly(ea(9,6,1), ea(2,2,2), ea(8,3,3), ea(7,1,4),
                                                        ea(9,9,5), ea(8,1,6), ea(9,4,8), ea(9,1,9));
 
-    Implication b7_ov8 = new Implication(marks.collectAntecedents(us(b(7), 3,9), ns(8)),
-                                         new Overlap(b(7), n(8), us(c(2), 1)));
+    Implication b7_ov8 = makeImplication(marks, new Overlap(b(7), n(8), us(c(2), 1)));
     assertThat(b7_ov8.getAntecedents()).containsExactly(ea(5,3,8));
 
-    Implication b4_ov4 = new Implication(marks.collectAntecedents(us(b(4), 1,4,7,9), ns(4)),
-                                         new Overlap(b(4), n(4), us(c(2), 1)));
+    Implication b4_ov4 = makeImplication(marks, new Overlap(b(4), n(4), us(c(2), 1)));
     assertThat(b4_ov4.getAntecedents()).containsExactly(ea(7,1,4), ea(6,6,4));
 
-    Implication b4_set = new Implication(marks.collectAntecedents(us(b(4), 1,4,7,9), ns(3,4)),
-                                         new LockedSet(ns(3,4), us(b(4), 2,5), false));
+    Implication b4_set = makeImplication(marks, new LockedSet(ns(3,4), us(b(4), 2,5), false));
     assertThat(b4_set.getAntecedents()).containsExactly(ea(2,1,3), ea(8,3,3), ea(7,1,4), ea(6,6,4));
 
-    Implication b7_set158 = new Implication(marks.collectAntecedents(us(b(7), 8,9), ns(8,1,5)),
-                                          new LockedSet(ns(8,1,5), us(b(7), 2,3,5), false));
+    Implication b7_set158 = makeImplication(marks,
+                                            new LockedSet(ns(8,1,5), us(b(7), 2,3,5), false));
     assertThat(b7_set158.getAntecedents()).containsExactly(ea(9,4,8), ea(9,6,1), ea(9,9,5));
 
     marks = marks.toBuilder()  // Note we're not adding the assignments here.
@@ -290,12 +290,10 @@ public class MarksTest {
         .add(b7_set158)
         .build();
 
-    Implication c2_ov1 = new Implication(marks.collectAntecedents(us(c(2), 1,4,5), ns(1)),
-                                         new Overlap(c(2), n(1), us(b(7), 3,9)));
+    Implication c2_ov1 = makeImplication(marks, new Overlap(c(2), n(1), us(b(7), 3,9)));
     assertThat(c2_ov1.getAntecedents()).containsExactly(ea(1,4,1), b4_set);
 
-    Implication b7_fl2 = new Implication(marks.collectAntecedents(us(b(7), 2,3,5,8), ns(2)),
-                                         new ForcedLoc(b(7), n(2), l(9,3)));
+    Implication b7_fl2 = makeImplication(marks, new ForcedLoc(b(7), n(2), l(9,3)));
     assertThat(b7_fl2.getAntecedents()).containsExactly(ea(2,2,2), b7_set158);
 
     assertCompareInOrder(marks, b7_fl2, b7_fn7);
@@ -305,16 +303,14 @@ public class MarksTest {
         .add(b7_fl2)
         .build();
 
-    Implication b7_set18 = new Implication(marks.collectAntecedents(us(b(7), 3,8,9), ns(1,8)),
-                                          new LockedSet(ns(1,8), us(b(7), 2,5), false));
+    Implication b7_set18 = makeImplication(marks, new LockedSet(ns(1,8), us(b(7), 2,5), false));
     assertThat(b7_set18.getAntecedents()).containsExactly(ea(5,3,8), ea(9,4,8), ea(9,6,1), c2_ov1);
 
     marks = marks.toBuilder()
         .add(b7_set18)
         .build();
 
-    Implication b7_fl7 = new Implication(marks.collectAntecedents(us(b(7), 2,3,5,9), ns(7)),
-                                         new ForcedLoc(b(7), n(7), l(9,2)));
+    Implication b7_fl7 = makeImplication(marks, new ForcedLoc(b(7), n(7), l(9,2)));
     assertThat(b7_fl7.getAntecedents()).containsExactly(b7_set158, b7_fl2);
 
     assertCompareInOrder(marks, b7_fl7, b7_fn7);
@@ -323,8 +319,7 @@ public class MarksTest {
         .add(b7_fl7)
         .build();
 
-    Implication b1_fn5 = new Implication(marks.collectAntecedents(us(b(1), 2), ns(5).not()),
-                                         new ForcedNum(l(1,2), n(5)));
+    Implication b1_fn5 = makeImplication(marks, new ForcedNum(l(1,2), n(5)));
     assertThat(b1_fn5.getAntecedents()).containsExactly(ea(1,4,1), ea(2,2,2), ea(2,1,3), b4_ov4,
                                                         ea(2,3,6), b7_fl7, b7_ov8, ea(1,6,9));
 
@@ -334,8 +329,7 @@ public class MarksTest {
 
     // This is the point of this test: the old app showed the antecedents of
     // this assignment including b1_fn5.  These antecedents make more sense.
-    Implication b7_fl5 = new Implication(marks.collectAntecedents(us(b(7), 2,5,8,9), ns(5)),
-                                         new ForcedLoc(b(7), n(5), l(7,3)));
+    Implication b7_fl5 = makeImplication(marks, new ForcedLoc(b(7), n(5), l(7,3)));
     assertThat(b7_fl5.getAntecedents()).containsExactly(ea(9,9,5), b7_set18);
 
   }

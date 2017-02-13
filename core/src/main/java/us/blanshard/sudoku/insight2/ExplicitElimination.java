@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight2;
 
+import com.google.common.collect.ImmutableSet;
+
 import java.util.Collection;
 import java.util.Collections;
 
@@ -51,5 +53,9 @@ public class ExplicitElimination extends Insight {
 
   @Override public String toString() {
     return elimination.toString();
+  }
+
+  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+    return ImmutableSet.of();
   }
 }

@@ -16,11 +16,13 @@ limitations under the License.
 package us.blanshard.sudoku.insight2;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableSet;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.Unit;
+import us.blanshard.sudoku.core.UnitSubset;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -70,5 +72,9 @@ public final class ForcedLoc extends Insight {
 
   @Override public String toString() {
     return numeral + " \u2208 " + unit + " \u2192 " + location;  // element-of, right-arrow
+  }
+
+  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+    return marks.collectAntecedents(UnitSubset.of(unit, location).not(), numeral.asSet());
   }
 }

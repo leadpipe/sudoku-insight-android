@@ -16,7 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.insight2;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.Collection;
 
@@ -36,19 +36,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Immutable
 public final class Implication extends Insight {
-  private final ImmutableList<Insight> antecedents;
+  private final ImmutableSet<Insight> antecedents;
   private final Insight consequent;
   private final int cost;
 
-  public Implication(ImmutableList<? extends Insight> antecedents, Insight consequent) {
+  public Implication(ImmutableSet<? extends Insight> antecedents, Insight consequent) {
     super(Type.IMPLICATION, Objects.hashCode(antecedents, consequent));
     checkArgument(!antecedents.isEmpty());
-    this.antecedents = ImmutableList.copyOf(antecedents);
+    this.antecedents = ImmutableSet.copyOf(antecedents);
     this.consequent = checkNotNull(consequent);
     this.cost = calcCost();
   }
 
-  public ImmutableList<Insight> getAntecedents() {
+  public ImmutableSet<Insight> getAntecedents() {
     return antecedents;
   }
 
@@ -109,5 +109,9 @@ public final class Implication extends Insight {
 
   @Override public String toString() {
     return consequent + " \u2235 " + antecedents;  // "because" symbol
+  }
+
+  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+    return ImmutableSet.of();
   }
 }

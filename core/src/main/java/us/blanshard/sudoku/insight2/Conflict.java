@@ -15,10 +15,13 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight2;
 
+import us.blanshard.sudoku.core.Assignment;
+import us.blanshard.sudoku.core.Location;
 import us.blanshard.sudoku.core.Numeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableSet;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -57,5 +60,13 @@ public final class Conflict extends Insight {
 
   @Override public String toString() {
     return numeral + " \u2208 " + locations;  // element-of
+  }
+
+  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+    ImmutableSet.Builder<Insight> builder = ImmutableSet.builder();
+    for (Location loc : locations) {
+      builder.add(marks.getAssignmentInsight(Assignment.of(loc, numeral)));
+    }
+    return builder.build();
   }
 }

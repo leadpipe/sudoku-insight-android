@@ -16,6 +16,7 @@ limitations under the License.
 package us.blanshard.sudoku.insight2;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableSet;
 
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.Location;
@@ -62,5 +63,9 @@ public final class ForcedNum extends Insight {
 
   @Override public String toString() {
     return location + " \u2190 " + numeral.number;  // That's a left arrow
+  }
+
+  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+    return marks.collectAntecedents(location.unitSubsetList.get(0), numeral.asSet().not());
   }
 }

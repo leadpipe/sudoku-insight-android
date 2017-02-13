@@ -22,6 +22,7 @@ import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.LocSet;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.Collections;
 import java.util.List;
@@ -70,6 +71,7 @@ public final class DisprovedAssignment extends Insight {
   }
 
   @Override protected void addAssignmentLocations(boolean includeConsequent, LocSet set) {
+    set.add(assignment.location);
     resultingError.addAssignmentLocations(includeConsequent, set);
   }
 
@@ -92,5 +94,9 @@ public final class DisprovedAssignment extends Insight {
   private String getPrefix() {
     return assignment.numeral.number + " \u219b "  // crossed-out right arrow
             + assignment.location + " \u2235 ";
+  }
+
+  @Override protected ImmutableSet<Insight> getAntecedents(Marks marks) {
+    return ImmutableSet.of();
   }
 }

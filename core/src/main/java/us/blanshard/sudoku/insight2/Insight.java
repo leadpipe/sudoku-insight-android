@@ -15,6 +15,8 @@ limitations under the License.
 */
 package us.blanshard.sudoku.insight2;
 
+import com.google.common.collect.ImmutableSet;
+
 import us.blanshard.sudoku.core.Assignment;
 import us.blanshard.sudoku.core.LocSet;
 
@@ -138,6 +140,7 @@ public abstract class Insight {
    */
   protected void addAssignmentLocations(boolean includeConsequent, LocSet set) {
     if (includeConsequent && type.isAssignment()) {
+      //noinspection ConstantConditions
       set.add(getAssignment().location);
     }
   }
@@ -146,6 +149,13 @@ public abstract class Insight {
   public String toShortString() {
     return toString();
   }
+
+  /**
+   * Returns the insights from the given marks that prove this insight; result
+   * may be empty.  This method may throw if this insight is not in fact proven
+   * by the given marks.
+   */
+  protected abstract ImmutableSet<Insight> getAntecedents(Marks marks);
 
   @Override public final int hashCode() {
     return hashCode;
