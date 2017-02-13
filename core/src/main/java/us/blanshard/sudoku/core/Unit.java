@@ -73,6 +73,11 @@ public abstract class Unit extends AbstractCollection<Location>
     return NumSet.ofBits(getMissingBits(grid));
   }
 
+  /** Returns this unit's complete set of locations as a subset object. */
+  public final UnitSubset asFullSubset() {
+    return UnitSubset.ofBits(this, UnitSubset.ALL_BITS);
+  }
+
   /** Returns the subset of this unit that overlaps the given locations. */
   public final UnitSubset intersect(Collection<Location> locs) {
     return UnitSubset.ofBits(this, getOverlappingBits(locs));
