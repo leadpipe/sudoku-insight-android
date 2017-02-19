@@ -1,15 +1,17 @@
 package us.blanshard.sudoku.insight2;
 
+import com.google.common.collect.ImmutableSet;
+
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 import static com.google.common.truth.Truth.assertThat;
 import static us.blanshard.sudoku.insight2.TestHelper.*;
 
 public class AnalyzerTest implements Analyzer.Callback {
-  private final Collection<Insight> taken = new ArrayList<>();
+  private final List<Insight> taken = new ArrayList<>();
 
   @Override
   public void take(Insight insight) {
@@ -48,8 +50,11 @@ public class AnalyzerTest implements Analyzer.Callback {
           " . . . | . . . | . . . " +
           " . . . | . . . | . . . " +
           " . . 1 | . . . | . . . "), this);
-    assertThat(taken).containsExactly(new Overlap(b(2), n(1), us(c(5), 2, 3)),
-                                      new Overlap(b(4), n(1), us(r(5), 2, 3)));
+    assertThat(taken).containsExactly(new Overlap(b(4), n(1), us(r(5), 2, 3)),
+                                      new Overlap(b(2), n(1), us(c(5), 2, 3))).inOrder();
+    // Ensure the antecedents were already calculated too.
+    assertThat(taken.get(0).collectAntecedents(null)).containsExactly(ea(1, 1, 1));
+    assertThat(taken.get(1).collectAntecedents(null)).containsExactly(ea(1, 1, 1));
   }
 
   @Test
@@ -66,10 +71,67 @@ public class AnalyzerTest implements Analyzer.Callback {
           " . . . | . . . | . . . " +
           " . . . | 1 . . | . . . " +
           " . . 1 | . . . | . . . "), this);
-    assertThat(taken).containsExactly(new Overlap(b(2), n(1), us(c(5), 2, 3)),
-                                      new Overlap(b(4), n(1), us(r(5), 2, 3)),
-                                      new Overlap(r(6), n(1), us(b(5), 5, 6)),
-                                      new Overlap(c(6), n(1), us(b(5), 5, 6)));
+    assertThat(taken).containsExactly(new Overlap(b(4), n(1), us(r(5), 2, 3)),
+                                      new Overlap(b(2), n(1), us(c(5), 2, 3)),
+                                      new Overlap(r(6), n(1), us(b(5), 8, 9)),
+                                      new Overlap(c(6), n(1), us(b(5), 6, 9))).inOrder();
+    // Ensure the antecedents were already calculated too.
+    assertThat(taken.get(0).collectAntecedents(null)).containsExactly(ea(1, 1, 1), ea(4, 8, 1));
+    assertThat(taken.get(1).collectAntecedents(null)).containsExactly(ea(1, 1, 1), ea(8, 4, 1));
+  }
+
+  @Test
+  public void findOverlaps_blocks_skipAssignment3() {
+    Analyzer.findOverlaps(
+        m(" . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . 8 | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          "-------+-------+-------" +
+          " 4 . . | . . 3 | . . 8 " +
+          " 6 . 3 | . . . | . . . " +
+          " 9 . . | 8 . . | . . . "), this);
+
+    // Note that (5,3) compares after both (9,4) and (7,9) because of the number
+    // of open locations in its units.  (This example is why we calculate
+    // antecedents in findOverlaps.)
+
+    assertThat(taken).containsExactly(new Overlap(b(7), n(8), us(c(2), 1,2,3)),
+                                      new Overlap(c(1), n(8), us(b(1), 2,5,8))).inOrder();
+    assertThat(taken.get(0).collectAntecedents(null)).containsExactly(ea(5, 3, 8));
+  }
+
+  @Test
+  public void findOverlaps_blocks_skipAssignment4() {
+    Insight set1 = new Implication(ImmutableSet.of(ea(1,9,5)),
+                                   new LockedSet(ns(1,2,5), us(b(7),3,8,9), false));
+    Insight set2 = new LockedSet(ns(1,2,7), us(b(7),2,3,9), false);
+    Marks marks = mb(" . . . | . . . | . . . " +
+                     " . . . | . . . | . . . " +
+                     " . . . | . . . | . . . " +
+                     "-------+-------+-------" +
+                     " . . . | . . . | . . . " +
+                     " . . . | . . . | . . . " +
+                     " . . . | . . . | . . . " +
+                     "-------+-------+-------" +
+                     " 4 . . | . . 3 | . . . " +
+                     " 6 . 3 | . . . | . . . " +
+                     " 9 . . | . . . | . . . ")
+        .add(set1).add(set2).build();
+    Analyzer.findOverlaps(marks, this);
+
+    // Note that these sets are utterly bogus.  Can't find a real example that
+    // demonstrates retaining the second possible location's eliminations even
+    // if they sort greater.
+
+    assertThat(taken).containsExactly(new Overlap(b(7), n(5), us(c(2), 1,2,3,4,5,6)),
+                                      new Overlap(b(7), n(7), us(c(2), 1,2,3,4,5,6)),
+                                      new Overlap(b(7), n(8), us(c(2), 1,2,3,4,5,6))).inOrder();
+    assertThat(taken.get(2).collectAntecedents(null)).containsExactly(set1);
+    assertThat(marks.compare(set1, set2)).isGreaterThan(0);
   }
 
   @Test
@@ -86,8 +148,8 @@ public class AnalyzerTest implements Analyzer.Callback {
           " . . . | . 4 . | . . . " +
           " . . . | . 5 . | . . . " +
           " . . . | . 6 . | . . . "), this);
-    assertThat(taken).containsExactly(new Overlap(c(5), n(1), us(b(5), 4, 5, 6)),
-                                      new Overlap(r(5), n(1), us(b(5), 4, 5, 6)));
+    assertThat(taken).containsExactly(new Overlap(r(5), n(1), us(b(5), 4, 5, 6)),
+                                      new Overlap(c(5), n(1), us(b(5), 4, 5, 6))).inOrder();
   }
 
   @Test
@@ -116,8 +178,11 @@ public class AnalyzerTest implements Analyzer.Callback {
           " . . . | . . . | . . . " +
           " . . . | . . . | . . . " +
           " . . . | . . 1 | . . . "), this);
-    assertThat(taken).containsExactly(new Overlap(c(5), n(1), us(b(5), 4, 6)),
-                                      new Overlap(r(5), n(1), us(b(5), 4, 6)));
+    assertThat(taken).containsExactly(new Overlap(c(5), n(1), us(b(5), 2, 8)),
+                                      new Overlap(r(5), n(1), us(b(5), 4, 6))).inOrder();
+    // Ensure the antecedents were already calculated too.
+    assertThat(taken.get(0).collectAntecedents(null)).containsExactly(ea(1, 1, 1));
+    assertThat(taken.get(1).collectAntecedents(null)).containsExactly(ea(1, 1, 1));
   }
 
   @Test

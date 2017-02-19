@@ -453,6 +453,17 @@ public final class Marks implements Comparator<Insight> {
         }
       }
     }
+    return collectAntecedents(lists);
+  }
+
+  /**
+   * Takes a list of nonempty lists of insights, each of which is all the
+   * insights that eliminate some assignment, and constructs a set of insights
+   * that contains at least one insight from each list.  This means that the
+   * resulting set eliminates everything that the incoming entire collection of
+   * insights eliminates.
+   */
+  ImmutableSet<Insight> collectAntecedents(List<List<Insight>> lists) {
     Collections.sort(lists, new Comparator<List<Insight>>() {
       @Override public int compare(List<Insight> a, List<Insight> b) {
         // Will throw if either list is empty.

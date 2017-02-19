@@ -27,8 +27,10 @@ import us.blanshard.sudoku.core.UnitNumeral;
 import us.blanshard.sudoku.core.UnitSubset;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -268,22 +270,32 @@ public class Analyzer {
         Unit overlappingUnit = set.get(0).unit(overlappingType);
         UnitNumeral oun = UnitNumeral.of(overlappingUnit, num);
         UnitSubset overlappingSet = marks.getPossibleLocations(oun);
+        ImmutableSet<Insight> antecedents = null;
         if (overlappingSet.size() > set.size()) {
           // There's something to eliminate.
           if (set.size() > 1 ||
-              forcedLocationCountsAsOverlap(marks, num, unit, set, overlappingUnit)) {
-            callback.take(new Overlap(unit, num, overlappingSet.minus(set)));
+              (antecedents = overlapAntecedentsForForcedLocation(
+                  marks, num, unit, set, overlappingUnit)) != null) {
+            callback.take(new Overlap(unit, num, overlappingSet.minus(set), antecedents));
           }
         }
       }
     }
   }
 
-  private static boolean forcedLocationCountsAsOverlap(
+  /**
+   * Looks for a reduced set of antecedents for a forced location that still result
+   * in the given overlap.  Returns null if no such reduced set is found.
+   */
+  @Nullable
+  private static ImmutableSet<Insight> overlapAntecedentsForForcedLocation(
       Marks marks, Numeral num, Unit unit, UnitSubset set, Unit overlappingUnit) {
     UnitSubset intersection = unit.intersect(overlappingUnit);
     UnitSubset unassigned = marks.getUnassignedLocations(unit);
+    // Possibles has the currently eliminated locations within the intersection.
+    // These do not need to be eliminated for an overlap.
     UnitSubset possibles = intersection.and(unassigned).minus(set);
+    List<List<Insight>> requiredInsights = null;
     if (!possibles.isEmpty()) {
       // There is more than one unassigned location, so it might include an
       // overlap.  We count it as an overlap if removing the insights that
@@ -296,6 +308,9 @@ public class Analyzer {
       // units is NOT currently eliminated.  Therefore, we can just examine the
       // insights that eliminate the other 2 locations (those left in the
       // "possibles" set), and in isolation.
+      //
+      // Required has all the unassigned locations NOT in the intersection.
+      // These still need to be eliminated for an overlap.
       UnitSubset required = unassigned.minus(intersection);
       Set<Insight> insights = new HashSet<>();
       OUTER:
@@ -303,7 +318,7 @@ public class Analyzer {
         insights.clear();
         insights.addAll(marks.getEliminationInsights(Assignment.of(possibles.get(i), num)));
         for (int j = 0; j < required.size(); ++j) {
-          if (insights.containsAll(marks.getEliminationInsights(Assignment.of(required.get(j), num)))) {
+          if (insights.containsAll(getRequiredInsights(marks, num, required, j, requiredInsights))) {
             // Dropping all of these insights would mean this
             // required-to-be-eliminated location is no longer eliminated.  So
             // this iteration of i fails.  Go on to the next.
@@ -314,10 +329,47 @@ public class Analyzer {
         // of its eliminating insights removed without restoring any of the
         // other unassigned locations in the unit.  So we've found a non-obvious
         // elimination.
-        return true;
+        //
+        // Remove this possible's insights from each required's insights.
+        //
+        // Note that doing this inline, while processing each possible, means we
+        // might reinstate the possible location whose eliminations are less
+        // expensive, and then be unable to reinstate the other possible
+        // location, leaving us with a more expensive overlap than we should
+        // have.  My intuition is that this will be rare, so we'll do it this
+        // way (for now) because the code is more efficient.
+        List<List<Insight>> newRequiredInsights = new ArrayList<>(required.size());
+        for (int j = 0; j < required.size(); ++j) {
+          newRequiredInsights.add(copyWithout(
+                                      getRequiredInsights(marks, num, required, j, requiredInsights),
+                                      insights));
+        }
+        requiredInsights = newRequiredInsights;
       }
     }
-    return false;
+    return requiredInsights == null ? null : marks.collectAntecedents(requiredInsights);
+  }
+
+  private static List<Insight> getRequiredInsights(
+      Marks marks, Numeral num, UnitSubset required, int index,
+      List<List<Insight>> requiredInsights) {
+    return requiredInsights == null ?
+        marks.getEliminationInsights(Assignment.of(required.get(index), num)) :
+        requiredInsights.get(index);
+  }
+
+  /**
+   * Returns a copy of the given list, leaving out the insights in the given set.
+   */
+  private static List<Insight> copyWithout(List<Insight> list, Set<Insight> setToSkip) {
+    List<Insight> answer = new ArrayList<>();
+    for (int i = 0, ic = list.size(); i < ic; ++i) {
+      Insight insight = list.get(i);
+      if (!setToSkip.contains(insight)) {
+        answer.add(insight);
+      }
+    }
+    return answer;
   }
 
   public static void findSets(Marks marks, Callback callback) {

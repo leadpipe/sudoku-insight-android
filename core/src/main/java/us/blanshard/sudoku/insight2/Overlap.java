@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -41,12 +42,20 @@ public final class Overlap extends Insight {
   private final Numeral numeral;
   private final UnitSubset eliminatedLocations;
   private volatile List<Assignment> eliminations;
+  @Nullable
+  private final ImmutableSet<Insight> antecedents;
 
   public Overlap(Unit unit, Numeral numeral, UnitSubset eliminatedLocations) {
+    this(unit, numeral, eliminatedLocations, null);
+  }
+
+  public Overlap(Unit unit, Numeral numeral, UnitSubset eliminatedLocations,
+                 @Nullable ImmutableSet<Insight> antecedents) {
     super(Type.OVERLAP, Objects.hashCode(unit, numeral, eliminatedLocations.unit));
     this.unit = unit;
     this.numeral = numeral;
     this.eliminatedLocations = eliminatedLocations;
+    this.antecedents = antecedents;
   }
 
   @Override public List<Assignment> getEliminations() {
@@ -95,10 +104,12 @@ public final class Overlap extends Insight {
     return this.unit.equals(that.unit)
         && this.numeral.equals(that.numeral)
         && this.eliminatedLocations.unit.equals(that.eliminatedLocations.unit);
-    // Note that the "eliminatedLocations" ivar doesn't identify the insight.
+    // Note that the actual eliminated locations don't identify the insight, only their unit.
   }
 
   @Override protected ImmutableSet<Insight> collectAntecedents(Marks marks) {
-    return marks.collectAntecedents(unit.subtract(eliminatedLocations.unit), numeral.asSet());
+    return antecedents == null ?
+        marks.collectAntecedents(unit.subtract(eliminatedLocations.unit), numeral.asSet()) :
+        antecedents;
   }
 }
