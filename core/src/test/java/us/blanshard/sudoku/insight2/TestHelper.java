@@ -1,5 +1,7 @@
 package us.blanshard.sudoku.insight2;
 
+import com.google.common.collect.ImmutableSet;
+
 import java.util.Arrays;
 
 import us.blanshard.sudoku.core.Assignment;
@@ -36,4 +38,5 @@ public class TestHelper {
   public static Assignment a(int row, int col, int num) { return a(l(row, col), num); }
   public static ExplicitAssignment ea(int r, int c, int n) { return new ExplicitAssignment(a(r,c,n)); }
   public static ExplicitElimination ee(int r, int c, int n) { return new ExplicitElimination(a(r,c,n)); }
+  public static Implication imp(Insight i, Insight... as) { return new Implication(ImmutableSet.copyOf(as), i); }
 }
