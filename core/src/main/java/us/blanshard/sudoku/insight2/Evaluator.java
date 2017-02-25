@@ -155,7 +155,6 @@ public class Evaluator {
   }
 
   private enum RunStatus { INTERRUPTED, COMPLETE, ERROR, INCONCLUSIVE };
-  private static final Analyzer.Options OPTS = new Analyzer.Options(false, false);
 
   private class Run {
     Marks marks;
