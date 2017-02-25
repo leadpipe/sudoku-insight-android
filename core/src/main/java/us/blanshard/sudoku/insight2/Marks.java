@@ -208,14 +208,16 @@ public final class Marks implements Comparator<Insight> {
   }
 
   /**
-   * Returns the bit-set corresponding to {@link #getPossibleNumerals(Location)}.
+   * Returns the bit-set corresponding to {@link
+   * #getPossibleNumerals(Location)}.
    */
   public int getBitsForPossibleNumerals(Location loc) {
     return data[loc.index] & BITSET_MASK;
   }
 
   /**
-   * Returns the single numeral contained in {@link #getPossibleNumerals(Location)}, or null.
+   * Returns the single numeral contained in {@link
+   * #getPossibleNumerals(Location)}, or null.
    */
   @Nullable public Numeral getOnlyPossibleNumeral(Location loc) {
     NumSet set = getPossibleNumerals(loc);
@@ -320,7 +322,8 @@ public final class Marks implements Comparator<Insight> {
   }
 
   /**
-   * Returns the single location in {@link #getPossibleLocations(UnitNumeral)}, or null.
+   * Returns the single location in {@link #getPossibleLocations(UnitNumeral)},
+   * or null.
    */
   @Nullable public Location getOnlyPossibleLocation(UnitNumeral unitNum) {
     NumSet set = NumSet.ofBits(getBitsForPossibleLocations(unitNum));
@@ -333,7 +336,8 @@ public final class Marks implements Comparator<Insight> {
    * null.
    */
   @Nullable public Location getAssignedLocation(UnitNumeral unitNum) {
-    int assigned = (data[UNITNUM_OFFSET + unitNum.index] & UNITNUM_ASSIGNMENT_MASK) >> UNITNUM_ASSIGNMENT_SHIFT;
+    int assigned = (data[UNITNUM_OFFSET + unitNum.index] & UNITNUM_ASSIGNMENT_MASK)
+        >> UNITNUM_ASSIGNMENT_SHIFT;
     return assigned == 0 ? null : unitNum.unit.get(assigned - 1);
   }
 
@@ -342,7 +346,8 @@ public final class Marks implements Comparator<Insight> {
    * within the given unit.
    */
   public boolean hasAssignment(UnitNumeral unitNum) {
-    int assigned = (data[UNITNUM_OFFSET + unitNum.index] & UNITNUM_ASSIGNMENT_MASK) >> UNITNUM_ASSIGNMENT_SHIFT;
+    int assigned = (data[UNITNUM_OFFSET + unitNum.index] & UNITNUM_ASSIGNMENT_MASK)
+        >> UNITNUM_ASSIGNMENT_SHIFT;
     return assigned != 0;
   }
 
