@@ -503,4 +503,89 @@ public class AnalyzerTest implements Analyzer.Callback {
                                       new BarredNum(un(r(5), 1)),
                                       new BarredNum(un(c(5), 1)));
   }
+
+  @Test
+  public void analyze_stopped() {
+    boolean complete = Analyzer.analyze(
+        m(" 1 . . | . . . | . . . " +
+          " . . . | 2 . 3 | . . . " +
+          " . . . | 4 5 6 | . . . " +
+          "-------+-------+-------" +
+          " . 2 3 | . . . | . . . " +
+          " . . 4 | . . . | . . . " +
+          " . 5 6 | . . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . "),
+        new Analyzer.Callback() {
+          @Override public void take(Insight insight) {
+            throw new Analyzer.StopException();
+          }
+        });
+    assertThat(complete).isFalse();
+  }
+
+  @Test
+  public void analyze_interrupted() {
+    boolean complete = Analyzer.analyze(
+        m(" 1 . . | . . . | . . . " +
+          " . . . | 2 . 3 | . . . " +
+          " . . . | 4 5 6 | . . . " +
+          "-------+-------+-------" +
+          " . 2 3 | . . . | . . . " +
+          " . . 4 | . . . | . . . " +
+          " . 5 6 | . . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . "),
+        new Analyzer.Callback() {
+          @Override public void take(Insight insight) {
+            Thread.currentThread().interrupt();
+          }
+        });
+    assertThat(complete).isFalse();
+    assertThat(Thread.interrupted()).isTrue();  // Also clears the bit.
+  }
+
+  @Test
+  public void analyze_complete() {
+    boolean complete = Analyzer.analyze(
+        m(" 1 . . | . . . | . . . " +
+          " . . . | 2 . 3 | . . . " +
+          " . . . | 4 5 6 | . . . " +
+          "-------+-------+-------" +
+          " . 2 3 | . . . | . . . " +
+          " . . 4 | . . . | . . . " +
+          " . 5 6 | . . . | . . . " +
+          "-------+-------+-------" +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . " +
+          " . . . | . . . | . . . "), this);
+    assertThat(complete).isTrue();
+  }
+
+  @Test
+  public void analyze_real() {
+    // Puzzle 1:2:2017-2:67
+    Marks marks = m(
+        " . . . | 1 . 9 | . . 6 " +
+        " . 2 . | . 5 8 | 1 . . " +
+        " . . . | 6 . . | . . 3 " +
+        "-------+-------+-------" +
+        " . . 9 | 2 . . | . 1 . " +
+        " . . 8 | . . . | 5 . . " +
+        " . 6 . | . . 4 | 7 . . " +
+        "-------+-------+-------" +
+        " 4 . . | . . 3 | . . . " +
+        " . . 3 | 7 . . | . . . " +
+        " 9 . . | 8 . 1 | . . 5 ");
+    assertThat(Analyzer.analyze(marks, this)).isTrue();
+
+    assertThat(taken).containsAllOf(imp(new ForcedLoc(b(1), n(9), l(3,2)),
+                                        ea(4,3,9), ea(9,1,9), ea(1,6,9)),
+                                    imp(new Overlap(b(4), n(4), us(c(2), 1,3)),
+                                        ea(7,1,4), ea(6,6,4)));
+  }
 }

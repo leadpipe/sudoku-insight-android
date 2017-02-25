@@ -28,7 +28,6 @@ import us.blanshard.sudoku.core.UnitSubset;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +36,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 
 /**
  * Analyzes a Sudoku game state, producing a series of insights about it.
@@ -50,33 +48,10 @@ public class Analyzer {
     private static final long serialVersionUID = 1L;
   }
 
-//  /**
-//   * Controls the behavior of {@link #analyze}.
-//   */
-  @Immutable
-  public static final class Options {
-    /**
-     * When true, uses assignment insights as antecedents when constructing
-     * implications.  When false, leaves assignments out and only follows
-     * elimination insights.
-     */
-    public final boolean followAssignments;
-    /**
-     * When true, provides all elimination insights to the callback, even
-     * those that only appear during the search for implications.
-     */
-    public final boolean returnAllEliminations;
-
-    public Options(boolean followAssignments, boolean returnAllEliminations) {
-      this.followAssignments = followAssignments;
-      this.returnAllEliminations = returnAllEliminations;
-    }
-  }
-
-//  /**
-//   * Called by {@link #analyze} for each insight found.  The callback may cut the
-//   * work short by throwing a "stop" exception.
-//   */
+ /**
+  * Called by {@link #analyze} for each insight found.  The callback may cut the
+  * work short by throwing a "stop" exception.
+  */
   public interface Callback {
     void take(Insight insight) throws StopException;
   }
@@ -87,94 +62,75 @@ public class Analyzer {
    * time-consuming operation; if run as a background thread it can be stopped
    * early by interrupting the thread.
    */
-//  public static boolean analyze(Marks marks, Callback callback) {
-//    return analyze(marks, callback, DEFAULT_OPTIONS);
-//  }
+ public static boolean analyze(Marks marks, Callback callback) {
+   boolean complete = false;
 
-//  private static final Options DEFAULT_OPTIONS = new Options(true, false);
+   try {
+     findInsights(marks, callback, new HashSet<Insight>());
+     complete = true;
 
-  /**
-   * Like the standard version of analyze, but lets you control the detailed
-   * behavior of the analyzer.
-   */
-//  public static boolean analyze(Marks marks, Callback callback, Options options) {
-//    boolean complete = false;
-//
-//    try {
-//      findInsights(marks, callback, null, options);
-//      complete = true;
-//
-//    } catch (InterruptedException | StopException e) {
-//      // A normal event
-//    }
-//    return complete;
-//  }
+   } catch (InterruptedException | StopException e) {
+     // A normal event
+   }
+   return complete;
+ }
 
-//  private static void findInsights(
-//      Marks marks, Callback callback,
-//      @Nullable Set<Insight> index, Options options) throws InterruptedException {
-//
-//    index = index == null ? Sets.<Insight>newHashSet() : Sets.newHashSet(index);
-//    Collector collector;
-//
-//    if (marks.hasErrors()) {
-//      collector = new Collector(callback, index, false);
-//      findErrors(marks, collector);
-//      checkInterruption();
-//    }
-//
-//    collector = new Collector(callback, index, options.followAssignments);
-//
-//    findSingletonLocations(marks, collector);
-//    checkInterruption();
-//    findSingletonNumerals(marks, collector);
-//    checkInterruption();
-//
-//    if (!options.followAssignments)
-//      collector = new Collector(callback, index, true);
-//
-//    findOverlaps(marks, collector);
-//    checkInterruption();
-//    findSets(marks, collector);
-//    checkInterruption();
-//
-//    if (!collector.list.isEmpty()) {
-//      findImplications(marks, collector, callback, options);
-//    }
-//  }
+ private static void findInsights(Marks marks, Callback callback, Set<Insight> index)
+     throws InterruptedException {
 
-//  private static void findImplications(Marks marks, Collector antecedents,
-//      Callback callback, Options options) throws InterruptedException {
-//
-//    Collector collector = new Collector(null, antecedents.index, true);
-//    findInsights(marks.toBuilder().apply(antecedents.list).build(), collector,
-//        antecedents.index, options);
-//
-//    if (!collector.list.isEmpty()) {
-//      List<Insight> antecedentsList = ImmutableList.copyOf(antecedents.list);
-//      for (Insight insight : collector.list)
-//        if (insight.isElimination())
-//          callback.take(insight);
-//        else
-//          callback.take(new Implication(antecedentsList, insight));
-//    }
-//  }
+   Collector collector = new Collector(marks, callback, index);
+
+   while (true) {
+     while (true) {
+       findOverlaps(marks, collector);
+       checkInterruption();
+       if (collector.builder == null) break;  // No overlaps found
+
+       marks = collector.builder.build();
+       collector = new Collector(marks, callback, index);
+     }
+
+     findSets(marks, collector);
+     checkInterruption();
+     if (collector.builder == null) break;  // No sets found
+
+     marks = collector.builder.build();
+     collector = new Collector(marks, callback, index);
+   }
+
+   if (marks.hasErrors()) {
+     findErrors(marks, collector);
+     checkInterruption();
+   }
+
+   findSingletonLocations(marks, collector);
+   findSingletonNumerals(marks, collector);
+   checkInterruption();
+ }
 
   private static class Collector implements Callback {
-    @Nullable final Callback delegate;
+    final Marks marks;
+    final Callback delegate;
     final Set<Insight> index;
-    @Nullable final List<Insight> list;
+    Marks.Builder builder;
 
-    Collector(@Nullable Callback delegate, Set<Insight> index, boolean makeList) {
+    Collector(Marks marks, Callback delegate, Set<Insight> index) {
+      this.marks = marks;
       this.delegate = delegate;
       this.index = index;
-      this.list = makeList ? Lists.<Insight>newArrayList() : null;
     }
 
     @Override public void take(Insight insight) {
       if (index.add(insight)) {
-        if (list != null) list.add(insight);
-        if (delegate != null) delegate.take(insight);
+        ImmutableSet<Insight> antecedents = insight.collectAntecedents(marks);
+        if (!antecedents.isEmpty()) {
+          insight = new Implication(antecedents, insight);
+        }
+        delegate.take(insight);
+        if (insight.isElimination()) {
+          if (builder == null) builder = marks.toBuilder();
+          builder.add(insight);
+        }
       }
     }
   }
@@ -221,11 +177,6 @@ public class Analyzer {
   /** Checks for the current thread being interrupted, without clearing the bit. */
   public static void checkInterruption() throws InterruptedException {
     if (Thread.currentThread().isInterrupted()) throw new InterruptedException();
-  }
-
-  public static void findOverlapsAndSets(Marks marks, Callback callback) {
-    findOverlaps(marks, callback);
-    findSets(marks, callback);
   }
 
   public static void findOverlaps(Marks marks, Callback callback) {
