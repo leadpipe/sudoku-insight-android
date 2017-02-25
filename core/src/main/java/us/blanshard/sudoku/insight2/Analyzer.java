@@ -383,16 +383,19 @@ public class Analyzer {
   }
 
   private static void findNakedSets(Marks marks, Callback callback, Unit unit, int size, int[] indices) {
+    int unassignedLocationBits = marks.getBitsForUnassignedLocations(unit);
+    if (UnitSubset.bitsSize(unassignedLocationBits) < size) {
+      return;
+    }
     int bitsToCheck = 0;
     for (int i = 0; i < Unit.UNIT_SIZE; ++i) {
-      Location loc = unit.get(i);
-      NumSet possible = marks.getPossibleNumerals(loc);
+      int bit = 1 << i;
+      if ((bit & unassignedLocationBits) == 0) continue;
+      NumSet possible = marks.getPossibleNumerals(unit.get(i));
       int possibleSize = possible.size();
-      if (possibleSize > 1 ||
-          (possibleSize == 1 && !marks.hasAssignment(UnitNumeral.of(unit, possible.get(0))))) {
-        if (possibleSize <= size) {
-          bitsToCheck |= loc.unitSubsets.get(unit.type).bits;
-        }
+      if (possibleSize > 1 && possibleSize <= size) {
+        // Disallow all singletons for naked sets.
+        bitsToCheck |= bit;
       }
     }
     if (UnitSubset.bitsSize(bitsToCheck) >= size) {
@@ -427,16 +430,25 @@ public class Analyzer {
   }
 
   private static void findHiddenSets(Marks marks, Callback callback, Unit unit, int size, int[] indices) {
+    int unassignedNumeralBits = marks.getBitsForUnassignedNumerals(unit);
+    if (NumSet.ofBits(unassignedNumeralBits).size() < size) {
+      return;
+    }
     NumSet toCheck = NumSet.NONE;
+    boolean singletonIncluded = false;
     for (int i = 0; i < Numeral.COUNT; ++i) {
       Numeral num = Numeral.ofIndex(i);
-      UnitSubset possible = marks.getPossibleLocations(UnitNumeral.of(unit, num));
-      int possibleSize = possible.size();
-      if (possibleSize > 1 || (possibleSize == 1 && !marks.hasAssignment(possible.get(0)))) {
-        if (possibleSize <= size) {
-          toCheck = toCheck.with(num);
-        }
+      if ((num.bit & unassignedNumeralBits) == 0) continue;
+      int possibleBits = marks.getBitsForPossibleLocations(UnitNumeral.of(unit, num));
+      int possibleSize = UnitSubset.bitsSize(possibleBits);
+      if (possibleSize > size) continue;
+      if (possibleSize == 1) {
+        if (singletonIncluded) continue;  // Only allow one singleton per set.
+        // Also note it must be unassigned.
+        singletonIncluded = true;
       }
+
+      toCheck = toCheck.with(num);
     }
     if (toCheck.size() >= size) {
       firstSubset(size, indices);
